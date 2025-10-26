@@ -1,50 +1,73 @@
-# Welcome to your Expo app 👋
+# Projet EQuizz - Frontend Mobile (Étudiant)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Ce projet contient l'application mobile pour les étudiants, conçue pour la plateforme EQuizz. Elle est construite avec React Native et Expo.
 
-## Get started
+## Stack Technique
 
-1. Install dependencies
+- **React Native**
+- **Expo**
 
-   ```bash
-   npm install
-   ```
+## Prérequis
 
-2. Start the app
+Avant de commencer, assurez-vous d'avoir installé :
 
-   ```bash
-   npx expo start
-   ```
+- Git
+- Node.js et npm
+- Expo CLI (`npm install -g expo-cli`)
+- L'application **Expo Go** sur votre téléphone (Android ou iOS) OU un émulateur Android/iOS configuré sur votre ordinateur.
 
-In the output, you'll find options to open the app in a
+## Installation & Lancement
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+1. **Cloner le Dépôt Principal**
+    Si vous n'avez pas encore le projet, clonez le dépôt principal `equizz-platform`.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+    ```bash
+    git clone <URL_DE_VOTRE_DEPOT_GIT>
+    ```
 
-## Get a fresh project
+2. **Naviguer vers le Dossier Mobile**
 
-When you're ready, run:
+    ```bash
+    cd equizz-platform/mobile-student
+    ```
 
-```bash
-npm run reset-project
-```
+3. **Installer les Dépendances**
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+    ```bash
+    npm install
+    ```
 
-## Learn more
+4. **Configurer l'Environnement**
+    L'application mobile a besoin de connaître l'adresse IP de votre machine pour communiquer avec le serveur backend local. **`localhost` ne fonctionnera pas.**
 
-To learn more about developing your project with Expo, look at the following resources:
+    a. Créez un fichier `.env` à la racine de ce dossier (`mobile-student`).
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+    b. Trouvez l'adresse IP locale de votre machine :
+    - Sur **Windows** : ouvrez `cmd` et tapez `ipconfig` (cherchez l'adresse "IPv4 Address").
+    - Sur **macOS/Linux** : ouvrez le terminal et tapez `ifconfig` ou `ip a` (cherchez l'adresse "inet").
 
-## Join the community
+    c. Ajoutez cette ligne dans votre fichier `.env`, en remplaçant l'IP par la vôtre :
 
-Join our community of developers creating universal apps.
+    ```
+    API_URL=http://192.168.1.12:3000/api
+    ```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+5. **Lancer l'Application**
+    Cette commande démarre le serveur de développement Metro Bundler.
+
+    ```bash
+    npm start
+    ```
+
+    Un QR code s'affichera dans le terminal.
+    - **Pour utiliser votre téléphone :** Ouvrez l'application Expo Go et scannez le QR code.
+    - **Pour utiliser un émulateur :** Appuyez sur `a` (pour Android) ou `i` (pour iOS) dans le terminal.
+
+## Workflow Git
+
+Tout développement doit se faire sur une **branche de fonctionnalité** créée à partir de `develop`.
+
+1. Créez votre branche : `git checkout -b feature/ID-description-courte`
+2. Développez et commitez votre travail.
+3. Poussez votre branche : `git push origin feature/ID-description-courte`
+4. Créez une **Pull Request** sur GitHub/GitLab vers la branche `develop`.

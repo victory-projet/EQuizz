@@ -1,59 +1,61 @@
-# EquizzAdminWeb
+# Projet EQuizz - Frontend Admin (Web)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.2.2.
+Ce projet contient l'application web d'administration pour la plateforme EQuizz. Elle est construite avec Angular.
 
-## Development server
+## Stack Technique
+- **Angular** (v16+)
+- **TypeScript**
+- **SCSS**
 
-To start a local development server, run:
+## Prérequis
+Avant de commencer, assurez-vous d'avoir installé :
+- Git
+- Node.js et npm
+- Angular CLI (`npm install -g @angular/cli`)
 
-```bash
-ng serve
-```
+## Installation & Lancement
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+1.  **Cloner le Dépôt Principal**
+    Si vous n'avez pas encore le projet, clonez le dépôt principal `EQuizz`.
+    ```bash
+    git clone <URL_DE_VOTRE_DEPOT_GIT>
+    ```
 
-## Code scaffolding
+2.  **Naviguer vers le Dossier Frontend Admin**
+    ```bash
+    cd EQuizz/frontend-admin
+    ```
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+3.  **Installer les Dépendances**
+    ```bash
+    npm install
+    ```
 
-```bash
-ng generate component component-name
-```
+4.  **Configurer l'Environnement**
+    L'URL de l'API backend doit être configurée.
+    
+    a. Ouvrez le fichier `src/environments/environment.development.ts`.
+    
+    b. Assurez-vous que la variable `apiUrl` pointe vers votre serveur backend local.
+    ```typescript
+    export const environment = {
+      production: false,
+      apiUrl: 'http://localhost:3000/api' // URL de votre API backend
+    };
+    ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+5.  **Lancer le Serveur de Développement**
+    Cette commande compile l'application, démarre un serveur de développement et ouvre automatiquement votre navigateur sur `http://localhost:4200/`.
+    ```bash
+    ng serve --open
+    ```
+    L'application se rechargera automatiquement si vous modifiez des fichiers sources.
 
-```bash
-ng generate --help
-```
+## Workflow Git
 
-## Building
+Tout développement doit se faire sur une **branche de fonctionnalité** créée à partir de `develop`.
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+1.  Créez votre branche : `git checkout -b feature/ID-description-courte`
+2.  Développez et commitez votre travail.
+3.  Poussez votre branche : `git push origin feature/ID-description-courte`
+4.  Créez une **Pull Request** sur GitHub/GitLab vers la branche `develop`.
