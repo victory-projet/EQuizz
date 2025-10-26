@@ -1,9 +1,9 @@
 # Dépendances et fichiers de build
-/node_modules
-/dist
-/build
-/.expo
-/.angular
+node_modules
+dist
+build
+.expo
+.angular
 
 # Fichiers de log
 npm-debug.log*
