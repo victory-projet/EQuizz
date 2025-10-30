@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const bcrypt = require('bcryptjs');
 
 const Utilisateur = sequelize.define('Utilisateur', {
   id: {
@@ -26,9 +27,9 @@ const Utilisateur = sequelize.define('Utilisateur', {
       // Valider le format de l'email
       isEmailCustom(value) {
         // Regex pour valider le format : prenom.nom@saintjeaningenieur.com
-        const emailRegex = /^[a-z]+\.[a-z]+@saintjeaningenieur\.com$/;
+        const emailRegex = /^[a-z]+\.[a-z]+@saintjeaningenieur\.org$/;
         if (!emailRegex.test(value)) {
-          throw new Error('Le format de l\'email doit être prenom.nom@saintjeaningenieur.com');
+          throw new Error('Le format de l\'email doit être prenom.nom@saintjeaningenieur.org');
         }
       }
     }
@@ -36,8 +37,18 @@ const Utilisateur = sequelize.define('Utilisateur', {
 
   motDePasseHash: {
     type: DataTypes.STRING(255),
-    allowNull: false,
+    allowNull: true,
   },
+}, {
+// Ajout des Hooks
+  hooks: {
+  beforeSave: async (utilisateur) => {
+    if (utilisateur.changed('motDePasseHash') && utilisateur.motDePasseHash) {
+      const salt = await bcrypt.genSalt(10);
+      utilisateur.motDePasseHash = await bcrypt.hash(utilisateur.motDePasseHash, salt);
+    }
+  }
+}
 });
 
 module.exports = Utilisateur;
