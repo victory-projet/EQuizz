@@ -12,6 +12,12 @@ class EvaluationService {
    * @param {object} data - Données pour l'évaluation. Doit contenir cours_id.
    */
   async create(data) {
+
+    const { classeIds, ...evaluationData } = data;
+    if (!classeIds || !Array.isArray(classeIds) || classeIds.length === 0) {
+      throw new Error('Au moins une classe doit être ciblée.');
+    }
+
     const transaction = await db.sequelize.transaction();
 
     try {
@@ -20,6 +26,9 @@ class EvaluationService {
       if (!cours) {
         throw new Error('Cours non trouvé. Impossible de créer l\'évaluation.');
       }
+
+      // La méthode 'addClasses' est automatiquement fournie par Sequelize
+      await evaluation.addClasses(classeIds, { transaction });
 
       // 2. Créer l'évaluation
       const evaluation = await evaluationRepository.create(data, transaction);

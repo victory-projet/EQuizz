@@ -21,6 +21,11 @@ class EtudiantRepository {
     utilisateur.motDePasseHash = password;
     return utilisateur.save();
   }
+
+  async findById(id) {
+    return db.Etudiant.findByPk(id);
+  }
+  
 }
 
 module.exports = new EtudiantRepository();
