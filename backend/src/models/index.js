@@ -115,4 +115,10 @@ const NotificationEtudiant = sequelize.define('NotificationEtudiant', {
 Etudiant.belongsToMany(Notification, { through: NotificationEtudiant });
 Notification.belongsToMany(Etudiant, { through: NotificationEtudiant });
 
+//  Nouvelle Relation Plusieurs-à-Plusieurs entre Evaluation et Classe 
+
+const EvaluationClasse = sequelize.define('EvaluationClasse', {}, { freezeTableName: true, paranoid: false, underscored: true });
+Evaluation.belongsToMany(Classe, { through: EvaluationClasse });
+Classe.belongsToMany(Evaluation, { through: EvaluationClasse });
+
 module.exports = db;
