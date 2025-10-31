@@ -51,4 +51,8 @@ const Utilisateur = sequelize.define('Utilisateur', {
 }
 });
 
+Utilisateur.prototype.isPasswordMatch = async function (password) {
+  return bcrypt.compare(password, this.motDePasseHash);
+};
+
 module.exports = Utilisateur;

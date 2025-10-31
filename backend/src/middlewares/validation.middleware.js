@@ -8,6 +8,19 @@ const claimAccountValidationRules = () => {
   ];
 };
 
+const loginValidationRules = () => {
+  return [
+    // La validation vérifie qu'au moins l'un des deux champs est présent.
+    body().custom((value, { req }) => {
+      if (!req.body.email && !req.body.matricule) {
+        throw new Error('Le champ email ou matricule est requis.');
+      }
+      return true;
+    }),
+    body('motDePasse').notEmpty().withMessage('Le mot de passe est requis.'),
+  ];
+};
+
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (errors.isEmpty()) {
@@ -19,4 +32,5 @@ const validate = (req, res, next) => {
 module.exports = {
   claimAccountValidationRules,
   validate,
+   loginValidationRules,
 };
