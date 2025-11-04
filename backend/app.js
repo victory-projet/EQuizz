@@ -33,10 +33,15 @@ const PORT = process.env.PORT || 3000;
 db.sequelize.authenticate()
   .then(() => {
     console.log('✅ Connexion à la base de données établie avec succès.');
+    // Synchroniser la base de données avant de démarrer le serveur
+    return db.sequelize.sync({ alter: true });
+  })
+  .then(() => {
+    console.log('✅ Base de données synchronisée avec succès.');
     app.listen(PORT, () => {
       console.log(`🚀 Serveur démarré sur le port ${PORT}`);
     });
   })
   .catch(err => {
-    console.error('❌ Impossible de se connecter à la base de données:', err);
+    console.error('❌ Erreur lors de l\'initialisation:', err);
   });
