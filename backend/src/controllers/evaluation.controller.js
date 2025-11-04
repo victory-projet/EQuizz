@@ -17,7 +17,7 @@ class EvaluationController {
       const evaluations = await evaluationService.findAll();
       res.status(200).json(evaluations);
     } catch (error) {
-      res.status(500).json({ message: "Erreur lors de la récupération des évaluations." });
+      res.status(500).json({ message: 'Erreur lors de la récupération des évaluations.' });
     }
   }
 
@@ -78,7 +78,7 @@ class EvaluationController {
     }
   }
 
-   async importQuestions(req, res) {
+  async importQuestions(req, res) {
     try {
       const { quizzId } = req.params;
       

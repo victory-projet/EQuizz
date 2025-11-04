@@ -17,7 +17,7 @@ class CoursController {
       const coursList = await coursService.findAll();
       res.status(200).json(coursList);
     } catch (error) {
-      res.status(500).json({ message: "Erreur lors de la récupération des cours." });
+      res.status(500).json({ message: 'Erreur lors de la récupération des cours.' });
     }
   }
 

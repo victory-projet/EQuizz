@@ -22,7 +22,7 @@ class EmailService {
 
     const info = await mailer.sendMail(mailOptions);
 
-    console.log("Email envoyé. URL de prévisualisation : %s", nodemailer.getTestMessageUrl(info));
+    console.log('Email envoyé. URL de prévisualisation : %s', nodemailer.getTestMessageUrl(info));
     return info;
   }
 }

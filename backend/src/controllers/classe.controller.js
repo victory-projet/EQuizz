@@ -17,7 +17,7 @@ class ClasseController {
       const classes = await classeService.findAll();
       res.status(200).json(classes);
     } catch (error) {
-      res.status(500).json({ message: "Erreur lors de la récupération des classes." });
+      res.status(500).json({ message: 'Erreur lors de la récupération des classes.' });
     }
   }
 

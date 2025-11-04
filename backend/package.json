@@ -6,8 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "db:sync": "node sync-db.js",
-    "start:dev": "nodemon app.js"
-  },
+    "start:dev": "nodemon app.js",
+    "lint": "eslint . --ext .js --fix"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -28,9 +29,11 @@
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.5.0",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2"
   }

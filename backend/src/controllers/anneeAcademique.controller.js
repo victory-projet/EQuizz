@@ -17,7 +17,7 @@ class AnneeAcademiqueController {
       const annees = await anneeAcademiqueService.findAll();
       res.status(200).json(annees);
     } catch (error) {
-      res.status(500).json({ message: "Erreur lors de la récupération des années académiques." });
+      res.status(500).json({ message: 'Erreur lors de la récupération des années académiques.' });
     }
   }
 
