@@ -1,26 +1,24 @@
-# .github/workflows/backend-cd.yml
-
+# Nom du workflow
 name: Backend CD
 
+# Déclencheur
 on:
   push:
     branches:
       - main
 
+# Jobs
 jobs:
   deploy-backend:
     name: Deploy Backend to Railway
     runs-on: ubuntu-latest
     steps:
-      # Étape 1 : Assurez-vous que cette ligne a bien une version (@v3 ou @v4 sont courants)
       - name: Checkout code
-        uses: actions/checkout
+        uses: actions/checkout@v4
 
-      # Étape 2 : Assurez-vous que cette ligne a bien une version (@v1 est correct ici)
       - name: Setup Railway CLI
-        uses: railwayapp/cli-action
+        uses: railwayapp/cli-action@v1
 
-      # Étape 3 : Lancer le déploiement
       - name: Deploy to Railway
         run: railway up --detach
         env:
