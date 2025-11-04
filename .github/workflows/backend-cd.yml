@@ -1,34 +1,27 @@
-# Nom du workflow de Déploiement Continu
+# .github/workflows/backend-cd.yml
+
 name: Backend CD
 
-# Déclencheurs : QUAND ce workflow doit-il s'exécuter ?
 on:
-  # Uniquement lorsqu'un push est fait sur la branche 'main'
   push:
     branches:
       - main
 
-# Jobs : La liste des tâches à effectuer
 jobs:
-  # Nom du job de déploiement
   deploy-backend:
     name: Deploy Backend to Railway
     runs-on: ubuntu-latest
     steps:
-      # Étape 1 : Récupérer le code de la branche 'main'
+      # Étape 1 : Assurez-vous que cette ligne a bien une version (@v3 ou @v4 sont courants)
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Étape 2 : Installer la CLI de Railway
-      # 'railwayapp/cli-action@v1' est une action officielle de Railway
+      # Étape 2 : Assurez-vous que cette ligne a bien une version (@v1 est correct ici)
       - name: Setup Railway CLI
-        uses: railwayapp/cli-action
+        uses: railwayapp/cli-action@v1
 
       # Étape 3 : Lancer le déploiement
-      # Cette commande envoie le code à Railway, qui s'occupe de le construire
-      # et de le mettre en ligne.
       - name: Deploy to Railway
         run: railway up --detach
         env:
-          # On utilise le secret que nous avons configuré dans GitHub
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
