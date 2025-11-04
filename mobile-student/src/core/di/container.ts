@@ -7,26 +7,40 @@ import { GetCoursesUseCase } from '../../domain/usecases/GetCourses.usecase';
 import { GetEvaluationPeriodUseCase } from '../../domain/usecases/GetEvaluationPeriod.usecase';
 import { GetQuestionsUseCase } from '../../domain/usecases/GetQuestions.usecase';
 import { SubmitQuizUseCase } from '../../domain/usecases/SubmitQuiz.usecase';
+import { AuthDataSourceImpl } from '../../data/datasources/AuthDataSource';
+import { AuthRepositoryImpl } from '../../data/repositories/AuthRepositoryImpl';
+import { ClaimAccountUseCase } from '../../domain/usecases/ClaimAccountUseCase';
+import { LoginUseCase } from '../../domain/usecases/LoginUseCase';
 
+/**
+ * Conteneur d'injection de dépendances
+ * Centralise la création et la gestion des instances pour toute l'application
+ */
 class DIContainer {
     private static instance: DIContainer;
     
-    // Repositories
+    // Repositories - Quiz
     private courseRepository: ICourseRepository;
     private questionRepository: IQuestionRepository;
     
-    // Use Cases
+    // Repositories - Auth
+    private _authRepository: AuthRepositoryImpl | null = null;
+    
+    // DataSources - Auth
+    private _authDataSource: AuthDataSourceImpl | null = null;
+    
+    // Use Cases - Quiz
     private getCoursesUseCase: GetCoursesUseCase;
     private getEvaluationPeriodUseCase: GetEvaluationPeriodUseCase;
     private getQuestionsUseCase: GetQuestionsUseCase;
     private submitQuizUseCase: SubmitQuizUseCase;
 
     private constructor() {
-        // Initialize repositories
+        // Initialize quiz repositories
         this.courseRepository = new CourseRepositoryImpl();
         this.questionRepository = new QuestionRepositoryImpl();
         
-        // Initialize use cases
+        // Initialize quiz use cases
         this.getCoursesUseCase = new GetCoursesUseCase(this.courseRepository);
         this.getEvaluationPeriodUseCase = new GetEvaluationPeriodUseCase(this.courseRepository);
         this.getQuestionsUseCase = new GetQuestionsUseCase(this.questionRepository);
@@ -40,7 +54,7 @@ class DIContainer {
         return DIContainer.instance;
     }
 
-    // Getters for use cases
+    // Getters for quiz use cases
     getGetCoursesUseCase(): GetCoursesUseCase {
         return this.getCoursesUseCase;
     }
@@ -55,6 +69,31 @@ class DIContainer {
 
     getSubmitQuizUseCase(): SubmitQuizUseCase {
         return this.submitQuizUseCase;
+    }
+
+    // Getters for auth datasources
+    get authDataSource(): AuthDataSourceImpl {
+        if (!this._authDataSource) {
+            this._authDataSource = new AuthDataSourceImpl();
+        }
+        return this._authDataSource;
+    }
+
+    // Getters for auth repositories
+    get authRepository(): AuthRepositoryImpl {
+        if (!this._authRepository) {
+            this._authRepository = new AuthRepositoryImpl(this.authDataSource);
+        }
+        return this._authRepository;
+    }
+
+    // Getters for auth use cases
+    get claimAccountUseCase(): ClaimAccountUseCase {
+        return new ClaimAccountUseCase(this.authRepository);
+    }
+
+    get loginUseCase(): LoginUseCase {
+        return new LoginUseCase(this.authRepository);
     }
 }
 

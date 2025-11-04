@@ -1,14 +1,15 @@
-// API Configuration
-export const API_CONFIG = {
-    BASE_URL: process.env.API_URL || 'http://localhost:3000/api',
-    TIMEOUT: 10000,
-    RETRY_ATTEMPTS: 3
-};
+// API Configuration - Réexporte depuis config.ts pour compatibilité
+export { API_CONFIG } from '../config';
 
 // API Endpoints
 export const API_ENDPOINTS = {
+    // Quiz endpoints
     COURSES: '/courses',
     QUESTIONS: '/questions',
     SUBMIT_QUIZ: '/quiz/submit',
-    EVALUATION_PERIOD: '/evaluation-period'
+    EVALUATION_PERIOD: '/evaluation-period',
+    
+    // Auth endpoints
+    AUTH_LOGIN: '/auth/login',
+    AUTH_CLAIM_ACCOUNT: '/auth/claim-account',
 };
