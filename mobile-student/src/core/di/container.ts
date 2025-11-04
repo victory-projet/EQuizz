@@ -11,6 +11,11 @@ import { AuthDataSourceImpl } from '../../data/datasources/AuthDataSource';
 import { AuthRepositoryImpl } from '../../data/repositories/AuthRepositoryImpl';
 import { ClaimAccountUseCase } from '../../domain/usecases/ClaimAccountUseCase';
 import { LoginUseCase } from '../../domain/usecases/LoginUseCase';
+import { QuizzDataSourceImpl } from '../../data/datasources/QuizzDataSource';
+import { QuizzRepositoryImpl } from '../../data/repositories/QuizzRepositoryImpl';
+import { GetAvailableQuizzesUseCase } from '../../domain/usecases/GetAvailableQuizzesUseCase';
+import { GetQuizzDetailsUseCase } from '../../domain/usecases/GetQuizzDetailsUseCase';
+import { SubmitQuizzAnswersUseCase } from '../../domain/usecases/SubmitQuizzAnswersUseCase';
 
 /**
  * Conteneur d'injection de dépendances
@@ -26,8 +31,14 @@ class DIContainer {
     // Repositories - Auth
     private _authRepository: AuthRepositoryImpl | null = null;
     
+    // Repositories - Quizz
+    private _quizzRepository: QuizzRepositoryImpl | null = null;
+    
     // DataSources - Auth
     private _authDataSource: AuthDataSourceImpl | null = null;
+    
+    // DataSources - Quizz
+    private _quizzDataSource: QuizzDataSourceImpl | null = null;
     
     // Use Cases - Quiz
     private getCoursesUseCase: GetCoursesUseCase;
@@ -87,6 +98,22 @@ class DIContainer {
         return this._authRepository;
     }
 
+    // Getters for quizz datasources
+    get quizzDataSource(): QuizzDataSourceImpl {
+        if (!this._quizzDataSource) {
+            this._quizzDataSource = new QuizzDataSourceImpl();
+        }
+        return this._quizzDataSource;
+    }
+
+    // Getters for quizz repositories
+    get quizzRepository(): QuizzRepositoryImpl {
+        if (!this._quizzRepository) {
+            this._quizzRepository = new QuizzRepositoryImpl(this.quizzDataSource);
+        }
+        return this._quizzRepository;
+    }
+
     // Getters for auth use cases
     get claimAccountUseCase(): ClaimAccountUseCase {
         return new ClaimAccountUseCase(this.authRepository);
@@ -94,6 +121,19 @@ class DIContainer {
 
     get loginUseCase(): LoginUseCase {
         return new LoginUseCase(this.authRepository);
+    }
+
+    // Getters for quizz use cases
+    get getAvailableQuizzesUseCase(): GetAvailableQuizzesUseCase {
+        return new GetAvailableQuizzesUseCase(this.quizzRepository);
+    }
+
+    get getQuizzDetailsUseCase(): GetQuizzDetailsUseCase {
+        return new GetQuizzDetailsUseCase(this.quizzRepository);
+    }
+
+    get submitQuizzAnswersUseCase(): SubmitQuizzAnswersUseCase {
+        return new SubmitQuizzAnswersUseCase(this.quizzRepository);
     }
 }
 

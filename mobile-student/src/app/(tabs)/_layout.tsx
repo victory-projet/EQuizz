@@ -22,12 +22,19 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="quizzes"
+        options={{
+          title: 'Mes Quizz',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="quiz" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="quizz"
         options={{
-          title: 'Quizz',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="edit-note" size={size} color={color} />
-          ),
+          href: null, // Cache cet onglet de la navigation
         }}
       />
 

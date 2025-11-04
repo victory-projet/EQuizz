@@ -1,5 +1,5 @@
-import axios, { AxiosInstance } from 'axios';
-import { API_BASE_URL } from '../../core/constants';
+import axios from 'axios';
+import apiClient from '../../core/api';
 import { Utilisateur } from '../../domain/entities/Utilisateur';
 
 /**
@@ -12,24 +12,13 @@ export interface AuthDataSource {
 
 /**
  * Implémentation de la source de données d'authentification
- * Gère les appels API concrets
+ * Gère les appels API concrets avec l'API de production
  */
 export class AuthDataSourceImpl implements AuthDataSource {
-  private axiosInstance: AxiosInstance;
-
-  constructor() {
-    this.axiosInstance = axios.create({
-      baseURL: API_BASE_URL,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      timeout: 10000,
-    });
-  }
 
   async claimAccount(matricule: string, email: string, classeId: string): Promise<void> {
     try {
-      await this.axiosInstance.post('/auth/claim-account', {
+      await apiClient.post('/auth/claim-account', {
         matricule,
         email,
         classeId,
@@ -55,7 +44,7 @@ export class AuthDataSourceImpl implements AuthDataSource {
     motDePasse: string
   ): Promise<{ token: string; utilisateur: Utilisateur }> {
     try {
-      const response = await this.axiosInstance.post('/auth/login', {
+      const response = await apiClient.post('/auth/login', {
         matricule,
         motDePasse,
       });
