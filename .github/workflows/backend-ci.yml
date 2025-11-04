@@ -1,0 +1,48 @@
+# Nom du workflow qui apparaîtra dans l'onglet "Actions" de GitHub
+name: Backend CI
+
+# Déclencheurs : QUAND ce workflow doit-il s'exécuter ?
+on:
+  # Se déclenche à chaque push sur une branche qui a une Pull Request ouverte vers 'develop'
+  pull_request:
+    branches:
+      - develop
+
+# Jobs : La liste des tâches que le robot doit effectuer
+jobs:
+  # Nom du job (vous pouvez l'appeler comme vous voulez)
+  build-and-lint-backend:
+    # Nom qui sera affiché sur l'interface GitHub
+    name: Build and Lint Backend
+
+    # Système d'exploitation : Le robot tournera sur une machine virtuelle Ubuntu
+    runs-on: ubuntu-latest
+
+    # Étapes (steps) : La séquence d'actions à exécuter
+    steps:
+      # Étape 1 : Récupérer le code
+      # 'actions/checkout@v3' est une action pré-codée par GitHub pour cloner votre dépôt
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Étape 2 : Configurer Node.js
+      # 'actions/setup-node@v3' installe la version de Node.js que nous voulons
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.19.0' # Utiliser la même version que votre environnement de dev
+
+      # Étape 3 : Installer les dépendances du backend
+      # On se déplace dans le dossier du backend et on lance 'npm install'
+      # 'ci' est plus rapide et plus strict que 'install', idéal pour la CI
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      # Étape 4 : Lancer le Linting pour vérifier la qualité du code
+      # On ajoute un script 'lint' à notre package.json
+      - name: Run linter
+        run: |
+          cd backend
+          npm run lint
