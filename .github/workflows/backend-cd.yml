@@ -14,11 +14,11 @@ jobs:
     steps:
       # Étape 1 : Assurez-vous que cette ligne a bien une version (@v3 ou @v4 sont courants)
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout
 
       # Étape 2 : Assurez-vous que cette ligne a bien une version (@v1 est correct ici)
       - name: Setup Railway CLI
-        uses: railwayapp/cli-action@v1
+        uses: railwayapp/cli-action
 
       # Étape 3 : Lancer le déploiement
       - name: Deploy to Railway
