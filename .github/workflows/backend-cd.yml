@@ -30,6 +30,6 @@ jobs:
 
       # Étape 4 : Lancer le déploiement
       - name: Deploy to Railway
-        run: railway up --detach
+        run: railway up --detach --project ${{ secrets.RAILWAY_PROJECT_ID }} --service ${{ secrets.RAILWAY_SERVICE_ID }}
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
