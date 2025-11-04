@@ -22,7 +22,7 @@ jobs:
       # Étape 2 : Installer la CLI de Railway
       # 'railwayapp/cli-action@v1' est une action officielle de Railway
       - name: Setup Railway CLI
-        uses: railwayapp/cli-action@v1
+        uses: railwayapp/cli-action
 
       # Étape 3 : Lancer le déploiement
       # Cette commande envoie le code à Railway, qui s'occupe de le construire
