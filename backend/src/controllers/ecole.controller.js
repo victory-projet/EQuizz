@@ -22,7 +22,7 @@ class EcoleController {
       // On répond avec le statut 200 (OK) et la liste des objets
       res.status(200).json(ecoles);
     } catch (error) {
-      res.status(500).json({ message: "Erreur lors de la récupération des écoles." });
+      res.status(500).json({ message: 'Erreur lors de la récupération des écoles.' });
     }
   }
 

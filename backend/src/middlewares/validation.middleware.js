@@ -32,5 +32,5 @@ const validate = (req, res, next) => {
 module.exports = {
   claimAccountValidationRules,
   validate,
-   loginValidationRules,
+  loginValidationRules,
 };

@@ -42,13 +42,13 @@ const Utilisateur = sequelize.define('Utilisateur', {
 }, {
 // Ajout des Hooks
   hooks: {
-  beforeSave: async (utilisateur) => {
-    if (utilisateur.changed('motDePasseHash') && utilisateur.motDePasseHash) {
-      const salt = await bcrypt.genSalt(10);
-      utilisateur.motDePasseHash = await bcrypt.hash(utilisateur.motDePasseHash, salt);
+    beforeSave: async (utilisateur) => {
+      if (utilisateur.changed('motDePasseHash') && utilisateur.motDePasseHash) {
+        const salt = await bcrypt.genSalt(10);
+        utilisateur.motDePasseHash = await bcrypt.hash(utilisateur.motDePasseHash, salt);
+      }
     }
   }
-}
 });
 
 Utilisateur.prototype.isPasswordMatch = async function (password) {

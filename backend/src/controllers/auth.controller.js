@@ -11,7 +11,7 @@ class AuthController {
     }
   }
 
-   async login(req, res) {
+  async login(req, res) {
     try {
       const { email, matricule, motDePasse } = req.body;
       const loginIdentifier = email || matricule; // On prend l'un ou l'autre
