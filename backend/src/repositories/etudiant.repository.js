@@ -23,7 +23,9 @@ class EtudiantRepository {
   }
 
   async findById(id) {
-    return db.Etudiant.findByPk(id);
+    return db.Etudiant.findByPk(id, {
+      attributes: ['id', 'matricule', 'idCarte', 'classe_id']
+    });
   }
   
 }

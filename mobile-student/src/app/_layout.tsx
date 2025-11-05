@@ -8,16 +8,27 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return;
+    console.log('🔄 Navigation useEffect triggered:', { isAuthenticated, isLoading, segments: segments[0] });
+    
+    if (isLoading) {
+      console.log('⏳ Still loading, skipping navigation...');
+      return;
+    }
 
-    const inAuthGroup = segments[0]?.includes('auth');
+    const inAuthGroup = segments[0] === '(auth)';
+
+    console.log('Navigation check:', { isAuthenticated, inAuthGroup, segments: segments[0] });
 
     if (!isAuthenticated && !inAuthGroup) {
       // Rediriger vers la page de connexion si non authentifié
-      router.replace('/login' as any);
+      console.log('Redirecting to login...');
+      router.replace('/(auth)/login');
     } else if (isAuthenticated && inAuthGroup) {
       // Rediriger vers l'app si déjà authentifié
-      router.replace('/accueil' as any);
+      console.log('Redirecting to accueil...');
+      router.replace('/(tabs)/accueil');
+    } else {
+      console.log('✅ No navigation needed');
     }
   }, [isAuthenticated, isLoading, segments]);
 

@@ -6,7 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -221,33 +221,16 @@ export default function QuizDetailScreen() {
           ) : (
             <View style={styles.textInputContainer}>
               <Text style={styles.textInputLabel}>Votre réponse :</Text>
-              <TouchableOpacity
+              <TextInput
                 style={styles.textInput}
-                onPress={() => {
-                  Alert.prompt(
-                    'Votre réponse',
-                    'Entrez votre réponse ci-dessous',
-                    [
-                      { text: 'Annuler', style: 'cancel' },
-                      {
-                        text: 'OK',
-                        onPress: (text?: string) => text && handleAnswerChange(text),
-                      },
-                    ],
-                    'plain-text',
-                    currentAnswer
-                  );
-                }}
-              >
-                <Text
-                  style={[
-                    styles.textInputText,
-                    !currentAnswer && styles.textInputPlaceholder,
-                  ]}
-                >
-                  {currentAnswer || 'Appuyez pour répondre...'}
-                </Text>
-              </TouchableOpacity>
+                placeholder="Entrez votre réponse ici..."
+                placeholderTextColor="#9CA3AF"
+                value={currentAnswer}
+                onChangeText={handleAnswerChange}
+                multiline
+                numberOfLines={6}
+                textAlignVertical="top"
+              />
             </View>
           )}
         </View>
