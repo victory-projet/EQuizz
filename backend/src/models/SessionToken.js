@@ -17,6 +17,12 @@ const SessionToken = sequelize.define('SessionToken', {
     type: DataTypes.STRING(64),
     allowNull: false,
     unique: true,
+    defaultValue: () => {
+      // Générer un token anonyme unique
+      const hash = crypto.createHash('sha256');
+      hash.update(`${Date.now()}-${Math.random()}-${Math.random()}`);
+      return hash.digest('hex');
+    }
   },
 
   // Référence à l'étudiant (dans cette table séparée uniquement)
@@ -39,13 +45,11 @@ const SessionToken = sequelize.define('SessionToken', {
     }
   ],
   hooks: {
-    beforeCreate: (sessionToken) => {
-      if (!sessionToken.tokenAnonyme) {
-        // Générer un token anonyme unique basé sur l'étudiant et l'évaluation
-        const hash = crypto.createHash('sha256');
-        hash.update(`${sessionToken.etudiantId}-${sessionToken.evaluationId}-${Date.now()}`);
-        sessionToken.tokenAnonyme = hash.digest('hex');
-      }
+    beforeValidate: (sessionToken) => {
+      // Toujours régénérer le token avec les IDs pour plus de sécurité
+      const hash = crypto.createHash('sha256');
+      hash.update(`${sessionToken.etudiantId}-${sessionToken.evaluationId}-${Date.now()}-${Math.random()}`);
+      sessionToken.tokenAnonyme = hash.digest('hex');
     }
   }
 });
