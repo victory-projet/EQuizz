@@ -13,113 +13,201 @@ export const QuizzCard: React.FC<QuizzCardProps> = ({ evaluation, onPress }) => 
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
       day: '2-digit',
-      month: 'long',
+      month: 'short',
       year: 'numeric',
     });
   };
 
-  const isExpired = new Date(evaluation.dateFin) < new Date();
+  const getStatut = () => {
+    if (evaluation.statut) return evaluation.statut;
+    
+    const now = new Date();
+    const debut = new Date(evaluation.dateDebut);
+    const fin = new Date(evaluation.dateFin);
+    
+    if (now < debut) return 'À venir';
+    if (now > fin) return 'Terminé';
+    return 'En cours';
+  };
+
+  const statut = getStatut();
+  const isExpired = statut === 'Terminé';
+  const isUpcoming = statut === 'À venir';
+
+  const getStatutColor = () => {
+    switch (statut) {
+      case 'En cours': return '#10B981';
+      case 'À venir': return '#F59E0B';
+      case 'Terminé': return '#6B7280';
+      default: return '#6B7280';
+    }
+  };
+
+  const getStatutBgColor = () => {
+    switch (statut) {
+      case 'En cours': return '#D1FAE5';
+      case 'À venir': return '#FEF3C7';
+      case 'Terminé': return '#F3F4F6';
+      default: return '#F3F4F6';
+    }
+  };
 
   return (
-    <TouchableOpacity
-      style={[styles.card, isExpired && styles.cardExpired]}
-      onPress={() => !isExpired && onPress(evaluation.id)}
-      disabled={isExpired}
-      activeOpacity={0.7}
-    >
+    <View style={[styles.card, (isExpired || isUpcoming) && styles.cardDisabled]}>
+      {/* Header avec titre et badge statut */}
       <View style={styles.header}>
-        <View style={styles.iconContainer}>
-          <MaterialIcons name="quiz" size={24} color="#3A5689" />
-        </View>
-        <View style={styles.headerText}>
-          <Text style={styles.courseName}>{evaluation.Cours.nom}</Text>
-          <Text style={styles.quizzTitle}>{evaluation.titre}</Text>
+        <Text style={styles.ueTitle}>UE - {evaluation.Cours.nom}</Text>
+        <View style={[styles.statutBadge, { backgroundColor: getStatutBgColor() }]}>
+          <Text style={[styles.statutText, { color: getStatutColor() }]}>
+            {statut}
+          </Text>
         </View>
       </View>
 
-      <View style={styles.footer}>
-        <View style={styles.dateContainer}>
-          <MaterialIcons name="event" size={16} color="#6B7280" />
-          <Text style={styles.dateText}>
-            Date limite: {formatDate(evaluation.dateFin)}
+      {/* Classes */}
+      {evaluation.Classes && evaluation.Classes.length > 0 && (
+        <View style={styles.classesContainer}>
+          <MaterialIcons name="school" size={16} color="#6B7280" />
+          <Text style={styles.classesText}>
+            {evaluation.Classes.map(c => c.nom).join(', ')}
           </Text>
         </View>
-        {isExpired && (
-          <View style={styles.expiredBadge}>
-            <Text style={styles.expiredText}>Expiré</Text>
-          </View>
-        )}
+      )}
+
+      {/* Informations */}
+      <View style={styles.infoRow}>
+        <View style={styles.infoItem}>
+          <MaterialIcons name="quiz" size={18} color="#3A5689" />
+          <Text style={styles.infoText}>
+            {evaluation.nombreQuestions || '?'} questions
+          </Text>
+        </View>
       </View>
-    </TouchableOpacity>
+
+      {/* Période */}
+      <View style={styles.periodContainer}>
+        <MaterialIcons name="event" size={16} color="#6B7280" />
+        <Text style={styles.periodText}>
+          {formatDate(evaluation.dateDebut)} - {formatDate(evaluation.dateFin)}
+        </Text>
+      </View>
+
+      {/* Bouton Évaluer */}
+      <TouchableOpacity
+        style={[
+          styles.evaluateButton,
+          (isExpired || isUpcoming) && styles.evaluateButtonDisabled
+        ]}
+        onPress={() => onPress(evaluation.id)}
+        disabled={isExpired || isUpcoming}
+        activeOpacity={0.7}
+      >
+        <Text style={[
+          styles.evaluateButtonText,
+          (isExpired || isUpcoming) && styles.evaluateButtonTextDisabled
+        ]}>
+          {isExpired ? 'Terminé' : isUpcoming ? 'Pas encore disponible' : 'Évaluer'}
+        </Text>
+        {!isExpired && !isUpcoming && (
+          <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" />
+        )}
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  cardExpired: {
-    opacity: 0.6,
+  cardDisabled: {
+    opacity: 0.7,
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#EEF2FF',
-    justifyContent: 'center',
-    alignItems: 'center',
+  ueTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
     marginRight: 12,
   },
-  headerText: {
-    flex: 1,
-  },
-  courseName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#3A5689',
-    marginBottom: 4,
-  },
-  quizzTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1F2937',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dateText: {
-    fontSize: 13,
-    color: '#6B7280',
-    marginLeft: 6,
-  },
-  expiredBadge: {
-    backgroundColor: '#FEE2E2',
+  statutBadge: {
     paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: 12,
   },
-  expiredText: {
+  statutText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#DC2626',
+  },
+  classesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 6,
+  },
+  classesText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  periodContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 6,
+  },
+  periodText: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
+  evaluateButton: {
+    backgroundColor: '#3A5689',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 10,
+    gap: 8,
+  },
+  evaluateButtonDisabled: {
+    backgroundColor: '#E5E7EB',
+  },
+  evaluateButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  evaluateButtonTextDisabled: {
+    color: '#9CA3AF',
   },
 });

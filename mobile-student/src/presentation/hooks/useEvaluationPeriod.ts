@@ -18,9 +18,12 @@ export const useEvaluationPeriod = () => {
             setLoading(true);
             setError(null);
             const data = await getEvaluationPeriodUseCase.execute();
+            console.log('Evaluation period loaded:', data);
             setPeriod(data);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+            const errorMessage = err instanceof Error ? err.message : 'Une erreur est survenue';
+            console.error('Error loading evaluation period:', err);
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

@@ -165,9 +165,24 @@ export default function QuizDetailScreen() {
       {/* Question */}
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         <View style={styles.questionCard}>
-          <Text style={styles.questionNumber}>
-            Question {currentQuestionIndex + 1}
-          </Text>
+          <View style={styles.questionHeader}>
+            <Text style={styles.questionNumber}>
+              Question {currentQuestionIndex + 1} sur {quizz.Questions.length}
+            </Text>
+            <View style={[
+              styles.typeBadge,
+              currentQuestion.typeQuestion === TypeQuestion.CHOIX_MULTIPLE 
+                ? styles.typeBadgeMultiple 
+                : styles.typeBadgeOpen
+            ]}>
+              <Text style={styles.typeBadgeText}>
+                {currentQuestion.typeQuestion === TypeQuestion.CHOIX_MULTIPLE 
+                  ? 'Choix multiple' 
+                  : 'Question Ouverte'}
+              </Text>
+            </View>
+          </View>
+
           <Text style={styles.questionText}>{currentQuestion.enonce}</Text>
 
           {currentQuestion.typeQuestion === TypeQuestion.CHOIX_MULTIPLE &&
@@ -325,11 +340,34 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  questionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   questionNumber: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3A5689',
-    marginBottom: 12,
+    color: '#6B7280',
+  },
+  typeBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  typeBadgeMultiple: {
+    backgroundColor: '#DBEAFE',
+  },
+  typeBadgeOpen: {
+    backgroundColor: '#FEF3C7',
+  },
+  typeBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1F2937',
   },
   questionText: {
     fontSize: 18,

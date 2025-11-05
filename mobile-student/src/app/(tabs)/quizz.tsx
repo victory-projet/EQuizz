@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { ScrollView, StyleSheet, StatusBar, View, Alert, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuestions } from '@/src/presentation/hooks/useQuestions';
 import { useQuizSubmission } from '@/src/presentation/hooks/useQuizSubmission';
 import { useCourses } from '@/src/presentation/hooks/useCourses';
@@ -11,15 +12,8 @@ import ProgressBar from '@/src/presentation/components/ProgressBar.component';
 import QuestionCard from '@/src/presentation/components/QuestionCard.component';
 import QuizNavigation from '@/src/presentation/components/QuizNavigation.component';
 
-const LAST_QUIZ_KEY = '@last_quiz_state';
-
-// Stockage simple en mémoire (remplacer par AsyncStorage en production)
-const Asyncstorage = {
-    data: {} as Record<string, string>,
-    getItem: (key: string) => Asyncstorage.data[key] || null,
-    setItem: (key: string, value: string) => { Asyncstorage.data[key] = value; },
-    removeItem: (key: string) => { delete Asyncstorage.data[key]; }
-};
+const CURRENT_QUIZ_KEY = '@current_quiz_state';
+const COMPLETED_QUIZZES_KEY = '@completed_quizzes';
 
 export default function Quizz() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,8 +24,30 @@ export default function Quizz() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState<Map<string, string[]>>(new Map());
     const [isInitialized, setIsInitialized] = useState(false);
+    const [isCompleted, setIsCompleted] = useState(false);
 
     const course = useMemo(() => courses.find(c => c.id === id), [courses, id]);
+
+    // Vérifier si le quiz est déjà terminé
+    useEffect(() => {
+        if (id) {
+            checkIfCompleted();
+        }
+    }, [id]);
+
+    const checkIfCompleted = async () => {
+        try {
+            const completedData = await AsyncStorage.getItem(COMPLETED_QUIZZES_KEY);
+            if (completedData) {
+                const completed = JSON.parse(completedData);
+                if (completed.includes(id)) {
+                    setIsCompleted(true);
+                }
+            }
+        } catch (error) {
+            console.error('Error checking if quiz is completed:', error);
+        }
+    };
 
     // Charger l'état sauvegardé au premier affichage
     useFocusEffect(
@@ -48,16 +64,16 @@ export default function Quizz() {
         }, [id, isInitialized])
     );
 
-    const loadLastQuizState = () => {
+    const loadLastQuizState = async () => {
         try {
-            const savedState = Asyncstorage.getItem(LAST_QUIZ_KEY);
+            const savedState = await AsyncStorage.getItem(CURRENT_QUIZ_KEY);
             if (savedState) {
                 const state = JSON.parse(savedState);
                 // Rediriger vers le dernier quiz en cours
-                if (state.courseId) {
+                if (state.quizId) {
                     router.replace({
                         pathname: '/(tabs)/quizz',
-                        params: { id: state.courseId }
+                        params: { id: state.quizId }
                     });
                 }
             }
@@ -68,15 +84,15 @@ export default function Quizz() {
         }
     };
 
-    const saveQuizState = () => {
+    const saveQuizState = async () => {
         try {
             const state = {
-                courseId: id,
+                quizId: id,
                 currentIndex,
                 answers: Array.from(answers.entries()),
                 timestamp: new Date().toISOString()
             };
-            Asyncstorage.setItem(LAST_QUIZ_KEY, JSON.stringify(state));
+            await AsyncStorage.setItem(CURRENT_QUIZ_KEY, JSON.stringify(state));
         } catch (error) {
             console.error('Error saving quiz state:', error);
         }
@@ -85,26 +101,53 @@ export default function Quizz() {
     // Restaurer l'état du quiz quand on charge un cours
     useEffect(() => {
         if (id && questions.length > 0) {
-            try {
-                const savedState = Asyncstorage.getItem(LAST_QUIZ_KEY);
-                if (savedState) {
-                    const state = JSON.parse(savedState);
-                    if (state.courseId === id) {
-                        setCurrentIndex(state.currentIndex || 0);
-                        setAnswers(new Map(state.answers || []));
-                    }
-                }
-            } catch (error) {
-                console.error('Error restoring quiz state:', error);
-            }
+            loadQuizState();
         }
     }, [id, questions]);
 
-    const clearQuizState = () => {
+    const loadQuizState = async () => {
         try {
-            Asyncstorage.removeItem(LAST_QUIZ_KEY);
+            const savedState = await AsyncStorage.getItem(CURRENT_QUIZ_KEY);
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                if (state.quizId === id) {
+                    // Restaurer l'état du quiz en cours
+                    setCurrentIndex(state.currentIndex || 0);
+                    setAnswers(new Map(state.answers || []));
+                } else {
+                    // Nouveau quiz différent, réinitialiser l'état
+                    setCurrentIndex(0);
+                    setAnswers(new Map());
+                }
+            } else {
+                // Pas d'état sauvegardé, commencer un nouveau quiz
+                setCurrentIndex(0);
+                setAnswers(new Map());
+            }
+        } catch (error) {
+            console.error('Error restoring quiz state:', error);
+        }
+    };
+
+    const clearQuizState = async () => {
+        try {
+            await AsyncStorage.removeItem(CURRENT_QUIZ_KEY);
         } catch (error) {
             console.error('Error clearing quiz state:', error);
+        }
+    };
+
+    const markQuizAsCompleted = async (quizId: string) => {
+        try {
+            const completedData = await AsyncStorage.getItem(COMPLETED_QUIZZES_KEY);
+            const completed = completedData ? JSON.parse(completedData) : [];
+            
+            if (!completed.includes(quizId)) {
+                completed.push(quizId);
+                await AsyncStorage.setItem(COMPLETED_QUIZZES_KEY, JSON.stringify(completed));
+            }
+        } catch (error) {
+            console.error('Error marking quiz as completed:', error);
         }
     };
     const currentQuestion = questions[currentIndex];
@@ -150,7 +193,7 @@ export default function Quizz() {
     const handleSubmit = async () => {
         Alert.alert(
             'Confirmation',
-            'Voulez-vous soumettre vos réponses ?',
+            'Voulez-vous soumettre vos réponses ? Une fois soumis, vous ne pourrez plus accéder à ce quiz.',
             [
                 { text: 'Annuler', style: 'cancel' },
                 {
@@ -167,9 +210,13 @@ export default function Quizz() {
 
                         const success = await submitQuiz(submission);
                         if (success) {
-                            clearQuizState();
+                            // Marquer le quiz comme terminé
+                            await markQuizAsCompleted(id || '');
+                            // Supprimer l'état du quiz en cours
+                            await clearQuizState();
+                            
                             Alert.alert('Succès', 'Quiz soumis avec succès !', [
-                                { text: 'OK', onPress: () => router.replace('/(tabs)/' as any) }
+                                { text: 'OK', onPress: () => router.replace('/(tabs)/quizzes' as any) }
                             ]);
                         }
                     }
@@ -186,6 +233,21 @@ export default function Quizz() {
         return (
             <SafeAreaView style={styles.container} edges={[]}>
                 <LoadingSpinner />
+            </SafeAreaView>
+        );
+    }
+
+    if (isCompleted) {
+        return (
+            <SafeAreaView style={styles.container} edges={[]}>
+                <View style={styles.emptyHeader}>
+                    <Text style={styles.emptyHeaderText}>📝 Quiz</Text>
+                </View>
+                <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>
+                        Ce quiz a déjà été soumis. Vous ne pouvez plus y accéder.
+                    </Text>
+                </View>
             </SafeAreaView>
         );
     }
