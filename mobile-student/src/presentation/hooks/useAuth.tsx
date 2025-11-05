@@ -47,8 +47,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const loginUseCase = container.loginUseCase;
     const result = await loginUseCase.execute(matricule, motDePasse);
     
+    console.log('✅ Login successful:', { 
+      token: result.token.substring(0, 20) + '...', 
+      user: result.utilisateur 
+    });
+    
     setToken(result.token);
     setUtilisateur(result.utilisateur);
+    
+    // Récupérer les informations complètes de l'étudiant
+    try {
+      console.log('📡 Fetching complete student info...');
+      const getStudentInfoUseCase = container.getStudentInfoUseCase;
+      const completeInfo = await getStudentInfoUseCase.execute();
+      console.log('✅ Complete student info:', completeInfo);
+      setUtilisateur(completeInfo);
+    } catch (error) {
+      console.error('⚠️ Could not fetch complete student info:', error);
+      // On continue quand même avec les infos du login
+    }
   };
 
   const logout = async () => {

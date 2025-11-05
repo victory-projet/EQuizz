@@ -4,10 +4,18 @@ const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middlewares/auth.middleware');
 const quizzController = require('../controllers/quizz.controller');
+const studentController = require('../controllers/student.controller');
 
 // --- Sécurisation Globale des Routes Étudiantes ---
 
 router.use(authenticate);
+
+// =========================================================
+// --- Routes pour les informations de l'étudiant ---
+// =========================================================
+
+// GET /api/student/me - Obtenir les informations complètes de l'étudiant connecté
+router.get('/me', studentController.getMe);
 
 // =========================================================
 // --- Routes pour la consultation et la réponse aux Quizz ---

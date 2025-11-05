@@ -19,16 +19,21 @@ export interface QuizzDataSource {
 export class QuizzDataSourceImpl implements QuizzDataSource {
   async getAvailableQuizzes(): Promise<Evaluation[]> {
     try {
+      console.log('📡 Fetching available quizzes from /student/quizzes...');
       const response = await apiClient.get<Evaluation[]>('/student/quizzes');
+      console.log('✅ Quizzes fetched:', response.data.length, 'quiz(zes)');
       return response.data;
     } catch (error) {
+      console.error('❌ Error fetching quizzes:', error);
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
           throw new Error('Non authentifié. Veuillez vous reconnecter.');
         } else if (error.response) {
+          console.error('Response error:', error.response.status, error.response.data);
           const message = error.response.data?.message || 'Erreur lors de la récupération des quizz';
           throw new Error(message);
         } else if (error.request) {
+          console.error('Request error - no response received');
           throw new Error('Impossible de contacter le serveur. Vérifiez votre connexion.');
         }
       }

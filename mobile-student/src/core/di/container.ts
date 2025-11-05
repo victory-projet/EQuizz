@@ -16,6 +16,9 @@ import { QuizzRepositoryImpl } from '../../data/repositories/QuizzRepositoryImpl
 import { GetAvailableQuizzesUseCase } from '../../domain/usecases/GetAvailableQuizzesUseCase';
 import { GetQuizzDetailsUseCase } from '../../domain/usecases/GetQuizzDetailsUseCase';
 import { SubmitQuizzAnswersUseCase } from '../../domain/usecases/SubmitQuizzAnswersUseCase';
+import { StudentDataSourceImpl } from '../../data/datasources/StudentDataSource';
+import { StudentRepositoryImpl } from '../../data/repositories/StudentRepositoryImpl';
+import { GetStudentInfoUseCase } from '../../domain/usecases/GetStudentInfoUseCase';
 
 /**
  * Conteneur d'injection de dépendances
@@ -34,11 +37,17 @@ class DIContainer {
     // Repositories - Quizz
     private _quizzRepository: QuizzRepositoryImpl | null = null;
     
+    // Repositories - Student
+    private _studentRepository: StudentRepositoryImpl | null = null;
+    
     // DataSources - Auth
     private _authDataSource: AuthDataSourceImpl | null = null;
     
     // DataSources - Quizz
     private _quizzDataSource: QuizzDataSourceImpl | null = null;
+    
+    // DataSources - Student
+    private _studentDataSource: StudentDataSourceImpl | null = null;
     
     // Use Cases - Quiz
     private getCoursesUseCase: GetCoursesUseCase;
@@ -134,6 +143,27 @@ class DIContainer {
 
     get submitQuizzAnswersUseCase(): SubmitQuizzAnswersUseCase {
         return new SubmitQuizzAnswersUseCase(this.quizzRepository);
+    }
+
+    // Getters for student datasources
+    get studentDataSource(): StudentDataSourceImpl {
+        if (!this._studentDataSource) {
+            this._studentDataSource = new StudentDataSourceImpl();
+        }
+        return this._studentDataSource;
+    }
+
+    // Getters for student repositories
+    get studentRepository(): StudentRepositoryImpl {
+        if (!this._studentRepository) {
+            this._studentRepository = new StudentRepositoryImpl(this.studentDataSource);
+        }
+        return this._studentRepository;
+    }
+
+    // Getters for student use cases
+    get getStudentInfoUseCase(): GetStudentInfoUseCase {
+        return new GetStudentInfoUseCase(this.studentRepository);
     }
 }
 

@@ -10,6 +10,8 @@ export default function Profil() {
     const { utilisateur, logout } = useAuth();
     const [avatarUri, setAvatarUri] = useState<string | null>(utilisateur?.avatar || null);
 
+    console.log('👤 Utilisateur connecté:', utilisateur);
+
     const handleLogout = async () => {
         Alert.alert(
             'Déconnexion',

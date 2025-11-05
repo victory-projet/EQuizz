@@ -10,14 +10,18 @@ function RootLayoutNav() {
   useEffect(() => {
     if (isLoading) return;
 
-    const inAuthGroup = segments[0]?.includes('auth');
+    const inAuthGroup = segments[0] === '(auth)';
+
+    console.log('Navigation check:', { isAuthenticated, inAuthGroup, segments: segments[0] });
 
     if (!isAuthenticated && !inAuthGroup) {
       // Rediriger vers la page de connexion si non authentifié
-      router.replace('/login' as any);
+      console.log('Redirecting to login...');
+      router.replace('/(auth)/login');
     } else if (isAuthenticated && inAuthGroup) {
       // Rediriger vers l'app si déjà authentifié
-      router.replace('/accueil' as any);
+      console.log('Redirecting to accueil...');
+      router.replace('/(tabs)/accueil');
     }
   }, [isAuthenticated, isLoading, segments]);
 
