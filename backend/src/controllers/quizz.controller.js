@@ -18,7 +18,8 @@ class QuizzController {
   async getQuizzDetails(req, res) {
     try {
       const { id } = req.params;
-      const quizzDetails = await quizzService.getQuizzDetails(id);
+      const etudiantId = req.user.id;
+      const quizzDetails = await quizzService.getQuizzDetails(id, etudiantId);
       res.status(200).json(quizzDetails);
     } catch (error) {
       res.status(404).json({ message: error.message });
@@ -28,13 +29,14 @@ class QuizzController {
   async submitReponses(req, res) {
     try {
       const { id } = req.params; // ID du quizz
-      const { reponses } = req.body; // Tableau de réponses
+      const { reponses, estFinal } = req.body; // Tableau de réponses et flag final
+      const etudiantId = req.user.id;
 
       if (!reponses || !Array.isArray(reponses) || reponses.length === 0) {
         return res.status(400).json({ message: 'Le tableau de réponses est invalide ou vide.' });
       }
 
-      const result = await quizzService.submitReponses(id, reponses);
+      const result = await quizzService.submitReponses(id, etudiantId, reponses, estFinal !== false);
       res.status(201).json(result);
     } catch (error) {
       res.status(400).json({ message: error.message });

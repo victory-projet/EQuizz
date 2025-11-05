@@ -18,7 +18,31 @@ class AuthController {
 
       const { token, utilisateur } = await authService.login(loginIdentifier, motDePasse);
       
-      // On ne renvoie que les informations non sensibles au client
+      // Déterminer le rôle et préparer les informations complètes
+      let role = 'etudiant';
+      let additionalInfo = {};
+
+      if (utilisateur.Administrateur) {
+        role = 'admin';
+      } else if (utilisateur.Enseignant) {
+        role = 'enseignant';
+        additionalInfo = {
+          specialite: utilisateur.Enseignant.specialite
+        };
+      } else if (utilisateur.Etudiant) {
+        role = 'etudiant';
+        additionalInfo = {
+          matricule: utilisateur.Etudiant.matricule,
+          idCarte: utilisateur.Etudiant.idCarte,
+          classe: utilisateur.Etudiant.Classe ? {
+            id: utilisateur.Etudiant.Classe.id,
+            nom: utilisateur.Etudiant.Classe.nom,
+            niveau: utilisateur.Etudiant.Classe.niveau
+          } : null
+        };
+      }
+      
+      // Retourner toutes les informations non sensibles
       res.status(200).json({
         token,
         utilisateur: {
@@ -26,7 +50,8 @@ class AuthController {
           nom: utilisateur.nom,
           prenom: utilisateur.prenom,
           email: utilisateur.email,
-          role: utilisateur.Administrateur ? 'admin' : (utilisateur.Enseignant ? 'enseignant' : 'etudiant')
+          role,
+          ...additionalInfo
         }
       });
     } catch (error) {

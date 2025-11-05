@@ -43,9 +43,17 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
+      console.log('🔑 Starting login...');
       await login(matricule, motDePasse);
-      // La navigation sera gérée automatiquement par le layout
+      console.log('✅ Login completed, navigating to accueil...');
+      
+      // Petit délai pour s'assurer que le state est mis à jour
+      setTimeout(() => {
+        console.log('🚀 Navigating now...');
+        router.replace('/(tabs)/accueil');
+      }, 100);
     } catch (error) {
+      console.error('❌ Login error:', error);
       Alert.alert(
         'Erreur de connexion',
         error instanceof Error ? error.message : 'Une erreur est survenue'

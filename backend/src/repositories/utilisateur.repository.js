@@ -14,13 +14,18 @@ class UtilisateurRepository {
       },
       include: [{
         model: db.Etudiant,
-        attributes: ['matricule'], // On inclut Etudiant pour pouvoir chercher sur le matricule
+        attributes: ['matricule', 'idCarte'], // Inclure tous les attributs nécessaires
+        include: [{
+          model: db.Classe,
+          attributes: ['id', 'nom', 'niveau']
+        }],
         required: false, // On met 'false' car un admin n'a pas de profil étudiant
       }, {
         model: db.Administrateur, // On inclut le profil Admin
         required: false,
       }, {
         model: db.Enseignant, // On inclut le profil Enseignant
+        attributes: ['specialite'],
         required: false,
       }]
     });

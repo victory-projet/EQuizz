@@ -10,6 +10,8 @@ export default function Profil() {
     const { utilisateur, logout } = useAuth();
     const [avatarUri, setAvatarUri] = useState<string | null>(utilisateur?.avatar || null);
 
+    console.log('👤 Utilisateur connecté:', utilisateur);
+
     const handleLogout = async () => {
         Alert.alert(
             'Déconnexion',
@@ -74,101 +76,9 @@ export default function Profil() {
                     <MaterialIcons name="logout" size={24} color="#DC2626" />
                 </TouchableOpacity>
             </View>
-
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                {/* Avatar Section */}
-                <View style={styles.avatarSection}>
-                    <TouchableOpacity onPress={handleChangeAvatar} style={styles.avatarContainer}>
-                        {avatarUri ? (
-                            <Image source={{ uri: avatarUri }} style={styles.avatar} />
-                        ) : (
-                            <View style={styles.avatarPlaceholder}>
-                                <Text style={styles.avatarInitials}>
-                                    {utilisateur.prenom[0]}{utilisateur.nom[0]}
-                                </Text>
-                            </View>
-                        )}
-                        <View style={styles.cameraIconContainer}>
-                            <MaterialIcons name="camera-alt" size={20} color="#FFFFFF" />
-                        </View>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Info Card */}
-                <View style={styles.infoCard}>
-                    <Text style={styles.fullName}>
-                        {utilisateur.prenom} {utilisateur.nom}
-                    </Text>
-                    <Text style={styles.classInfo}>
-                        {utilisateur.Classe?.nom || 'Classe non définie'} • {utilisateur.Classe?.Niveau?.nom || 'Niveau non défini'}
-                    </Text>
-                    <Text style={styles.schoolInfo}>
-                        {utilisateur.Ecole?.nom || 'École non définie'}
-                    </Text>
-                </View>
-
-                {/* Form Section */}
-                <View style={styles.formSection}>
-                    <View style={styles.formField}>
-                        <Text style={styles.fieldLabel}>Nom & Prénom</Text>
-                        <View style={styles.fieldValue}>
-                            <Text style={styles.fieldText}>
-                                {utilisateur.nom} {utilisateur.prenom}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.formField}>
-                        <Text style={styles.fieldLabel}>Mot de passe</Text>
-                        <View style={styles.fieldValue}>
-                            <Text style={styles.fieldText}>••••••••</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.formField}>
-                        <Text style={styles.fieldLabel}>Matricule</Text>
-                        <View style={styles.fieldValue}>
-                            <Text style={styles.fieldText}>{utilisateur.matricule}</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.formField}>
-                        <Text style={styles.fieldLabel}>Année Académique</Text>
-                        <View style={styles.fieldValue}>
-                            <Text style={styles.fieldText}>
-                                {utilisateur.anneeScolaire || '2024-2025'}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.formField}>
-                        <Text style={styles.fieldLabel}>Niveau</Text>
-                        <View style={styles.fieldValue}>
-                            <Text style={styles.fieldText}>
-                                {utilisateur.Classe?.Niveau?.nom || 'Non défini'}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.formField}>
-                        <Text style={styles.fieldLabel}>Classe</Text>
-                        <View style={styles.fieldValue}>
-                            <Text style={styles.fieldText}>
-                                {utilisateur.Classe?.nom || 'Non définie'}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Logout Button */}
-                <PrimaryButton
-                    title="Se Déconnecter"
-                    onPress={handleLogout}
-                    style={styles.logoutButton}
-                />
-
-                <View style={styles.bottomSpacing} />
-            </ScrollView>
+            <View >
+                <Text>Mon Profil</Text>                
+            </View>
         </SafeAreaView>
     );
 }
