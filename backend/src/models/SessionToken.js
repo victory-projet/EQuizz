@@ -31,10 +31,11 @@ const SessionToken = sequelize.define('SessionToken', {
     allowNull: false,
   },
 }, {
+  underscored: true,
   indexes: [
     {
       unique: true,
-      fields: ['etudiantId', 'evaluationId']
+      fields: ['etudiant_id', 'evaluation_id']
     }
   ],
   hooks: {
