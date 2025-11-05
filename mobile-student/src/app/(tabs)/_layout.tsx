@@ -34,7 +34,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="quizz"
         options={{
-          href: null, // Cache cet onglet de la navigation
+          href: null, // Cache cet onglet - utilisé pour afficher un quiz spécifique
         }}
       />
 

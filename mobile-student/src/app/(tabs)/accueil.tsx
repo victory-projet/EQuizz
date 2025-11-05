@@ -23,26 +23,36 @@ export default function Accueil() {
         } : null,
         quizzes: quizzes.length,
         loading,
-        quizzesError
+        error
     });
 
     console.log('📊 Quiz data:', quizzes);
 
-    const filteredQuizzes = quizzes.filter(quiz =>
-        quiz.titre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        quiz.Cours.nom.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredQuizzes = quizzes.filter(quiz => {
+        const coursNom = quiz.Cours?.nom || quiz.Cour?.nom || '';
+        return quiz.titre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               coursNom.toLowerCase().includes(searchQuery.toLowerCase());
+    });
 
-    const handleQuizPress = (quizId: string) => {
-        const quiz = quizzes.find(q => q.id === quizId);
+    const handleQuizPress = (evaluationId: string) => {
+        const evaluation = quizzes.find(q => q.id === evaluationId);
+        const coursNom = evaluation?.Cours?.nom || evaluation?.Cour?.nom || 'Cours';
+        const quizzId = evaluation?.Quizz?.id;
+        
+        if (!quizzId) {
+            Alert.alert('Erreur', 'Ce quiz n\'est pas encore disponible.');
+            return;
+        }
+        
         Alert.alert(
             'Démarrer le quiz',
-            `${quiz?.titre}\n${quiz?.Cours.nom}`,
+            `${evaluation?.titre}\n${coursNom}`,
             [
                 { text: 'Annuler', style: 'cancel' },
                 {
                     text: 'Commencer',
-                    onPress: () => router.push(`/quiz/${quizId}` as any)
+                    // Navigation vers le quiz dans les tabs
+                    onPress: () => router.push(`/(tabs)/quizz?id=${quizzId}`)
                 }
             ]
         );
@@ -102,7 +112,7 @@ export default function Accueil() {
                                     Quiz chargés : {quizzes.length}
                                 </Text>
                                 <Text style={styles.debugText}>
-                                    Erreur : {quizzesError || 'Aucune'}
+                                    Erreur : {error || 'Aucune'}
                                 </Text>
                             </View>
                         )}

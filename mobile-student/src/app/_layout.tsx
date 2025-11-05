@@ -8,7 +8,12 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return;
+    console.log('🔄 Navigation useEffect triggered:', { isAuthenticated, isLoading, segments: segments[0] });
+    
+    if (isLoading) {
+      console.log('⏳ Still loading, skipping navigation...');
+      return;
+    }
 
     const inAuthGroup = segments[0] === '(auth)';
 
@@ -22,6 +27,8 @@ function RootLayoutNav() {
       // Rediriger vers l'app si déjà authentifié
       console.log('Redirecting to accueil...');
       router.replace('/(tabs)/accueil');
+    } else {
+      console.log('✅ No navigation needed');
     }
   }, [isAuthenticated, isLoading, segments]);
 

@@ -52,20 +52,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       user: result.utilisateur 
     });
     
+    // Mettre à jour le token et l'utilisateur immédiatement
     setToken(result.token);
     setUtilisateur(result.utilisateur);
     
-    // Récupérer les informations complètes de l'étudiant
-    try {
-      console.log('📡 Fetching complete student info...');
-      const getStudentInfoUseCase = container.getStudentInfoUseCase;
-      const completeInfo = await getStudentInfoUseCase.execute();
-      console.log('✅ Complete student info:', completeInfo);
-      setUtilisateur(completeInfo);
-    } catch (error) {
-      console.error('⚠️ Could not fetch complete student info:', error);
-      // On continue quand même avec les infos du login
-    }
+    console.log('🔄 Auth state updated, isAuthenticated should be true now');
+    
+    // Récupérer les informations complètes de l'étudiant en arrière-plan
+    // Ne pas attendre pour ne pas bloquer la navigation
+    setTimeout(async () => {
+      try {
+        console.log('📡 Fetching complete student info in background...');
+        const getStudentInfoUseCase = container.getStudentInfoUseCase;
+        const completeInfo = await getStudentInfoUseCase.execute();
+        console.log('✅ Complete student info:', completeInfo);
+        setUtilisateur(completeInfo);
+      } catch (error) {
+        console.error('⚠️ Could not fetch complete student info:', error);
+        // On continue quand même avec les infos du login
+      }
+    }, 100);
   };
 
   const logout = async () => {
@@ -74,13 +80,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUtilisateur(null);
   };
 
+  const isAuthenticated = !!token && !!utilisateur;
+  
+  // Log pour debug
+  useEffect(() => {
+    console.log('🔐 Auth state changed:', { isAuthenticated, hasToken: !!token, hasUser: !!utilisateur, isLoading });
+  }, [isAuthenticated, token, utilisateur, isLoading]);
+
   return (
     <AuthContext.Provider
       value={{
         utilisateur,
         token,
         isLoading,
-        isAuthenticated: !!token && !!utilisateur,
+        isAuthenticated,
         login,
         logout,
       }}

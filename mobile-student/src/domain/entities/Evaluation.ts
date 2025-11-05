@@ -9,10 +9,19 @@ export interface Evaluation {
   dateFin: string;
   statut?: 'En cours' | 'À venir' | 'Terminé';
   nombreQuestions?: number;
-  Cours: {
+  Cours?: {
     nom: string;
+  };
+  Cour?: {  // L'API retourne parfois "Cour" au lieu de "Cours"
+    nom: string;
+    code?: string;
   };
   Classes?: Array<{
     nom: string;
   }>;
+  Quizz?: {
+    id: string;
+    titre?: string;
+    instructions?: string;
+  };
 }

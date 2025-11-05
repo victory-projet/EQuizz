@@ -52,11 +52,14 @@ export const QuizzCard: React.FC<QuizzCardProps> = ({ evaluation, onPress }) => 
     }
   };
 
+  // L'API peut retourner "Cours" ou "Cour"
+  const coursNom = evaluation.Cours?.nom || evaluation.Cour?.nom || 'Cours';
+
   return (
     <View style={[styles.card, (isExpired || isUpcoming) && styles.cardDisabled]}>
       {/* Header avec titre et badge statut */}
       <View style={styles.header}>
-        <Text style={styles.ueTitle}>UE - {evaluation.Cours.nom}</Text>
+        <Text style={styles.ueTitle}>UE - {coursNom}</Text>
         <View style={[styles.statutBadge, { backgroundColor: getStatutBgColor() }]}>
           <Text style={[styles.statutText, { color: getStatutColor() }]}>
             {statut}
