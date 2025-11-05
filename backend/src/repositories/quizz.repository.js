@@ -27,7 +27,12 @@ class QuizzRepository {
         {
           model: db.Classe,
           where: { id: classeId },
-          attributes: [] // On ne veut pas les attributs de la classe, juste filtrer
+          attributes: ['id', 'nom', 'niveau'],
+          through: { attributes: [] } // Exclure les attributs de la table de jonction
+        },
+        {
+          model: db.Quizz,
+          attributes: ['id', 'titre', 'instructions']
         }
       ],
       order: [['dateFin', 'ASC']] // Les plus urgentes en premier

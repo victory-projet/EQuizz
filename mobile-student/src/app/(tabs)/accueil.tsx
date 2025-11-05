@@ -3,22 +3,15 @@ import { ScrollView, StyleSheet, StatusBar, View, Alert, Text } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAvailableQuizzes } from '../../presentation/hooks/useAvailableQuizzes';
-import { useEvaluationPeriod } from '../../presentation/hooks/useEvaluationPeriod';
 import { useAuth } from '../../presentation/hooks/useAuth';
 import Header from '../../presentation/components/Header.component';
-import PeriodBanner from '../../presentation/components/PeriodBanner.component';
 import { QuizzCard } from '../../presentation/components/QuizzCard';
 import LoadingSpinner from '../../presentation/components/LoadingSpinner.component';
 
 export default function Accueil() {
     const [searchQuery, setSearchQuery] = useState('');
     const { utilisateur } = useAuth();
-    const { quizzes, loading: quizzesLoading, error: quizzesError } = useAvailableQuizzes();
-    const { period, loading: periodLoading, error: periodError } = useEvaluationPeriod();
-
-    // Seul le chargement des quiz est bloquant
-    const loading = quizzesLoading;
-    const error = quizzesError; // L'erreur de période n'est pas bloquante
+    const { quizzes, loading, error } = useAvailableQuizzes();
 
     console.log('Accueil state:', {
         utilisateur: utilisateur ? {
@@ -30,9 +23,7 @@ export default function Accueil() {
         } : null,
         quizzes: quizzes.length,
         loading,
-        quizzesError,
-        periodError,
-        periodLoading
+        quizzesError
     });
 
     console.log('📊 Quiz data:', quizzes);
@@ -68,8 +59,6 @@ export default function Accueil() {
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
             />
-
-            {period && !periodError && <PeriodBanner period={period} />}
 
             <ScrollView
                 style={styles.scrollView}

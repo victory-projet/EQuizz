@@ -163,9 +163,9 @@ router.post('/seed', async (req, res) => {
         const evaluation = await db.Evaluation.create({
             titre: 'Évaluation Mi-Parcours - Bases de Données',
             description: 'Évaluation de satisfaction du cours de Bases de Données Avancées',
-            dateDebut: new Date('2024-11-01T08:00:00'),
-            dateFin: new Date('2024-11-15T23:59:59'),
-            datePublication: new Date('2024-11-01T08:00:00'),
+            dateDebut: new Date('2025-11-01T08:00:00'),
+            dateFin: new Date('2025-12-31T23:59:59'),
+            datePublication: new Date('2025-11-01T08:00:00'),
             typeEvaluation: 'MI_PARCOURS',
             statut: 'PUBLIEE',
             administrateur_id: adminUser.id,
