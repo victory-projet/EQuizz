@@ -9,6 +9,11 @@ export interface Evaluation {
   dateFin: string;
   statut?: 'En cours' | 'À venir' | 'Terminé';
   nombreQuestions?: number;
+  // Statut de l'étudiant pour cette évaluation
+  statutEtudiant?: 'NOUVEAU' | 'EN_COURS' | 'TERMINE';
+  tokenAnonyme?: string | null;
+  dateDebutSession?: string | null;
+  dateFinSession?: string | null;
   Cours?: {
     nom: string;
   };

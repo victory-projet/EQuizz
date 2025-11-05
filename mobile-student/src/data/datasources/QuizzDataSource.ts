@@ -43,15 +43,20 @@ export class QuizzDataSourceImpl implements QuizzDataSource {
 
   async getQuizzDetails(id: string): Promise<Quizz> {
     try {
+      console.log(`📡 Fetching quiz details from /student/quizzes/${id}...`);
       const response = await apiClient.get<Quizz>(`/student/quizzes/${id}`);
+      console.log('✅ Quiz details fetched:', response.data);
       return response.data;
     } catch (error) {
+      console.error('❌ Error fetching quiz details:', error);
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
           throw new Error('Non authentifié. Veuillez vous reconnecter.');
         } else if (error.response?.status === 404) {
+          console.error('404 Error details:', error.response.data);
           throw new Error('Quizz non trouvé');
         } else if (error.response) {
+          console.error('Response error:', error.response.status, error.response.data);
           const message = error.response.data?.message || 'Erreur lors de la récupération du quizz';
           throw new Error(message);
         } else if (error.request) {

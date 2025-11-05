@@ -43,14 +43,26 @@ export default function Accueil() {
             Alert.alert('Erreur', 'Ce quiz n\'est pas encore disponible.');
             return;
         }
+
+        // Si le quiz est déjà terminé, ne pas permettre de le refaire
+        if (evaluation?.statutEtudiant === 'TERMINE') {
+            Alert.alert('Quiz terminé', 'Vous avez déjà complété ce quiz.');
+            return;
+        }
+        
+        const message = evaluation?.statutEtudiant === 'EN_COURS'
+            ? 'Reprendre là où vous vous êtes arrêté ?'
+            : 'Commencer ce quiz ?';
+        
+        const buttonText = evaluation?.statutEtudiant === 'EN_COURS' ? 'Reprendre' : 'Commencer';
         
         Alert.alert(
-            'Démarrer le quiz',
-            `${evaluation?.titre}\n${coursNom}`,
+            evaluation?.titre || 'Quiz',
+            `${coursNom}\n\n${message}`,
             [
                 { text: 'Annuler', style: 'cancel' },
                 {
-                    text: 'Commencer',
+                    text: buttonText,
                     // Navigation vers le quiz dans les tabs
                     onPress: () => router.push(`/(tabs)/quizz?id=${quizzId}`)
                 }

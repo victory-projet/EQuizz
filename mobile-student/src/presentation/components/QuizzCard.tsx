@@ -18,53 +18,42 @@ export const QuizzCard: React.FC<QuizzCardProps> = ({ evaluation, onPress }) => 
     });
   };
 
-  const getStatut = () => {
-    if (evaluation.statut) return evaluation.statut;
-    
-    const now = new Date();
-    const debut = new Date(evaluation.dateDebut);
-    const fin = new Date(evaluation.dateFin);
-    
-    if (now < debut) return 'À venir';
-    if (now > fin) return 'Terminé';
-    return 'En cours';
-  };
-
-  const statut = getStatut();
-  const isExpired = statut === 'Terminé';
-  const isUpcoming = statut === 'À venir';
-
-  const getStatutColor = () => {
-    switch (statut) {
-      case 'En cours': return '#10B981';
-      case 'À venir': return '#F59E0B';
-      case 'Terminé': return '#6B7280';
-      default: return '#6B7280';
-    }
-  };
-
-  const getStatutBgColor = () => {
-    switch (statut) {
-      case 'En cours': return '#D1FAE5';
-      case 'À venir': return '#FEF3C7';
-      case 'Terminé': return '#F3F4F6';
-      default: return '#F3F4F6';
-    }
-  };
+  // Vérifier si l'évaluation est expirée ou à venir
+  const now = new Date();
+  const fin = new Date(evaluation.dateFin);
+  const isExpired = now > fin;
 
   // L'API peut retourner "Cours" ou "Cour"
   const coursNom = evaluation.Cours?.nom || evaluation.Cour?.nom || 'Cours';
 
+  // Statut étudiant
+  const getStudentStatusConfig = () => {
+    switch (evaluation.statutEtudiant) {
+      case 'NOUVEAU':
+        return { label: '✨ Nouveau', color: '#3B82F6', bgColor: '#DBEAFE' };
+      case 'EN_COURS':
+        return { label: '⏳ En cours', color: '#F59E0B', bgColor: '#FEF3C7' };
+      case 'TERMINE':
+        return { label: '✅ Terminé', color: '#10B981', bgColor: '#D1FAE5' };
+      default:
+        return null;
+    }
+  };
+
+  const studentStatus = getStudentStatusConfig();
+
   return (
-    <View style={[styles.card, (isExpired || isUpcoming) && styles.cardDisabled]}>
+    <View style={[styles.card, isExpired && styles.cardDisabled]}>
       {/* Header avec titre et badge statut */}
       <View style={styles.header}>
         <Text style={styles.ueTitle}>UE - {coursNom}</Text>
-        <View style={[styles.statutBadge, { backgroundColor: getStatutBgColor() }]}>
-          <Text style={[styles.statutText, { color: getStatutColor() }]}>
-            {statut}
-          </Text>
-        </View>
+        {studentStatus && (
+          <View style={[styles.statutBadge, { backgroundColor: studentStatus.bgColor }]}>
+            <Text style={[styles.statutText, { color: studentStatus.color }]}>
+              {studentStatus.label}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Classes */}
@@ -99,19 +88,25 @@ export const QuizzCard: React.FC<QuizzCardProps> = ({ evaluation, onPress }) => 
       <TouchableOpacity
         style={[
           styles.evaluateButton,
-          (isExpired || isUpcoming) && styles.evaluateButtonDisabled
+          (isExpired || evaluation.statutEtudiant === 'TERMINE') && styles.evaluateButtonDisabled
         ]}
         onPress={() => onPress(evaluation.id)}
-        disabled={isExpired || isUpcoming}
+        disabled={isExpired || evaluation.statutEtudiant === 'TERMINE'}
         activeOpacity={0.7}
       >
         <Text style={[
           styles.evaluateButtonText,
-          (isExpired || isUpcoming) && styles.evaluateButtonTextDisabled
+          (isExpired || evaluation.statutEtudiant === 'TERMINE') && styles.evaluateButtonTextDisabled
         ]}>
-          {isExpired ? 'Terminé' : isUpcoming ? 'Pas encore disponible' : 'Évaluer'}
+          {evaluation.statutEtudiant === 'TERMINE' 
+            ? 'Quiz complété' 
+            : evaluation.statutEtudiant === 'EN_COURS'
+            ? 'Continuer'
+            : isExpired 
+            ? 'Expiré' 
+            : 'Commencer'}
         </Text>
-        {!isExpired && !isUpcoming && (
+        {!isExpired && evaluation.statutEtudiant !== 'TERMINE' && (
           <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" />
         )}
       </TouchableOpacity>
@@ -142,6 +137,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
   },
+
   ueTitle: {
     flex: 1,
     fontSize: 18,
