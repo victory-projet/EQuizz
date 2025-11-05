@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, StatusBar, View, Alert, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useAvailableQuizzes } from '../../presentation/hooks/useAvailableQuizzes';
 import { useAuth } from '../../presentation/hooks/useAuth';
 import Header from '../../presentation/components/Header.component';
@@ -11,7 +11,15 @@ import LoadingSpinner from '../../presentation/components/LoadingSpinner.compone
 export default function Accueil() {
     const [searchQuery, setSearchQuery] = useState('');
     const { utilisateur } = useAuth();
-    const { quizzes, loading, error } = useAvailableQuizzes();
+    const { quizzes, loading, error, reload } = useAvailableQuizzes();
+
+    // Recharger les quiz quand on revient sur cette page
+    useFocusEffect(
+        React.useCallback(() => {
+            console.log('🔄 Accueil focused - reloading quizzes...');
+            reload();
+        }, [])
+    );
 
     console.log('Accueil state:', {
         utilisateur: utilisateur ? {
@@ -31,14 +39,14 @@ export default function Accueil() {
     const filteredQuizzes = quizzes.filter(quiz => {
         const coursNom = quiz.Cours?.nom || quiz.Cour?.nom || '';
         return quiz.titre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               coursNom.toLowerCase().includes(searchQuery.toLowerCase());
+            coursNom.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
     const handleQuizPress = (evaluationId: string) => {
         const evaluation = quizzes.find(q => q.id === evaluationId);
         const coursNom = evaluation?.Cours?.nom || evaluation?.Cour?.nom || 'Cours';
         const quizzId = evaluation?.Quizz?.id;
-        
+
         if (!quizzId) {
             Alert.alert('Erreur', 'Ce quiz n\'est pas encore disponible.');
             return;
@@ -49,13 +57,13 @@ export default function Accueil() {
             Alert.alert('Quiz terminé', 'Vous avez déjà complété ce quiz.');
             return;
         }
-        
+
         const message = evaluation?.statutEtudiant === 'EN_COURS'
             ? 'Reprendre là où vous vous êtes arrêté ?'
             : 'Commencer ce quiz ?';
-        
+
         const buttonText = evaluation?.statutEtudiant === 'EN_COURS' ? 'Reprendre' : 'Commencer';
-        
+
         Alert.alert(
             evaluation?.titre || 'Quiz',
             `${coursNom}\n\n${message}`,
@@ -64,7 +72,12 @@ export default function Accueil() {
                 {
                     text: buttonText,
                     // Navigation vers le quiz dans les tabs
-                    onPress: () => router.push(`/(tabs)/quizz?id=${quizzId}`)
+                    onPress: async () => {
+                        // Sauvegarder l'ID du quiz en cours
+                        const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+                        await AsyncStorage.setItem('@current_quiz_id', quizzId);
+                        router.push(`/(tabs)/quizz?id=${quizzId}`);
+                    }
                 }
             ]
         );
@@ -99,35 +112,12 @@ export default function Accueil() {
                             {searchQuery ? '🔍 Aucun résultat' : '📚 Aucun quiz disponible'}
                         </Text>
                         <Text style={styles.emptyText}>
-                            {searchQuery 
-                                ? 'Essayez avec d\'autres mots-clés' 
+                            {searchQuery
+                                ? 'Essayez avec d\'autres mots-clés'
                                 : 'Aucune évaluation n\'est disponible pour le moment.\n\nRevenez plus tard ou contactez votre enseignant.'}
                         </Text>
+
                         
-                        {/* Debug Info */}
-                        {utilisateur && (
-                            <View style={styles.debugContainer}>
-                                <Text style={styles.debugTitle}>🔍 Informations de debug :</Text>
-                                <Text style={styles.debugText}>
-                                    Utilisateur : {utilisateur.prenom} {utilisateur.nom}
-                                </Text>
-                                <Text style={styles.debugText}>
-                                    Matricule : {utilisateur.matricule || 'Non défini'}
-                                </Text>
-                                <Text style={styles.debugText}>
-                                    Classe : {utilisateur.Classe?.nom || 'Non définie'}
-                                </Text>
-                                <Text style={styles.debugText}>
-                                    Niveau : {utilisateur.Classe?.Niveau?.nom || 'Non défini'}
-                                </Text>
-                                <Text style={styles.debugText}>
-                                    Quiz chargés : {quizzes.length}
-                                </Text>
-                                <Text style={styles.debugText}>
-                                    Erreur : {error || 'Aucune'}
-                                </Text>
-                            </View>
-                        )}
                     </View>
                 ) : (
                     <>

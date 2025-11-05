@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuizzDetails } from '../../presentation/hooks/useQuizzDetails';
 import { useQuizzSubmission } from '../../presentation/hooks/useQuizzSubmission';
 import { useAvailableQuizzes } from '../../presentation/hooks/useAvailableQuizzes';
@@ -24,6 +25,12 @@ import { useAuth } from '../../presentation/hooks/useAuth';
 function QuizListView() {
     const { quizzes, loading, error, reload } = useAvailableQuizzes();
     const { utilisateur } = useAuth();
+
+    // Recharger les quiz quand on revient sur cette page
+    React.useEffect(() => {
+        console.log('🔄 Quiz list focused - reloading quizzes...');
+        reload();
+    }, []);
 
     // Grouper les quiz par statut
     const nouveaux = quizzes.filter(q => q.statutEtudiant === 'NOUVEAU');
@@ -55,7 +62,11 @@ function QuizListView() {
                 { text: 'Annuler', style: 'cancel' },
                 {
                     text: evaluation.statutEtudiant === 'EN_COURS' ? 'Reprendre' : 'Commencer',
-                    onPress: () => router.push(`/(tabs)/quizz?id=${quizzId}`)
+                    onPress: async () => {
+                        // Sauvegarder l'ID du quiz en cours
+                        await AsyncStorage.setItem('@current_quiz_id', quizzId);
+                        router.push(`/(tabs)/quizz?id=${quizzId}`);
+                    }
                 }
             ]
         );
@@ -173,6 +184,15 @@ function QuizDetailView({ id }: { id: string }) {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<Map<string, string>>(new Map());
 
+    // Sauvegarder l'ID du quiz en cours dans AsyncStorage
+    React.useEffect(() => {
+        if (id && !loading && !error) {
+            AsyncStorage.setItem('@current_quiz_id', id).catch(err =>
+                console.error('Erreur lors de la sauvegarde du quiz en cours:', err)
+            );
+        }
+    }, [id, loading, error]);
+
     if (loading) {
         return (
             <SafeAreaView style={styles.container}>
@@ -265,13 +285,19 @@ function QuizDetailView({ id }: { id: string }) {
                         const success = await submitQuizz(id!, { reponses });
 
                         if (success) {
+                            // Supprimer le quiz en cours d'AsyncStorage
+                            await AsyncStorage.removeItem('@current_quiz_id');
+                            
                             Alert.alert(
                                 'Succès',
                                 'Vos réponses ont été soumises avec succès !',
                                 [
                                     {
                                         text: 'OK',
-                                        onPress: () => router.push('/(tabs)/quizz'),
+                                        onPress: () => {
+                                            // Rediriger vers l'accueil pour voir le statut mis à jour
+                                            router.replace('/(tabs)/accueil');
+                                        },
                                     },
                                 ]
                             );
@@ -409,11 +435,43 @@ function QuizDetailView({ id }: { id: string }) {
 // Composant principal qui décide quelle vue afficher
 export default function QuizScreen() {
     const params = useLocalSearchParams<{ id?: string }>();
-    const id = params.id;
+    const paramId = params.id;
+    const [currentQuizId, setCurrentQuizId] = React.useState<string | null>(null);
+    const [loading, setLoading] = React.useState(true);
 
-    // Si un ID est fourni, afficher les détails du quiz
-    if (id) {
-        return <QuizDetailView id={id} />;
+    // Charger le quiz en cours depuis AsyncStorage
+    React.useEffect(() => {
+        const loadCurrentQuiz = async () => {
+            try {
+                const savedQuizId = await AsyncStorage.getItem('@current_quiz_id');
+                if (savedQuizId) {
+                    console.log('📦 Quiz en cours trouvé dans AsyncStorage:', savedQuizId);
+                    setCurrentQuizId(savedQuizId);
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement du quiz en cours:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadCurrentQuiz();
+    }, []);
+
+    // Si un ID est fourni en paramètre, l'utiliser en priorité
+    const quizIdToDisplay = paramId || currentQuizId;
+
+    if (loading) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <LoadingSpinner />
+            </SafeAreaView>
+        );
+    }
+
+    // Si un ID est disponible (paramètre ou AsyncStorage), afficher les détails du quiz
+    if (quizIdToDisplay) {
+        return <QuizDetailView id={quizIdToDisplay} />;
     }
 
     // Sinon, afficher la liste des quiz
