@@ -18,9 +18,12 @@ export const useCourses = () => {
             setLoading(true);
             setError(null);
             const data = await getCoursesUseCase.execute();
+            console.log('Courses loaded:', data);
             setCourses(data);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+            const errorMessage = err instanceof Error ? err.message : 'Une erreur est survenue';
+            console.error('Error loading courses:', err);
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
