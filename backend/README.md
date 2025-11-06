@@ -1,80 +1,211 @@
-# Projet EQuizz - Backend
+# EQuizz - Backend API
 
-Ce projet contient l'API RESTful pour la plateforme EQuizz. Il est construit avec Node.js, Express, et utilise Sequelize comme ORM pour communiquer avec une base de données MySQL.
+API RESTful pour la plateforme EQuizz, un système d'évaluation anonyme pour établissements d'enseignement.
 
-## Stack Technique
-- **Node.js** (v18+)
-- **Express.js**
-- **Sequelize** (ORM)
-- **MySQL**
+## 🚀 Stack Technique
 
-## Prérequis
-Avant de commencer, assurez-vous d'avoir installé :
+- **Node.js** (v22+)
+- **Express.js** - Framework web
+- **Sequelize** - ORM pour MySQL
+- **MySQL** - Base de données
+- **JWT** - Authentification
+- **SendGrid** - Envoi d'emails
+- **Bcrypt** - Hachage des mots de passe
+
+## 📋 Prérequis
+
+- Node.js v18+ et npm
+- MySQL 8.0+
 - Git
-- Node.js et npm
-- Un serveur de base de données MySQL fonctionnant localement (ex: via WAMP, XAMPP, MySQL Workbench, ou Docker).
 
-## Installation & Lancement
+## ⚙️ Installation
 
-1.  **Cloner le Dépôt Principal**
-    Si vous n'avez pas encore le projet, clonez le dépôt principal `equizz-platform`.
-    ```bash
-    git clone <URL_DE_VOTRE_DEPOT_GIT>
-    ```
+### 1. Cloner le projet
+```bash
+git clone <URL_DU_DEPOT>
+cd EQuizz/backend
+```
 
-2.  **Naviguer vers le Dossier Backend**
-    ```bash
-    cd EQuizz/backend
-    ```
+### 2. Installer les dépendances
+```bash
+npm install
+```
 
-3.  **Installer les Dépendances**
-    Cette commande va installer tous les packages nécessaires listés dans `package.json`.
-    ```bash
-    npm install
-    ```
+### 3. Configuration de l'environnement
 
-4.  **Configurer l'Environnement**
-    Ce projet utilise un fichier `.env` pour gérer les variables d'environnement et les secrets.
-    
-    a. Créez une copie du fichier d'exemple :
-    ```bash
-    # Sur Windows (cmd)
-    copy .env.example .env
-    
-    # Sur Linux / macOS / Git Bash
-    cp .env.example .env
-    ```
-    # Fichier env.example
-    DB_HOST=localhost
-    DB_USER=root
-    DB_PASSWORD=votre_mot_de_passe_local
-    DB_NAME=equizz_db
-    DB_DIALECT=mysql
-    
-    b. Ouvrez le nouveau fichier `.env` et modifiez les valeurs pour correspondre à votre configuration MySQL locale, notamment `DB_PASSWORD`.
+Créer un fichier `.env` à la racine du dossier backend :
 
-5.  **Configurer la Base de Données**
-    a. Connectez-vous à votre serveur MySQL et créez la base de données (si elle n'existe pas déjà).
-    ```sql
-    CREATE DATABASE equizz_db;
-    ```
-    b. Lancez le script de synchronisation pour créer toutes les tables et leurs relations.
-    ```bash
-    npm run db:sync
-    ```
+```env
+# Base de données
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=votre_mot_de_passe
+DB_NAME=equizz_db
+DB_DIALECT=mysql
 
-6.  **Lancer le Serveur de Développement**
-    Cette commande démarre le serveur avec `nodemon`, qui redémarrera automatiquement à chaque modification de fichier.
-    ```bash
-    npm run start:dev
-    ```
-    Votre API est maintenant accessible à l'adresse `http://localhost:3000` (ou le port que vous avez configuré).
+# JWT
+JWT_SECRET=votre_secret_jwt_tres_securise
+JWT_EXPIRES_IN=8h
 
-## Workflow Git
+# Email (SendGrid)
+SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+SENDGRID_VERIFIED_SENDER=votre.email@verifie.com
 
-Tout développement doit se faire sur une **branche de fonctionnalité** créée à partir de `develop`.
+# Serveur
+PORT=8080
+NODE_ENV=development
+```
 
-1.  Créez votre branche : `git checkout -b feature/ID-description-courte`
-2.  Développez et commitez votre travail.
-3.  Poussez votre branche : `git push origin feature/ID-description-courte`
-4.  Créez une **Pull Request** sur GitHub/GitLab vers la branche `develop`.
+### 4. Créer la base de données
+```sql
+CREATE DATABASE equizz_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+### 5. Synchroniser la base de données
+```bash
+npm run db:sync
+```
+
+## 🎯 Démarrage
+
+### Développement
+```bash
+npm run start:dev
+```
+Le serveur démarre sur `http://localhost:3000` avec rechargement automatique.
+
+### Production
+```bash
+npm start
+```
+
+## 📚 API Endpoints
+
+### Authentification
+- `POST /api/auth/login` - Connexion (email/matricule + mot de passe)
+- `POST /api/auth/claim-account` - Activation de compte étudiant
+
+### Étudiant
+- `GET /api/student/me` - Informations de l'étudiant connecté
+- `GET /api/student/quizzes` - Liste des quizz disponibles avec statut
+- `GET /api/student/quizzes/:id` - Détails d'un quizz
+- `POST /api/student/quizzes/:id/submit` - Soumettre des réponses
+
+### Administration Académique
+- `GET /api/academic/classes` - Liste des classes
+- `POST /api/academic/classes` - Créer une classe
+- `GET /api/academic/courses` - Liste des cours
+- `POST /api/academic/students/import` - Importer des étudiants (CSV/Excel)
+
+### Évaluations
+- `GET /api/evaluations` - Liste des évaluations
+- `POST /api/evaluations` - Créer une évaluation
+- `GET /api/evaluations/:id/results` - Résultats d'une évaluation
+
+### Initialisation (Développement uniquement)
+- `POST /api/init/seed` - Peupler la base avec des données de test
+- `POST /api/init/reset` - Réinitialiser la base de données
+
+## 🔐 Système d'Anonymat
+
+Le système garantit l'anonymat des réponses étudiantes :
+
+1. **SessionToken** (table privée) : Mappe `etudiantId` → `tokenAnonyme`
+2. **SessionReponse** (table anonyme) : Utilise uniquement `tokenAnonyme`
+3. **ReponseEtudiant** (table anonyme) : Liée à SessionReponse
+
+Les administrateurs voient les réponses mais ne peuvent pas identifier les étudiants.
+
+## 📊 Statuts des Quizz
+
+Chaque quizz peut avoir 3 statuts pour un étudiant :
+- **NOUVEAU** : Pas encore commencé
+- **EN_COURS** : Commencé mais pas terminé
+- **TERMINE** : Soumis et finalisé
+
+## 🛠️ Scripts Disponibles
+
+```bash
+npm start              # Démarrer en production
+npm run start:dev      # Démarrer en développement (nodemon)
+npm run db:sync        # Synchroniser la base de données
+npm run lint           # Vérifier le code (ESLint)
+npm run lint:fix       # Corriger automatiquement les erreurs
+```
+
+## 📁 Structure du Projet
+
+```
+backend/
+├── src/
+│   ├── config/          # Configuration (DB, JWT, etc.)
+│   ├── controllers/     # Contrôleurs (logique des routes)
+│   ├── middlewares/     # Middlewares (auth, validation)
+│   ├── models/          # Modèles Sequelize
+│   ├── repositories/    # Couche d'accès aux données
+│   ├── routes/          # Définition des routes
+│   └── services/        # Logique métier
+├── app.js              # Point d'entrée de l'application
+├── package.json
+└── .env                # Variables d'environnement (à créer)
+```
+
+## 🚢 Déploiement
+
+### Railway (Recommandé)
+
+1. Connecter le dépôt GitHub à Railway
+2. Configurer les variables d'environnement
+3. Railway détecte automatiquement Node.js et déploie
+
+### Commandes Railway CLI
+```bash
+railway login
+railway link
+railway up              # Déployer depuis le dossier local
+railway status          # Vérifier le statut
+railway logs            # Voir les logs
+```
+
+## 🔧 Dépannage
+
+### Erreur de connexion MySQL
+- Vérifier que MySQL est démarré
+- Vérifier les credentials dans `.env`
+- Vérifier que la base de données existe
+
+### Erreur "Table doesn't exist"
+```bash
+npm run db:sync
+```
+
+### Erreur JWT
+- Vérifier que `JWT_SECRET` est défini dans `.env`
+- Régénérer un nouveau secret si nécessaire
+
+## 📝 Workflow Git
+
+1. Créer une branche : `git checkout -b feature/nom-fonctionnalite`
+2. Développer et commiter
+3. Pousser : `git push origin feature/nom-fonctionnalite`
+4. Créer une Pull Request vers `develop`
+
+## 👥 Comptes de Test
+
+Après avoir exécuté `POST /api/init/seed` :
+
+**Administrateur**
+- Email : `super.admin@saintjeaningenieur.org`
+- Mot de passe : `Admin123!`
+
+**Enseignant**
+- Email : `marie.dupont@saintjeaningenieur.org`
+- Mot de passe : `Prof123!`
+
+**Étudiant**
+- Email : `sophie.bernard@saintjeaningenieur.org`
+- Mot de passe : `Etudiant123!`
+
+## 📄 Licence
+
+Ce projet est développé dans le cadre d'un projet académique.

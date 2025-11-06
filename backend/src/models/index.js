@@ -16,6 +16,7 @@ const Evaluation = require('./Evaluation');
 const Quizz = require('./Quizz');
 const Question = require('./Question');
 const SessionReponse = require('./SessionReponse');
+const SessionToken = require('./SessionToken');
 const ReponseEtudiant = require('./ReponseEtudiant');
 const Notification = require('./Notification');
 const AnalyseReponse = require('./AnalyseReponse');
@@ -38,6 +39,7 @@ db.Evaluation = Evaluation;
 db.Quizz = Quizz;
 db.Question = Question;
 db.SessionReponse = SessionReponse;
+db.SessionToken = SessionToken;
 db.ReponseEtudiant = ReponseEtudiant;
 db.Notification = Notification;
 db.AnalyseReponse = AnalyseReponse;
@@ -114,5 +116,11 @@ const NotificationEtudiant = sequelize.define('NotificationEtudiant', {
 }, { freezeTableName: true, paranoid: false, underscored: true });
 Etudiant.belongsToMany(Notification, { through: NotificationEtudiant });
 Notification.belongsToMany(Etudiant, { through: NotificationEtudiant });
+
+//  Nouvelle Relation Plusieurs-à-Plusieurs entre Evaluation et Classe 
+
+const EvaluationClasse = sequelize.define('EvaluationClasse', {}, { freezeTableName: true, paranoid: false, underscored: true });
+Evaluation.belongsToMany(Classe, { through: EvaluationClasse });
+Classe.belongsToMany(Evaluation, { through: EvaluationClasse });
 
 module.exports = db;
