@@ -207,7 +207,7 @@ export default function Quizz() {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#6B4C9A" />
+            <StatusBar barStyle="light-content" backgroundColor="#3A5689" />
 
             <ProgressBar
                 current={currentIndex + 1}
@@ -253,12 +253,12 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
     },
     emptyHeader: {
-        backgroundColor: '#7C3AED',
+        backgroundColor: '#3A5689',
         paddingTop: 50,
         paddingBottom: 16,
         paddingHorizontal: 20,
         borderBottomWidth: 3,
-        borderBottomColor: '#6D28D9',
+        borderBottomColor: '#3A5999',
     },
     emptyHeaderText: {
         fontSize: 22,
