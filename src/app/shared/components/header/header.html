@@ -1,0 +1,60 @@
+<!-- src/app/shared/components/header/header.html -->
+<mat-toolbar class="header-toolbar">
+  <div class="toolbar-content">
+    <!-- Logo et titre -->
+    <div class="brand-section">
+      <mat-icon class="logo-icon">quiz</mat-icon>
+      <span class="app-title">E-Quizz</span>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-section">
+      <!-- Notifications -->
+      <button mat-icon-button [matMenuTriggerFor]="notificationsMenu" class="notification-btn">
+        <mat-icon [matBadge]="notifications.length" matBadgeColor="warn">notifications</mat-icon>
+      </button>
+
+      <!-- User menu -->
+      <button mat-button [matMenuTriggerFor]="userMenu" class="user-btn">
+        <div class="user-info">
+          <span class="user-name">{{ currentUser.name }}</span>
+          <span class="user-role">{{ currentUser.role }}</span>
+        </div>
+        <mat-icon>expand_more</mat-icon>
+      </button>
+    </div>
+  </div>
+</mat-toolbar>
+
+<!-- Notifications Menu -->
+<mat-menu #notificationsMenu="matMenu" class="notifications-menu">
+  <div class="menu-header">
+    <h3>Notifications</h3>
+  </div>
+  <div *ngFor="let notification of notifications" class="notification-item">
+    <div class="notification-content">
+      <p class="notification-message">{{ notification.message }}</p>
+      <span class="notification-time">{{ notification.time }}</span>
+    </div>
+  </div>
+  <div class="menu-footer">
+    <button mat-button color="primary">Voir toutes les notifications</button>
+  </div>
+</mat-menu>
+
+<!-- User Menu -->
+<mat-menu #userMenu="matMenu" class="user-menu">
+  <button mat-menu-item>
+    <mat-icon>account_circle</mat-icon>
+    <span>Mon profil</span>
+  </button>
+  <button mat-menu-item>
+    <mat-icon>settings</mat-icon>
+    <span>Paramètres</span>
+  </button>
+  <mat-divider></mat-divider>
+  <button mat-menu-item>
+    <mat-icon>logout</mat-icon>
+    <span>Déconnexion</span>
+  </button>
+</mat-menu>

@@ -1,0 +1,75 @@
+// src/app/features/quiz-management/components/quiz-filters/quiz-filters.scss
+.quiz-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+  .filters-section {
+    flex: 1;
+
+    .filter-toggles {
+      .filter-toggle {
+        padding: 0 20px;
+        height: 36px;
+        font-size: 14px;
+
+        &.mat-button-toggle-checked {
+          background: #3f51b5;
+          color: white;
+        }
+      }
+    }
+  }
+
+  .search-section {
+    .search-field {
+      width: 300px;
+
+      mat-icon {
+        color: #666;
+      }
+
+      .mat-form-field-outline {
+        background: #f8f9fa;
+      }
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .quiz-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+
+    .search-section {
+      .search-field {
+        width: 100%;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .quiz-filters {
+    .filters-section {
+      .filter-toggles {
+        display: flex;
+        flex-wrap: wrap;
+
+        .filter-toggle {
+          flex: 1;
+          min-width: 120px;
+          padding: 0 12px;
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+<div class="quiz-management">
+  <!-- En-tête -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Gestion des Quiz</h1>
+      <p>Créez et gérez tous vos questionnaires d'évaluation</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="onCreateQuiz()">
+      <mat-icon>add</mat-icon>
+      Nouveau Quiz
+    </button>
+  </div>
+
+  <!-- Statistiques -->
+  <app-quiz-stats></app-quiz-stats>
+
+  <!-- Barre de recherche et filtres -->
+  <div class="filters-section">
+    <div class="search-container">
+      <!-- CORRECTION : Utiliser (search) au lieu de (searchChange) -->
+      <app-search-bar
+        [placeholder]="'Rechercher un quiz par titre, UE ou classe...'"
+        (search)="onSearch($event)">
+      </app-search-bar>
+    </div>
+    <app-quiz-filters
+      [filters]="filters"
+      [activeFilter]="selectedFilter"
+      (filterChange)="onFilterChange($event)">
+    </app-quiz-filters>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="content-area">
+    <mat-card>
+      <mat-card-content>
+        <!-- Loading spinner -->
+        <div *ngIf="isLoading" class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Chargement des quiz...</p>
+        </div>
+
+        <!-- Liste des quiz -->
+        <app-quiz-list
+          *ngIf="!isLoading"
+          [searchTerm]="searchTerm"
+          [filter]="selectedFilter">
+        </app-quiz-list>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

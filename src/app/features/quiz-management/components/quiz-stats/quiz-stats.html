@@ -1,0 +1,18 @@
+<div class="stats-grid">
+  <mat-card *ngFor="let stat of stats" class="stat-card">
+    <div class="stat-content">
+      <div class="stat-info">
+        <h3>{{ stat.title }}</h3>
+        <p class="stat-number">{{ stat.value }}</p>
+        <span *ngIf="stat.trend"
+              [class]="'stat-trend ' + (stat.trendPositive ? 'positive' : 'negative')">
+          {{ stat.trend }}
+        </span>
+        <span *ngIf="stat.label" class="stat-label">
+          {{ stat.label }}
+        </span>
+      </div>
+      <mat-icon class="stat-icon">{{ stat.icon }}</mat-icon>
+    </div>
+  </mat-card>
+</div>

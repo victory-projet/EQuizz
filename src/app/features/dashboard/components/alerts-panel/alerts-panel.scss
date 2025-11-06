@@ -1,0 +1,58 @@
+// src/app/features/dashboard/components/alerts-panel/alerts-panel.scss
+.alerts-panel {
+  .alerts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .alert-item {
+      display: flex;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 8px;
+      border-left: 4px solid;
+
+      &.warning {
+        background: #fff3e0;
+        border-left-color: #ff9800;
+      }
+
+      &.error {
+        background: #ffebee;
+        border-left-color: #f44336;
+      }
+
+      &.info {
+        background: #e3f2fd;
+        border-left-color: #2196f3;
+      }
+
+      .alert-icon {
+        display: flex;
+        align-items: flex-start;
+
+        mat-icon {
+          color: #666;
+        }
+      }
+
+      .alert-content {
+        flex: 1;
+
+        .alert-title {
+          margin: 0 0 4px 0;
+          font-size: 14px;
+          font-weight: 600;
+          color: #333;
+        }
+
+        .alert-message {
+          margin: 0;
+          font-size: 12px;
+          color: #666;
+          line-height: 1.4;
+        }
+      }
+    }
+  }
+}

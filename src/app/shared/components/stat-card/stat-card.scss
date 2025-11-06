@@ -1,0 +1,108 @@
+// src/app/shared/components/stat-card/stat-card.scss
+.stat-card {
+  padding: 20px;
+  border-radius: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  color: white;
+  height: 100%;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    .icon-container {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.2);
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .trend {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
+  .value {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: white;
+    line-height: 1;
+  }
+
+  .title {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+  }
+
+  .card-footer {
+    margin-top: 16px;
+  }
+
+  // Couleurs thématiques
+  &.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  &.success {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  }
+
+  &.warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+
+  &.info {
+    background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+  }
+}
+
+@media (max-width: 768px) {
+  .stat-card {
+    padding: 16px;
+
+    .value {
+      font-size: 24px;
+    }
+
+    .card-header {
+      .icon-container {
+        width: 40px;
+        height: 40px;
+
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
+  }
+}

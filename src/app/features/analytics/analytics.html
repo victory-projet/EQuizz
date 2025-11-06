@@ -1,0 +1,77 @@
+<div class="analytics">
+  <div class="analytics-header">
+    <h1>Analytiques des Quiz</h1>
+    <p>Statistiques et analyses détaillées de vos évaluations</p>
+  </div>
+
+  <mat-tab-group [(selectedIndex)]="activeTab">
+    <!-- Vue d'ensemble -->
+    <mat-tab label="Vue d'ensemble">
+      <div class="tab-content">
+        <div class="stats-overview">
+          <mat-card *ngFor="let stat of [1,2,3,4]" class="stat-card">
+            <div class="stat-content">
+              <div class="stat-icon">
+                <mat-icon>assessment</mat-icon>
+              </div>
+              <div class="stat-details">
+                <h3>Quiz Totaux</h3>
+                <p class="stat-value">{{ overallStats.totalQuizzes }}</p>
+                <span class="stat-trend positive">+12% ce mois</span>
+              </div>
+            </div>
+          </mat-card>
+        </div>
+
+        <div class="charts-section">
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>Participation par UE</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-placeholder">
+                <mat-icon>bar_chart</mat-icon>
+                <p>Graphique de participation</p>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>Répartition des scores</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-placeholder">
+                <mat-icon>pie_chart</mat-icon>
+                <p>Graphique des scores</p>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Activité récente -->
+    <mat-tab label="Activité récente">
+      <div class="tab-content">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Activité récente</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="activity-list">
+              <div *ngFor="let activity of recentActivity" class="activity-item">
+                <mat-icon class="activity-icon">fiber_manual_record</mat-icon>
+                <div class="activity-details">
+                  <strong>{{ activity.action }}</strong>
+                  <span>{{ activity.details }}</span>
+                </div>
+                <span class="activity-time">{{ activity.time }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

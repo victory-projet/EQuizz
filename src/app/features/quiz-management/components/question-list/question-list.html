@@ -1,0 +1,122 @@
+<!-- src/app/features/quiz-management/components/question-list/question-list.html -->
+<div class="question-list">
+  <div class="list-header">
+    <h2>Questions du quiz</h2>
+    @if (editable) {
+      <button
+        mat-flat-button
+        color="primary"
+        class="add-btn"
+        (click)="onAddQuestion()">
+        <mat-icon>add</mat-icon>
+        Ajouter une question
+      </button>
+    }
+  </div>
+
+  <mat-card class="questions-card">
+    <mat-card-content>
+      <!-- Message vide -->
+      @if (questions.length === 0) {
+        <div class="empty-questions">
+          <mat-icon class="empty-icon">help_outline</mat-icon>
+          <h3>Aucune question</h3>
+          <p>Commencez par ajouter des questions à votre quiz</p>
+          @if (editable) {
+            <button
+              mat-flat-button
+              color="primary"
+              (click)="onAddQuestion()">
+              <mat-icon>add</mat-icon>
+              Ajouter la première question
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Liste des questions -->
+      @if (questions.length > 0) {
+        <mat-list>
+          @for (question of questions; track question.id; let i = $index) {
+            <mat-list-item class="question-item">
+
+              <div class="question-content">
+                <!-- En-tête de la question -->
+                <div class="question-header">
+                  <div class="question-number">
+                    <span class="number">Q{{ i + 1 }}</span>
+                  </div>
+                  <div class="question-main">
+                    <h4 class="question-text">{{ question.text }}</h4>
+                    <div class="question-meta">
+                      <mat-chip
+                        [color]="getQuestionTypeColor(question.type)"
+                        selected
+                        class="type-chip">
+                        <mat-icon class="chip-icon">{{ getQuestionTypeIcon(question.type) }}</mat-icon>
+                        {{ getQuestionTypeLabel(question.type) }}
+                      </mat-chip>
+                      <span class="points">{{ question.points }} point{{ question.points > 1 ? 's' : '' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Options pour les questions à choix -->
+                @if (question.options && question.options.length > 0) {
+                  <div class="question-options">
+                    <div class="options-list">
+                      @for (option of question.options; track option; let j = $index) {
+                        <div
+                          class="option-item"
+                          [class.correct]="j === question.correctAnswer">
+                          <!-- CORRECTION ICI : Utiliser getOptionLetter(j) au lieu de String.fromCharCode -->
+                          <span class="option-letter">{{ getOptionLetter(j) }}</span>
+                          <span class="option-text">{{ option }}</span>
+                          @if (j === question.correctAnswer) {
+                            <mat-icon class="correct-icon">check_circle</mat-icon>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- Indication pour les questions ouvertes -->
+                @if (question.type === 'open') {
+                  <div class="open-question-indicator">
+                    <mat-icon>short_text</mat-icon>
+                    <span>Réponse libre attendue</span>
+                  </div>
+                }
+
+                <!-- Actions -->
+                @if (editable) {
+                  <div class="question-actions">
+                    <button
+                      mat-icon-button
+                      color="primary"
+                      (click)="onEditQuestion(question)"
+                      matTooltip="Modifier la question">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      color="warn"
+                      (click)="onDeleteQuestion(question)"
+                      matTooltip="Supprimer la question">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+
+              @if (i < questions.length - 1) {
+                <mat-divider></mat-divider>
+              }
+            </mat-list-item>
+          }
+        </mat-list>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

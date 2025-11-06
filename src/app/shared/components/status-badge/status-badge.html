@@ -1,0 +1,17 @@
+<!-- src/app/shared/components/status-badge/status-badge.html -->
+@let config = getStatusConfig();
+@let displayLabel = getDisplayLabel();
+@let sizeClass = getSizeClass();
+
+<mat-chip
+  [color]="config.color"
+  [class]="sizeClass"
+  class="status-badge"
+  selected>
+
+  @if (config.icon) {
+    <mat-icon class="status-icon">{{ config.icon }}</mat-icon>
+  }
+
+  <span class="status-label">{{ displayLabel }}</span>
+</mat-chip>

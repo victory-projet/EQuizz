@@ -1,0 +1,23 @@
+<!-- src/app/features/dashboard/components/participation-chart/participation-chart.html -->
+<mat-card class="participation-card">
+  <mat-card-header>
+    <mat-card-title>Taux de participation</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="participation-chart">
+      <div class="bars-container">
+        <div *ngFor="let item of chartData.values; let i = index" class="bar-item">
+          <div class="bar-label">{{ chartData.labels[i] }}</div>
+          <div class="bar-wrapper">
+            <div
+              class="bar"
+              [style.height.%]="item"
+              [style.background]="chartData.colors[i]">
+              <span class="bar-value">{{ item }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

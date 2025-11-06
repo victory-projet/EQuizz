@@ -1,0 +1,11 @@
+<!-- src/app/shared/components/loading-spinner/loading-spinner.html -->
+<div class="loading-container">
+  <mat-progress-spinner
+    [diameter]="diameter"
+    mode="indeterminate"
+    color="primary">
+  </mat-progress-spinner>
+  @if (message) {
+    <p class="loading-message">{{ message }}</p>
+  }
+</div>

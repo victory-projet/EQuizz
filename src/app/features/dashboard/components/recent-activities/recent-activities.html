@@ -1,0 +1,21 @@
+<!-- src/app/features/dashboard/components/recent-activities/recent-activities.html -->
+<mat-card class="activities-panel">
+  <mat-card-header>
+    <mat-card-title>Activités récentes</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="activities-list">
+      <div *ngFor="let activity of activities" class="activity-item">
+        <div class="activity-badge"></div>
+        <div class="activity-content">
+          <p class="activity-type">{{ activity.type }}</p>
+          <h4 class="activity-title">{{ activity.title }}</h4>
+          <p class="activity-time">{{ activity.time }}</p>
+        </div>
+      </div>
+    </div>
+    <button mat-button color="primary" class="see-more-btn">
+      Voir plus
+    </button>
+  </mat-card-content>
+</mat-card>

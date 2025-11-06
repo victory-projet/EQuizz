@@ -1,0 +1,10 @@
+<div class="filter-chips">
+  <mat-chip-listbox>
+    <mat-chip-option
+      *ngFor="let filter of filters"
+      [selected]="activeFilter === filter.value"
+      (click)="onFilterSelect(filter.value)">
+      {{ filter.label }} ({{ filter.count }})
+    </mat-chip-option>
+  </mat-chip-listbox>
+</div>

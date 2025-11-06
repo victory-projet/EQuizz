@@ -1,0 +1,72 @@
+// src/app/features/quiz-management/components/quiz-editor/quiz-editor.scss
+.quiz-editor {
+  padding: 24px;
+  background: #f5f7f9;
+  min-height: 100vh;
+
+  .editor-header {
+    margin-bottom: 32px;
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #333;
+      margin: 0 0 8px 0;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #666;
+      margin: 0;
+    }
+  }
+
+  .editor-card {
+    margin-bottom: 24px;
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      mat-form-field {
+        width: 100%;
+      }
+    }
+  }
+
+  .editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+
+    .cancel-btn,
+    .save-btn {
+      min-width: 160px;
+
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .quiz-editor {
+    .form-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .editor-actions {
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}

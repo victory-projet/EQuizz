@@ -1,0 +1,17 @@
+<mat-form-field appearance="outline" class="full-width">
+  <mat-label>{{ placeholder() }}</mat-label>
+  <input matInput
+         [value]="searchValue"
+         (input)="onInputChange($event)"
+         [placeholder]="placeholder()">
+  <mat-icon matSuffix>search</mat-icon>
+
+  <!-- Bouton de suppression optionnel -->
+  <button *ngIf="searchValue"
+          matSuffix
+          mat-icon-button
+          (click)="onClear()"
+          aria-label="Effacer la recherche">
+    <mat-icon>close</mat-icon>
+  </button>
+</mat-form-field>

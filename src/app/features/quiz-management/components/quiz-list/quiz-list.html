@@ -1,0 +1,19 @@
+<!-- src/app/features/quiz-management/components/quiz-list/quiz-list.html -->
+<div class="quiz-list">
+  <app-quiz-card
+    *ngFor="let quiz of quizzes"
+    [quiz]="quiz"
+    class="quiz-item">
+  </app-quiz-card>
+
+  <!-- Message vide -->
+  <div *ngIf="quizzes.length === 0" class="empty-state">
+    <mat-icon class="empty-icon">quiz</mat-icon>
+    <h3 class="empty-title">Aucun quiz trouvé</h3>
+    <p class="empty-message">{{ getEmptyMessage() }}</p>
+    <button mat-flat-button color="primary" class="create-first-btn">
+      <mat-icon>add</mat-icon>
+      Créer votre premier quiz
+    </button>
+  </div>
+</div>

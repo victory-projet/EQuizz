@@ -1,0 +1,12 @@
+<!-- src/app/features/dashboard/components/stats-grid/stats-grid.html -->
+<div class="stats-grid">
+  <app-stat-card
+    *ngFor="let stat of stats"
+    [title]="stat.title"
+    [value]="stat.value"
+    [trend]="stat.trend"
+    [trendDirection]="stat.trendDirection"
+    [icon]="stat.icon"
+    [color]="stat.color">
+  </app-stat-card>
+</div>

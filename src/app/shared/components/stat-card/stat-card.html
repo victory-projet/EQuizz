@@ -1,0 +1,21 @@
+<!-- src/app/shared/components/stat-card/stat-card.html -->
+<mat-card class="stat-card" [class]="color">
+  <mat-card-content>
+    <div class="card-header">
+      <div class="icon-container">
+        <mat-icon>{{ icon }}</mat-icon>
+      </div>
+      <span class="trend" [style.color]="trendColor">
+        <mat-icon>{{ trendIcon }}</mat-icon>
+        {{ trend }}
+      </span>
+    </div>
+
+    <h3 class="value">{{ value }}</h3>
+    <p class="title">{{ title }}</p>
+
+    <div class="card-footer">
+      <ng-content></ng-content>
+    </div>
+  </mat-card-content>
+</mat-card>

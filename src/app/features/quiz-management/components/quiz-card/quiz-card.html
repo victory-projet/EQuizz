@@ -1,0 +1,70 @@
+<!-- src/app/features/quiz-management/components/quiz-card/quiz-card.html -->
+<mat-card class="quiz-card" [class]="quiz.status">
+  <mat-card-content>
+    <div class="quiz-header">
+      <div class="quiz-title-section">
+        <h3 class="quiz-title">{{ quiz.title }}</h3>
+        <mat-chip [color]="getStatusColor(quiz.status)" selected class="status-chip">
+          {{ getStatusLabel(quiz.status) }}
+        </mat-chip>
+      </div>
+      <div class="quiz-actions">
+        <button mat-icon-button color="primary" *ngIf="quiz.status === 'draft'">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" *ngIf="quiz.status === 'draft'">
+          <mat-icon>delete</mat-icon>
+        </button>
+        <button mat-icon-button color="primary" *ngIf="quiz.status === 'active'">
+          <mat-icon>visibility</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="quiz-details">
+      <div class="detail-row">
+        <div class="detail-item">
+          <span class="label">UE:</span>
+          <span class="value">{{ quiz.ue }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Questions:</span>
+          <span class="value">{{ quiz.questionsCount }}</span>
+        </div>
+      </div>
+
+      <div class="detail-row">
+        <div class="detail-item">
+          <span class="label">Participation:</span>
+          <span class="value">
+            {{ quiz.participation.current }}/{{ quiz.participation.total }}
+            ({{ quiz.participation.rate }}%)
+            <span class="participation-bar">
+              <span class="participation-fill" [style.width.%]="quiz.participation.rate"></span>
+            </span>
+          </span>
+        </div>
+        <div class="detail-item">
+          <span class="label">{{ getTypeLabel(quiz.type) }}</span>
+          <span class="value date">
+            <mat-icon>schedule</mat-icon>
+            Fin: {{ formatDate(quiz.endDate) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="detail-row">
+        <div class="detail-item">
+          <span class="label">Classes:</span>
+          <span class="value classes">
+            <span *ngFor="let cls of quiz.classes" class="class-tag">{{ cls }}</span>
+          </span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Créé le:</span>
+          <span class="value">{{ formatDate(quiz.createdAt) }}</span>
+        </div>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

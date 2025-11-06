@@ -1,0 +1,7 @@
+// src/app/features/dashboard/components/stats-grid/stats-grid.scss
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}

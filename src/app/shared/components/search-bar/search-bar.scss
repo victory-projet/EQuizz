@@ -1,0 +1,48 @@
+// src/app/shared/components/search-bar/search-bar.scss
+.full-width {
+  width: 100%;
+}
+.search-bar {
+  .search-field {
+    width: 100%;
+
+    .mat-form-field-outline {
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .mat-form-field-prefix,
+    .mat-form-field-suffix {
+      color: #666;
+    }
+
+    .clear-btn {
+      width: 24px;
+      height: 24px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    input {
+      font-size: 14px;
+
+      &::placeholder {
+        color: #999;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .search-bar {
+    .search-field {
+      .mat-form-field-wrapper {
+        padding-bottom: 0;
+      }
+    }
+  }
+}

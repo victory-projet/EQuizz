@@ -1,0 +1,94 @@
+<!-- src/app/features/quiz-management/components/quiz-editor/quiz-editor.html -->
+<div class="quiz-editor">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Nouveau Quiz</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form class="quiz-form">
+        <!-- Titre -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Titre du quiz</mat-label>
+          <input
+            matInput
+            [(ngModel)]="quiz.title"
+            name="title"
+            placeholder="Ex: Évaluation Mi-parcours - Algorithmique"
+            required>
+        </mat-form-field>
+
+        <!-- Unité d'Enseignement -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Unité d'Enseignement</mat-label>
+          <mat-select
+            [(ngModel)]="quiz.ue"
+            name="ue"
+            required>
+            <mat-option value="">Sélectionnez une UE</mat-option>
+            <mat-option *ngFor="let ue of ueOptions" [value]="ue">
+              {{ ue }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Type de quiz -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Type de quiz</mat-label>
+          <mat-select
+            [(ngModel)]="quiz.type"
+            name="type"
+            required>
+            <mat-option *ngFor="let type of typeOptions" [value]="type.value">
+              {{ type.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Classes -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Classes concernées</mat-label>
+          <mat-select
+            [(ngModel)]="quiz.classes"
+            name="classes"
+            multiple
+            required>
+            <mat-option *ngFor="let class of classOptions" [value]="class">
+              {{ class }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Date de fin -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Date de fin</mat-label>
+          <input
+            matInput
+            [(ngModel)]="quiz.endDate"
+            name="endDate"
+            [matDatepicker]="picker"
+            required>
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Nombre de questions -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nombre de questions</mat-label>
+          <input
+            matInput
+            type="number"
+            [(ngModel)]="quiz.questionsCount"
+            name="questionsCount"
+            min="0"
+            required>
+        </mat-form-field>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-button color="warn">Annuler</button>
+      <button mat-raised-button color="primary">Créer le Quiz</button>
+    </mat-card-actions>
+  </mat-card>
+</div>
