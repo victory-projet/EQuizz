@@ -1,0 +1,36 @@
+# Nom du workflow
+name: Backend CD
+
+# Déclencheur
+on:
+  push:
+    branches:
+      - main
+
+# Jobs
+jobs:
+  deploy-backend:
+    name: Deploy Backend to Railway
+    runs-on: ubuntu-latest
+    steps:
+      # Étape 1 : Récupérer le code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Étape 2 : Configurer Node.js (nécessaire pour installer la CLI)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.19.0'
+
+      # Étape 3 : Installer la CLI de Railway via NPM
+      # C'est la nouvelle étape qui remplace 'uses: railwayapp/cli-action'
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      # Étape 4 : Lancer le déploiement
+      - name: Deploy to Railway
+        run: railway up --detach --service ${{ secrets.RAILWAY_SERVICE_ID }}
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
