@@ -1,4 +1,12 @@
-require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+
+// Charger .env seulement s'il existe (développement local)
+const envPath = path.resolve(__dirname, '../../.env');
+if (fs.existsSync(envPath)) {
+  require('dotenv').config({ path: envPath });
+}
+
 const { Sequelize } = require('sequelize');
 
 const sequelize = new Sequelize(
@@ -7,7 +15,7 @@ const sequelize = new Sequelize(
   process.env.DB_PASSWORD,
   {
     host: process.env.DB_HOST,
-    dialect: process.env.DB_DIALECT,
+    dialect: process.env.DB_DIALECT ,
     logging: false,
 
     // --- Options globales pour tous les modèles ---

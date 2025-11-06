@@ -7,6 +7,8 @@ const semestreController = require('../controllers/semestre.controller');
 const coursController = require('../controllers/cours.controller');
 const classeController = require('../controllers/classe.controller');
 
+// Route publique pour obtenir les classes (utile pour le formulaire d'activation)
+router.get('/classes/public', classeController.findAll);
 
 // Sécurisation Globale des Routes Académiques 
 router.use(authenticate, isAdmin);
