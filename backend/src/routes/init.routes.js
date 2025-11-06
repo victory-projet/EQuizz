@@ -69,9 +69,9 @@ router.post('/seed', async (req, res) => {
 
         // 6. Créer les enseignants
         const enseignantUser1 = await db.Utilisateur.create({
-            nom: 'mepe',
-            prenom: 'victoire',
-            email: 'victoire.mepe@saintjeaningenieur.org',
+            nom: 'dupont',
+            prenom: 'marie',
+            email: 'marie.dupont@saintjeaningenieur.org',
             motDePasseHash: 'Prof123!'
         }, { transaction });
 
@@ -81,9 +81,9 @@ router.post('/seed', async (req, res) => {
         }, { transaction });
 
         const enseignantUser2 = await db.Utilisateur.create({
-            nom: 'kouang',
-            prenom: 'priscille',
-            email: 'priscille.kouang@saintjeaningenieur.org',
+            nom: 'martin',
+            prenom: 'jean',
+            email: 'jean.martin@saintjeaningenieur.org',
             motDePasseHash: 'Prof123!'
         }, { transaction });
 
@@ -159,6 +159,32 @@ router.post('/seed', async (req, res) => {
             classe_id: classes[1].id
         }, { transaction });
 
+        const etudiantUser4 = await db.Utilisateur.create({
+            nom: 'mepe',
+            prenom: 'victoire',
+            email: 'victoire.mepe@saintjeaningenieur.org',
+            motDePasseHash: null
+        }, { transaction });
+
+        await db.Etudiant.create({
+            id: etudiantUser4.id,
+            matricule: '2223i235',
+            classe_id: classes[0].id
+        }, { transaction });
+
+        const etudiantUser5 = await db.Utilisateur.create({
+            nom: 'simo',
+            prenom: 'celestin',
+            email: 'celestin.simo@saintjeaningenieur.org',
+            motDePasseHash: null
+        }, { transaction });
+
+        await db.Etudiant.create({
+            id: etudiantUser5.id,
+            matricule: '2223i032',
+            classe_id: classes[0].id
+        }, { transaction });
+
         // 10. Créer une évaluation
         const evaluation = await db.Evaluation.create({
             titre: 'Évaluation Mi-Parcours - Bases de Données',
@@ -227,7 +253,7 @@ router.post('/seed', async (req, res) => {
                 classes: classes.length,
                 cours: 3,
                 enseignants: 2,
-                etudiants: 3,
+                etudiants: 5,
                 evaluations: 1,
                 questions: 5
             },

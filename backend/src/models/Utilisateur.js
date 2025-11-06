@@ -25,11 +25,19 @@ const Utilisateur = sequelize.define('Utilisateur', {
     unique: true,
     validate: {
       // Valider le format de l'email
+      isEmail: {
+        msg: 'L\'adresse email doit être valide'
+      },
       isEmailCustom(value) {
-        // Regex pour valider le format : prenom.nom@saintjeaningenieur.com
-        const emailRegex = /^[a-z]+\.[a-z]+@saintjeaningenieur\.org$/;
+        // Regex stricte pour valider le format : prenom.nom@saintjeaningenieur.org
+        // Accepte UNIQUEMENT les lettres non accentuées (a-z, A-Z), pas de chiffres ni d'accents
+        const emailRegex = /^[a-zA-Z]+\.[a-zA-Z]+@saintjeaningenieur\.org$/;
         if (!emailRegex.test(value)) {
-          throw new Error('Le format de l\'email doit être prenom.nom@saintjeaningenieur.org');
+          throw new Error('Le format de l\'email doit être prenom.nom@saintjeaningenieur.org (lettres non accentuées uniquement, sans chiffres)');
+        }
+        // Vérifier que le domaine est exactement @saintjeaningenieur.org
+        if (!value.endsWith('@saintjeaningenieur.org')) {
+          throw new Error('L\'email doit se terminer par @saintjeaningenieur.org');
         }
       }
     }

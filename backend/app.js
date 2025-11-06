@@ -1,7 +1,14 @@
 // backend/app.js
 
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
-require('dotenv').config(); // S'assurer que dotenv est chargé au tout début
+
+// Charger .env seulement s'il existe (développement local)
+const envPath = path.resolve(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  require('dotenv').config({ path: envPath });
+}
 
 const app = express();
 const db = require('./src/models'); // Importer db pour la connexion
