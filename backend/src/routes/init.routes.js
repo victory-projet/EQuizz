@@ -69,9 +69,9 @@ router.post('/seed', async (req, res) => {
 
         // 6. Créer les enseignants
         const enseignantUser1 = await db.Utilisateur.create({
-            nom: 'mepe',
-            prenom: 'victoire',
-            email: 'irene.mepe@saintjeaningenieur.org',
+            nom: 'dupont',
+            prenom: 'marie',
+            email: 'marie.dupont@saintjeaningenieur.org',
             motDePasseHash: 'Prof123!'
         }, { transaction });
 
@@ -81,9 +81,9 @@ router.post('/seed', async (req, res) => {
         }, { transaction });
 
         const enseignantUser2 = await db.Utilisateur.create({
-            nom: 'kouang',
-            prenom: 'priscille',
-            email: 'priscille.kouang@saintjeaningenieur.org',
+            nom: 'martin',
+            prenom: 'jean',
+            email: 'jean.martin@saintjeaningenieur.org',
             motDePasseHash: 'Prof123!'
         }, { transaction });
 

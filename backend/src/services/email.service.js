@@ -10,7 +10,10 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const verifiedSender = process.env.SENDGRID_VERIFIED_SENDER;
 
 class EmailService {
-  async sendAccountClaimEmail(utilisateur, password) {
+  async sendAccountClaimEmail(etudiant, password) {
+    // L'objet etudiant contient : { Utilisateur: {...}, matricule, ... }
+    const utilisateur = etudiant.Utilisateur;
+    
     // 3. Définir le message au format attendu par SendGrid
     const msg = {
       to: utilisateur.email,
@@ -21,10 +24,12 @@ class EmailService {
         <p>Bonjour ${utilisateur.prenom},</p>
         <p>Votre compte a été activé avec succès. Voici vos identifiants pour vous connecter :</p>
         <ul>
-          <li><strong>Identifiant :</strong> ${utilisateur.Etudiant.matricule}</li>
+          <li><strong>Identifiant (Email) :</strong> ${utilisateur.email}</li>
+          <li><strong>Identifiant (Matricule) :</strong> ${etudiant.matricule}</li>
           <li><strong>Mot de passe :</strong> ${password}</li>
         </ul>
         <p>Veuillez conserver ce mot de passe en lieu sûr.</p>
+        <p>Vous pouvez vous connecter avec votre email ou votre matricule.</p>
         <a href="http://lien-vers-le-frontend-de-connexion">Cliquez ici pour vous connecter</a>
       `,
     };

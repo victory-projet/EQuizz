@@ -22,31 +22,32 @@ class EvaluationService {
 
     try {
       // 1. Valider que le cours associé existe
-      const cours = await coursRepository.findById(data.cours_id);
+      const cours = await coursRepository.findById(evaluationData.cours_id);
       if (!cours) {
         throw new Error('Cours non trouvé. Impossible de créer l\'évaluation.');
       }
 
+      // 2. Créer l'évaluation
+      const evaluation = await evaluationRepository.create(evaluationData, transaction);
+
+      // 3. Associer les classes à l'évaluation
       // La méthode 'addClasses' est automatiquement fournie par Sequelize
       await evaluation.addClasses(classeIds, { transaction });
 
-      // 2. Créer l'évaluation
-      const evaluation = await evaluationRepository.create(data, transaction);
-
-      // 3. Créer le Quizz vide associé à cette évaluation
+      // 4. Créer le Quizz vide associé à cette évaluation
       await db.Quizz.create({
         titre: `Quizz pour ${evaluation.titre}`,
         evaluation_id: evaluation.id
       }, { transaction });
 
-      // 4. Si tout s'est bien passé, on valide la transaction
+      // 5. Si tout s'est bien passé, on valide la transaction
       await transaction.commit();
       
-      // 5. On retourne l'évaluation complète avec son quizz
+      // 6. On retourne l'évaluation complète avec son quizz
       return evaluationRepository.findById(evaluation.id);
 
     } catch (error) {
-      // 6. En cas d'erreur, on annule toutes les opérations
+      // 7. En cas d'erreur, on annule toutes les opérations
       await transaction.rollback();
       throw error; // Propager l'erreur pour que le contrôleur la gère
     }

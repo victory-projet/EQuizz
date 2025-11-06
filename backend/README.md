@@ -9,7 +9,7 @@ API RESTful pour la plateforme EQuizz, un système d'évaluation anonyme pour é
 - **Sequelize** - ORM pour MySQL
 - **MySQL** - Base de données
 - **JWT** - Authentification
-- **Nodemailer** - Envoi d'emails
+- **SendGrid** - Envoi d'emails
 - **Bcrypt** - Hachage des mots de passe
 
 ## 📋 Prérequis
@@ -45,17 +45,14 @@ DB_DIALECT=mysql
 
 # JWT
 JWT_SECRET=votre_secret_jwt_tres_securise
-JWT_EXPIRES_IN=24h
+JWT_EXPIRES_IN=8h
 
-# Email (Nodemailer)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=votre_email@gmail.com
-EMAIL_PASSWORD=votre_mot_de_passe_app
-EMAIL_FROM=noreply@equizz.com
+# Email (SendGrid)
+SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+SENDGRID_VERIFIED_SENDER=votre.email@verifie.com
 
 # Serveur
-PORT=3000
+PORT=8080
 NODE_ENV=development
 ```
 
