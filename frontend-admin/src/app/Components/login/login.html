@@ -1,0 +1,39 @@
+<div class="login-container">
+  <!-- Partie gauche vide ou image -->
+  <div class="left-section">
+     <img src="Equizz3.jpg" alt="EQUIZZ" class="image" />
+  </div>
+
+  <!-- Partie droite : formulaire -->
+  <div class="right-section">
+    <div class="login-card">
+      <div class="logo-container">
+        <img src="logo1.png" alt="EQUIZZ" class="logo" />
+      </div>
+
+      <form (ngSubmit)="onLogin()">
+        <div class="input-group">
+          <input
+            type="email"
+            placeholder="Adresse institutionnelle"
+            [(ngModel)]="email"
+            name="email"
+            required
+          />
+        </div>
+
+        <div class="input-group password-group">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            placeholder="Mot de passe"
+            [(ngModel)]="password"
+            name="password"
+            required
+          />
+        </div>
+
+        <button type="submit" class="login-button">Connexion</button>
+      </form>
+    </div>
+  </div>
+</div>

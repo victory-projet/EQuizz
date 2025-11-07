@@ -1,4 +1,9 @@
 require('dotenv').config();
+console.log('Chargement du .env :', {
+  DB_HOST: process.env.DB_HOST,
+  DB_USER: process.env.DB_USER,
+  DB_DIALECT: process.env.DB_DIALECT,
+});
 const { Sequelize } = require('sequelize');
 
 const sequelize = new Sequelize(
