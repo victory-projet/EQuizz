@@ -1,0 +1,135 @@
+<mat-card class="question-editor-card">
+  <mat-card-header>
+    <div class="question-header">
+      <h3>Question {{ index + 1 }}</h3>
+      <button mat-icon-button color="warn" (click)="onRemove()" type="button">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content>
+    <form [formGroup]="questionForm" (ngSubmit)="onSubmit()">
+      <!-- Type de question -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Type de question</mat-label>
+        <mat-select formControlName="type">
+          <mat-option *ngFor="let type of questionTypes" [value]="type.value">
+            {{ type.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Texte de la question -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Question</mat-label>
+        <textarea 
+          matInput 
+          formControlName="text" 
+          rows="3"
+          placeholder="Saisissez votre question ici..."></textarea>
+        <mat-error *ngIf="questionForm.get('text')?.hasError('required')">
+          La question est requise
+        </mat-error>
+        <mat-error *ngIf="questionForm.get('text')?.hasError('minlength')">
+          La question doit contenir au moins 10 caractères
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Points -->
+      <mat-form-field appearance="outline" class="points-field">
+        <mat-label>Points</mat-label>
+        <input 
+          matInput 
+          type="number" 
+          formControlName="points" 
+          min="1"
+          placeholder="1">
+        <mat-error *ngIf="questionForm.get('points')?.hasError('required')">
+          Les points sont requis
+        </mat-error>
+        <mat-error *ngIf="questionForm.get('points')?.hasError('min')">
+          Minimum 1 point
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Options pour QCM -->
+      <div *ngIf="currentType === 'multiple'" class="options-section">
+        <h4>Options de réponse</h4>
+        
+        <div formArrayName="options" class="options-list">
+          <div *ngFor="let option of options.controls; let i = index" class="option-item">
+            <mat-radio-button 
+              [value]="i" 
+              [checked]="questionForm.get('correctAnswer')?.value === i"
+              (change)="questionForm.get('correctAnswer')?.setValue(i)"
+              class="correct-answer-radio">
+            </mat-radio-button>
+            
+            <mat-form-field appearance="outline" class="option-field">
+              <mat-label>Option {{ i + 1 }}</mat-label>
+              <input 
+                matInput 
+                [formControlName]="i"
+                placeholder="Saisissez l'option...">
+              <mat-error>Cette option est requise</mat-error>
+            </mat-form-field>
+
+            <button 
+              mat-icon-button 
+              color="warn" 
+              type="button"
+              (click)="removeOption(i)"
+              [disabled]="options.length <= 2">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <button 
+          mat-stroked-button 
+          type="button"
+          (click)="addOption()"
+          [disabled]="options.length >= 6"
+          class="add-option-btn">
+          <mat-icon>add</mat-icon>
+          Ajouter une option
+        </button>
+
+        <p class="hint-text">
+          <mat-icon class="hint-icon">info</mat-icon>
+          Sélectionnez la bonne réponse en cliquant sur le bouton radio
+        </p>
+      </div>
+
+      <!-- Réponse pour question fermée -->
+      <mat-form-field 
+        *ngIf="currentType === 'close'" 
+        appearance="outline" 
+        class="full-width">
+        <mat-label>Réponse attendue</mat-label>
+        <input 
+          matInput 
+          formControlName="correctAnswer"
+          placeholder="Saisissez la réponse correcte...">
+        <mat-error>La réponse est requise</mat-error>
+      </mat-form-field>
+
+      <!-- Message pour question ouverte -->
+      <div *ngIf="currentType === 'open'" class="open-question-info">
+        <mat-icon>info</mat-icon>
+        <p>Les questions ouvertes n'ont pas de réponse prédéfinie. Les étudiants pourront répondre librement.</p>
+      </div>
+
+      <!-- Explication (optionnel) -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Explication (optionnel)</mat-label>
+        <textarea 
+          matInput 
+          formControlName="explanation" 
+          rows="2"
+          placeholder="Ajoutez une explication pour cette question..."></textarea>
+      </mat-form-field>
+    </form>
+  </mat-card-content>
+</mat-card>

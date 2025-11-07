@@ -1,0 +1,52 @@
+<div class="class-management-container">
+  <!-- Search Bar -->
+  <div class="search-section">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput 
+             [(ngModel)]="searchTerm" 
+             (input)="onSearch()" 
+             placeholder="Rechercher une classe">
+    </mat-form-field>
+  </div>
+
+  <!-- Classes List -->
+  <div class="classes-list">
+    <div *ngFor="let class of filteredClasses" class="class-item">
+      <div class="class-info">
+        <h3 class="class-name">{{ class.name }}</h3>
+        <div class="class-details">
+          <span class="student-count">{{ class.studentCount }} étudiants</span>
+          <div class="class-meta">
+            <mat-icon class="meta-icon">school</mat-icon>
+            <span>{{ class.level }}</span>
+            <mat-icon class="meta-icon">calendar_today</mat-icon>
+            <span>{{ class.academicYear }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="class-actions">
+        <button mat-button color="primary" (click)="showEditForm(class)">
+          <mat-icon>edit</mat-icon>
+          Modifier
+        </button>
+        <button mat-button color="warn" (click)="deleteClass(class)">
+          <mat-icon>delete</mat-icon>
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && filteredClasses.length === 0" class="empty-state">
+    <mat-icon>groups</mat-icon>
+    <h3>Aucune classe trouvée</h3>
+    <p *ngIf="searchTerm">Aucun résultat pour "{{ searchTerm }}"</p>
+    <p *ngIf="!searchTerm">Aucune classe disponible</p>
+  </div>
+
+  <!-- Loading -->
+  <app-loading-skeleton *ngIf="isLoading" type="list" [count]="5"></app-loading-skeleton>
+</div>

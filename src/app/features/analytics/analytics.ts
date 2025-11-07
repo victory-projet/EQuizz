@@ -11,7 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
   templateUrl: './analytics.html',
   styleUrls: ['./analytics.scss']
 })
-export class Analytics{
+export class AnalyticsComponent {
   activeTab = 0;
 
   overallStats = {

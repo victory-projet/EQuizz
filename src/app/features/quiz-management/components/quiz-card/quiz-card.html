@@ -9,15 +9,50 @@
         </mat-chip>
       </div>
       <div class="quiz-actions">
-        <button mat-icon-button color="primary" *ngIf="quiz.status === 'draft'">
-          <mat-icon>edit</mat-icon>
+        <button mat-icon-button [matMenuTriggerFor]="actionsMenu" class="actions-menu-btn">
+          <mat-icon>more_vert</mat-icon>
         </button>
-        <button mat-icon-button color="warn" *ngIf="quiz.status === 'draft'">
-          <mat-icon>delete</mat-icon>
-        </button>
-        <button mat-icon-button color="primary" *ngIf="quiz.status === 'active'">
-          <mat-icon>visibility</mat-icon>
-        </button>
+        <mat-menu #actionsMenu="matMenu">
+          <!-- Prévisualiser -->
+          <button mat-menu-item (click)="previewQuiz()" [disabled]="!quiz.questions || quiz.questions.length === 0">
+            <mat-icon>visibility</mat-icon>
+            <span>Prévisualiser</span>
+          </button>
+          
+          <!-- Voir les résultats (si actif ou terminé) -->
+          <button mat-menu-item (click)="viewResults()" *ngIf="quiz.status === 'active' || quiz.status === 'completed'">
+            <mat-icon>assessment</mat-icon>
+            <span>Voir les résultats</span>
+          </button>
+          
+          <!-- Éditer (si brouillon) -->
+          <button mat-menu-item (click)="editQuiz()" *ngIf="quiz.status === 'draft'">
+            <mat-icon>edit</mat-icon>
+            <span>Modifier</span>
+          </button>
+          
+          <mat-divider></mat-divider>
+          
+          <!-- Publier (si brouillon) -->
+          <button mat-menu-item (click)="publishQuiz()" *ngIf="quiz.status === 'draft'">
+            <mat-icon>publish</mat-icon>
+            <span>Publier</span>
+          </button>
+          
+          <!-- Dépublier (si actif) -->
+          <button mat-menu-item (click)="unpublishQuiz()" *ngIf="quiz.status === 'active'">
+            <mat-icon>unpublished</mat-icon>
+            <span>Dépublier</span>
+          </button>
+          
+          <mat-divider></mat-divider>
+          
+          <!-- Supprimer -->
+          <button mat-menu-item (click)="deleteQuiz()" class="delete-action">
+            <mat-icon>delete</mat-icon>
+            <span>Supprimer</span>
+          </button>
+        </mat-menu>
       </div>
     </div>
 

@@ -7,7 +7,7 @@ export const routes: Routes = [
   },
   {
     path: 'evaluation',
-    loadComponent: () => import('./features/quiz-management/quiz-management').then(m => m.QuizManagementComponent)
+    loadComponent: () => import('./features/evaluation/evaluation').then(m => m.EvaluationComponent)
   },
   {
     path: 'quiz-management',
@@ -18,12 +18,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/quiz-management/components/quiz-editor/quiz-editor').then(m => m.QuizEditorComponent)
   },
   {
+    path: 'quiz-management/edit/:id',
+    loadComponent: () => import('./features/quiz-management/components/quiz-editor/quiz-editor').then(m => m.QuizEditorComponent)
+  },
+  {
     path: 'courses',
-    loadComponent: () => import('./features/dashboard/dashboard').then(m => m.DashboardComponent)
+    loadComponent: () => import('./features/ue-management/ue-management.component').then(m => m.UEManagementComponent)
   },
   {
     path: 'classes',
-    loadComponent: () => import('./features/dashboard/dashboard').then(m => m.DashboardComponent)
+    loadComponent: () => import('./features/class-management/class-management.component').then(m => m.ClassManagementComponent)
   },
   {
     path: 'academic-year',

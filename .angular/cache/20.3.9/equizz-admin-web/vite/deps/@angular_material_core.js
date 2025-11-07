@@ -7,11 +7,7 @@ import {
   MatOptionSelectionChange,
   _countGroupLabelsBeforeOption,
   _getOptionScrollPosition
-} from "./chunk-E4DALQ3X.js";
-import {
-  MatPseudoCheckbox,
-  MatPseudoCheckboxModule
-} from "./chunk-5VWDVRFF.js";
+} from "./chunk-R5LOOR3T.js";
 import {
   DateAdapter,
   MAT_DATE_FORMATS,
@@ -19,42 +15,49 @@ import {
   MAT_DATE_LOCALE_FACTORY
 } from "./chunk-B6J7EKHF.js";
 import {
+  MatRippleLoader
+} from "./chunk-OMMWN4CK.js";
+import {
   ErrorStateMatcher,
   ShowOnDirtyErrorStateMatcher,
   _ErrorStateTracker
 } from "./chunk-DIAYO2BT.js";
 import {
-  MatRippleLoader
-} from "./chunk-KO5O2DEF.js";
+  MatPseudoCheckbox,
+  MatPseudoCheckboxModule
+} from "./chunk-IQI53Q7R.js";
+import {
+  MatRippleModule
+} from "./chunk-WF7YBMSB.js";
 import {
   MAT_RIPPLE_GLOBAL_OPTIONS,
   MatRipple,
-  MatRippleModule,
   RippleRef,
   RippleRenderer,
   RippleState,
   _StructuralStylesLoader,
   defaultRippleAnimationConfig
-} from "./chunk-KGHYZE76.js";
+} from "./chunk-HQL7IV74.js";
+import "./chunk-7CRCHJWD.js";
 import "./chunk-GWFLKVBH.js";
-import "./chunk-RIFA6AOY.js";
+import "./chunk-VENV3F3G.js";
 import {
   AnimationCurves,
   AnimationDurations,
   MATERIAL_ANIMATIONS,
   _animationsDisabled,
   _getAnimationsState
-} from "./chunk-AQM6SEML.js";
+} from "./chunk-6QYI6WET.js";
 import {
   MATERIAL_SANITY_CHECKS,
   MatCommonModule
-} from "./chunk-Y5J7365Y.js";
+} from "./chunk-CSLRHFEK.js";
 import "./chunk-CGIXWWOM.js";
 import "./chunk-5EG33CFQ.js";
-import "./chunk-U666LCDV.js";
-import "./chunk-3UOWZ6O6.js";
+import "./chunk-WCLRD6CR.js";
 import "./chunk-DDGYUQGD.js";
 import "./chunk-RDHXSB74.js";
+import "./chunk-U666LCDV.js";
 import {
   ChangeDetectionStrategy,
   Component,
@@ -209,7 +212,7 @@ var MatLineModule = class _MatLineModule {
 })();
 
 // node_modules/@angular/material/fesm2022/core.mjs
-var VERSION = new Version("20.2.11");
+var VERSION = new Version("20.2.12");
 var ISO_8601_REGEX = /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|(?:(?:\+|-)\d{2}:\d{2}))?)?$/;
 var TIME_REGEX = /^(\d?\d)[:.](\d?\d)(?:[:.](\d?\d))?\s*(AM|PM)?$/i;
 function range(length, valueFunction) {

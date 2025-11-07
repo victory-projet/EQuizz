@@ -1,0 +1,116 @@
+<div class="ue-management-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Gestion des Unités d'Enseignement</h1>
+      <p>Gérez les UE de votre établissement</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="showCreateForm()" *ngIf="!isFormVisible">
+      <mat-icon>add</mat-icon>
+      Nouvelle UE
+    </button>
+  </div>
+
+  <!-- Formulaire de création/édition -->
+  <mat-card *ngIf="isFormVisible" class="form-card">
+    <mat-card-header>
+      <mat-card-title>
+        {{ editingUE ? 'Modifier l\'UE' : 'Nouvelle UE' }}
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Code UE</mat-label>
+          <input matInput [(ngModel)]="ueForm.code" placeholder="Ex: INF101" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nom de l'UE</mat-label>
+          <input matInput [(ngModel)]="ueForm.name" placeholder="Ex: Algorithmique et Programmation" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description</mat-label>
+          <textarea matInput [(ngModel)]="ueForm.description" rows="3" placeholder="Description de l'UE..."></textarea>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Crédits ECTS</mat-label>
+          <input matInput type="number" [(ngModel)]="ueForm.credits" min="1" max="12" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Semestre</mat-label>
+          <input matInput type="number" [(ngModel)]="ueForm.semester" min="1" max="6" required>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button mat-button (click)="cancelForm()">Annuler</button>
+      <button mat-raised-button color="primary" (click)="saveUE()">
+        {{ editingUE ? 'Mettre à jour' : 'Créer' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <!-- Barre de recherche -->
+  <div class="search-section" *ngIf="!isFormVisible">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Rechercher une UE</mat-label>
+      <input matInput [(ngModel)]="searchTerm" (input)="onSearch()" placeholder="Code, nom ou description...">
+      <mat-icon matPrefix>search</mat-icon>
+    </mat-form-field>
+  </div>
+
+  <!-- Loading -->
+  <app-loading-skeleton *ngIf="isLoading" type="card" [count]="3"></app-loading-skeleton>
+
+  <!-- Liste des UE -->
+  <div class="ue-grid" *ngIf="!isLoading && !isFormVisible">
+    <mat-card *ngFor="let ue of filteredUEs" class="ue-card">
+      <mat-card-header>
+        <div class="ue-header">
+          <div class="ue-code">{{ ue.code }}</div>
+          <div class="ue-credits">{{ ue.credits }} ECTS</div>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <h3 class="ue-name">{{ ue.name }}</h3>
+        <p class="ue-description">{{ ue.description }}</p>
+        <div class="ue-meta">
+          <span class="meta-item">
+            <mat-icon>calendar_today</mat-icon>
+            Semestre {{ ue.semester }}
+          </span>
+          <span class="meta-item">
+            <mat-icon>schedule</mat-icon>
+            Créé le {{ ue.createdAt | date:'dd/MM/yyyy' }}
+          </span>
+        </div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button color="primary" (click)="showEditForm(ue)">
+          <mat-icon>edit</mat-icon>
+          Modifier
+        </button>
+        <button mat-button color="warn" (click)="deleteUE(ue)">
+          <mat-icon>delete</mat-icon>
+          Supprimer
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Message vide -->
+  <div *ngIf="!isLoading && filteredUEs.length === 0 && !isFormVisible" class="empty-state">
+    <mat-icon>school</mat-icon>
+    <h3>Aucune UE trouvée</h3>
+    <p *ngIf="searchTerm">Aucun résultat pour "{{ searchTerm }}"</p>
+    <p *ngIf="!searchTerm">Commencez par créer votre première UE</p>
+    <button mat-raised-button color="primary" (click)="showCreateForm()" *ngIf="!searchTerm">
+      <mat-icon>add</mat-icon>
+      Créer une UE
+    </button>
+  </div>
+</div>

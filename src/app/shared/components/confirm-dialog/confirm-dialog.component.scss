@@ -1,0 +1,111 @@
+.confirm-dialog {
+  padding: 8px;
+  min-width: 400px;
+
+  .dialog-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+
+    .dialog-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+  }
+
+  .dialog-message {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0 0 24px 0;
+  }
+
+  mat-dialog-actions {
+    padding: 16px 0 0 0;
+    margin: 0;
+    gap: 12px;
+
+    button {
+      min-width: 100px;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn-cancel {
+      color: var(--text-secondary);
+
+      &:hover {
+        background-color: var(--bg-tertiary);
+      }
+    }
+
+    .btn-confirm {
+      color: white;
+
+      &.btn-danger {
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+
+        &:hover {
+          background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+      }
+
+      &.btn-warning {
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+
+        &:hover {
+          background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+      }
+
+      &.btn-info {
+        background: linear-gradient(135deg, #3A5689 0%, #2C4570 100%);
+
+        &:hover {
+          background: linear-gradient(135deg, #2C4570 0%, #1E3050 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(58, 86, 137, 0.3);
+        }
+      }
+    }
+  }
+
+  &.confirm-dialog-danger {
+    .dialog-icon {
+      color: #EF4444;
+    }
+  }
+
+  &.confirm-dialog-warning {
+    .dialog-icon {
+      color: #F59E0B;
+    }
+  }
+
+  &.confirm-dialog-info {
+    .dialog-icon {
+      color: #3A5689;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .confirm-dialog {
+    min-width: auto;
+    width: 100%;
+  }
+}

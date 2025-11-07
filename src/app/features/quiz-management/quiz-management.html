@@ -1,52 +1,97 @@
 <div class="quiz-management">
-  <!-- En-tête -->
+  <!-- En-tête simple comme dans la maquette -->
   <div class="page-header">
     <div class="header-content">
       <h1>Gestion des Quiz</h1>
-      <p>Créez et gérez tous vos questionnaires d'évaluation</p>
+      <p>Vue d'ensemble de tous vos questionnaires d'évaluation</p>
     </div>
-    <button mat-raised-button color="primary" (click)="onCreateQuiz()">
+    <button mat-raised-button color="primary" (click)="onCreateQuiz()" class="generate-btn">
       <mat-icon>add</mat-icon>
-      Nouveau Quiz
+      Générer un Quiz
     </button>
   </div>
 
-  <!-- Statistiques -->
-  <app-quiz-stats></app-quiz-stats>
+  <!-- Statistiques - 4 cartes -->
+  <div class="stats-cards">
+    <mat-card class="stat-card">
+      <div class="stat-header">
+        <mat-icon class="stat-icon purple">quiz</mat-icon>
+        <h3>Total Quiz</h3>
+      </div>
+      <div class="stat-number">24</div>
+      <div class="stat-trend positive">+3 ce mois</div>
+    </mat-card>
 
-  <!-- Barre de recherche et filtres -->
-  <div class="filters-section">
-    <div class="search-container">
-      <!-- CORRECTION : Utiliser (search) au lieu de (searchChange) -->
-      <app-search-bar
-        [placeholder]="'Rechercher un quiz par titre, UE ou classe...'"
-        (search)="onSearch($event)">
-      </app-search-bar>
-    </div>
-    <app-quiz-filters
-      [filters]="filters"
-      [activeFilter]="selectedFilter"
-      (filterChange)="onFilterChange($event)">
-    </app-quiz-filters>
+    <mat-card class="stat-card">
+      <div class="stat-header">
+        <mat-icon class="stat-icon green">trending_up</mat-icon>
+        <h3>Quiz actifs</h3>
+      </div>
+      <div class="stat-number">8</div>
+      <div class="stat-label">En cours</div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-header">
+        <mat-icon class="stat-icon blue">visibility</mat-icon>
+        <h3>Taux de participation</h3>
+      </div>
+      <div class="stat-number">76%</div>
+      <div class="stat-trend positive">+12% vs mois dernier</div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-header">
+        <mat-icon class="stat-icon orange">edit</mat-icon>
+        <h3>Brouillons</h3>
+      </div>
+      <div class="stat-number">5</div>
+      <div class="stat-label">À finaliser</div>
+    </mat-card>
   </div>
 
-  <!-- Contenu principal -->
-  <div class="content-area">
-    <mat-card>
-      <mat-card-content>
-        <!-- Loading spinner -->
-        <div *ngIf="isLoading" class="loading-container">
-          <mat-spinner diameter="40"></mat-spinner>
-          <p>Chargement des quiz...</p>
-        </div>
+  <!-- Barre de recherche et filtres -->
+  <div class="search-filter-section">
+    <mat-form-field appearance="outline" class="search-field">
+      <input matInput placeholder="Rechercher un quiz par titre, UE ou classe..." [(ngModel)]="searchTerm" (input)="onSearch()">
+      <mat-icon matPrefix>search</mat-icon>
+    </mat-form-field>
 
-        <!-- Liste des quiz -->
-        <app-quiz-list
-          *ngIf="!isLoading"
-          [searchTerm]="searchTerm"
-          [filter]="selectedFilter">
-        </app-quiz-list>
-      </mat-card-content>
-    </mat-card>
+    <div class="filter-actions">
+      <button mat-stroked-button class="filter-btn">
+        <mat-icon>filter_list</mat-icon>
+        Filtres
+      </button>
+      <button mat-stroked-button class="sort-btn">
+        <mat-icon>sort</mat-icon>
+        Trier par
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtres par statut -->
+  <div class="status-filters">
+    <button 
+      mat-button 
+      *ngFor="let filter of filters"
+      [class.active]="selectedFilter === filter.value"
+      (click)="onFilterChange(filter.value)"
+      class="status-filter-btn">
+      {{ filter.label }} ({{ filter.count }})
+    </button>
+  </div>
+
+  <!-- Liste des quiz -->
+  <div class="quiz-list" *ngIf="!isLoading">
+    <app-quiz-list
+      [searchTerm]="searchTerm"
+      [filter]="selectedFilter">
+    </app-quiz-list>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Chargement des quiz...</p>
   </div>
 </div>

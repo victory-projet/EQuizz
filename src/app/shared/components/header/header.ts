@@ -4,32 +4,34 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatBadgeModule } from '@angular/material/badge';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatBadgeModule],
   template: `
     <header class="main-header">
-      <div class="header-title">
-        <h1>Tableau de bord</h1>
-        <p>Vue d'ensemble du système d'évaluation des enseignements</p>
-      </div>
-      
-      <div class="header-actions">
-        <div class="search-bar">
-          <span class="icon">🔍</span>
-          <input type="text" placeholder="Rechercher...">
+      <div class="header-content">
+        <div class="search-container">
+          <mat-icon class="search-icon">search</mat-icon>
+          <input type="text" placeholder="Rechercher un quiz, une UE, une classe..." class="search-input">
         </div>
         
-        <span class="notification-icon">🔔</span>
-        
-        <div class="user-profile">
-          <div class="user-info">
-            <span class="username">Admin</span>
-            <span class="role">Administrateur</span>
+        <div class="header-actions">
+          <button mat-icon-button class="notification-btn">
+            <mat-icon [matBadge]="3" matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
+          </button>
+          
+          <div class="user-profile">
+            <div class="user-info">
+              <span class="username">Administrateur</span>
+              <span class="role">Enseignant</span>
+            </div>
+            <div class="avatar">
+              <mat-icon>account_circle</mat-icon>
+            </div>
           </div>
-          <div class="avatar">A</div>
         </div>
       </div>
     </header>

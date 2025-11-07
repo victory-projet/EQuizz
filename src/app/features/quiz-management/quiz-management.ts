@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,6 +23,7 @@ import { SearchBar } from '../../shared/components/search-bar/search-bar';
   imports: [
     CommonModule,
     RouterModule,
+    FormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -30,10 +32,7 @@ import { SearchBar } from '../../shared/components/search-bar/search-bar';
     MatInputModule,
     MatSelectModule,
     MatChipsModule,
-    QuizStatsComponent,
-    QuizFiltersComponent,
-    QuizListComponent,
-    SearchBar
+    QuizListComponent
   ],
   templateUrl: './quiz-management.html',
   styleUrls: ['./quiz-management.scss']
@@ -80,8 +79,7 @@ export class QuizManagementComponent implements OnInit {
     this.filters[3].count = this.quizzes.filter(q => q.status === 'closed').length;
   }
 
-  onSearch(term: string): void {
-    this.searchTerm = term;
+  onSearch(): void {
     this.applyFilter();
   }
 

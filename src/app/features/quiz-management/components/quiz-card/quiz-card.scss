@@ -153,3 +153,25 @@
     }
   }
 }
+
+.actions-menu-btn {
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: var(--primary-color);
+    background: rgba(58, 86, 137, 0.1);
+  }
+}
+
+::ng-deep .mat-mdc-menu-panel {
+  min-width: 200px;
+
+  .delete-action {
+    color: var(--error-color);
+
+    mat-icon {
+      color: var(--error-color);
+    }
+  }
+}

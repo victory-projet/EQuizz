@@ -5,6 +5,9 @@ import { PreviewModalComponent } from '../../components/modals/preview-modal/pre
 import { EditModalComponent } from '../../components/modals/edit-modal/edit-modal';
 import { PublishModalComponent } from '../../components/modals/publish-modal/publish-modal';
 import { DeleteModalComponent } from '../../components/modals/delete-modal/delete-modal';
+import { CreateModalComponent } from '../../components/modals/create-modal/create-modal';
+import { GenerateQuizModalComponent } from '../../components/modals/generate-quiz-modal/generate-quiz-modal';
+import { ImportExcelModalComponent } from '../../components/modals/import-excel-modal/import-excel-modal';
 
 @Injectable({
   providedIn: 'root'
@@ -44,6 +47,32 @@ export class ModalService {
       width: '450px',
       data: { quiz },
       panelClass: 'delete-modal'
+    }).afterClosed();
+  }
+
+  openCreate(): Observable<any> {
+    return this.dialog.open(CreateModalComponent, {
+      width: '800px',
+      maxWidth: '95vw',
+      panelClass: 'create-modal'
+    }).afterClosed();
+  }
+
+  openGenerateQuiz(): Observable<any> {
+    return this.dialog.open(GenerateQuizModalComponent, {
+      width: '800px',
+      maxWidth: '95vw',
+      panelClass: 'generate-quiz-modal',
+      disableClose: false
+    }).afterClosed();
+  }
+
+  openImportExcel(): Observable<any> {
+    return this.dialog.open(ImportExcelModalComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      panelClass: 'import-excel-modal',
+      disableClose: false
     }).afterClosed();
   }
 }

@@ -41,29 +41,29 @@ interface NavItem {
   styles: [`
     .sidebar {
       width: 250px;
-      background: #2c3e50;
+      background: linear-gradient(180deg, #2C4570 0%, #3A5689 100%);
       height: 100vh;
       position: sticky;
       top: 0;
       padding: 0;
       display: flex;
       flex-direction: column;
-      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
     }
 
     .logo-section {
       display: flex;
       align-items: center;
-      padding: 20px;
-      background: #1a252f;
+      padding: 24px 20px;
+      background: rgba(0, 0, 0, 0.2);
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .logo {
-      width: 40px;
-      height: 40px;
-      background-color: #3498db;
-      border-radius: 4px;
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      border-radius: 8px;
       margin-right: 12px;
       display: flex;
       align-items: center;
@@ -71,6 +71,7 @@ interface NavItem {
       font-weight: bold;
       color: #fff;
       font-size: 1.2em;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
     }
 
     .app-name {
@@ -103,14 +104,16 @@ interface NavItem {
     }
 
     .navigation li:hover {
-      background-color: #1a252f;
+      background-color: rgba(255, 255, 255, 0.1);
       color: #fff;
+      transform: translateX(4px);
     }
 
     .navigation li.active {
-      background-color: #3498db;
+      background: linear-gradient(90deg, #10B981 0%, #059669 100%);
       color: #fff;
       font-weight: 500;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
     }
 
     .navigation li.active a {

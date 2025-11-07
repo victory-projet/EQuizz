@@ -1,11 +1,14 @@
 // core/services/quiz.service.ts
 import { Injectable } from '@angular/core';
 import { Quiz, Question } from '../../shared/interfaces/quiz.interface';
+import { ToastService } from './toast.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class QuizService {
+  constructor(private toastService: ToastService) {}
+
   private quizzes: Quiz[] = [
     {
       id: '1',
@@ -48,11 +51,19 @@ export class QuizService {
   private questions: Question[] = [
     {
       id: '1',
+      quizId: '1',
       type: 'multiple',
       text: 'Quelle est la complexité de l\'algorithme de tri rapide?',
-      options: ['O(n log n)', 'O(n²)', 'O(log n)', 'O(1)'],
+      order: 1,
+      options: [
+        { id: '1a', text: 'O(n log n)', order: 1 },
+        { id: '1b', text: 'O(n²)', order: 2 },
+        { id: '1c', text: 'O(log n)', order: 3 },
+        { id: '1d', text: 'O(1)', order: 4 }
+      ],
       correctAnswer: 0,
-      points: 2
+      points: 2,
+      createdAt: new Date('2025-09-15')
     }
   ];
 
@@ -74,12 +85,43 @@ export class QuizService {
       id: Math.random().toString(36).substr(2, 9)
     };
     this.quizzes.push(newQuiz);
+    this.toastService.success('Quiz créé avec succès !');
   }
 
   updateQuiz(id: string, updates: Partial<Quiz>): void {
     const index = this.quizzes.findIndex(quiz => quiz.id === id);
     if (index !== -1) {
       this.quizzes[index] = { ...this.quizzes[index], ...updates };
+      this.toastService.success('Quiz mis à jour avec succès !');
+    } else {
+      this.toastService.error('Quiz introuvable');
     }
+  }
+
+  deleteQuiz(id: string): void {
+    const index = this.quizzes.findIndex(quiz => quiz.id === id);
+    if (index !== -1) {
+      this.quizzes.splice(index, 1);
+      this.toastService.success('Quiz supprimé avec succès !');
+    } else {
+      this.toastService.error('Quiz introuvable');
+    }
+  }
+
+  publishQuiz(id: string): void {
+    const quiz = this.getQuizById(id);
+    if (quiz) {
+      if (quiz.questionsCount === 0) {
+        this.toastService.error('Impossible de publier un quiz sans questions');
+        return;
+      }
+      this.updateQuiz(id, { status: 'active' });
+      this.toastService.success('Quiz publié avec succès !');
+    }
+  }
+
+  unpublishQuiz(id: string): void {
+    this.updateQuiz(id, { status: 'draft' });
+    this.toastService.info('Quiz dépublié');
   }
 }

@@ -1,0 +1,194 @@
+<div class="evaluation-container">
+  <div class="page-header" @fadeInUp>
+    <div class="header-content">
+      <h1>Gestion des Quiz</h1>
+      <p class="subtitle">Vue d'ensemble de tous vos questionnaires d'évaluation</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="onGenerateQuiz()" class="generate-btn">
+      <mat-icon>add_circle</mat-icon>
+      Générer un Quiz
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <mat-card class="stat-card stat-total" @scaleIn>
+      <div class="stat-content">
+        <div class="stat-info">
+          <div class="stat-label">TOTAL QUIZ</div>
+          <div class="stat-value">{{ stats.total }}</div>
+          <div class="stat-change positive">
+            <mat-icon>trending_up</mat-icon>
+            +3 ce mois
+          </div>
+        </div>
+        <div class="stat-icon-wrapper">
+          <mat-icon class="stat-icon">quiz</mat-icon>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card stat-active" @scaleIn>
+      <div class="stat-content">
+        <div class="stat-info">
+          <div class="stat-label">QUIZ ACTIFS</div>
+          <div class="stat-value">{{ stats.active }}</div>
+          <div class="stat-change">En cours</div>
+        </div>
+        <div class="stat-icon-wrapper">
+          <mat-icon class="stat-icon">play_circle</mat-icon>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card stat-participation" @scaleIn>
+      <div class="stat-content">
+        <div class="stat-info">
+          <div class="stat-label">TAUX DE PARTICIPATION</div>
+          <div class="stat-value">{{ stats.participationRate }}</div>
+          <div class="stat-change positive">
+            <mat-icon>trending_up</mat-icon>
+            +12% vs mois dernier
+          </div>
+        </div>
+        <div class="stat-icon-wrapper">
+          <mat-icon class="stat-icon">people</mat-icon>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card stat-drafts" @scaleIn>
+      <div class="stat-content">
+        <div class="stat-info">
+          <div class="stat-label">BROUILLONS</div>
+          <div class="stat-value">{{ stats.drafts }}</div>
+          <div class="stat-change">À finaliser</div>
+        </div>
+        <div class="stat-icon-wrapper">
+          <mat-icon class="stat-icon">drafts</mat-icon>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-section" @fadeInUp>
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-icon matPrefix>search</mat-icon>
+      <input 
+        matInput 
+        [(ngModel)]="searchQuery"
+        (input)="onSearch()"
+        placeholder="Rechercher un quiz par titre, UE ou classe...">
+      <button mat-icon-button matSuffix *ngIf="searchQuery" (click)="searchQuery=''; onSearch()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+  </div>
+
+  <!-- Filter Chips -->
+  <div class="filter-section" @fadeInUp>
+    <mat-chip-listbox [value]="selectedFilter" (change)="setFilter($event.value)">
+      <mat-chip-option value="all" selected>
+        <mat-icon>check_circle</mat-icon>
+        Tous ({{ getFilterCount('all') }})
+      </mat-chip-option>
+      <mat-chip-option value="active">
+        <mat-icon>play_circle</mat-icon>
+        En cours ({{ getFilterCount('active') }})
+      </mat-chip-option>
+      <mat-chip-option value="draft">
+        <mat-icon>edit</mat-icon>
+        Brouillons ({{ getFilterCount('draft') }})
+      </mat-chip-option>
+      <mat-chip-option value="closed">
+        <mat-icon>check</mat-icon>
+        Clôturés ({{ getFilterCount('closed') }})
+      </mat-chip-option>
+    </mat-chip-listbox>
+  </div>
+
+  <!-- Quiz List -->
+  <div class="quiz-list" [@listAnimation]="filteredQuizzes.length">
+    <mat-card *ngFor="let quiz of filteredQuizzes" class="quiz-card" @fadeInUp>
+      <div class="quiz-header">
+        <div class="quiz-title-section">
+          <h2>{{ quiz.title }}</h2>
+          <span class="status-badge" [ngClass]="getStatusClass(quiz.status)">
+            {{ quiz.status }}
+          </span>
+        </div>
+        <div class="quiz-actions">
+          <button mat-icon-button 
+                  matTooltip="Prévisualiser"
+                  (click)="onViewQuiz(quiz)">
+            <mat-icon>visibility</mat-icon>
+          </button>
+          <button mat-icon-button 
+                  matTooltip="Modifier"
+                  (click)="onEditQuiz(quiz)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button 
+                  matTooltip="Publier"
+                  (click)="onPublishQuiz(quiz)"
+                  *ngIf="quiz.status === 'Brouillon'">
+            <mat-icon>publish</mat-icon>
+          </button>
+          <button mat-icon-button 
+                  matTooltip="Supprimer"
+                  color="warn"
+                  (click)="onDeleteQuiz(quiz)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="quiz-details">
+        <div class="detail-column">
+          <div class="detail-item">
+            <span class="detail-label">UE:</span>
+            <span class="detail-value">{{ quiz.ue }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Participation:</span>
+            <span class="detail-value" *ngIf="quiz.participation">
+              {{ quiz.participation.current }}/{{ quiz.participation.total }} 
+              ({{ quiz.participation.rate }}%)
+            </span>
+            <span class="detail-value" *ngIf="!quiz.participation">-</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Fin:</span>
+            <span class="detail-value">{{ quiz.endDate }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Créé le:</span>
+            <span class="detail-value">{{ quiz.createdDate }}</span>
+          </div>
+        </div>
+
+        <div class="detail-column">
+          <div class="detail-item">
+            <span class="detail-label">Questions:</span>
+            <span class="detail-value">{{ quiz.questions }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Type:</span>
+            <span class="detail-value">{{ quiz.type }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Classes:</span>
+            <span class="detail-value">{{ quiz.classes.join(', ') }}</span>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+
+    <div *ngIf="filteredQuizzes.length === 0" class="no-results">
+      <mat-icon>search_off</mat-icon>
+      <p>Aucun quiz trouvé</p>
+      <p class="no-results-hint">Essayez de modifier vos critères de recherche</p>
+    </div>
+  </div>
+</div>

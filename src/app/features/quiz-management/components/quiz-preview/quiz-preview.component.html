@@ -1,0 +1,133 @@
+<div class="quiz-preview-dialog">
+  <!-- Header -->
+  <div class="preview-header">
+    <div class="header-content">
+      <h2>{{ data.quiz.title }}</h2>
+      <div class="quiz-meta">
+        <span class="meta-item">
+          <mat-icon>school</mat-icon>
+          {{ data.quiz.ue }}
+        </span>
+        <span class="meta-item">
+          <mat-icon>quiz</mat-icon>
+          {{ data.questions.length }} questions
+        </span>
+        <span class="meta-item">
+          <mat-icon>star</mat-icon>
+          {{ getTotalPoints() }} points
+        </span>
+      </div>
+    </div>
+    <button mat-icon-button (click)="close()" class="close-btn">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-container">
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="progress"></div>
+    </div>
+    <span class="progress-text">
+      Question {{ currentQuestionIndex + 1 }} / {{ data.questions.length }}
+    </span>
+  </div>
+
+  <!-- Question Content -->
+  <div class="question-content">
+    <mat-card class="question-card">
+      <div class="question-header">
+        <span class="question-number">Question {{ currentQuestionIndex + 1 }}</span>
+        <span class="question-points">{{ currentQuestion.points }} point(s)</span>
+      </div>
+
+      <div class="question-text">
+        {{ currentQuestion.text }}
+      </div>
+
+      <!-- QCM Options -->
+      <div *ngIf="currentQuestion.type === 'multiple'" class="question-options">
+        <mat-radio-group 
+          [value]="getSelectedAnswer(currentQuestion.id)"
+          (change)="selectAnswer(currentQuestion.id, $event.value)">
+          <mat-radio-button 
+            *ngFor="let option of currentQuestion.options; let i = index" 
+            [value]="i"
+            class="option-item">
+            <span class="option-label">{{ String.fromCharCode(65 + i) }}.</span>
+            {{ option.text }}
+          </mat-radio-button>
+        </mat-radio-group>
+      </div>
+
+      <!-- Question fermée -->
+      <div *ngIf="currentQuestion.type === 'close'" class="question-answer">
+        <div class="answer-input-container">
+          <mat-icon>edit</mat-icon>
+          <input 
+            type="text" 
+            placeholder="Votre réponse..."
+            [value]="getSelectedAnswer(currentQuestion.id) || ''"
+            (input)="onInputChange($event, currentQuestion.id)"
+            class="answer-input">
+        </div>
+      </div>
+
+      <!-- Question ouverte -->
+      <div *ngIf="currentQuestion.type === 'open'" class="question-answer">
+        <div class="answer-textarea-container">
+          <mat-icon>subject</mat-icon>
+          <textarea 
+            placeholder="Rédigez votre réponse..."
+            rows="5"
+            [value]="getSelectedAnswer(currentQuestion.id) || ''"
+            (input)="onTextareaChange($event, currentQuestion.id)"
+            class="answer-textarea"></textarea>
+        </div>
+      </div>
+
+      <!-- Explication (si présente) -->
+      <div *ngIf="currentQuestion.explanation" class="question-explanation">
+        <mat-icon>info</mat-icon>
+        <p>{{ currentQuestion.explanation }}</p>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Navigation Dots -->
+  <div class="navigation-dots">
+    <button 
+      *ngFor="let question of data.questions; let i = index"
+      class="dot"
+      [class.active]="i === currentQuestionIndex"
+      [class.answered]="selectedAnswers.has(question.id)"
+      (click)="goToQuestion(i)"
+      [attr.aria-label]="'Aller à la question ' + (i + 1)">
+      {{ i + 1 }}
+    </button>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="preview-footer">
+    <button 
+      mat-stroked-button 
+      (click)="previousQuestion()"
+      [disabled]="isFirstQuestion">
+      <mat-icon>chevron_left</mat-icon>
+      Précédent
+    </button>
+
+    <button mat-stroked-button (click)="close()">
+      Fermer la prévisualisation
+    </button>
+
+    <button 
+      mat-raised-button 
+      color="primary"
+      (click)="nextQuestion()"
+      [disabled]="isLastQuestion">
+      Suivant
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</div>

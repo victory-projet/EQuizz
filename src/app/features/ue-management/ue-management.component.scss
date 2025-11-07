@@ -1,0 +1,230 @@
+.ue-management-container {
+  padding: 30px;
+  background: var(--bg-secondary);
+  min-height: 100vh;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+
+  .header-content {
+    h1 {
+      margin: 0 0 8px 0;
+      color: var(--text-primary);
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+  }
+}
+
+.form-card {
+  margin-bottom: 30px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+
+  mat-card-header {
+    background: var(--bg-secondary);
+    padding: 20px 24px;
+    border-bottom: 2px solid var(--primary-color);
+
+    mat-card-title {
+      color: var(--primary-color);
+      font-weight: 600;
+      font-size: 18px;
+    }
+  }
+
+  mat-card-content {
+    padding: 24px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.search-section {
+  margin-bottom: 24px;
+
+  .search-field {
+    width: 100%;
+    max-width: 500px;
+  }
+}
+
+.ue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+}
+
+.ue-card {
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  border-left: 4px solid var(--primary-color);
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+  }
+
+  mat-card-header {
+    padding: 16px 20px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+
+    .ue-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+
+      .ue-code {
+        font-weight: 700;
+        font-size: 16px;
+        color: var(--primary-color);
+        background: rgba(58, 86, 137, 0.1);
+        padding: 6px 12px;
+        border-radius: 6px;
+      }
+
+      .ue-credits {
+        background: var(--secondary-color);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+    }
+  }
+
+  mat-card-content {
+    padding: 20px;
+
+    .ue-name {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    .ue-description {
+      margin: 0 0 16px 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .ue-meta {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+
+      .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--text-secondary);
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+
+  mat-card-actions {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: var(--text-light);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    color: var(--text-primary);
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0 0 24px 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .ue-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .ue-management-container {
+    padding: 20px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .ue-grid {
+    grid-template-columns: 1fr;
+  }
+}

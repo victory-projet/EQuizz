@@ -4,6 +4,8 @@ import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './shared/components/header/header';
 import { SidebarComponent } from './shared/components/sidebar/sidebar';
 import { FooterComponent } from './shared/components/footer/footer';
+import { LoadingSpinnerComponent } from './shared/components/loading-spinner/loading-spinner';
+import { ToastComponent } from './shared/components/toast/toast.component';
 
 @Component({
   selector: 'app-root',
@@ -12,20 +14,11 @@ import { FooterComponent } from './shared/components/footer/footer';
     RouterOutlet,
     HeaderComponent,
     SidebarComponent,
-    FooterComponent
+    FooterComponent,
+    LoadingSpinnerComponent,
+    ToastComponent
   ],
-  template: `
-    <div class="app-layout">
-      <app-header></app-header>
-      <div class="main-content">
-        <app-sidebar></app-sidebar>
-        <main class="content-area">
-          <router-outlet></router-outlet>
-        </main>
-      </div>
-      <app-footer></app-footer>
-    </div>
-  `,
+  templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })
 export class App {

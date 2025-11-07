@@ -11,8 +11,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 // Composants
-import { SidebarComponent } from '../../shared/components/sidebar/sidebar';
-import { HeaderComponent } from '../../shared/components/header/header';
 import { StatsGrid } from './components/stats-grid/stats-grid';
 import { ParticipationChartComponent } from './components/participation-chart/participation-chart';
 import { EvaluationChartComponent } from './components/evaluation-chart/evaluation-chart';
@@ -41,8 +39,6 @@ import { Router } from '@angular/router';
     MatInputModule,
     MatProgressBarModule,
     MatTooltipModule,
-    SidebarComponent,
-    HeaderComponent,
     StatsGrid,
     ParticipationChartComponent,
     EvaluationChartComponent,

@@ -1,44 +1,49 @@
-<!-- src/app/features/quiz-management/components/quiz-editor/quiz-editor.html -->
-<div class="quiz-editor">
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>Nouveau Quiz</mat-card-title>
-    </mat-card-header>
+<div class="quiz-editor-container">
+  <div class="editor-header">
+    <h1>{{ isEditMode ? 'Modifier le quiz' : 'Créer un nouveau quiz' }}</h1>
+    <div class="header-actions">
+      <button mat-stroked-button (click)="cancel()">
+        <mat-icon>close</mat-icon>
+        Annuler
+      </button>
+      <button mat-stroked-button color="primary" (click)="previewQuiz()" [disabled]="questions.length === 0">
+        <mat-icon>visibility</mat-icon>
+        Prévisualiser
+      </button>
+      <button mat-raised-button color="primary" (click)="saveQuiz()">
+        <mat-icon>save</mat-icon>
+        {{ isEditMode ? 'Mettre à jour' : 'Créer le quiz' }}
+      </button>
+    </div>
+  </div>
 
+  <!-- Informations du quiz -->
+  <mat-card class="quiz-info-card">
+    <mat-card-header>
+      <mat-card-title>Informations générales</mat-card-title>
+    </mat-card-header>
     <mat-card-content>
-      <form class="quiz-form">
+      <div class="form-grid">
         <!-- Titre -->
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Titre du quiz</mat-label>
-          <input
-            matInput
-            [(ngModel)]="quiz.title"
-            name="title"
-            placeholder="Ex: Évaluation Mi-parcours - Algorithmique"
-            required>
+          <input matInput [(ngModel)]="quiz.title" placeholder="Ex: Évaluation Mi-parcours - Algorithmique" required>
         </mat-form-field>
 
-        <!-- Unité d'Enseignement -->
-        <mat-form-field appearance="outline" class="full-width">
+        <!-- UE -->
+        <mat-form-field appearance="outline">
           <mat-label>Unité d'Enseignement</mat-label>
-          <mat-select
-            [(ngModel)]="quiz.ue"
-            name="ue"
-            required>
-            <mat-option value="">Sélectionnez une UE</mat-option>
+          <mat-select [(ngModel)]="quiz.ue" required>
             <mat-option *ngFor="let ue of ueOptions" [value]="ue">
               {{ ue }}
             </mat-option>
           </mat-select>
         </mat-form-field>
 
-        <!-- Type de quiz -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Type de quiz</mat-label>
-          <mat-select
-            [(ngModel)]="quiz.type"
-            name="type"
-            required>
+        <!-- Type -->
+        <mat-form-field appearance="outline">
+          <mat-label>Type d'évaluation</mat-label>
+          <mat-select [(ngModel)]="quiz.type" required>
             <mat-option *ngFor="let type of typeOptions" [value]="type.value">
               {{ type.label }}
             </mat-option>
@@ -47,48 +52,93 @@
 
         <!-- Classes -->
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Classes concernées</mat-label>
-          <mat-select
-            [(ngModel)]="quiz.classes"
-            name="classes"
-            multiple
-            required>
+          <mat-label>Classes</mat-label>
+          <mat-select [(ngModel)]="quiz.classes" multiple required>
             <mat-option *ngFor="let class of classOptions" [value]="class">
               {{ class }}
             </mat-option>
           </mat-select>
+          <mat-hint>Sélectionnez une ou plusieurs classes</mat-hint>
         </mat-form-field>
 
         <!-- Date de fin -->
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field appearance="outline">
           <mat-label>Date de fin</mat-label>
-          <input
-            matInput
-            [(ngModel)]="quiz.endDate"
-            name="endDate"
-            [matDatepicker]="picker"
-            required>
+          <input matInput [matDatepicker]="picker" [(ngModel)]="quiz.endDate" required>
           <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
           <mat-datepicker #picker></mat-datepicker>
         </mat-form-field>
-
-        <!-- Nombre de questions -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Nombre de questions</mat-label>
-          <input
-            matInput
-            type="number"
-            [(ngModel)]="quiz.questionsCount"
-            name="questionsCount"
-            min="0"
-            required>
-        </mat-form-field>
-      </form>
+      </div>
     </mat-card-content>
-
-    <mat-card-actions align="end">
-      <button mat-button color="warn">Annuler</button>
-      <button mat-raised-button color="primary">Créer le Quiz</button>
-    </mat-card-actions>
   </mat-card>
+
+  <!-- Questions -->
+  <div class="questions-section">
+    <div class="section-header">
+      <h2>
+        Questions 
+        <span class="question-count">({{ questions.length }})</span>
+      </h2>
+      <button mat-raised-button [matMenuTriggerFor]="questionMenu" color="accent">
+        <mat-icon>add</mat-icon>
+        Ajouter une question
+      </button>
+      <mat-menu #questionMenu="matMenu">
+        <button mat-menu-item (click)="addQuestion('multiple')">
+          <mat-icon>radio_button_checked</mat-icon>
+          <span>QCM (Choix multiples)</span>
+        </button>
+        <button mat-menu-item (click)="addQuestion('close')">
+          <mat-icon>short_text</mat-icon>
+          <span>Question fermée</span>
+        </button>
+        <button mat-menu-item (click)="addQuestion('open')">
+          <mat-icon>subject</mat-icon>
+          <span>Question ouverte</span>
+        </button>
+      </mat-menu>
+    </div>
+
+    <!-- Liste des questions avec drag & drop -->
+    <div 
+      cdkDropList 
+      (cdkDropListDropped)="dropQuestion($event)"
+      class="questions-list">
+      <div *ngFor="let question of questions; let i = index" cdkDrag class="question-drag-item">
+        <div class="drag-handle" cdkDragHandle>
+          <mat-icon>drag_indicator</mat-icon>
+        </div>
+        <app-question-editor
+          [question]="question"
+          [index]="i"
+          (questionChange)="onQuestionChange($event, i)"
+          (remove)="removeQuestion(i)">
+        </app-question-editor>
+      </div>
+    </div>
+
+    <!-- Message si aucune question -->
+    <div *ngIf="questions.length === 0" class="empty-questions">
+      <mat-icon>quiz</mat-icon>
+      <h3>Aucune question ajoutée</h3>
+      <p>Cliquez sur "Ajouter une question" pour commencer à créer votre quiz</p>
+    </div>
+  </div>
+
+  <!-- Actions du bas -->
+  <div class="editor-footer">
+    <button mat-stroked-button (click)="cancel()">
+      Annuler
+    </button>
+    <div class="footer-actions">
+      <button mat-stroked-button color="primary" (click)="previewQuiz()" [disabled]="questions.length === 0">
+        <mat-icon>visibility</mat-icon>
+        Prévisualiser
+      </button>
+      <button mat-raised-button color="primary" (click)="saveQuiz()">
+        <mat-icon>save</mat-icon>
+        {{ isEditMode ? 'Mettre à jour' : 'Créer le quiz' }}
+      </button>
+    </div>
+  </div>
 </div>
