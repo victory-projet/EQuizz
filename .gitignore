@@ -1,1 +1,10 @@
 node_modules
+# Angular/Vite Cache
+.angular/cache
+
+# Historique de la compilation (souvent grand)
+.angular/
+
+# Autres caches de build/environnement
+dist/
+tmp/
