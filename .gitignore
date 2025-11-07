@@ -8,3 +8,153 @@ node_modules
 # Autres caches de build/environnement
 dist/
 tmp/
+
+# ========================================
+# FICHIERS DE DOCUMENTATION TEMPORAIRES
+# ========================================
+# Fichiers de documentation d'intégration (à déplacer vers /docs)
+ARCHITECTURE_INTEGRATION.md
+CHECKLIST_INTEGRATION.md
+GUIDE_IMPORT_EXCEL.md
+RESUME_INTEGRATION.txt
+VERIFICATION_INTEGRATION.md
+FICHIERS_A_NETTOYER.md
+AMELIORATIONS_APPLIQUEES.md
+
+# ========================================
+# FICHIERS EXTERNES ET TEMPORAIRES
+# ========================================
+# Fichiers externes au projet
+/C:/Users/surface/OneDrive/Documents/DashboardAmeliore/dashboard.html
+
+# Fichiers de brouillon et temporaires
+*.tmp
+*.temp
+*~
+.DS_Store
+Thumbs.db
+
+# ========================================
+# FICHIERS DE DÉVELOPPEMENT
+# ========================================
+# Logs de développement
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Fichiers d'environnement locaux
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ========================================
+# FICHIERS IDE ET ÉDITEURS
+# ========================================
+# VSCode
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+!.vscode/tasks.json
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# ========================================
+# FICHIERS DE TEST NON IMPLÉMENTÉS
+# ========================================
+# Tests vides ou non implémentés (temporaire)
+src/app/features/analytics/analytics.spec.ts
+src/app/features/import-export/import-preview/import-preview.spec.ts
+
+# ========================================
+# COMPOSANTS NON UTILISÉS
+# ========================================
+# Import-preview (doublon avec import-excel-modal)
+src/app/features/import-export/import-preview/
+
+# ========================================
+# FICHIERS DE SAUVEGARDE
+# ========================================
+# Sauvegardes automatiques
+*.bak
+*.backup
+*.swp
+*.swo
+
+# ========================================
+# FICHIERS SYSTÈME
+# ========================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Linux
+*~
+.nfs*
+
+# ========================================
+# DOSSIERS DE CACHE ET BUILD
+# ========================================
+# Coverage reports
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# ========================================
+# FICHIERS DE CONFIGURATION LOCAUX
+# ========================================
+# Configuration locale de développement
+.env
+.env.local
+config/local.json
+
+# Certificats SSL locaux
+*.pem
+*.key
+*.crt
+
+# ========================================
+# FICHIERS GÉNÉRÉS AUTOMATIQUEMENT
+# ========================================
+# Documentation générée
+docs/generated/
+typedoc/
+
+# Fichiers de build
+build/
+out/
