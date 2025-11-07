@@ -1,0 +1,236 @@
+<!-- src/app/features/evaluation/evaluation.component.html -->
+<div class="evaluation-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Gestion des Quiz</h1>
+      <p class="subtitle">Gérez vos questionnaires d'évaluation</p>
+    </div>
+    <button class="btn-primary" (click)="createQuiz()">
+      ➕ Générer un Quiz
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon blue">📋</div>
+      <div class="stat-content">
+        <div class="stat-label">Total Quiz</div>
+        <div class="stat-value">{{ totalQuizzes() }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon green">✅</div>
+      <div class="stat-content">
+        <div class="stat-label">Quiz Actifs</div>
+        <div class="stat-value">{{ activeQuizzes() }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon purple">📊</div>
+      <div class="stat-content">
+        <div class="stat-label">Taux de Participation</div>
+        <div class="stat-value">{{ participationRate() }}%</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon orange">📝</div>
+      <div class="stat-content">
+        <div class="stat-label">Brouillons</div>
+        <div class="stat-value">{{ drafts() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <input 
+      type="text" 
+      placeholder="Rechercher un quiz par titre, UE ou classe..."
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="onSearchChange()"
+      class="search-input"
+    />
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button 
+      class="tab" 
+      [class.active]="activeFilter() === 'all'"
+      (click)="setFilter('all')"
+    >
+      Tous ({{ getFilterCount('all') }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeFilter() === 'active'"
+      (click)="setFilter('active')"
+    >
+      En cours ({{ getFilterCount('active') }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeFilter() === 'draft'"
+      (click)="setFilter('draft')"
+    >
+      Brouillons ({{ getFilterCount('draft') }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeFilter() === 'closed'"
+      (click)="setFilter('closed')"
+    >
+      Clôturés ({{ getFilterCount('closed') }})
+    </button>
+  </div>
+
+  <!-- Quiz Grid -->
+  <div class="quiz-grid">
+    <div *ngFor="let quiz of filteredQuizzes()" class="quiz-card">
+      <div class="quiz-header">
+        <div class="quiz-type">{{ quiz.type }}</div>
+        <span class="status-badge" [ngClass]="getStatusClass(quiz.status)">
+          {{ quiz.status }}
+        </span>
+      </div>
+
+      <h3 class="quiz-title">{{ quiz.title }}</h3>
+
+      <div class="quiz-details">
+        <div class="detail-item">
+          <span class="icon">📚</span>
+          <span>{{ quiz.subject }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="icon">👥</span>
+          <span>{{ quiz.classes.join(', ') }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="icon">❓</span>
+          <span>{{ quiz.questions }} questions</span>
+        </div>
+        <div class="detail-item">
+          <span class="icon">📅</span>
+          <span>{{ quiz.createdDate }}</span>
+        </div>
+      </div>
+
+      <!-- Participation Progress (only for active quizzes) -->
+      <div class="participation-section" *ngIf="quiz.status === 'En cours'">
+        <div class="participation-info">
+          <span class="label">Participation</span>
+          <span class="value">{{ quiz.participation.current }}/{{ quiz.participation.total }} ({{ quiz.participation.percentage }}%)</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="quiz.participation.percentage"></div>
+        </div>
+        <div class="deadline" *ngIf="quiz.endDate">
+          ⏰ Fin: {{ quiz.endDate }}
+        </div>
+      </div>
+
+      <div class="quiz-actions">
+        <button 
+          *ngIf="quiz.status === 'En cours'" 
+          class="btn-action btn-view"
+          (click)="viewResults(quiz.id)"
+        >
+          Résultats
+        </button>
+        <button 
+          *ngIf="quiz.status === 'Brouillon'" 
+          class="btn-action btn-edit"
+          (click)="continueQuiz(quiz.id)"
+        >
+          Continuer
+        </button>
+        <button 
+          class="btn-action btn-delete"
+          (click)="deleteQuiz(quiz)"
+        >
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredQuizzes().length === 0" class="empty-state">
+    <p>Aucun quiz trouvé</p>
+  </div>
+</div>
+
+<!-- Modal Voir Résultats -->
+<app-modal [isOpen]="showResultsModal()" [title]="'Résultats du Quiz'" [size]="'large'" (close)="closeAllModals()">
+  <div class="results-view" *ngIf="selectedQuiz() as quiz">
+    <div class="detail-section">
+      <div class="detail-header">
+        <span class="quiz-type-large">{{ quiz.type }}</span>
+        <span class="status-badge-large" [ngClass]="getStatusClass(quiz.status)">
+          {{ quiz.status }}
+        </span>
+      </div>
+      <h2 class="quiz-title-large">{{ quiz.title }}</h2>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-item-large">
+        <span class="detail-icon">📚</span>
+        <div>
+          <div class="detail-label">Unité d'Enseignement</div>
+          <div class="detail-value">{{ quiz.subject }}</div>
+        </div>
+      </div>
+
+      <div class="detail-item-large">
+        <span class="detail-icon">👥</span>
+        <div>
+          <div class="detail-label">Classes</div>
+          <div class="detail-value">{{ quiz.classes.join(', ') }}</div>
+        </div>
+      </div>
+
+      <div class="detail-item-large">
+        <span class="detail-icon">📊</span>
+        <div>
+          <div class="detail-label">Participation</div>
+          <div class="detail-value">{{ quiz.participation.current }}/{{ quiz.participation.total }} ({{ quiz.participation.percentage }}%)</div>
+        </div>
+      </div>
+
+      <div class="detail-item-large">
+        <span class="detail-icon">❓</span>
+        <div>
+          <div class="detail-label">Questions</div>
+          <div class="detail-value">{{ quiz.questions }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeAllModals()">Fermer</button>
+      <button type="button" class="btn-primary" (click)="exportResults()">Exporter PDF</button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Modal Supprimer -->
+<app-modal [isOpen]="showDeleteModal()" [title]="'Confirmer la suppression'" [size]="'small'" (close)="closeAllModals()">
+  <div class="delete-confirmation" *ngIf="selectedQuiz()">
+    <div class="warning-icon">⚠️</div>
+    <p class="warning-text">
+      Êtes-vous sûr de vouloir supprimer le quiz <strong>{{ selectedQuiz()!.title }}</strong> ?
+    </p>
+    <p class="warning-subtext">Cette action est irréversible.</p>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeAllModals()">Annuler</button>
+      <button type="button" class="btn-danger" (click)="confirmDelete()">Supprimer</button>
+    </div>
+  </div>
+</app-modal>

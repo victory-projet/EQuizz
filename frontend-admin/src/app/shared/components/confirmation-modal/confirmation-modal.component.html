@@ -1,0 +1,30 @@
+<!-- src/app/shared/components/confirmation-modal/confirmation-modal.component.html -->
+<app-modal [isOpen]="isOpen" (close)="onCancel()">
+  <div class="confirmation-modal">
+    <div class="confirmation-header">
+      <h2 class="confirmation-title">{{ data.title }}</h2>
+    </div>
+
+    <div class="confirmation-body">
+      <p class="confirmation-message">{{ data.message }}</p>
+      <p *ngIf="data.entityName" class="entity-name">
+        <strong>{{ data.entityName }}</strong>
+      </p>
+    </div>
+
+    <div class="confirmation-actions">
+      <button 
+        type="button" 
+        class="btn btn-secondary" 
+        (click)="onCancel()">
+        {{ data.cancelText }}
+      </button>
+      <button 
+        type="button" 
+        [class]="data.isDangerous ? 'btn btn-danger' : 'btn btn-primary'" 
+        (click)="onConfirm()">
+        {{ data.confirmText }}
+      </button>
+    </div>
+  </div>
+</app-modal>

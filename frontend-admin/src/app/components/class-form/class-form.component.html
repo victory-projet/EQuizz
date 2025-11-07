@@ -1,0 +1,77 @@
+<!-- src/app/shared/components/class-form/class-form.component.html -->
+<form class="modal-form" (ngSubmit)="onSubmit()">
+  <!-- Nom -->
+  <div class="form-group">
+    <label for="name">Nom de la classe <span class="required">*</span></label>
+    <input
+      id="name"
+      type="text"
+      [(ngModel)]="classData.name"
+      name="name"
+      placeholder="Ex: L1 Info A"
+      required
+      class="form-input"
+    />
+  </div>
+
+  <!-- Niveau + Étudiants -->
+  <div class="form-row">
+    <div class="form-group">
+      <label for="level">Niveau <span class="required">*</span></label>
+      <select
+        id="level"
+        [(ngModel)]="classData.level"
+        name="level"
+        required
+        class="form-select"
+      >
+        <option value="" disabled>Sélectionner...</option>
+        <option>Licence 1</option>
+        <option>Licence 2</option>
+        <option>Licence 3</option>
+        <option>Master 1</option>
+        <option>Master 2</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="students">Nombre d'étudiants</label>
+      <input
+        id="students"
+        type="number"
+        [(ngModel)]="classData.studentCount"
+        name="studentCount"
+        min="0"
+        placeholder="0"
+        class="form-input"
+      />
+    </div>
+  </div>
+
+  <!-- Année -->
+  <div class="form-group">
+    <label for="year">Année académique</label>
+    <input
+      id="year"
+      type="text"
+      [(ngModel)]="classData.academicYear"
+      name="academicYear"
+      placeholder="2024-2025"
+      class="form-input"
+    />
+  </div>
+
+  <!-- Actions -->
+  <div class="modal-actions">
+    <button type="button" class="btn-secondary" (click)="cancel.emit()">
+      Annuler
+    </button>
+    <button
+      type="submit"
+      class="btn-primary"
+      [disabled]="!isValid"
+    >
+      Enregistrer
+    </button>
+  </div>
+</form>

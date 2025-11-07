@@ -1,0 +1,36 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>Tableau de bord</h1>
+    <p class="subtitle">Vue d'ensemble de votre plateforme</p>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Chargement des données...</p>
+    </div>
+  } @else if (analyticsData()) {
+    <div class="dashboard-content">
+      <app-stats-grid [data]="analyticsData()!" />
+      
+      <div class="dashboard-grid">
+        <div class="chart-section">
+          <app-participation-chart />
+        </div>
+        
+        <div class="alerts-section">
+          <app-alerts-panel />
+        </div>
+      </div>
+
+      <div class="activities-section">
+        <app-recent-activities />
+      </div>
+    </div>
+  } @else {
+    <div class="error-state">
+      <p>Impossible de charger les données</p>
+      <button (click)="loadDashboardData()">Réessayer</button>
+    </div>
+  }
+</div>

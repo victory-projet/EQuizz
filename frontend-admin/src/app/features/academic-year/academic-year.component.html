@@ -1,0 +1,92 @@
+<div class="academic-year-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Année Académique</h1>
+      <p class="subtitle">Gérez les années académiques et les périodes</p>
+    </div>
+    <button class="btn-primary" (click)="addYear()">
+      ➕ Nouvelle Année
+    </button>
+  </div>
+
+  <!-- Current Year Card (Featured) -->
+  <div class="current-year-featured" *ngIf="currentYear">
+    <div class="featured-badge">
+      ⭐ Année en cours
+    </div>
+    <h2 class="featured-title">{{ currentYear.name }}</h2>
+    <div class="featured-dates">
+      <div class="date-item">
+        <span class="icon">📅</span>
+        <span>Début: {{ currentYear.startDate | date:'dd/MM/yyyy' }}</span>
+      </div>
+      <div class="date-item">
+        <span class="icon">📅</span>
+        <span>Fin: {{ currentYear.endDate | date:'dd/MM/yyyy' }}</span>
+      </div>
+    </div>
+    <div class="semesters-section" *ngIf="currentYear.semesters.length > 0">
+      <div class="semesters-label">Semestres</div>
+      <div class="semester-chips">
+        <span *ngFor="let semester of currentYear.semesters" class="semester-chip">
+          📚 {{ semester.name }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- All Years Section -->
+  <div class="years-section">
+    <h3 class="section-title">Toutes les Années Académiques</h3>
+    
+    <div class="years-grid">
+      <div *ngFor="let year of academicYears" class="year-card">
+        <div class="year-header">
+          <div class="year-name">{{ year.name }}</div>
+          <div class="year-status">
+            <span class="status-badge" [class.active]="year.isActive">
+              {{ year.isActive ? '✓ Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="year-details">
+          <div class="detail-item">
+            <span class="icon">📅</span>
+            <span>{{ year.startDate | date:'dd/MM/yyyy' }} - {{ year.endDate | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="icon">📚</span>
+            <span>{{ year.semesters.length }} semestre(s)</span>
+          </div>
+        </div>
+
+        <div class="year-actions">
+          <button class="btn-action btn-view" (click)="addSemester(year)">
+            Ajouter Semestre
+          </button>
+          <button class="btn-action btn-edit" (click)="editYear(year)">
+            Modifier
+          </button>
+          <button class="btn-action btn-delete" (click)="deleteYear(year)">
+            Supprimer
+          </button>
+        </div>
+
+        <div class="toggle-section">
+          <label class="toggle-label">
+            <input 
+              type="checkbox" 
+              [checked]="year.isActive"
+              (change)="toggleActive(year)"
+              class="toggle-input"
+            />
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">{{ year.isActive ? 'Désactiver' : 'Activer' }}</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

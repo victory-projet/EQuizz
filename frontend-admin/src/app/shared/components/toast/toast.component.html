@@ -1,0 +1,26 @@
+<div class="toast-container" role="region" aria-live="polite" aria-label="Notifications">
+  <div 
+    *ngFor="let notification of notifications$ | async" 
+    class="toast"
+    [ngClass]="getColorClass(notification.type)"
+    [@toastAnimation]
+    role="alert"
+    aria-atomic="true">
+    
+    <div class="toast-icon">
+      <span class="material-icons">{{ getIcon(notification.type) }}</span>
+    </div>
+    
+    <div class="toast-content">
+      <p class="toast-message">{{ notification.message }}</p>
+    </div>
+    
+    <button 
+      class="toast-close" 
+      (click)="close(notification)"
+      aria-label="Fermer la notification"
+      type="button">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+</div>

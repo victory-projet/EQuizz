@@ -1,0 +1,152 @@
+<!-- src/app/features/class-management/class-management.component.html -->
+<div class="class-management-page" @fadeInUp>
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Gestion des Classes</h1>
+      <p class="subtitle">Gérez vos classes et affectations d'étudiants</p>
+    </div>
+    <button class="btn-primary" (click)="addClass()">
+      <svg-icon name="plus" class="icon-add"></svg-icon>
+      Nouvelle Classe
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <svg-icon name="school" class="stat-icon blue"></svg-icon>
+      <div class="stat-content">
+        <div class="stat-label">Total Classes</div>
+        <div class="stat-value">{{ totalClasses() }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <svg-icon name="users" class="stat-icon green"></svg-icon>
+      <div class="stat-content">
+        <div class="stat-label">Total Étudiants</div>
+        <div class="stat-value">{{ totalStudents() }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <svg-icon name="calendar" class="stat-icon purple"></svg-icon>
+      <div class="stat-content">
+        <div class="stat-label">Année en cours</div>
+        <div class="stat-value">{{ currentYear() }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <svg-icon name="trending-up" class="stat-icon orange"></svg-icon>
+      <div class="stat-content">
+        <div class="stat-label">Taux de remplissage</div>
+        <div class="stat-value">{{ fillRate() }}%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <div class="search-wrapper">
+      <svg-icon name="search" class="search-icon"></svg-icon>
+      <input 
+        type="text" 
+        placeholder="Rechercher une classe par nom, niveau ou année..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange()"
+        class="search-input"
+      />
+    </div>
+  </div>
+
+  <!-- Classes Grid (comme courses) -->
+  <div class="classes-grid">
+    <div *ngFor="let cls of filteredClasses()" class="class-card">
+      <div class="class-header">
+        <div class="class-name">
+          <svg-icon name="school"></svg-icon>
+          <span>{{ cls.name }}</span>
+        </div>
+        <span class="status-badge active">
+          {{ cls.academicYear }}
+        </span>
+      </div>
+
+      <div class="class-details">
+        <div class="detail-item">
+          <svg-icon name="graduation-cap"></svg-icon>
+          <span>{{ cls.level }}</span>
+        </div>
+        <div class="detail-item">
+          <svg-icon name="users"></svg-icon>
+          <span>{{ cls.studentCount }} étudiants</span>
+        </div>
+        <div class="detail-item">
+          <svg-icon name="calendar"></svg-icon>
+          <span>Créée le {{ cls.createdAt | date:'shortDate' }}</span>
+        </div>
+      </div>
+
+      <div class="class-actions">
+        <button class="btn-action btn-view" (click)="viewDetails(cls)">
+          <svg-icon name="eye"></svg-icon> Détails
+        </button>
+        <button class="btn-action btn-edit" (click)="editClass(cls)">
+          <svg-icon name="edit"></svg-icon> Modifier
+        </button>
+        <button class="btn-action btn-delete" (click)="deleteClass(cls)">
+          <svg-icon name="trash"></svg-icon> Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredClasses().length === 0" class="empty-state">
+    <svg-icon name="search-off" class="empty-icon"></svg-icon>
+    <p>Aucune classe trouvée</p>
+  </div>
+</div>
+
+<!-- === MODALS (UNIFORMES) === -->
+
+<!-- Ajouter / Modifier -->
+<app-modal 
+  [isOpen]="showFormModal()" 
+  [title]="selectedClass() ? 'Modifier la Classe' : 'Nouvelle Classe'" 
+  (close)="closeModal()"
+>
+  <app-class-form 
+    [classData]="formData" 
+    (save)="saveClass()" 
+    (cancel)="closeModal()">
+  </app-class-form>
+</app-modal>
+
+<!-- Voir Détails -->
+<app-modal 
+  [isOpen]="showDetailsModal()" 
+  [title]="'Détails de la Classe'" 
+  size="large" 
+  (close)="closeModal()"
+>
+  <app-class-details 
+    *ngIf="selectedClass() as cls" 
+    [cls]="cls" 
+    (edit)="editClass(cls); closeModal()">
+  </app-class-details>
+</app-modal>
+
+<!-- Supprimer -->
+<app-confirmation-modal
+  [isOpen]="showDeleteModal()"
+  [data]="{
+    title: 'Supprimer la classe',
+    message: 'Voulez-vous vraiment supprimer cette classe ?',
+    entityName: selectedClass()?.name,
+    confirmText: 'Supprimer',
+    cancelText: 'Annuler',
+    isDangerous: true
+  }"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()">
+</app-confirmation-modal>

@@ -1,0 +1,23 @@
+<div class="quiz-management-container">
+  <div class="page-header">
+    <div>
+      <h1>Gestion des Quiz</h1>
+      <p class="subtitle">Créez et gérez vos quiz</p>
+    </div>
+    <button class="btn-primary" (click)="onCreateQuiz()">
+      <span>➕</span>
+      Créer un quiz
+    </button>
+  </div>
+
+  <app-quiz-filters (filterChange)="onFilterChange($event)" />
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des quiz...</p>
+    </div>
+  } @else {
+    <app-quiz-list [quizzes]="filteredQuizzes()" />
+  }
+</div>

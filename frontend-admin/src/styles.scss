@@ -1,0 +1,232 @@
+// src/styles.scss
+
+// === 1. ANGULAR MATERIAL THEME (MUST BE FIRST) ===
+@use '@angular/material' as mat;
+@use './app/shared/styles/modal.scss' as *;
+
+@include mat.core();
+
+@include mat.theme((
+  color: (
+    primary: mat.$azure-palette,
+    tertiary: mat.$blue-palette,
+  ),
+  typography: Roboto,
+  density: 0,
+));
+
+// === 2. SYSTEM-LEVEL STYLES ===
+html {
+  // Light theme by default
+  color-scheme: light;
+
+  // Material system variables
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  // Reset
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  height: 100%;
+}
+
+// === 3. CUSTOM MODAL STYLES ===
+
+
+// === 4. CUSTOM MODAL PANEL OVERRIDE ===
+.custom-modal-panel {
+  .mat-mdc-dialog-container {
+    border-radius: 12px;
+    padding: 0;
+    overflow: hidden;
+  }
+}
+
+// === 5. MODAL HEADER, BODY, ACTIONS ===
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fafbfc;
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  .close-button {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    padding: 0;
+    line-height: 32px;
+
+    .mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+    }
+  }
+}
+
+.modal-body {
+  padding: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #fafbfc;
+
+  button {
+    min-width: 100px;
+  }
+}
+
+// === 6. FORM STYLES IN MODALS ===
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+
+      &.required::after {
+        content: ' *';
+        color: #ef4444;
+      }
+    }
+
+    input,
+    textarea,
+    select {
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: all 0.2s;
+
+      &:focus {
+        outline: none;
+        border-color: #3a5689;
+        box-shadow: 0 0 0 3px rgba(58, 86, 137, 0.1);
+      }
+
+      &.error {
+        border-color: #ef4444;
+      }
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .error-message {
+      font-size: 12px;
+      color: #ef4444;
+      margin-top: 4px;
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// === 7. CONFIRMATION MODAL STYLES ===
+.confirmation-modal {
+  .modal-header {
+    background: #fef2f2;
+    border-bottom-color: #fecaca;
+
+    &.warning {
+      background: #fffbeb;
+      border-bottom-color: #fde68a;
+    }
+
+    .mat-icon {
+      color: #ef4444;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      margin-right: 12px;
+
+      &.warning {
+        color: #f59e0b;
+      }
+    }
+  }
+
+  .entity-highlight {
+    padding: 12px;
+    background: #f3f4f6;
+    border-left: 3px solid #3a5689;
+    border-radius: 4px;
+    font-weight: 500;
+    margin-top: 16px;
+  }
+}
+
+// === 8. RESPONSIVE ===
+@media (max-width: 768px) {
+  .custom-modal-panel {
+    .mat-mdc-dialog-container {
+      max-width: 95vw !important;
+      margin: 16px;
+    }
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-actions {
+    padding: 16px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+// === FIN DU FICHIER ===

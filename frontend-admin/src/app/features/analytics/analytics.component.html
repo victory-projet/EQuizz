@@ -1,0 +1,159 @@
+<div class="analytics-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Rapports et Analyses</h1>
+      <p class="subtitle">Vue d'ensemble des performances et analyses</p>
+    </div>
+    <button class="btn-primary" (click)="exportReport()">
+      📥 Exporter le rapport
+    </button>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs">
+    <button 
+      class="tab" 
+      [class.active]="activeTab() === 'overview'"
+      (click)="setActiveTab('overview')"
+    >
+      📊 Vue d'ensemble
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeTab() === 'sentiment'"
+      (click)="setActiveTab('sentiment')"
+    >
+      😊 Analyse des sentiments
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeTab() === 'performance'"
+      (click)="setActiveTab('performance')"
+    >
+      🏆 Performances
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des données...</p>
+    </div>
+  } @else {
+    <!-- Overview Tab -->
+    @if (activeTab() === 'overview') {
+      <div class="tab-content">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue">📝</div>
+            <div class="stat-content">
+              <div class="stat-label">Quiz créés</div>
+              <div class="stat-value">{{ stats().totalQuizzes }}</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon green">✍️</div>
+            <div class="stat-content">
+              <div class="stat-label">Réponses totales</div>
+              <div class="stat-value">{{ stats().totalResponses }}</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon purple">⭐</div>
+            <div class="stat-content">
+              <div class="stat-label">Score moyen</div>
+              <div class="stat-value">{{ stats().averageScore }}%</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon orange">📈</div>
+            <div class="stat-content">
+              <div class="stat-label">Taux de participation</div>
+              <div class="stat-value">{{ stats().participationRate }}%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="activity-section">
+          <h3 class="section-title">Activité Récente</h3>
+          <div class="activity-grid">
+            <div *ngFor="let activity of recentActivity()" class="activity-card">
+              <div class="activity-icon">{{ activity.icon }}</div>
+              <div class="activity-content">
+                <div class="activity-action">{{ activity.action }}</div>
+                <div class="activity-details">{{ activity.details }}</div>
+              </div>
+              <div class="activity-time">{{ activity.time }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Sentiment Tab -->
+    @if (activeTab() === 'sentiment') {
+      <div class="tab-content">
+        <div class="sentiment-section">
+          <h3 class="section-title">Analyse des Sentiments</h3>
+          
+          <div class="sentiment-stats">
+            <div class="sentiment-card positive">
+              <div class="sentiment-icon">😊</div>
+              <div class="sentiment-content">
+                <div class="sentiment-label">Positif</div>
+                <div class="sentiment-value">{{ stats().positiveSentiment }}%</div>
+              </div>
+            </div>
+
+            <div class="sentiment-card neutral">
+              <div class="sentiment-icon">😐</div>
+              <div class="sentiment-content">
+                <div class="sentiment-label">Neutre</div>
+                <div class="sentiment-value">{{ stats().neutralSentiment }}%</div>
+              </div>
+            </div>
+
+            <div class="sentiment-card negative">
+              <div class="sentiment-icon">😞</div>
+              <div class="sentiment-content">
+                <div class="sentiment-label">Négatif</div>
+                <div class="sentiment-value">{{ stats().negativeSentiment }}%</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sentiment Component -->
+          <app-sentiment-analysis />
+        </div>
+      </div>
+    }
+
+    <!-- Performance Tab -->
+    @if (activeTab() === 'performance') {
+      <div class="tab-content">
+        <div class="performance-section">
+          <h3 class="section-title">Top Performers</h3>
+          <div class="performers-grid">
+            <div *ngFor="let performer of topPerformers(); let i = index" class="performer-card">
+              <div class="performer-rank">{{ i + 1 }}</div>
+              <div class="performer-content">
+                <div class="performer-name">{{ performer.name }}</div>
+                <div class="performer-score">{{ performer.score }}%</div>
+              </div>
+              <div class="performer-trend" [class.up]="performer.trend === 'up'" [class.down]="performer.trend === 'down'">
+                {{ performer.trend === 'up' ? '📈' : '📉' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

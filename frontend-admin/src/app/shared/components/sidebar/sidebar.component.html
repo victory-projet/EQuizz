@@ -1,0 +1,28 @@
+<aside class="sidebar">
+  <!-- Header -->
+  <div class="sidebar-header">
+    <span class="section-title">Navigation</span>
+  </div>
+
+  <!-- Navigation Menu -->
+  <nav class="sidebar-nav">
+    <a 
+      *ngFor="let item of menuItems"
+      [routerLink]="item.route"
+      routerLinkActive="active"
+      class="nav-item"
+      [matTooltip]="item.label"
+      matTooltipPosition="right">
+      <mat-icon>{{ item.icon }}</mat-icon>
+      <span class="nav-label">{{ item.label }}</span>
+    </a>
+  </nav>
+
+  <!-- Logout Button -->
+  <div class="sidebar-footer">
+    <button mat-button class="logout-btn" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      <span>Déconnexion</span>
+    </button>
+  </div>
+</aside>

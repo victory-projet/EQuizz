@@ -1,0 +1,234 @@
+<div class="courses-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Gestion des Cours & UE</h1>
+      <p class="subtitle">Gérez vos unités d'enseignement et cours</p>
+    </div>
+    <button class="btn-primary" (click)="addCourse()">
+      ➕ Ajouter un Cours
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon blue">📚</div>
+      <div class="stat-content">
+        <div class="stat-label">Total Cours</div>
+        <div class="stat-value">{{ totalCourses() }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon green">✅</div>
+      <div class="stat-content">
+        <div class="stat-label">Cours Actifs</div>
+        <div class="stat-value">{{ activeCourses() }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon purple">👥</div>
+      <div class="stat-content">
+        <div class="stat-label">Total Étudiants</div>
+        <div class="stat-value">{{ totalStudents() }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon orange">🎓</div>
+      <div class="stat-content">
+        <div class="stat-label">Total Crédits</div>
+        <div class="stat-value">{{ totalCredits() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <input 
+      type="text" 
+      placeholder="Rechercher un cours par nom, code ou enseignant..."
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="onSearchChange()"
+      class="search-input"
+    />
+  </div>
+
+  <!-- Courses Grid -->
+  <div class="courses-grid">
+    <div *ngFor="let course of filteredCourses()" class="course-card">
+      <div class="course-header">
+        <div class="course-code">{{ course.code }}</div>
+        <span class="status-badge" [class.active]="course.status === 'Actif'">
+          {{ course.status }}
+        </span>
+      </div>
+
+      <h3 class="course-name">{{ course.name }}</h3>
+
+      <div class="course-details">
+        <div class="detail-item">
+          <span class="icon">👨‍🏫</span>
+          <span>{{ course.teacher }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="icon">👥</span>
+          <span>{{ course.students }} étudiants</span>
+        </div>
+        <div class="detail-item">
+          <span class="icon">📅</span>
+          <span>Semestre {{ course.semester }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="icon">🎓</span>
+          <span>{{ course.credits }} crédits</span>
+        </div>
+      </div>
+
+      <div class="course-actions">
+        <button class="btn-action btn-view" (click)="viewDetails(course)">
+          Détails
+        </button>
+        <button class="btn-action btn-edit" (click)="editCourse(course)">
+          Modifier
+        </button>
+        <button class="btn-action btn-delete" (click)="deleteCourse(course)">
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredCourses().length === 0" class="empty-state">
+    <p>Aucun cours trouvé</p>
+  </div>
+</div>
+
+<!-- Modal Ajouter/Modifier un Cours -->
+<app-modal [isOpen]="showAddModal || showEditModal" [title]="showAddModal ? 'Ajouter un Cours' : 'Modifier le Cours'" (close)="closeModal()">
+  <form class="modal-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Code du cours *</label>
+        <input type="text" [(ngModel)]="formData.code" name="code" placeholder="Ex: INF101" required>
+      </div>
+      <div class="form-group">
+        <label>Crédits *</label>
+        <input type="number" [(ngModel)]="formData.credits" name="credits" min="1" max="10" required>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Nom du cours *</label>
+      <input type="text" [(ngModel)]="formData.name" name="name" placeholder="Ex: Algorithmique et Programmation" required>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Enseignant *</label>
+        <input type="text" [(ngModel)]="formData.teacher" name="teacher" placeholder="Ex: Dr. Martin" required>
+      </div>
+      <div class="form-group">
+        <label>Semestre *</label>
+        <select [(ngModel)]="formData.semester" name="semester" required>
+          <option [value]="1">Semestre 1</option>
+          <option [value]="2">Semestre 2</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre d'étudiants</label>
+        <input type="number" [(ngModel)]="formData.students" name="students" min="0" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Statut</label>
+        <select [(ngModel)]="formData.status" name="status">
+          <option value="Actif">Actif</option>
+          <option value="Inactif">Inactif</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeModal()">Annuler</button>
+      <button type="button" class="btn-primary" (click)="showAddModal ? saveNewCourse() : saveEditCourse()">
+        Enregistrer
+      </button>
+    </div>
+  </form>
+</app-modal>
+
+<!-- Modal Voir Détails -->
+<app-modal [isOpen]="showViewModal" [title]="'Détails du Cours'" (close)="closeModal()">
+  <div class="details-view" *ngIf="selectedCourse">
+    <div class="detail-section">
+      <div class="detail-header">
+        <span class="course-code-large">{{ selectedCourse.code }}</span>
+        <span class="status-badge-large" [class.active]="selectedCourse.status === 'Actif'">
+          {{ selectedCourse.status }}
+        </span>
+      </div>
+      <h2 class="course-title">{{ selectedCourse.name }}</h2>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-item-large">
+        <span class="detail-icon">👨‍🏫</span>
+        <div>
+          <div class="detail-label">Enseignant</div>
+          <div class="detail-value">{{ selectedCourse.teacher }}</div>
+        </div>
+      </div>
+
+      <div class="detail-item-large">
+        <span class="detail-icon">👥</span>
+        <div>
+          <div class="detail-label">Étudiants inscrits</div>
+          <div class="detail-value">{{ selectedCourse.students }}</div>
+        </div>
+      </div>
+
+      <div class="detail-item-large">
+        <span class="detail-icon">📅</span>
+        <div>
+          <div class="detail-label">Semestre</div>
+          <div class="detail-value">Semestre {{ selectedCourse.semester }}</div>
+        </div>
+      </div>
+
+      <div class="detail-item-large">
+        <span class="detail-icon">🎓</span>
+        <div>
+          <div class="detail-label">Crédits ECTS</div>
+          <div class="detail-value">{{ selectedCourse.credits }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeModal()">Fermer</button>
+      <button type="button" class="btn-primary" (click)="editCourse(selectedCourse); closeModal()">Modifier</button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Modal Supprimer -->
+<app-modal [isOpen]="showDeleteModal" [title]="'Confirmer la suppression'" [size]="'small'" (close)="closeModal()">
+  <div class="delete-confirmation" *ngIf="selectedCourse">
+    <div class="warning-icon">⚠️</div>
+    <p class="warning-text">
+      Êtes-vous sûr de vouloir supprimer le cours <strong>{{ selectedCourse.name }}</strong> ?
+    </p>
+    <p class="warning-subtext">Cette action est irréversible.</p>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeModal()">Annuler</button>
+      <button type="button" class="btn-danger" (click)="confirmDelete()">Supprimer</button>
+    </div>
+  </div>
+</app-modal>
