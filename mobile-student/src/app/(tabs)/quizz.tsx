@@ -99,7 +99,7 @@ function QuizListView() {
                 <Text style={styles.quizCardSubtitle}>{coursNom}</Text>
                 <View style={styles.quizCardFooter}>
                     <Text style={styles.quizCardDate}>
-                        📅 Jusqu'au {new Date(evaluation.dateFin).toLocaleDateString('fr-FR')}
+                        📅 Jusqu&apos;au {new Date(evaluation.dateFin).toLocaleDateString('fr-FR')}
                     </Text>
                 </View>
             </TouchableOpacity>
@@ -314,9 +314,6 @@ function QuizDetailView({ id }: { id: string }) {
     };
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#3A5689" />
-
         <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.push('/(tabs)/quizz')} style={styles.backIcon}>
@@ -515,13 +512,6 @@ const styles = StyleSheet.create({
     scrollContent: {
         padding: 16,
     },
-    emptyHeader: {
-        backgroundColor: '#3A5689',
-        paddingTop: 50,
-        paddingBottom: 16,
-        paddingHorizontal: 20,
-        borderBottomWidth: 3,
-        borderBottomColor: '#3A5999',
     section: {
         marginBottom: 24,
     },
