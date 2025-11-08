@@ -3,11 +3,10 @@ export { API_CONFIG } from '../config';
 
 // API Endpoints
 export const API_ENDPOINTS = {
-    // Quiz endpoints
-    COURSES: '/courses',
-    QUESTIONS: '/questions',
-    SUBMIT_QUIZ: '/quiz/submit',
-    EVALUATION_PERIOD: '/evaluation-period',
+    // Student endpoints (utilisés par l'application)
+    STUDENT_COURSES: '/student/courses',
+    STUDENT_QUIZZES: '/student/quizzes',
+    STUDENT_EVALUATION_PERIOD: '/student/evaluation-period',
     
     // Auth endpoints
     AUTH_LOGIN: '/auth/login',

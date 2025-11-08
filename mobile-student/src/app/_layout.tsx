@@ -22,7 +22,7 @@ function RootLayoutNav() {
     if (!isAuthenticated && !inAuthGroup) {
       // Rediriger vers la page de connexion si non authentifié
       console.log('Redirecting to login...');
-      router.replace('/(auth)/login');
+      router.replace('/(auth)');
     } else if (isAuthenticated && inAuthGroup) {
       // Rediriger vers l'app si déjà authentifié
       console.log('Redirecting to accueil...');
