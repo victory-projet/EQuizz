@@ -51,6 +51,18 @@ app.use('/api/student', studentRoutes);
 
 app.use('/api/init', initRoutes);
 
+// --- Route 404 pour les endpoints non trouvés ---
+app.use((req, res, next) => {
+  const error = new Error(`Route non trouvée: ${req.method} ${req.originalUrl}`);
+  error.statusCode = 404;
+  error.code = 'ROUTE_NOT_FOUND';
+  next(error);
+});
+
+// --- Middleware de gestion d'erreurs (doit être en dernier) ---
+const ErrorHandler = require('./src/middlewares/errorHandler.middleware');
+app.use(ErrorHandler.handle);
+
 const PORT = process.env.PORT || 3000;
 
 // Démarrer le serveur et tester la connexion à la base de données

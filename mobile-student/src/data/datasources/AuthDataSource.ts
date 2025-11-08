@@ -1,6 +1,6 @@
-import axios from 'axios';
 import apiClient from '../../core/api';
 import { Utilisateur } from '../../domain/entities/Utilisateur';
+import { ErrorHandlerService } from '../../core/services/errorHandler.service';
 
 /**
  * Interface de la source de données d'authentification
@@ -24,18 +24,9 @@ export class AuthDataSourceImpl implements AuthDataSource {
         classeId,
       });
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        if (error.response) {
-          // Erreur de validation ou logique métier
-          const message = error.response.data?.message || 
-                         error.response.data?.errors?.[0]?.msg ||
-                         'Une erreur est survenue';
-          throw new Error(message);
-        } else if (error.request) {
-          throw new Error('Impossible de contacter le serveur. Vérifiez votre connexion.');
-        }
-      }
-      throw new Error('Une erreur inattendue est survenue');
+      ErrorHandlerService.logError(error, 'AuthDataSource.claimAccount');
+      const userError = ErrorHandlerService.handleError(error);
+      throw new Error(userError.message);
     }
   }
 
@@ -54,17 +45,9 @@ export class AuthDataSourceImpl implements AuthDataSource {
         utilisateur: response.data.utilisateur,
       };
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          throw new Error('Identifiants invalides');
-        } else if (error.response) {
-          const message = error.response.data?.message || 'Une erreur est survenue';
-          throw new Error(message);
-        } else if (error.request) {
-          throw new Error('Impossible de contacter le serveur. Vérifiez votre connexion.');
-        }
-      }
-      throw new Error('Une erreur inattendue est survenue');
+      ErrorHandlerService.logError(error, 'AuthDataSource.login');
+      const userError = ErrorHandlerService.handleError(error);
+      throw new Error(userError.message);
     }
   }
 }
