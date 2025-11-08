@@ -2,6 +2,112 @@
   min-width: 400px;
   max-width: 500px;
 
+  .confirmation-header {
+    padding: 24px;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-bottom: 2px solid #ef4444;
+
+    .confirmation-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: #991b1b;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      &::before {
+        content: '⚠';
+        font-size: 24px;
+      }
+    }
+  }
+
+  .confirmation-body {
+    padding: 24px;
+
+    .confirmation-message {
+      margin: 0 0 16px 0;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #374151;
+    }
+
+    .entity-name {
+      margin: 16px 0 0 0;
+      padding: 12px 16px;
+      background: #f3f4f6;
+      border-left: 3px solid #3a5689;
+      border-radius: 4px;
+      font-weight: 500;
+      color: #1f2937;
+      word-break: break-word;
+    }
+  }
+
+  .confirmation-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+    background: #fafbfc;
+
+    .btn {
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      min-width: 100px;
+
+      &.btn-secondary {
+        background: white;
+        color: #374151;
+        border: 1px solid #d1d5db;
+
+        &:hover {
+          background: #f9fafb;
+          border-color: #9ca3af;
+        }
+      }
+
+      &.btn-danger {
+        background: #ef4444;
+        color: white;
+
+        &:hover {
+          background: #dc2626;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+
+      &.btn-primary {
+        background: #3a5689;
+        color: white;
+
+        &:hover {
+          background: #2d4470;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(58, 86, 137, 0.3);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+
+  // Old styles kept for compatibility
   .modal-header {
     display: flex;
     align-items: center;
@@ -140,17 +246,22 @@
     min-width: auto;
     max-width: 100%;
 
+    .confirmation-header,
+    .confirmation-body,
+    .confirmation-actions,
     .modal-header,
     .modal-body,
     .modal-actions {
       padding: 16px;
     }
 
+    .confirmation-actions,
     .modal-actions {
       flex-direction: column-reverse;
       gap: 8px;
 
-      button {
+      button,
+      .btn {
         width: 100%;
       }
     }

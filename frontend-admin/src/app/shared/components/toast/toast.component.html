@@ -1,26 +1,29 @@
-<div class="toast-container" role="region" aria-live="polite" aria-label="Notifications">
+<!-- src/app/shared/components/toast/toast.component.html -->
+<div class="toast-container">
   <div 
-    *ngFor="let notification of notifications$ | async" 
+    *ngFor="let toast of toasts"
     class="toast"
-    [ngClass]="getColorClass(notification.type)"
-    [@toastAnimation]
-    role="alert"
-    aria-atomic="true">
+    [class]="'toast-' + toast.type"
+    [@toastAnimation]>
     
     <div class="toast-icon">
-      <span class="material-icons">{{ getIcon(notification.type) }}</span>
+      {{ getIcon(toast.type) }}
     </div>
     
     <div class="toast-content">
-      <p class="toast-message">{{ notification.message }}</p>
+      <p class="toast-message">{{ toast.message }}</p>
     </div>
     
     <button 
-      class="toast-close" 
-      (click)="close(notification)"
-      aria-label="Fermer la notification"
-      type="button">
-      <span class="material-icons">close</span>
+      *ngIf="toast.dismissible"
+      class="toast-close"
+      (click)="remove(toast.id)"
+      type="button"
+      aria-label="Fermer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <line x1="18" y1="6" x2="6" y2="18" stroke-width="2" stroke-linecap="round"/>
+        <line x1="6" y1="6" x2="18" y2="18" stroke-width="2" stroke-linecap="round"/>
+      </svg>
     </button>
   </div>
 </div>

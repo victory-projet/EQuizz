@@ -1,51 +1,82 @@
-import { Component, OnInit, inject } from '@angular/core';
+// src/app/shared/components/toast/toast.component.ts
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { NotificationService, Notification } from '../../../core/services/notification.service';
-import { Observable } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
+
+export interface Toast {
+  id: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  message: string;
+  duration?: number;
+  dismissible?: boolean;
+}
 
 @Component({
   selector: 'app-toast',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './toast.component.html',
-  styleUrls: ['./toast.component.scss'],
+  styleUrl: './toast.component.scss',
   animations: [
     trigger('toastAnimation', [
       transition(':enter', [
-        style({ opacity: 0, transform: 'translateX(100%)' }),
-        animate('300ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
+        style({ transform: 'translateX(100%)', opacity: 0 }),
+        animate('300ms cubic-bezier(0.34, 1.56, 0.64, 1)', 
+          style({ transform: 'translateX(0)', opacity: 1 }))
       ]),
       transition(':leave', [
-        animate('300ms ease-in', style({ opacity: 0, transform: 'translateX(100%)' }))
+        animate('200ms ease-out', 
+          style({ transform: 'translateX(100%)', opacity: 0 }))
       ])
     ])
   ]
 })
-export class ToastComponent implements OnInit {
-  private notificationService = inject(NotificationService);
-  
-  notifications$!: Observable<Notification[]>;
+export class ToastComponent implements OnInit, OnDestroy {
+  toasts: Toast[] = [];
+  private destroy$ = new Subject<void>();
 
   ngOnInit(): void {
-    this.notifications$ = this.notificationService.notifications$;
+    // Subscribe to toast service if needed
   }
 
-  close(notification: Notification): void {
-    this.notificationService.remove(notification.id);
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  show(toast: Omit<Toast, 'id'>): void {
+    const id = this.generateId();
+    const duration = toast.duration ?? 5000;
+    const newToast: Toast = {
+      id,
+      ...toast,
+      duration,
+      dismissible: toast.dismissible ?? true
+    };
+
+    this.toasts.push(newToast);
+
+    if (duration > 0) {
+      setTimeout(() => this.remove(id), duration);
+    }
+  }
+
+  remove(id: string): void {
+    this.toasts = this.toasts.filter(t => t.id !== id);
   }
 
   getIcon(type: string): string {
     const icons: Record<string, string> = {
-      success: 'check_circle',
-      error: 'error',
-      info: 'info',
-      warning: 'warning'
+      success: '✓',
+      error: '✕',
+      warning: '⚠',
+      info: 'ℹ'
     };
-    return icons[type] || 'info';
+    return icons[type] || 'ℹ';
   }
 
-  getColorClass(type: string): string {
-    return `toast-${type}`;
+  private generateId(): string {
+    return `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 }

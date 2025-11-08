@@ -8,3 +8,6 @@ export * from './status-badge/status-badge.component';
 export * from './toast/toast.component';
 export * from './base-modal/base-modal.component';
 export * from './confirmation-modal/confirmation-modal.component';
+export * from './modal/modal.component';
+export * from './error-modal/error-modal.component';
+export * from './loading/loading.component';
