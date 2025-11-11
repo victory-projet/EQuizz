@@ -488,7 +488,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         flexDirection: 'row',
+        gap: 170,
         alignItems: 'center',
+        height: 120,
+        paddingTop: 75
     },
     backIcon: {
         marginRight: 12,
