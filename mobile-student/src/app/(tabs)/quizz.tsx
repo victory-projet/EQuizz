@@ -99,7 +99,7 @@ function QuizListView() {
                 <Text style={styles.quizCardSubtitle}>{coursNom}</Text>
                 <View style={styles.quizCardFooter}>
                     <Text style={styles.quizCardDate}>
-                        📅 Jusqu'au {new Date(evaluation.dateFin).toLocaleDateString('fr-FR')}
+                        📅 Jusqu&apos;au {new Date(evaluation.dateFin).toLocaleDateString('fr-FR')}
                     </Text>
                 </View>
             </TouchableOpacity>
@@ -488,7 +488,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         flexDirection: 'row',
+        gap: 170,
         alignItems: 'center',
+        height: 120,
+        paddingTop: 75
     },
     backIcon: {
         marginRight: 12,
