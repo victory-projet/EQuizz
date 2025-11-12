@@ -1,9 +1,11 @@
 // src/styles.scss
 
-// === 1. ANGULAR MATERIAL THEME (MUST BE FIRST) ===
+// === 1. IMPORTS (MUST BE FIRST) ===
+@use './app/shared/styles/variables' as *;
 @use '@angular/material' as mat;
 @use './app/shared/styles/modal.scss' as *;
 
+// === 2. ANGULAR MATERIAL THEME ===
 @include mat.core();
 
 @include mat.theme((
@@ -15,17 +17,12 @@
   density: 0,
 ));
 
-// === 2. SYSTEM-LEVEL STYLES ===
+// === 3. SYSTEM-LEVEL STYLES ===
 html {
-  // Light theme by default
   color-scheme: light;
-
-  // Material system variables
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
-
-  // Reset
   margin: 0;
   height: 100%;
 }
@@ -34,10 +31,12 @@ body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
   height: 100%;
+  background-color: $surface;
 }
 
-// === 3. CUSTOM MODAL STYLES ===
-
+* {
+  box-sizing: border-box;
+}
 
 // === 4. CUSTOM MODAL PANEL OVERRIDE ===
 .custom-modal-panel {
@@ -100,133 +99,174 @@ body {
   }
 }
 
-// === 6. FORM STYLES IN MODALS ===
-.modal-form {
+// === 6. BOOTSTRAP-LIKE UTILITIES ===
+// Custom checkbox
+.custom-control {
+  position: relative;
+  display: block;
+  min-height: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.custom-control-input {
+  position: absolute;
+  left: 0;
+  z-index: -1;
+  width: 1rem;
+  height: 1.25rem;
+  opacity: 0;
+
+  &:checked ~ .custom-control-label::before {
+    color: #fff;
+    border-color: $primary;
+    background-color: $primary;
+  }
+
+  &:focus ~ .custom-control-label::before {
+    box-shadow: 0 0 0 0.2rem rgba($primary, 0.25);
+  }
+
+  &:disabled ~ .custom-control-label {
+    color: #6c757d;
+
+    &::before {
+      background-color: #e9ecef;
+    }
+  }
+}
+
+.custom-control-label {
+  position: relative;
+  margin-bottom: 0;
+  vertical-align: top;
+
+  &::before {
+    position: absolute;
+    top: 0.25rem;
+    left: -1.5rem;
+    display: block;
+    width: 1rem;
+    height: 1rem;
+    pointer-events: none;
+    content: "";
+    background-color: #fff;
+    border: 1px solid #adb5bd;
+  }
+
+  &::after {
+    position: absolute;
+    top: 0.25rem;
+    left: -1.5rem;
+    display: block;
+    width: 1rem;
+    height: 1rem;
+    content: "";
+    background: no-repeat 50% / 50% 50%;
+  }
+}
+
+.custom-checkbox {
+  .custom-control-label::before {
+    border-radius: 0.25rem;
+  }
+
+  .custom-control-input:checked ~ .custom-control-label {
+    &::after {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%23fff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26l2.974 2.99L8 2.193z'/%3e%3c/svg%3e");
+    }
+  }
+}
+
+// Grid system
+.container {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+@media (min-width: 576px) {
+  .container { max-width: 540px; }
+}
+
+@media (min-width: 768px) {
+  .container { max-width: 720px; }
+}
+
+@media (min-width: 992px) {
+  .container { max-width: 960px; }
+}
+
+@media (min-width: 1200px) {
+  .container { max-width: 1140px; }
+}
+
+.row {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-
-  .form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-
-    label {
-      font-size: 14px;
-      font-weight: 500;
-      color: #374151;
-
-      &.required::after {
-        content: ' *';
-        color: #ef4444;
-      }
-    }
-
-    input,
-    textarea,
-    select {
-      padding: 10px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 14px;
-      transition: all 0.2s;
-
-      &:focus {
-        outline: none;
-        border-color: #3a5689;
-        box-shadow: 0 0 0 3px rgba(58, 86, 137, 0.1);
-      }
-
-      &.error {
-        border-color: #ef4444;
-      }
-    }
-
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-
-    .error-message {
-      font-size: 12px;
-      color: #ef4444;
-      margin-top: 4px;
-    }
-
-    .help-text {
-      font-size: 12px;
-      color: #6b7280;
-      margin-top: 4px;
-    }
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-
-    @media (max-width: 768px) {
-      grid-template-columns: 1fr;
-    }
-  }
+  flex-wrap: wrap;
+  margin-right: -15px;
+  margin-left: -15px;
 }
 
-// === 7. CONFIRMATION MODAL STYLES ===
-.confirmation-modal {
-  .modal-header {
-    background: #fef2f2;
-    border-bottom-color: #fecaca;
-
-    &.warning {
-      background: #fffbeb;
-      border-bottom-color: #fde68a;
-    }
-
-    .mat-icon {
-      color: #ef4444;
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
-      margin-right: 12px;
-
-      &.warning {
-        color: #f59e0b;
-      }
-    }
-  }
-
-  .entity-highlight {
-    padding: 12px;
-    background: #f3f4f6;
-    border-left: 3px solid #3a5689;
-    border-radius: 4px;
-    font-weight: 500;
-    margin-top: 16px;
-  }
+.no-gutters {
+  margin-right: 0;
+  margin-left: 0;
 }
 
-// === 8. RESPONSIVE ===
-@media (max-width: 768px) {
-  .custom-modal-panel {
-    .mat-mdc-dialog-container {
-      max-width: 95vw !important;
-      margin: 16px;
-    }
-  }
-
-  .modal-header,
-  .modal-body,
-  .modal-actions {
-    padding: 16px;
-  }
-
-  .modal-actions {
-    flex-direction: column-reverse;
-
-    button {
-      width: 100%;
-    }
-  }
+.col,
+.col-md-6,
+.col-xl-12 {
+  position: relative;
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
 }
 
-// === FIN DU FICHIER ===
+.col-md-6 {
+  flex: 0 0 50%;
+  max-width: 50%;
+}
+
+.col-xl-12 {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
+// Utility classes
+.h-100 { height: 100% !important; }
+.d-flex { display: flex !important; }
+.d-none { display: none !important; }
+.justify-content-center { justify-content: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.align-items-center { align-items: center !important; }
+.text-center { text-align: center !important; }
+.mb-1 { margin-bottom: 0.25rem !important; }
+.mb-2 { margin-bottom: 0.5rem !important; }
+.mb-3 { margin-bottom: 1rem !important; }
+.mt-3 { margin-top: 1rem !important; }
+.mt-4 { margin-top: 1.5rem !important; }
+.ml-1 { margin-left: 0.25rem !important; }
+.ml-2 { margin-left: 0.5rem !important; }
+
+// Spinner
+.spinner-border {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  vertical-align: text-bottom;
+  border: 0.25em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-border 0.75s linear infinite;
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.2em;
+}
+
+@keyframes spinner-border {
+  to { transform: rotate(360deg); }
+}

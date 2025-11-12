@@ -1,0 +1,35 @@
+// src/app/core/domain/use-cases/quiz/update-quiz.use-case.ts
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { Quiz } from '../../entities/quiz.entity';
+import { IQuizRepository } from '../../repositories/quiz.repository.interface';
+
+export interface UpdateQuizDto {
+  id: string;
+  title?: string;
+  subject?: string;
+  classIds?: string[];
+  endDate?: Date;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UpdateQuizUseCase {
+  private repository = inject(IQuizRepository);
+
+  execute(dto: UpdateQuizDto): Observable<Quiz> {
+    this.validate(dto);
+    return this.repository.update(dto.id, dto);
+  }
+
+  private validate(dto: UpdateQuizDto): void {
+    if (dto.title !== undefined && dto.title.trim().length === 0) {
+      throw new Error('Le titre ne peut pas être vide');
+    }
+
+    if (dto.classIds !== undefined && dto.classIds.length === 0) {
+      throw new Error('Au moins une classe doit être sélectionnée');
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -6,9 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatChipsModule } from '@angular/material/chips';
-
-// Imports animations corrects
 import { trigger, transition, style, animate } from '@angular/animations';
+
+// Modals
+import { AcademicYearFormModalComponent, AcademicYearFormData } from './components/academic-year-form-modal/academic-year-form-modal.component';
+import { SemesterFormModalComponent, SemesterFormData } from './components/semester-form-modal/semester-form-modal.component';
+import { ConfirmationModalComponent, ConfirmationData } from '../../shared/components/confirmation-modal/confirmation-modal.component';
+import { ToastService } from '../../core/services/toast.service';
 
 interface AcademicYear {
   id: string;
@@ -38,7 +42,10 @@ interface Period {
     MatButtonModule,
     MatIconModule,
     MatSlideToggleModule,
-    MatChipsModule
+    MatChipsModule,
+    AcademicYearFormModalComponent,
+    SemesterFormModalComponent,
+    ConfirmationModalComponent
   ],
   templateUrl: './academic-year.component.html',
   styleUrls: ['./academic-year.component.scss'],
@@ -52,9 +59,26 @@ interface Period {
   ]
 })
 export class AcademicYearComponent implements OnInit {
-  // ... le reste de votre code reste identique
+  private toastService = inject(ToastService);
+
   academicYears: AcademicYear[] = [];
   currentYear: AcademicYear | null = null;
+
+  // Modal states
+  showYearFormModal = false;
+  showSemesterFormModal = false;
+  showDeleteModal = false;
+  
+  // Modal data
+  selectedYear: AcademicYear | null = null;
+  yearFormMode: 'create' | 'edit' = 'create';
+  confirmationData: ConfirmationData = {
+    title: '',
+    message: '',
+    confirmText: 'Confirmer',
+    cancelText: 'Annuler',
+    isDangerous: true
+  };
 
   ngOnInit(): void {
     this.loadAcademicYears();
@@ -108,25 +132,162 @@ export class AcademicYearComponent implements OnInit {
     this.academicYears.forEach(y => y.isActive = false);
     year.isActive = true;
     this.currentYear = year;
+    this.toastService.success(`Année ${year.name} activée avec succès`);
   }
 
+  // === YEAR MANAGEMENT ===
   addYear(): void {
-    console.log('Add academic year');
+    this.yearFormMode = 'create';
+    this.selectedYear = null;
+    this.showYearFormModal = true;
   }
 
   editYear(year: AcademicYear): void {
-    console.log('Edit year', year);
+    this.yearFormMode = 'edit';
+    this.selectedYear = year;
+    this.showYearFormModal = true;
   }
 
   deleteYear(year: AcademicYear): void {
-    console.log('Delete year', year);
+    this.selectedYear = year;
+    this.confirmationData = {
+      title: 'Supprimer l\'année académique',
+      message: 'Êtes-vous sûr de vouloir supprimer cette année académique ? Cette action est irréversible.',
+      entityName: year.name,
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+      isDangerous: true
+    };
+    this.showDeleteModal = true;
   }
 
-  addPeriod(year: AcademicYear): void {
-    console.log('Add period to', year);
+  onSaveYear(data: AcademicYearFormData): void {
+    if (this.yearFormMode === 'create') {
+      // Créer une nouvelle année
+      const newYear: AcademicYear = {
+        id: Date.now().toString(),
+        name: data.name,
+        startDate: new Date(data.startDate),
+        endDate: new Date(data.endDate),
+        isActive: data.isActive,
+        periods: [],
+        semesters: []
+      };
+
+      if (data.isActive) {
+        this.academicYears.forEach(y => y.isActive = false);
+        this.currentYear = newYear;
+      }
+
+      this.academicYears.unshift(newYear);
+      this.toastService.success('Année académique créée avec succès');
+    } else {
+      // Modifier une année existante
+      const index = this.academicYears.findIndex(y => y.id === this.selectedYear?.id);
+      if (index !== -1) {
+        this.academicYears[index] = {
+          ...this.academicYears[index],
+          name: data.name,
+          startDate: new Date(data.startDate),
+          endDate: new Date(data.endDate),
+          isActive: data.isActive
+        };
+
+        if (data.isActive) {
+          this.academicYears.forEach((y, i) => {
+            if (i !== index) y.isActive = false;
+          });
+          this.currentYear = this.academicYears[index];
+        }
+
+        this.toastService.success('Année académique modifiée avec succès');
+      }
+    }
+
+    this.showYearFormModal = false;
+    this.selectedYear = null;
   }
 
+  onConfirmDelete(): void {
+    if (this.selectedYear) {
+      const index = this.academicYears.findIndex(y => y.id === this.selectedYear?.id);
+      if (index !== -1) {
+        const wasActive = this.academicYears[index].isActive;
+        this.academicYears.splice(index, 1);
+        
+        if (wasActive && this.academicYears.length > 0) {
+          this.academicYears[0].isActive = true;
+          this.currentYear = this.academicYears[0];
+        } else if (this.academicYears.length === 0) {
+          this.currentYear = null;
+        }
+
+        this.toastService.success('Année académique supprimée avec succès');
+      }
+    }
+    this.showDeleteModal = false;
+    this.selectedYear = null;
+  }
+
+  // === SEMESTER MANAGEMENT ===
   addSemester(year: AcademicYear): void {
-    console.log('Add semester to', year);
+    this.selectedYear = year;
+    this.showSemesterFormModal = true;
+  }
+
+  onSaveSemester(data: SemesterFormData): void {
+    if (this.selectedYear) {
+      const newSemester: Period = {
+        id: Date.now().toString(),
+        name: data.name,
+        type: data.type,
+        startDate: new Date(data.startDate),
+        endDate: new Date(data.endDate)
+      };
+
+      const yearIndex = this.academicYears.findIndex(y => y.id === this.selectedYear?.id);
+      if (yearIndex !== -1) {
+        this.academicYears[yearIndex].semesters.push(newSemester);
+        this.academicYears[yearIndex].periods.push(newSemester);
+        
+        if (this.currentYear?.id === this.selectedYear.id) {
+          this.currentYear = this.academicYears[yearIndex];
+        }
+
+        this.toastService.success('Semestre ajouté avec succès');
+      }
+    }
+
+    this.showSemesterFormModal = false;
+    this.selectedYear = null;
+  }
+
+  // === MODAL CLOSE HANDLERS ===
+  closeYearFormModal(): void {
+    this.showYearFormModal = false;
+    this.selectedYear = null;
+  }
+
+  closeSemesterFormModal(): void {
+    this.showSemesterFormModal = false;
+    this.selectedYear = null;
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
+    this.selectedYear = null;
+  }
+
+  // === HELPERS ===
+  getYearFormData(): AcademicYearFormData | null {
+    if (!this.selectedYear) return null;
+    
+    return {
+      id: this.selectedYear.id,
+      name: this.selectedYear.name,
+      startDate: this.selectedYear.startDate.toISOString().split('T')[0],
+      endDate: this.selectedYear.endDate.toISOString().split('T')[0],
+      isActive: this.selectedYear.isActive
+    };
   }
 }

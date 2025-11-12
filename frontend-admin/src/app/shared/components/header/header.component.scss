@@ -6,8 +6,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 2rem;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
@@ -126,9 +128,22 @@
     background: #f3f4f6;
   }
 
+  .user-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+  }
+
   .user-name {
     font-weight: 500;
     color: #1a1a1a;
+    font-size: 0.875rem;
+  }
+
+  .user-role {
+    font-size: 0.75rem;
+    color: #666;
   }
 
   .chevron {
@@ -190,6 +205,16 @@
   .user-email {
     font-size: 0.875rem;
     color: #666;
+    margin: 0 0 0.25rem 0;
+  }
+
+  .user-role-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
     margin: 0;
   }
 }
@@ -244,7 +269,7 @@
     display: none;
   }
 
-  .user-name {
+  .user-details {
     display: none;
   }
 }

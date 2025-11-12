@@ -5,12 +5,18 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
+import { ToastService } from '../../core/services/toast.service';
 
-interface QuizItem {
+// Clean Architecture - Use Cases
+import { GetAllQuizzesUseCase } from '../../core/domain/use-cases/quiz/get-all-quizzes.use-case';
+import { DeleteQuizUseCase } from '../../core/domain/use-cases/quiz/delete-quiz.use-case';
+import { Quiz } from '../../core/domain/entities/quiz.entity';
+
+interface QuizDisplay {
   id: string;
   title: string;
   subject: string;
-  status: 'En cours' | 'Brouillon' | 'Clôturé';
+  status: string;
   classes: string[];
   questions: number;
   createdDate: string;
@@ -21,6 +27,31 @@ interface QuizItem {
     percentage: number;
   };
   type: string;
+}
+
+function mapQuizToDisplay(quiz: Quiz): QuizDisplay {
+  const statusMap: Record<string, string> = {
+    'draft': 'Brouillon',
+    'active': 'En cours',
+    'closed': 'Clôturé'
+  };
+
+  return {
+    id: quiz.id,
+    title: quiz.title,
+    subject: quiz.subject,
+    status: statusMap[quiz.status] || quiz.status,
+    classes: quiz.classIds,
+    questions: quiz.questions.length,
+    createdDate: quiz.createdDate.toLocaleDateString('fr-FR'),
+    endDate: quiz.endDate?.toLocaleDateString('fr-FR'),
+    participation: {
+      current: 0,
+      total: 0,
+      percentage: 0
+    },
+    type: quiz.type || 'Standard'
+  };
 }
 
 @Component({
@@ -36,22 +67,26 @@ interface QuizItem {
   styleUrl: './evaluation.component.scss'
 })
 export class EvaluationComponent implements OnInit {
+  // Clean Architecture - Inject Use Cases
+  private getAllQuizzesUseCase = inject(GetAllQuizzesUseCase);
+  private deleteQuizUseCase = inject(DeleteQuizUseCase);
+  private toastService = inject(ToastService);
   private router = inject(Router);
   private dialog = inject(MatDialog);
 
   // Stats
-  totalQuizzes = signal(24);
-  activeQuizzes = signal(8);
+  totalQuizzes = signal(0);
+  activeQuizzes = signal(0);
   participationRate = signal(76);
-  drafts = signal(5);
+  drafts = signal(0);
 
   // Filters
   searchTerm = signal('');
   activeFilter = signal<'all' | 'active' | 'draft' | 'closed'>('all');
 
   // Quizzes
-  quizzes = signal<QuizItem[]>([]);
-  filteredQuizzes = signal<QuizItem[]>([]);
+  quizzes = signal<QuizDisplay[]>([]);
+  filteredQuizzes = signal<QuizDisplay[]>([]);
   isLoading = signal(true);
 
   // Modals
@@ -59,7 +94,7 @@ export class EvaluationComponent implements OnInit {
   showImportModal = signal(false);
   showResultsModal = signal(false);
   showDeleteModal = signal(false);
-  selectedQuiz = signal<QuizItem | null>(null);
+  selectedQuiz = signal<QuizDisplay | null>(null);
   selectedFile: File | null = null;
 
   ngOnInit(): void {
@@ -69,47 +104,26 @@ export class EvaluationComponent implements OnInit {
   loadQuizzes(): void {
     this.isLoading.set(true);
 
-    const mockQuizzes: QuizItem[] = [
-      {
-        id: '1',
-        title: 'Évaluation Mi-parcours - Algorithmique',
-        subject: 'Algorithmique et Programmation',
-        status: 'En cours',
-        classes: ['L1 Info A', 'L1 Info B'],
-        questions: 15,
-        createdDate: '15 Sept 2025',
-        endDate: '30 Sept 2025',
-        participation: { current: 124, total: 150, percentage: 83 },
-        type: 'Mi-parcours'
+    this.getAllQuizzesUseCase.execute().subscribe({
+      next: (quizzes) => {
+        const displayQuizzes = quizzes.map(mapQuizToDisplay);
+        this.quizzes.set(displayQuizzes);
+        this.filteredQuizzes.set(displayQuizzes);
+        this.updateStats(displayQuizzes);
+        this.isLoading.set(false);
       },
-      {
-        id: '2',
-        title: 'Évaluation Fin de Semestre - Base de Données',
-        subject: 'Base de Données',
-        status: 'En cours',
-        classes: ['L2 Info'],
-        questions: 20,
-        createdDate: '10 Oct 2025',
-        endDate: '25 Oct 2025',
-        participation: { current: 45, total: 80, percentage: 56 },
-        type: 'Fin de semestre'
-      },
-      {
-        id: '3',
-        title: 'Évaluation Mi-parcours - Réseaux',
-        subject: 'Réseaux Informatiques',
-        status: 'Brouillon',
-        classes: ['L3 Info A', 'L3 Info B'],
-        questions: 18,
-        createdDate: '12 Oct 2025',
-        participation: { current: 0, total: 0, percentage: 0 },
-        type: 'Mi-parcours'
+      error: (error) => {
+        this.toastService.error('Erreur lors du chargement des quiz');
+        console.error('Error loading quizzes:', error);
+        this.isLoading.set(false);
       }
-    ];
+    });
+  }
 
-    this.quizzes.set(mockQuizzes);
-    this.filteredQuizzes.set(mockQuizzes);
-    this.isLoading.set(false);
+  private updateStats(quizzes: QuizDisplay[]): void {
+    this.totalQuizzes.set(quizzes.length);
+    this.activeQuizzes.set(quizzes.filter(q => q.status === 'En cours').length);
+    this.drafts.set(quizzes.filter(q => q.status === 'Brouillon').length);
   }
 
   setFilter(filter: 'all' | 'active' | 'draft' | 'closed'): void {
@@ -177,20 +191,8 @@ export class EvaluationComponent implements OnInit {
   }
 
   openImportModal(): void {
-    import('../../components/modals/import-excel-modal/import-excel-modal.component').then(m => {
-      const dialogRef = this.dialog.open(m.ImportExcelModalComponent, {
-        width: '800px',
-        maxWidth: '95vw',
-        panelClass: 'import-excel-dialog'
-      });
-
-      dialogRef.afterClosed().subscribe(result => {
-        if (result?.success) {
-          console.log(`Imported ${result.questionsCount} questions`);
-          this.router.navigate(['/quiz/create']);
-        }
-      });
-    });
+    // Fonctionnalité d'import désactivée
+    console.log('Import non disponible');
   }
 
   selectGenerateOption(option: 'manual' | 'import' | 'ai'): void {
@@ -216,17 +218,24 @@ export class EvaluationComponent implements OnInit {
     this.router.navigate(['/quiz/create', quizId]);
   }
 
-  deleteQuiz(quiz: QuizItem): void {
+  deleteQuiz(quiz: QuizDisplay): void {
     this.selectedQuiz.set(quiz);
     this.showDeleteModal.set(true);
   }
 
   confirmDelete(): void {
-    if (this.selectedQuiz()) {
-      const updated = this.quizzes().filter(q => q.id !== this.selectedQuiz()!.id);
-      this.quizzes.set(updated);
-      this.filteredQuizzes.set(updated);
-      this.closeAllModals();
+    const selected = this.selectedQuiz();
+    if (selected) {
+      this.deleteQuizUseCase.execute(selected.id).subscribe({
+        next: () => {
+          this.toastService.success('Quiz supprimé avec succès');
+          this.loadQuizzes();
+          this.closeAllModals();
+        },
+        error: (error) => {
+          this.toastService.error(error.message || 'Erreur lors de la suppression');
+        }
+      });
     }
   }
 

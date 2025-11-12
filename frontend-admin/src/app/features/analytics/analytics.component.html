@@ -5,9 +5,22 @@
       <h1>Rapports et Analyses</h1>
       <p class="subtitle">Vue d'ensemble des performances et analyses</p>
     </div>
-    <button class="btn-primary" (click)="exportReport()">
-      📥 Exporter le rapport
-    </button>
+    <div class="export-dropdown">
+      <button class="btn-primary" (click)="toggleExportMenu()">
+        📥 Exporter le rapport
+        <span class="dropdown-arrow">{{ showExportMenu() ? '▲' : '▼' }}</span>
+      </button>
+      <div class="dropdown-menu" *ngIf="showExportMenu()">
+        <button class="dropdown-item" (click)="exportToPDF()">
+          <span class="icon">📄</span>
+          <span class="text">Exporter en PDF</span>
+        </button>
+        <button class="dropdown-item" (click)="exportToExcel()">
+          <span class="icon">📊</span>
+          <span class="text">Exporter en Excel</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Tabs Navigation -->

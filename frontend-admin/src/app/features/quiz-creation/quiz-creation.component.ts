@@ -1,11 +1,14 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { QuizService } from '../../core/services/quiz.service';
 import { AcademicService } from '../../core/services/academic.service';
 import { ModalService } from '../../core/services/modal.service';
-import { Quiz, Question, QuestionOption } from '../../core/models/quiz.interface';
+import { ToastService } from '../../core/services/toast.service';
+
+// Clean Architecture - Use Cases
+import { CreateQuizUseCase } from '../../core/domain/use-cases/quiz/create-quiz.use-case';
+import { Quiz, Question, QuestionOption } from '../../core/domain/entities/quiz.entity';
 
 interface LocalQuestion {
   id: string;
@@ -29,11 +32,12 @@ interface LocalQuestionOption {
   templateUrl: './quiz-creation.component.html',
   styleUrls: ['./quiz-creation.component.scss']
 })
-export class QuizCreationComponent {
+export class QuizCreationComponent implements OnInit {
   private router = inject(Router);
-  private quizService = inject(QuizService);
+  private createQuizUseCase = inject(CreateQuizUseCase);
   private academicService = inject(AcademicService);
   private modalService = inject(ModalService);
+  private toastService = inject(ToastService);
 
   // Quiz data
   quizTitle = signal('');
@@ -69,21 +73,47 @@ export class QuizCreationComponent {
   ];
 
   ngOnInit(): void {
+    console.log('QuizCreationComponent initialized');
     this.loadAcademicYears();
+    this.loadSubjects();
   }
 
   loadAcademicYears(): void {
+    console.log('Loading academic years...');
+    this.isLoading.set(true);
     this.academicService.getAcademicYears().subscribe({
-      next: (years) => this.academicYears.set(years),
-      error: (err) => console.error('Error loading academic years:', err)
+      next: (years) => {
+        console.log('Academic years loaded:', years);
+        this.academicYears.set(years);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading academic years:', err);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  loadSubjects(): void {
+    console.log('Loading subjects...');
+    this.academicService.getSubjects().subscribe({
+      next: (subjects) => {
+        console.log('Subjects loaded:', subjects);
+        this.subjects.set(subjects);
+      },
+      error: (err) => console.error('Error loading subjects:', err)
     });
   }
 
   onAcademicYearChange(): void {
     const yearId = this.selectedAcademicYear();
+    console.log('Academic year changed:', yearId);
     if (yearId) {
       this.academicService.getSubjects(yearId).subscribe({
-        next: (subjects) => this.subjects.set(subjects),
+        next: (subjects) => {
+          console.log('Subjects for year loaded:', subjects);
+          this.subjects.set(subjects);
+        },
         error: (err) => console.error('Error loading subjects:', err)
       });
     }
@@ -161,34 +191,43 @@ export class QuizCreationComponent {
     );
     
     if (confirmed) {
-      await this.saveQuiz('published');
+      await this.saveQuiz('active');
     }
   }
 
-  private async saveQuiz(status: 'draft' | 'published'): Promise<void> {
+  private async saveQuiz(status: 'draft' | 'active'): Promise<void> {
     this.isSaving.set(true);
 
-    const quizData: Partial<Quiz> = {
-      title: this.quizTitle(),
-      description: this.quizDescription(),
-      academicYearId: this.selectedAcademicYear(),
-      subjectId: this.selectedSubject(),
-      status
-      // Note: questions will be added separately via API after quiz creation
-    };
+    // Créer l'entité Quiz
+    const quiz = new Quiz(
+      `quiz-${Date.now()}`,
+      this.quizTitle(),
+      this.selectedSubject(),
+      status,
+      [], // Les questions seront ajoutées après
+      ['class-1'], // TODO: Sélectionner les classes
+      new Date(),
+      undefined,
+      'Évaluation'
+    );
 
-    this.quizService.createQuiz(quizData).subscribe({
-      next: () => {
+    this.createQuizUseCase.execute(quiz).subscribe({
+      next: (createdQuiz) => {
         this.isSaving.set(false);
-        this.modalService.alert(
-          'Succès', 
-          status === 'published' ? 'Quiz publié avec succès !' : 'Quiz enregistré comme brouillon'
-        );
-        this.router.navigate(['/quiz-management']);
+        const message = status === 'active' 
+          ? 'Quiz publié avec succès !' 
+          : 'Quiz enregistré comme brouillon';
+        
+        this.toastService.success(message);
+        
+        // Délai pour permettre au toast de s'afficher avant la navigation
+        setTimeout(() => {
+          this.router.navigate(['/quiz-management']);
+        }, 1500);
       },
       error: (err) => {
         this.isSaving.set(false);
-        this.modalService.alert('Erreur', 'Impossible de sauvegarder le quiz');
+        this.toastService.error('Impossible de sauvegarder le quiz');
         console.error('Error saving quiz:', err);
       }
     });

@@ -1,55 +1,78 @@
+// src/app/core/services/academic.service.ts
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { AcademicYear, Subject } from '../models/quiz.interface';
+import { Observable, map } from 'rxjs';
+import { GetAllAcademicYearsUseCase } from '../domain/use-cases/academic-year/get-all-academic-years.use-case';
+import { GetAllClassesUseCase } from '../domain/use-cases/class/get-all-classes.use-case';
+import { GetAllCoursesUseCase } from '../domain/use-cases/course/get-all-courses.use-case';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AcademicService {
-  private http = inject(HttpClient);
-  private apiUrl = '/api';
+  private getAllAcademicYearsUseCase = inject(GetAllAcademicYearsUseCase);
+  private getAllClassesUseCase = inject(GetAllClassesUseCase);
+  private getAllCoursesUseCase = inject(GetAllCoursesUseCase);
 
-  getAcademicYears(): Observable<AcademicYear[]> {
-    return this.http.get<AcademicYear[]>(`${this.apiUrl}/academic-years`);
+  /**
+   * Récupérer toutes les années académiques
+   */
+  getAcademicYears(): Observable<any[]> {
+    return this.getAllAcademicYearsUseCase.execute().pipe(
+      map(years => years.map(year => ({
+        id: year.id,
+        name: year.name,
+        isActive: year.isActive,
+        startDate: year.startDate,
+        endDate: year.endDate
+      })))
+    );
   }
 
-  getAcademicYearById(id: string): Observable<AcademicYear> {
-    return this.http.get<AcademicYear>(`${this.apiUrl}/academic-years/${id}`);
+  /**
+   * Récupérer toutes les classes
+   */
+  getClasses(): Observable<any[]> {
+    return this.getAllClassesUseCase.execute().pipe(
+      map(classes => classes.map(cls => ({
+        id: cls.id,
+        name: cls.name,
+        level: cls.level,
+        academicYearId: cls.academicYearId,
+        studentCount: cls.getStudentCount()
+      })))
+    );
   }
 
-  createAcademicYear(year: Partial<AcademicYear>): Observable<AcademicYear> {
-    return this.http.post<AcademicYear>(`${this.apiUrl}/academic-years`, year);
+  /**
+   * Récupérer les classes d'une année académique
+   */
+  getClassesByYear(yearId: string): Observable<any[]> {
+    return this.getAllClassesUseCase.execute().pipe(
+      map(classes => 
+        classes
+          .filter(cls => cls.academicYearId === yearId)
+          .map(cls => ({
+            id: cls.id,
+            name: cls.name,
+            level: cls.level,
+            academicYearId: cls.academicYearId,
+            studentCount: cls.getStudentCount()
+          }))
+      )
+    );
   }
 
-  updateAcademicYear(id: string, year: Partial<AcademicYear>): Observable<AcademicYear> {
-    return this.http.put<AcademicYear>(`${this.apiUrl}/academic-years/${id}`, year);
-  }
-
-  deleteAcademicYear(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/academic-years/${id}`);
-  }
-
-  getSubjects(academicYearId?: string): Observable<Subject[]> {
-    const url = academicYearId 
-      ? `${this.apiUrl}/subjects?academicYearId=${academicYearId}`
-      : `${this.apiUrl}/subjects`;
-    return this.http.get<Subject[]>(url);
-  }
-
-  getSubjectById(id: string): Observable<Subject> {
-    return this.http.get<Subject>(`${this.apiUrl}/subjects/${id}`);
-  }
-
-  createSubject(subject: Partial<Subject>): Observable<Subject> {
-    return this.http.post<Subject>(`${this.apiUrl}/subjects`, subject);
-  }
-
-  updateSubject(id: string, subject: Partial<Subject>): Observable<Subject> {
-    return this.http.put<Subject>(`${this.apiUrl}/subjects/${id}`, subject);
-  }
-
-  deleteSubject(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/subjects/${id}`);
+  /**
+   * Récupérer tous les cours (matières)
+   */
+  getSubjects(yearId?: string): Observable<any[]> {
+    return this.getAllCoursesUseCase.execute().pipe(
+      map(courses => courses.map(course => ({
+        id: course.id,
+        code: course.code,
+        name: course.name,
+        description: course.description
+      })))
+    );
   }
 }

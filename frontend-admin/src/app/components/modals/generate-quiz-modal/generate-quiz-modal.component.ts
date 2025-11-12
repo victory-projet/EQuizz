@@ -42,34 +42,6 @@ import { MatIconModule } from '@angular/material/icon';
             <span>OU</span>
           </div>
 
-          <div class="option-card" (click)="selectImport()">
-            <div class="option-icon import">
-              <span class="icon">📊</span>
-            </div>
-            <h3>Importer depuis Excel</h3>
-            <p>Importez vos questions depuis un fichier Excel pré-formaté</p>
-            <button mat-raised-button color="accent">
-              <mat-icon>upload_file</mat-icon>
-              Importer un fichier
-            </button>
-          </div>
-        </div>
-
-        <div class="info-section">
-          <mat-icon>info</mat-icon>
-          <div>
-            <p><strong>Format du fichier Excel requis :</strong></p>
-            <ul>
-              <li>Colonne A : Type de question (QCM/Ouverte/Fermée)</li>
-              <li>Colonne B : Texte de la question</li>
-              <li>Colonnes C-F : Options de réponse (pour QCM)</li>
-              <li>Colonne G : Réponse correcte</li>
-            </ul>
-            <a href="#" class="download-link" (click)="downloadTemplate($event)">
-              <mat-icon>download</mat-icon>
-              Télécharger le modèle Excel
-            </a>
-          </div>
         </div>
       </mat-dialog-content>
     </div>

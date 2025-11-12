@@ -1,7 +1,6 @@
 // src/app/shared/components/confirmation-modal/confirmation-modal.component.ts
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ModalComponent } from '../modal/modal.component';
 
 export interface ConfirmationData {
   title: string;
@@ -15,7 +14,7 @@ export interface ConfirmationData {
 @Component({
   selector: 'app-confirmation-modal',
   standalone: true,
-  imports: [CommonModule, ModalComponent],
+  imports: [CommonModule],
   templateUrl: './confirmation-modal.component.html',
   styleUrl: './confirmation-modal.component.scss'
 })
@@ -26,7 +25,7 @@ export class ConfirmationModalComponent {
     message: 'Êtes-vous sûr ?',
     confirmText: 'Confirmer',
     cancelText: 'Annuler',
-    isDangerous: true
+    isDangerous: false
   };
 
   @Output() confirm = new EventEmitter<void>();
@@ -38,5 +37,11 @@ export class ConfirmationModalComponent {
 
   onCancel(): void {
     this.cancel.emit();
+  }
+
+  onBackdropClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.onCancel();
+    }
   }
 }

@@ -1,22 +1,31 @@
 // src/app/features/class-management/class-management.component.ts
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal/confirmation-modal.component';
-import { ClassFormComponent } from '../../components/class-form/class-form.component';
+import { ClassFormComponent, ClassData } from '../../components/class-form/class-form.component';
 import { ClassDetailsComponent } from '../../components/class-details/class-details.component';
-
 import { trigger, transition, style, animate } from '@angular/animations';
 import { SvgIconComponent } from '../../shared/components/svg-icon/svg-icon';
+import { ToastService } from '../../core/services/toast.service';
 
-interface Class {
-  id: string;
-  name: string;
-  level: string;
-  studentCount: number;
-  academicYear: string;
-  createdAt: Date;
+// Clean Architecture - Use Cases
+import { GetAllClassesUseCase } from '../../core/domain/use-cases/class/get-all-classes.use-case';
+import { CreateClassUseCase, CreateClassDto } from '../../core/domain/use-cases/class/create-class.use-case';
+import { UpdateClassUseCase, UpdateClassDto } from '../../core/domain/use-cases/class/update-class.use-case';
+import { DeleteClassUseCase } from '../../core/domain/use-cases/class/delete-class.use-case';
+import { Class } from '../../core/domain/entities/class.entity';
+
+// Mapper pour convertir Class entity vers ClassData (UI)
+function mapClassToData(cls: Class): ClassData {
+  return {
+    id: cls.id,
+    name: cls.name,
+    level: cls.level,
+    studentCount: cls.getStudentCount(),
+    academicYear: cls.academicYearId
+  };
 }
 
 @Component({
@@ -43,8 +52,15 @@ interface Class {
   ]
 })
 export class ClassManagementComponent implements OnInit {
-  classes = signal<Class[]>([]);
-  filteredClasses = signal<Class[]>([]);
+  // Clean Architecture - Inject Use Cases
+  private getAllClassesUseCase = inject(GetAllClassesUseCase);
+  private createClassUseCase = inject(CreateClassUseCase);
+  private updateClassUseCase = inject(UpdateClassUseCase);
+  private deleteClassUseCase = inject(DeleteClassUseCase);
+  private toastService = inject(ToastService);
+
+  classes = signal<ClassData[]>([]);
+  filteredClasses = signal<ClassData[]>([]);
   searchTerm = signal('');
 
   // Stats
@@ -57,14 +73,13 @@ export class ClassManagementComponent implements OnInit {
   showFormModal = signal(false);
   showDetailsModal = signal(false);
   showDeleteModal = signal(false);
-  selectedClass = signal<Class | null>(null);
+  selectedClass = signal<ClassData | null>(null);
 
   // Form
-  formData: Partial<Class> = {
+  formData: Partial<CreateClassDto> = {
     name: '',
     level: '',
-    studentCount: 0,
-    academicYear: '2024-2025'
+    academicYearId: 'year-1'
   };
 
   ngOnInit(): void {
@@ -72,14 +87,18 @@ export class ClassManagementComponent implements OnInit {
   }
 
   loadClasses(): void {
-    const mock: Class[] = [
-      { id: '1', name: 'L1 Info A', level: 'Licence 1', studentCount: 45, academicYear: '2024-2025', createdAt: new Date('2024-09-01') },
-      { id: '2', name: 'L1 Info B', level: 'Licence 1', studentCount: 42, academicYear: '2024-2025', createdAt: new Date('2024-09-01') },
-      { id: '3', name: 'L2 Info', level: 'Licence 2', studentCount: 38, academicYear: '2024-2025', createdAt: new Date('2024-09-01') }
-    ];
-    this.classes.set(mock);
-    this.filteredClasses.set(mock);
-    this.updateStats();
+    this.getAllClassesUseCase.execute().subscribe({
+      next: (classes) => {
+        const classData = classes.map(mapClassToData);
+        this.classes.set(classData);
+        this.filteredClasses.set(classData);
+        this.updateStats();
+      },
+      error: (error) => {
+        this.toastService.error('Erreur lors du chargement des classes');
+        console.error('Error loading classes:', error);
+      }
+    });
   }
 
   updateStats(): void {
@@ -97,8 +116,7 @@ export class ClassManagementComponent implements OnInit {
     const filtered = term
       ? this.classes().filter(c =>
           c.name.toLowerCase().includes(term) ||
-          c.level.toLowerCase().includes(term) ||
-          c.academicYear.includes(term)
+          c.level.toLowerCase().includes(term)
         )
       : this.classes();
     this.filteredClasses.set(filtered);
@@ -106,51 +124,85 @@ export class ClassManagementComponent implements OnInit {
 
   addClass(): void {
     this.resetForm();
+    this.selectedClass.set(null);
     this.showFormModal.set(true);
   }
 
-  editClass(cls: Class): void {
+  editClass(cls: ClassData): void {
     this.selectedClass.set(cls);
-    this.formData = { ...cls };
+    this.formData = {
+      name: cls.name,
+      level: cls.level,
+      academicYearId: cls.academicYear
+    };
     this.showFormModal.set(true);
   }
 
-  viewDetails(cls: Class): void {
+  viewDetails(cls: ClassData): void {
     this.selectedClass.set(cls);
     this.showDetailsModal.set(true);
   }
 
-  deleteClass(cls: Class): void {
+  deleteClass(cls: ClassData): void {
     this.selectedClass.set(cls);
     this.showDeleteModal.set(true);
   }
 
   saveClass(): void {
-    if (this.selectedClass()) {
-      // Edit
-      this.classes.update(c =>
-        c.map(item => item.id === this.selectedClass()!.id ? { ...item, ...this.formData } : item)
-      );
-    } else {
-      // Add
-      const newClass: Class = {
-        id: Date.now().toString(),
-        createdAt: new Date(),
-        ...this.formData as Omit<Class, 'id' | 'createdAt'>
+    const selected = this.selectedClass();
+    
+    if (selected && selected.id) {
+      // Update existing class
+      const dto: UpdateClassDto = {
+        id: selected.id,
+        name: this.formData.name!,
+        level: this.formData.level!
       };
-      this.classes.update(c => [...c, newClass]);
+
+      this.updateClassUseCase.execute(dto).subscribe({
+        next: () => {
+          this.toastService.success('Classe modifiée avec succès');
+          this.loadClasses();
+          this.closeModal();
+        },
+        error: (error) => {
+          this.toastService.error(error.message || 'Erreur lors de la modification');
+        }
+      });
+    } else {
+      // Create new class
+      const dto: CreateClassDto = {
+        name: this.formData.name!,
+        level: this.formData.level!,
+        academicYearId: this.formData.academicYearId!
+      };
+
+      this.createClassUseCase.execute(dto).subscribe({
+        next: () => {
+          this.toastService.success('Classe créée avec succès');
+          this.loadClasses();
+          this.closeModal();
+        },
+        error: (error) => {
+          this.toastService.error(error.message || 'Erreur lors de la création');
+        }
+      });
     }
-    this.filteredClasses.set(this.classes());
-    this.updateStats();
-    this.closeModal();
   }
 
   confirmDelete(): void {
-    if (this.selectedClass()) {
-      this.classes.update(c => c.filter(item => item.id !== this.selectedClass()!.id));
-      this.filteredClasses.set(this.classes());
-      this.updateStats();
-      this.closeModal();
+    const selected = this.selectedClass();
+    if (selected && selected.id) {
+      this.deleteClassUseCase.execute(selected.id).subscribe({
+        next: () => {
+          this.toastService.success('Classe supprimée avec succès');
+          this.loadClasses();
+          this.closeModal();
+        },
+        error: (error) => {
+          this.toastService.error(error.message || 'Erreur lors de la suppression');
+        }
+      });
     }
   }
 
@@ -166,8 +218,7 @@ export class ClassManagementComponent implements OnInit {
     this.formData = {
       name: '',
       level: '',
-      studentCount: 0,
-      academicYear: '2024-2025'
+      academicYearId: 'year-1'
     };
   }
 }

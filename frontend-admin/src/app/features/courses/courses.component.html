@@ -37,10 +37,10 @@
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon orange">🎓</div>
+      <div class="stat-icon orange">📅</div>
       <div class="stat-content">
-        <div class="stat-label">Total Crédits</div>
-        <div class="stat-value">{{ totalCredits() }}</div>
+        <div class="stat-label">Semestres</div>
+        <div class="stat-value">2</div>
       </div>
     </div>
   </div>
@@ -61,8 +61,8 @@
     <div *ngFor="let course of filteredCourses()" class="course-card">
       <div class="course-header">
         <div class="course-code">{{ course.code }}</div>
-        <span class="status-badge" [class.active]="course.status === 'Actif'">
-          {{ course.status }}
+        <span class="status-badge active">
+          Actif
         </span>
       </div>
 
@@ -71,19 +71,15 @@
       <div class="course-details">
         <div class="detail-item">
           <span class="icon">👨‍🏫</span>
-          <span>{{ course.teacher }}</span>
+          <span>{{ course.teacherId }}</span>
         </div>
         <div class="detail-item">
           <span class="icon">👥</span>
-          <span>{{ course.students }} étudiants</span>
+          <span>40 étudiants</span>
         </div>
         <div class="detail-item">
           <span class="icon">📅</span>
-          <span>Semestre {{ course.semester }}</span>
-        </div>
-        <div class="detail-item">
-          <span class="icon">🎓</span>
-          <span>{{ course.credits }} crédits</span>
+          <span>{{ course.semesterId }}</span>
         </div>
       </div>
 
@@ -110,15 +106,9 @@
 <!-- Modal Ajouter/Modifier un Cours -->
 <app-modal [isOpen]="showAddModal || showEditModal" [title]="showAddModal ? 'Ajouter un Cours' : 'Modifier le Cours'" (close)="closeModal()">
   <form class="modal-form">
-    <div class="form-row">
-      <div class="form-group">
-        <label>Code du cours *</label>
-        <input type="text" [(ngModel)]="formData.code" name="code" placeholder="Ex: INF101" required>
-      </div>
-      <div class="form-group">
-        <label>Crédits *</label>
-        <input type="number" [(ngModel)]="formData.credits" name="credits" min="1" max="10" required>
-      </div>
+    <div class="form-group">
+      <label>Code du cours *</label>
+      <input type="text" [(ngModel)]="formData.code" name="code" placeholder="Ex: INF101" required>
     </div>
 
     <div class="form-group">
@@ -129,28 +119,18 @@
     <div class="form-row">
       <div class="form-group">
         <label>Enseignant *</label>
-        <input type="text" [(ngModel)]="formData.teacher" name="teacher" placeholder="Ex: Dr. Martin" required>
+        <input type="text" [(ngModel)]="formData.teacherId" name="teacherId" placeholder="Ex: teacher-1" required>
       </div>
       <div class="form-group">
         <label>Semestre *</label>
-        <select [(ngModel)]="formData.semester" name="semester" required>
-          <option [value]="1">Semestre 1</option>
-          <option [value]="2">Semestre 2</option>
-        </select>
+        <input type="text" [(ngModel)]="formData.semesterId" name="semesterId" placeholder="Ex: semester-1" required>
       </div>
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label>Nombre d'étudiants</label>
-        <input type="number" [(ngModel)]="formData.students" name="students" min="0" placeholder="0">
-      </div>
-      <div class="form-group">
-        <label>Statut</label>
-        <select [(ngModel)]="formData.status" name="status">
-          <option value="Actif">Actif</option>
-          <option value="Inactif">Inactif</option>
-        </select>
+        <label>Année académique *</label>
+        <input type="text" [(ngModel)]="formData.academicYearId" name="academicYearId" placeholder="Ex: year-1" required>
       </div>
     </div>
 
@@ -165,15 +145,13 @@
 
 <!-- Modal Voir Détails -->
 <app-modal [isOpen]="showViewModal" [title]="'Détails du Cours'" (close)="closeModal()">
-  <div class="details-view" *ngIf="selectedCourse">
+  <div class="details-view" *ngIf="selectedCourse()">
     <div class="detail-section">
       <div class="detail-header">
-        <span class="course-code-large">{{ selectedCourse.code }}</span>
-        <span class="status-badge-large" [class.active]="selectedCourse.status === 'Actif'">
-          {{ selectedCourse.status }}
-        </span>
+        <span class="course-code-large">{{ selectedCourse()!.code }}</span>
+        <span class="status-badge-large">Actif</span>
       </div>
-      <h2 class="course-title">{{ selectedCourse.name }}</h2>
+      <h2 class="course-title">{{ selectedCourse()!.name }}</h2>
     </div>
 
     <div class="detail-grid">
@@ -181,15 +159,15 @@
         <span class="detail-icon">👨‍🏫</span>
         <div>
           <div class="detail-label">Enseignant</div>
-          <div class="detail-value">{{ selectedCourse.teacher }}</div>
+          <div class="detail-value">{{ selectedCourse()!.teacherId }}</div>
         </div>
       </div>
 
       <div class="detail-item-large">
-        <span class="detail-icon">👥</span>
+        <span class="detail-icon">📚</span>
         <div>
-          <div class="detail-label">Étudiants inscrits</div>
-          <div class="detail-value">{{ selectedCourse.students }}</div>
+          <div class="detail-label">Description</div>
+          <div class="detail-value">{{ selectedCourse()!.description }}</div>
         </div>
       </div>
 
@@ -197,32 +175,24 @@
         <span class="detail-icon">📅</span>
         <div>
           <div class="detail-label">Semestre</div>
-          <div class="detail-value">Semestre {{ selectedCourse.semester }}</div>
-        </div>
-      </div>
-
-      <div class="detail-item-large">
-        <span class="detail-icon">🎓</span>
-        <div>
-          <div class="detail-label">Crédits ECTS</div>
-          <div class="detail-value">{{ selectedCourse.credits }}</div>
+          <div class="detail-value">{{ selectedCourse()!.semesterId }}</div>
         </div>
       </div>
     </div>
 
     <div class="modal-actions">
       <button type="button" class="btn-secondary" (click)="closeModal()">Fermer</button>
-      <button type="button" class="btn-primary" (click)="editCourse(selectedCourse); closeModal()">Modifier</button>
+      <button type="button" class="btn-primary" (click)="editCourse(selectedCourse()!); closeModal()">Modifier</button>
     </div>
   </div>
 </app-modal>
 
 <!-- Modal Supprimer -->
 <app-modal [isOpen]="showDeleteModal" [title]="'Confirmer la suppression'" [size]="'small'" (close)="closeModal()">
-  <div class="delete-confirmation" *ngIf="selectedCourse">
+  <div class="delete-confirmation" *ngIf="selectedCourse()">
     <div class="warning-icon">⚠️</div>
     <p class="warning-text">
-      Êtes-vous sûr de vouloir supprimer le cours <strong>{{ selectedCourse.name }}</strong> ?
+      Êtes-vous sûr de vouloir supprimer le cours <strong>{{ selectedCourse()!.name }}</strong> ?
     </p>
     <p class="warning-subtext">Cette action est irréversible.</p>
 

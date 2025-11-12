@@ -1,8 +1,6 @@
 // src/app/app.component.ts
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { HeaderComponent } from './shared/components/header/header.component';
-import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
 import { ToastComponent } from './shared/components/toast/toast.component';
 
 @Component({
@@ -10,8 +8,6 @@ import { ToastComponent } from './shared/components/toast/toast.component';
   standalone: true,
   imports: [
     RouterOutlet,
-    HeaderComponent,
-    SidebarComponent,
     ToastComponent
   ],
   templateUrl: './app.html',

@@ -20,39 +20,41 @@
     </button>
 
     <!-- User Menu -->
-    <div class="user-menu">
+    <div class="user-menu" *ngIf="currentUser()">
       <button class="user-btn" (click)="toggleUserMenu()">
         <div class="user-avatar">
           <span>{{ getUserInitials() }}</span>
         </div>
-        <span class="user-name">{{ currentUser().name }}</span>
+        <div class="user-details">
+          <span class="user-name">{{ getUserName() }}</span>
+          <span class="user-role">{{ getUserRole() }}</span>
+        </div>
         <span class="chevron">▼</span>
       </button>
 
-      @if (showUserMenu()) {
-        <div class="user-dropdown">
-          <div class="user-info">
-            <div class="user-avatar-large">
-              <span>{{ getUserInitials() }}</span>
-            </div>
-            <div>
-              <p class="user-name-large">{{ currentUser().name }}</p>
-              <p class="user-email">{{ currentUser().email }}</p>
-            </div>
+      <div class="user-dropdown" *ngIf="isUserMenuOpen()">
+        <div class="user-info">
+          <div class="user-avatar-large">
+            <span>{{ getUserInitials() }}</span>
           </div>
-          <div class="dropdown-divider"></div>
-          <button class="dropdown-item" (click)="onProfile()">
-            <span class="item-icon">👤</span> Mon profil
-          </button>
-          <button class="dropdown-item" (click)="onSettings()">
-            <span class="item-icon">⚙️</span> Paramètres
-          </button>
-          <div class="dropdown-divider"></div>
-          <button class="dropdown-item danger" (click)="onLogout()">
-            <span class="item-icon">🚪</span> Déconnexion
-          </button>
+          <div>
+            <p class="user-name-large">{{ getUserName() }}</p>
+            <p class="user-email">{{ getUserEmail() }}</p>
+            <p class="user-role-badge">{{ getUserRole() }}</p>
+          </div>
         </div>
-      }
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" (click)="onProfile()">
+          <span class="item-icon">👤</span> Mon profil
+        </button>
+        <button class="dropdown-item" (click)="onSettings()">
+          <span class="item-icon">⚙️</span> Paramètres
+        </button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item danger" (click)="onLogout()">
+          <span class="item-icon">🚪</span> Déconnexion
+        </button>
+      </div>
     </div>
   </div>
 </header>

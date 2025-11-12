@@ -1,6 +1,6 @@
 import { Component, input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Quiz } from '../../../../core/models/quiz.interface';
+import { Quiz } from '../../../../core/domain/entities/quiz.entity';
 import { ModalService } from '../../../../core/services/modal.service';
 
 @Component({
@@ -28,16 +28,16 @@ import { ModalService } from '../../../../core/services/modal.service';
 
       <div class="card-content">
         <h3>{{ quiz().title }}</h3>
-        <p class="description">{{ quiz().description || 'Aucune description' }}</p>
+        <p class="description">Matière: {{ quiz().subject }}</p>
         
         <div class="card-stats">
           <div class="stat">
             <span class="stat-icon">❓</span>
-            <span>{{ quiz().questions.length }} questions</span>
+            <span>{{ quiz().questions.length || 0 }} questions</span>
           </div>
           <div class="stat">
             <span class="stat-icon">📅</span>
-            <span>{{ formatDate(quiz().createdAt) }}</span>
+            <span>{{ formatDate(quiz().createdDate) }}</span>
           </div>
         </div>
       </div>
@@ -45,7 +45,7 @@ import { ModalService } from '../../../../core/services/modal.service';
       <div class="card-footer">
         <button class="btn-outline" (click)="onEdit()">Modifier</button>
         <button class="btn-primary" (click)="onPublish()">
-          {{ quiz().status === 'published' ? 'Dépublier' : 'Publier' }}
+          {{ quiz().isActive() ? 'Fermer' : 'Publier' }}
         </button>
       </div>
     </div>
@@ -83,12 +83,12 @@ import { ModalService } from '../../../../core/services/modal.service';
         color: #6b7280;
       }
 
-      &.published {
+      &.active {
         background: #d1fae5;
         color: #065f46;
       }
 
-      &.archived {
+      &.closed {
         background: #fee2e2;
         color: #991b1b;
       }
@@ -236,8 +236,8 @@ export class QuizCardComponent {
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
       draft: 'Brouillon',
-      published: 'Publié',
-      archived: 'Archivé'
+      active: 'Publié',
+      closed: 'Fermé'
     };
     return labels[status] || status;
   }

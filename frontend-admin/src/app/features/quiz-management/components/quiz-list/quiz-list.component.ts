@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Quiz } from '../../../../core/models/quiz.interface';
+import { Quiz } from '../../../../core/domain/entities/quiz.entity';
 import { QuizCardComponent } from '../quiz-card/quiz-card.component';
 
 @Component({

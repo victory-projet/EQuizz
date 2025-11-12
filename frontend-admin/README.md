@@ -1,11 +1,18 @@
-# Projet EQuizz - Frontend Admin (Web)
+# 🎓 Projet EQuizz - Frontend Admin (Web)
 
-Ce projet contient l'application web d'administration pour la plateforme EQuizz. Elle est construite avec Angular.
+Application web d'administration pour la plateforme EQuizz, construite avec **Clean Architecture**.
 
-## Stack Technique
+## 📊 Status
+✅ **Application fonctionnelle** - Tous les repositories implémentés avec mock data  
+✅ **0 erreur TypeScript** - Build réussi  
+✅ **Clean Architecture** - Principes SOLID respectés
+
+## 🛠️ Stack Technique
 - **Angular** (v16+)
 - **TypeScript**
 - **SCSS**
+- **RxJS**
+- **Clean Architecture**
 
 ## Prérequis
 Avant de commencer, assurez-vous d'avoir installé :
@@ -51,6 +58,53 @@ Avant de commencer, assurez-vous d'avoir installé :
     ```
     L'application se rechargera automatiquement si vous modifiez des fichiers sources.
 
+## 📚 Documentation
+
+- **[README_ARCHITECTURE.md](./README_ARCHITECTURE.md)** - Vue d'ensemble de l'architecture
+- **[HOW_TO_ADD_NEW_FEATURE.md](./HOW_TO_ADD_NEW_FEATURE.md)** - Guide pour ajouter une feature
+- **[PROJECT_STATUS.md](./PROJECT_STATUS.md)** - État actuel du projet
+- **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Guide de test complet
+
+## 🎯 Fonctionnalités
+
+### ✅ Implémenté
+- Gestion des années académiques (référence complète)
+- Gestion des quiz (création, modification, publication)
+- Gestion des classes et étudiants
+- Gestion des cours (UE) et enseignants
+- Dashboard avec statistiques
+- Évaluation et analytics
+- Authentification et autorisation
+
+### 📦 Repositories (Mock Data)
+- AcademicYearRepository
+- QuizRepository & QuizSubmissionRepository
+- ClassRepository & StudentRepository
+- CourseRepository & TeacherRepository
+- AuthRepository & UserRepository
+
+## 🏗️ Architecture
+
+```
+src/app/
+├── core/
+│   ├── domain/              # Entités et Use Cases
+│   ├── infrastructure/      # Repositories
+│   ├── services/            # Services techniques
+│   └── interceptors/        # HTTP interceptors
+├── features/                # Pages de l'application
+├── shared/                  # Composants réutilisables
+└── pages/                   # Pages publiques
+```
+
+## 🧪 Tests
+
+Suivre le guide : [TESTING_GUIDE.md](./TESTING_GUIDE.md)
+
+**Identifiants de test** :
+- Email : `admin@equizz.com`
+- Mot de passe : `admin123`
+
 ## Workflow Git
 
 Tout développement doit se faire sur une **branche de fonctionnalité** créée à partir de `develop`.
@@ -59,3 +113,11 @@ Tout développement doit se faire sur une **branche de fonctionnalité** créée
 2.  Développez et commitez votre travail.
 3.  Poussez votre branche : `git push origin feature/ID-description-courte`
 4.  Créez une **Pull Request** sur GitHub/GitLab vers la branche `develop`.
+
+## 🚀 Prochaines étapes
+
+1. **Tests** - Suivre le guide de test complet
+2. **Use Cases manquants** - Compléter les use cases pour Quiz
+3. **Intégration Backend** - Remplacer mock data par vraies API
+4. **Tests unitaires** - Ajouter tests pour Use Cases et Entities
+5. **Optimisations** - Lazy loading, caching, PWA

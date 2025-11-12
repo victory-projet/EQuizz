@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AnalyticsService } from '../../core/services/analytics.service';
+import { ExportService } from '../../core/services/export.service';
 import { SentimentAnalysisComponent } from './components/sentiment-analysis/sentiment-analysis.component';
 
 @Component({
@@ -12,9 +13,11 @@ import { SentimentAnalysisComponent } from './components/sentiment-analysis/sent
 })
 export class AnalyticsComponent implements OnInit {
   private analyticsService = inject(AnalyticsService);
+  private exportService = inject(ExportService);
 
   activeTab = signal<'overview' | 'sentiment' | 'performance'>('overview');
   isLoading = signal(true);
+  showExportMenu = signal(false);
 
   stats = signal({
     totalQuizzes: 24,
@@ -64,20 +67,92 @@ export class AnalyticsComponent implements OnInit {
     this.activeTab.set(tab);
   }
 
-  exportReport(): void {
-    const data = {
-      stats: this.stats(),
-      recentActivity: this.recentActivity(),
-      topPerformers: this.topPerformers(),
-      exportDate: new Date().toISOString()
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `rapport-analytics-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+  toggleExportMenu(): void {
+    this.showExportMenu.update(v => !v);
   }
+
+  exportToPDF(): void {
+    const stats = this.stats();
+    const exportData = {
+      title: 'Rapport d\'Analyses et Performances',
+      date: new Date().toLocaleDateString('fr-FR', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      }),
+      stats: [
+        { label: 'Quiz créés', value: stats.totalQuizzes },
+        { label: 'Réponses totales', value: stats.totalResponses },
+        { label: 'Score moyen', value: `${stats.averageScore}%` },
+        { label: 'Taux de participation', value: `${stats.participationRate}%` },
+        { label: 'Sentiment positif', value: `${stats.positiveSentiment}%` },
+        { label: 'Sentiment neutre', value: `${stats.neutralSentiment}%` },
+        { label: 'Sentiment négatif', value: `${stats.negativeSentiment}%` }
+      ],
+      tables: [
+        {
+          title: 'Activité Récente',
+          headers: ['Action', 'Détails', 'Temps'],
+          rows: this.recentActivity().map(a => [a.action, a.details, a.time])
+        },
+        {
+          title: 'Top Performers',
+          headers: ['Rang', 'Classe', 'Score', 'Tendance'],
+          rows: this.topPerformers().map((p, i) => [
+            `${i + 1}`,
+            p.name,
+            `${p.score}%`,
+            p.trend === 'up' ? '↑' : '↓'
+          ])
+        }
+      ],
+      additionalInfo: 'Ce rapport a été généré automatiquement par le système EQuizz.'
+    };
+
+    this.exportService.exportToPDF(exportData);
+    this.showExportMenu.set(false);
+  }
+
+  exportToExcel(): void {
+    const stats = this.stats();
+    const exportData = {
+      title: 'Rapport d\'Analyses et Performances',
+      date: new Date().toLocaleDateString('fr-FR', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      }),
+      stats: [
+        { label: 'Quiz créés', value: stats.totalQuizzes },
+        { label: 'Réponses totales', value: stats.totalResponses },
+        { label: 'Score moyen', value: `${stats.averageScore}%` },
+        { label: 'Taux de participation', value: `${stats.participationRate}%` },
+        { label: 'Sentiment positif', value: `${stats.positiveSentiment}%` },
+        { label: 'Sentiment neutre', value: `${stats.neutralSentiment}%` },
+        { label: 'Sentiment négatif', value: `${stats.negativeSentiment}%` }
+      ],
+      tables: [
+        {
+          title: 'Activité Récente',
+          headers: ['Action', 'Détails', 'Temps'],
+          rows: this.recentActivity().map(a => [a.action, a.details, a.time])
+        },
+        {
+          title: 'Top Performers',
+          headers: ['Rang', 'Classe', 'Score', 'Tendance'],
+          rows: this.topPerformers().map((p, i) => [
+            i + 1,
+            p.name,
+            p.score,
+            p.trend === 'up' ? 'Hausse' : 'Baisse'
+          ])
+        }
+      ]
+    };
+
+    this.exportService.exportToExcel(exportData);
+    this.showExportMenu.set(false);
+  }
+
+
 }

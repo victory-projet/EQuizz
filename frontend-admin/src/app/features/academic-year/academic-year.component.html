@@ -90,3 +90,30 @@
     </div>
   </div>
 </div>
+
+<!-- Modals -->
+<!-- Academic Year Form Modal -->
+<app-academic-year-form-modal
+  [isOpen]="showYearFormModal"
+  [mode]="yearFormMode"
+  [academicYear]="getYearFormData()"
+  (close)="closeYearFormModal()"
+  (save)="onSaveYear($event)">
+</app-academic-year-form-modal>
+
+<!-- Semester Form Modal -->
+<app-semester-form-modal
+  [isOpen]="showSemesterFormModal"
+  [academicYearId]="selectedYear?.id || ''"
+  [academicYearName]="selectedYear?.name || ''"
+  (close)="closeSemesterFormModal()"
+  (save)="onSaveSemester($event)">
+</app-semester-form-modal>
+
+<!-- Delete Confirmation Modal -->
+<app-confirmation-modal
+  [isOpen]="showDeleteModal"
+  [data]="confirmationData"
+  (confirm)="onConfirmDelete()"
+  (cancel)="closeDeleteModal()">
+</app-confirmation-modal>

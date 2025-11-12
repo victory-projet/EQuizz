@@ -48,16 +48,23 @@
         <div class="form-row">
           <div class="form-group">
             <label for="academicYear">Année académique *</label>
+            @if (isLoading()) {
+              <p class="loading-text">Chargement des années académiques...</p>
+            }
             <select 
               id="academicYear"
               [(ngModel)]="selectedAcademicYear"
               (ngModelChange)="onAcademicYearChange()"
+              [disabled]="isLoading()"
             >
               <option value="">Sélectionner une année</option>
               @for (year of academicYears(); track year.id) {
                 <option [value]="year.id">{{ year.name }}</option>
               }
             </select>
+            @if (!isLoading() && academicYears().length === 0) {
+              <p class="error-text">Aucune année académique disponible</p>
+            }
           </div>
 
           <div class="form-group">
@@ -65,13 +72,16 @@
             <select 
               id="subject"
               [(ngModel)]="selectedSubject"
-              [disabled]="!selectedAcademicYear()"
+              [disabled]="subjects().length === 0"
             >
               <option value="">Sélectionner une matière</option>
               @for (subject of subjects(); track subject.id) {
                 <option [value]="subject.id">{{ subject.name }}</option>
               }
             </select>
+            @if (subjects().length === 0 && !isLoading()) {
+              <p class="info-text">Aucune matière disponible</p>
+            }
           </div>
         </div>
       </div>

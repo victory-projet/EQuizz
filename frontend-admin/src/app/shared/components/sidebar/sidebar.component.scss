@@ -1,14 +1,14 @@
 .sidebar {
   position: fixed;
   left: 0;
-  top: 70px; // Commence sous le header
-  height: calc(100vh - 70px); // Hauteur moins le header
+  top: 70px;
+  height: calc(100vh - 70px);
   width: 240px;
   background: linear-gradient(180deg, #3A5A8C 0%, #2C4570 100%);
   color: white;
   display: flex;
   flex-direction: column;
-  z-index: 50; // Moins que le header (100)
+  z-index: 50;
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.1);
 }
 
