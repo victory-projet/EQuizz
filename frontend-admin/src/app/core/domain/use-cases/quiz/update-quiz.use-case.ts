@@ -7,9 +7,12 @@ import { IQuizRepository } from '../../repositories/quiz.repository.interface';
 export interface UpdateQuizDto {
   id: string;
   title?: string;
+  description?: string;
   subject?: string;
   classIds?: string[];
   endDate?: Date;
+  status?: 'draft' | 'active' | 'closed';
+  questions?: any[]; // Questions du quiz
 }
 
 @Injectable({

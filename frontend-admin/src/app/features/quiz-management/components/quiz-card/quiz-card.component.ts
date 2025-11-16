@@ -1,7 +1,11 @@
-import { Component, input, inject } from '@angular/core';
+import { Component, input, inject, signal, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Quiz } from '../../../../core/domain/entities/quiz.entity';
 import { ModalService } from '../../../../core/services/modal.service';
+import { ToastService } from '../../../../core/services/toast.service';
+import { PublishQuizUseCase } from '../../../../core/domain/use-cases/quiz/publish-quiz.use-case';
+import { DeleteQuizUseCase } from '../../../../core/domain/use-cases/quiz/delete-quiz.use-case';
 
 @Component({
   selector: 'app-quiz-card',
@@ -10,14 +14,13 @@ import { ModalService } from '../../../../core/services/modal.service';
   template: `
     <div class="quiz-card">
       <div class="card-header">
-        <div class="status-badge" [class]="quiz().status">
-          {{ getStatusLabel(quiz().status) }}
+        <div class="status-badge" [class]="getStatusClass()">
+          {{ getStatusLabel() }}
         </div>
         <div class="card-menu">
           <button class="menu-btn" (click)="toggleMenu()">⋮</button>
-          @if (showMenu()) {
-            <div class="menu-dropdown">
-              <button (click)="onEdit()">✏️ Modifier</button>
+          @if (showMenuDropdown()) {
+            <div class="menu-dropdown" (click)="$event.stopPropagation()">
               <button (click)="onPreview()">👁️ Aperçu</button>
               <button (click)="onDuplicate()">📋 Dupliquer</button>
               <button (click)="onDelete()" class="danger">🗑️ Supprimer</button>
@@ -39,14 +42,41 @@ import { ModalService } from '../../../../core/services/modal.service';
             <span class="stat-icon">📅</span>
             <span>{{ formatDate(quiz().createdDate) }}</span>
           </div>
+          @if (quiz().endDate !== undefined) {
+            <div class="stat">
+              <span class="stat-icon">⏰</span>
+              <span>Fin: {{ formatDate(quiz().endDate!) }}</span>
+            </div>
+          }
         </div>
       </div>
 
       <div class="card-footer">
-        <button class="btn-outline" (click)="onEdit()">Modifier</button>
-        <button class="btn-primary" (click)="onPublish()">
-          {{ quiz().isActive() ? 'Fermer' : 'Publier' }}
-        </button>
+        @if (quiz().isDraft()) {
+          <!-- Brouillon: Bouton Continuer + Publier -->
+          <button class="btn-secondary" (click)="onContinue()">
+            ▶️ Continuer
+          </button>
+          <button class="btn-accent" (click)="onPublish()">
+            🚀 Publier
+          </button>
+        } @else if (quiz().isActive()) {
+          <!-- Actif: Bouton Modifier + Fermer -->
+          <button class="btn-outline" (click)="onEdit()">
+            ✏️ Modifier
+          </button>
+          <button class="btn-secondary" (click)="onClose()">
+            🔒 Fermer
+          </button>
+        } @else {
+          <!-- Fermé: Bouton Voir résultats -->
+          <button class="btn-outline" (click)="onViewResults()">
+            📊 Résultats
+          </button>
+          <button class="btn-secondary" (click)="onEdit()">
+            ✏️ Modifier
+          </button>
+        }
       </div>
     </div>
   `,
@@ -57,6 +87,9 @@ import { ModalService } from '../../../../core/services/modal.service';
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       overflow: hidden;
       transition: transform 0.2s, box-shadow 0.2s;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
 
       &:hover {
         transform: translateY(-4px);
@@ -76,21 +109,26 @@ import { ModalService } from '../../../../core/services/modal.service';
       padding: 0.25rem 0.75rem;
       border-radius: 12px;
       font-size: 0.75rem;
-      font-weight: 500;
+      font-weight: 600;
 
       &.draft {
-        background: #f3f4f6;
-        color: #6b7280;
+        background: #6a1b9a;    // Violet foncé (Purple 800)
+        color: #f3e5f5;         // Violet très clair
       }
 
       &.active {
-        background: #d1fae5;
-        color: #065f46;
+        background: #1a1a1a;    // Noir
+        color: #ffffff;         // Blanc
       }
 
       &.closed {
-        background: #fee2e2;
-        color: #991b1b;
+        background: #424242;    // Gris très foncé (Grey 800)
+        color: #e0e0e0;         // Gris clair
+      }
+
+      &.expired {
+        background: #616161;    // Gris foncé (Grey 700)
+        color: #f5f5f5;         // Gris très clair
       }
     }
 
@@ -136,10 +174,13 @@ import { ModalService } from '../../../../core/services/modal.service';
           }
 
           &.danger {
-            color: #dc2626;
+            color: white;
+            background: #1a1a1a;
+            font-weight: 600;
 
             &:hover {
-              background: #fee2e2;
+              background: #000000;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             }
           }
         }
@@ -148,28 +189,33 @@ import { ModalService } from '../../../../core/services/modal.service';
 
     .card-content {
       padding: 1.5rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
 
       h3 {
         font-size: 1.25rem;
         font-weight: 600;
         color: #1a1a1a;
         margin-bottom: 0.5rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
       }
 
       .description {
         color: #666;
         font-size: 0.875rem;
         margin-bottom: 1rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
       }
     }
 
     .card-stats {
       display: flex;
-      gap: 1rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: auto;
 
       .stat {
         display: flex;
@@ -198,26 +244,56 @@ import { ModalService } from '../../../../core/services/modal.service';
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s;
+        border: none;
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
       }
 
       .btn-outline {
         background: white;
-        border: 1px solid #e5e7eb;
-        color: #1a1a1a;
+        border: 2px solid #2c3e50;
+        color: #2c3e50;
 
-        &:hover {
-          border-color: #4f46e5;
-          color: #4f46e5;
+        &:hover:not(:disabled) {
+          background: #2c3e50;
+          color: white;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
       }
 
       .btn-primary {
-        background: #4f46e5;
-        border: none;
+        background: #2c3e50;
         color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 
-        &:hover {
-          background: #4338ca;
+        &:hover:not(:disabled) {
+          background: #1a252f;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        }
+      }
+
+      .btn-secondary {
+        background: #34495e;
+        color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+
+        &:hover:not(:disabled) {
+          background: #2c3e50;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        }
+      }
+
+      .btn-accent {
+        background: #3498db;
+        color: white;
+        box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+
+        &:hover:not(:disabled) {
+          background: #2980b9;
+          box-shadow: 0 3px 6px rgba(52, 152, 219, 0.4);
         }
       }
     }
@@ -225,21 +301,46 @@ import { ModalService } from '../../../../core/services/modal.service';
 })
 export class QuizCardComponent {
   quiz = input.required<Quiz>();
-  private modalService = inject(ModalService);
+  quizDeleted = output<string>();
+  quizUpdated = output<void>();
   
-  showMenu = input(false);
+  private router = inject(Router);
+  private modalService = inject(ModalService);
+  private toastService = inject(ToastService);
+  private publishQuizUseCase = inject(PublishQuizUseCase);
+  private deleteQuizUseCase = inject(DeleteQuizUseCase);
+  
+  showMenuDropdown = signal(false);
 
   toggleMenu(): void {
-    // Toggle menu logic
+    this.showMenuDropdown.update(v => !v);
   }
 
-  getStatusLabel(status: string): string {
+  getStatusLabel(): string {
+    const quiz = this.quiz();
+    
+    // Vérifier si le quiz est expiré (date de fin passée)
+    if (quiz.endDate && new Date(quiz.endDate) < new Date() && quiz.status === 'active') {
+      return 'Terminé';
+    }
+    
     const labels: Record<string, string> = {
       draft: 'Brouillon',
-      active: 'Publié',
+      active: 'En cours',
       closed: 'Fermé'
     };
-    return labels[status] || status;
+    return labels[quiz.status] || quiz.status;
+  }
+
+  getStatusClass(): string {
+    const quiz = this.quiz();
+    
+    // Vérifier si le quiz est expiré
+    if (quiz.endDate && new Date(quiz.endDate) < new Date() && quiz.status === 'active') {
+      return 'expired';
+    }
+    
+    return quiz.status;
   }
 
   formatDate(date: Date): string {
@@ -250,30 +351,75 @@ export class QuizCardComponent {
     });
   }
 
+  onContinue(): void {
+    // Continuer l'édition d'un brouillon
+    this.router.navigate(['/quiz/edit', this.quiz().id]);
+  }
+
   onEdit(): void {
-    // Navigation vers édition
+    // Modifier un quiz
+    this.router.navigate(['/quiz/edit', this.quiz().id]);
   }
 
   onPreview(): void {
-    // Ouvrir modal preview
+    // Aperçu du quiz
+    this.router.navigate(['/quiz/preview', this.quiz().id]);
+    this.showMenuDropdown.set(false);
   }
 
   onDuplicate(): void {
     // Dupliquer le quiz
+    this.toastService.info('Fonctionnalité de duplication à venir');
+    this.showMenuDropdown.set(false);
   }
 
   async onDelete(): Promise<void> {
+    this.showMenuDropdown.set(false);
+    
     const confirmed = await this.modalService.confirm(
       'Supprimer le quiz',
-      'Êtes-vous sûr de vouloir supprimer ce quiz ? Cette action est irréversible.'
+      `Êtes-vous sûr de vouloir supprimer le quiz "${this.quiz().title}" ? Cette action est irréversible.`
     );
     
     if (confirmed) {
-      // Supprimer le quiz
+      this.deleteQuizUseCase.execute(this.quiz().id).subscribe({
+        next: () => {
+          this.toastService.success('Quiz supprimé avec succès');
+          this.quizDeleted.emit(this.quiz().id);
+        },
+        error: (error) => {
+          this.toastService.error(error.message || 'Erreur lors de la suppression');
+        }
+      });
     }
   }
 
-  onPublish(): void {
-    // Publier/dépublier le quiz
+  async onPublish(): Promise<void> {
+    const confirmed = await this.modalService.confirm(
+      'Publier le quiz',
+      `Êtes-vous sûr de vouloir publier le quiz "${this.quiz().title}" ? Il sera visible par les étudiants.`
+    );
+    
+    if (confirmed) {
+      this.publishQuizUseCase.execute(this.quiz().id).subscribe({
+        next: () => {
+          this.toastService.success('Quiz publié avec succès');
+          this.quizUpdated.emit();
+        },
+        error: (error) => {
+          this.toastService.error(error.message || 'Erreur lors de la publication');
+        }
+      });
+    }
+  }
+
+  onClose(): void {
+    // Fermer un quiz actif
+    this.toastService.info('Fonctionnalité de fermeture à venir');
+  }
+
+  onViewResults(): void {
+    // Voir les résultats d'un quiz fermé
+    this.router.navigate(['/quiz/results', this.quiz().id]);
   }
 }

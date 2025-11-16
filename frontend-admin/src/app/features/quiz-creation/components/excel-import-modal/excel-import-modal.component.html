@@ -1,0 +1,120 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>📊 Importer des questions depuis Excel</h2>
+      <button class="btn-close" (click)="onCancel()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Zone de téléchargement du template -->
+      <div class="template-section">
+        <p class="info-text">
+          💡 Téléchargez d'abord le modèle Excel pour voir le format attendu
+        </p>
+        <button class="btn-download-template" (click)="downloadTemplate()">
+          ⬇️ Télécharger le modèle Excel
+        </button>
+      </div>
+
+      <div class="divider">
+        <span>Puis importez votre fichier</span>
+      </div>
+
+      <!-- Zone de drop -->
+      <div 
+        class="drop-zone"
+        [class.has-file]="selectedFile()"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event)"
+      >
+        @if (!selectedFile()) {
+          <div class="drop-zone-content">
+            <span class="drop-icon">📁</span>
+            <p class="drop-text">Glissez-déposez votre fichier Excel ici</p>
+            <p class="drop-subtext">ou</p>
+            <label class="btn-select-file">
+              Parcourir les fichiers
+              <input 
+                type="file" 
+                accept=".xlsx,.xls"
+                (change)="onFileSelected($event)"
+                hidden
+              />
+            </label>
+            <p class="file-types">Formats acceptés: .xlsx, .xls</p>
+          </div>
+        } @else {
+          <div class="file-selected">
+            <span class="file-icon">📄</span>
+            <div class="file-info">
+              <p class="file-name">{{ fileName() }}</p>
+              @if (isProcessing()) {
+                <p class="file-status processing">Traitement en cours...</p>
+              } @else if (validationResult()) {
+                <p class="file-status success">
+                  ✓ {{ validationResult()!.valid }} question(s) valide(s)
+                  @if (validationResult()!.errors > 0) {
+                    <span class="errors">, {{ validationResult()!.errors }} erreur(s)</span>
+                  }
+                </p>
+              }
+            </div>
+            <button class="btn-remove-file" (click)="selectedFile.set(null); fileName.set(''); validationResult.set(null)">
+              🗑️
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- Message d'erreur -->
+      @if (errorMessage()) {
+        <div class="error-message">
+          ⚠️ {{ errorMessage() }}
+        </div>
+      }
+
+      <!-- Résultat de validation -->
+      @if (validationResult() && validationResult()!.valid > 0) {
+        <div class="validation-result">
+          <h3>Aperçu des questions importées</h3>
+          <div class="stats">
+            <div class="stat success">
+              <span class="stat-number">{{ validationResult()!.valid }}</span>
+              <span class="stat-label">Questions valides</span>
+            </div>
+            @if (validationResult()!.errors > 0) {
+              <div class="stat error">
+                <span class="stat-number">{{ validationResult()!.errors }}</span>
+                <span class="stat-label">Lignes ignorées</span>
+              </div>
+            }
+          </div>
+          <div class="questions-preview">
+            @for (question of validationResult()!.questions.slice(0, 3); track $index) {
+              <div class="question-preview">
+                <span class="question-type">{{ question.type === 'multiple' ? 'QCM' : question.type === 'close' ? 'V/F' : 'QRO' }}</span>
+                <span class="question-text">{{ question.question }}</span>
+              </div>
+            }
+            @if (validationResult()!.questions.length > 3) {
+              <p class="more-questions">
+                ... et {{ validationResult()!.questions.length - 3 }} autre(s) question(s)
+              </p>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="onCancel()">Annuler</button>
+      <button 
+        class="btn-primary" 
+        (click)="onImport()"
+        [disabled]="!validationResult() || validationResult()!.valid === 0"
+      >
+        Importer {{ validationResult()?.valid || 0 }} question(s)
+      </button>
+    </div>
+  </div>
+</div>

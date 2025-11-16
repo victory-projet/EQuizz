@@ -28,7 +28,7 @@ interface MenuItem {
 export class SidebarComponent {
   menuItems: MenuItem[] = [
     { label: 'Tableau de bord', icon: 'dashboard', route: '/dashboard' },
-    { label: 'Evaluation', icon: 'assignment', route: '/evaluation' },
+    { label: 'Gestion des Quiz', icon: 'assignment', route: '/quiz-management' },
     { label: 'Cours & UE', icon: 'book', route: '/courses' },
     { label: 'Classes', icon: 'groups', route: '/classes' },
     { label: 'Année académique', icon: 'calendar_today', route: '/academic-year' },

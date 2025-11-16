@@ -16,7 +16,8 @@ export class Quiz {
     public classIds: string[],
     public createdDate: Date,
     public endDate?: Date,
-    public type?: string
+    public type?: string,
+    public description?: string
   ) {}
 
   /**
@@ -31,6 +32,38 @@ export class Quiz {
    */
   isActive(): boolean {
     return this.status === 'active';
+  }
+
+  /**
+   * Vérifie si le quiz est un brouillon
+   */
+  isDraft(): boolean {
+    return this.status === 'draft';
+  }
+
+  /**
+   * Obtient le statut actuel du quiz en tenant compte de la date de fin
+   */
+  getCurrentStatus(): QuizStatus {
+    // Si c'est un brouillon, retourner draft
+    if (this.status === 'draft') {
+      return 'draft';
+    }
+
+    // Si le quiz a une date de fin et qu'elle est passée, il est fermé
+    if (this.endDate && new Date() > this.endDate) {
+      return 'closed';
+    }
+
+    // Sinon, retourner le statut actuel
+    return this.status;
+  }
+
+  /**
+   * Vérifie si le quiz est terminé (date de fin passée)
+   */
+  isExpired(): boolean {
+    return this.endDate !== undefined && new Date() > this.endDate;
   }
 
   /**

@@ -1,19 +1,30 @@
-// Variables SCSS pour l'application
+// Variables SCSS pour l'application - Thème Bleu Foncé Moderne
 
-// Couleurs principales
-$primary: #7571F9;
-$primary-dark: #5e5bd9;
-$secondary: #6c757d;
-$success: #28a745;
-$danger: #dc3545;
-$warning: #ffc107;
-$info: #17a2b8;
-$error: #dc3545;
-$error-dark: #721c24;
+// Couleurs principales - Style sombre moderne
+$primary: #2c3e50;           // Bleu-gris très foncé (boutons principaux)
+$primary-dark: #1a252f;      // Bleu-gris ultra foncé
+$primary-light: #34495e;     // Bleu-gris moyen
+$secondary: #34495e;         // Bleu-gris secondaire
+$accent: #3498db;            // Bleu moderne (bouton Publier)
+$accent-dark: #2980b9;       // Bleu moderne foncé
 
-// Couleurs de fond
+// Couleurs de statut
+$success: #10b981;           // Vert (En cours)
+$danger: #ef4444;            // Rouge (Terminé)
+$warning: #f59e0b;           // Orange (Brouillon)
+$info: #3b82f6;              // Bleu info
+$error: #ef4444;
+$error-dark: #dc2626;
+
+// Backgrounds - Thème clair avec touches de bleu
 $white: #ffffff;
-$surface: #f8f9fa;
+$background: #f5f7fa;        // Fond principal (gris très clair bleuté)
+$surface: #ffffff;           // Surface des cartes (blanc)
+$surface-elevated: #ffffff;  // Surface élevée
+$surface-hover: #f8f9fb;     // Surface au survol (gris très clair)
+$surface-secondary: #f0f2f5; // Surface secondaire
+
+// Grays - Palette moderne
 $gray-50: #f9fafb;
 $gray-100: #f3f4f6;
 $gray-200: #e5e7eb;
@@ -25,12 +36,16 @@ $gray-700: #374151;
 $gray-800: #1f2937;
 $gray-900: #111827;
 
-// Couleurs de texte
-$text-primary: #1f2937;
-$text-secondary: #6b7280;
+// Couleurs de texte - Thème clair
+$text-primary: #1f2937;      // Texte principal (gris très foncé)
+$text-secondary: #6b7280;    // Texte secondaire (gris moyen)
+$text-tertiary: #9ca3af;     // Texte tertiaire (gris clair)
+$text-muted: #a0aec0;        // Texte atténué
 
-// Bordures
-$border: #e5e7eb;
+// Bordures - Subtiles
+$border: #e5e7eb;            // Bordure principale (gris clair)
+$border-light: #f3f4f6;      // Bordure très claire
+$border-dark: #d1d5db;       // Bordure foncée
 
 // Espacements
 $spacing-1: 0.25rem;

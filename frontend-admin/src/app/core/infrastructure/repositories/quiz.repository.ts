@@ -58,23 +58,27 @@ export class QuizRepository implements IQuizRepository {
   }
 
   publish(id: string): Observable<Quiz> {
-    return this.getById(id).pipe(
-      map(quiz => {
-        quiz.publish();
-        return quiz;
-      }),
-      delay(300)
-    );
+    const index = this.quizzes.findIndex(q => q.id === id);
+    if (index === -1) {
+      return throwError(() => new Error(`Quiz ${id} non trouvé`));
+    }
+
+    try {
+      this.quizzes[index].publish();
+      return of(this.quizzes[index]).pipe(delay(300));
+    } catch (error) {
+      return throwError(() => error);
+    }
   }
 
   close(id: string): Observable<Quiz> {
-    return this.getById(id).pipe(
-      map(quiz => {
-        quiz.close();
-        return quiz;
-      }),
-      delay(300)
-    );
+    const index = this.quizzes.findIndex(q => q.id === id);
+    if (index === -1) {
+      return throwError(() => new Error(`Quiz ${id} non trouvé`));
+    }
+
+    this.quizzes[index].close();
+    return of(this.quizzes[index]).pipe(delay(300));
   }
 
   addQuestion(quizId: string, question: Question): Observable<Question> {
@@ -113,6 +117,7 @@ export class QuizRepository implements IQuizRepository {
   }
 
   private initMockData(): Quiz[] {
+    // Quiz terminé (date passée en 2024-2025)
     const quiz1 = new Quiz(
       '1',
       'Évaluation Mi-parcours - Algorithmique',
@@ -121,10 +126,12 @@ export class QuizRepository implements IQuizRepository {
       [],
       ['class-1', 'class-2'],
       new Date('2024-09-15'),
-      new Date('2024-09-30'),
-      'Mi-parcours'
+      new Date('2024-12-20'), // Date passée → Terminé
+      'Mi-parcours',
+      'Cette évaluation porte sur les concepts fondamentaux de l\'algorithmique : structures de données, complexité, et algorithmes de tri.'
     );
     
+    // Quiz en cours (date future en 2025-2026)
     const quiz2 = new Quiz(
       '2',
       'Évaluation Fin de Semestre - Base de Données',
@@ -132,11 +139,13 @@ export class QuizRepository implements IQuizRepository {
       'active',
       [],
       ['class-3'],
-      new Date('2024-10-10'),
-      new Date('2024-10-25'),
-      'Fin de semestre'
+      new Date('2025-10-05'),
+      new Date('2026-01-31'), // Date future → En cours
+      'Fin de semestre',
+      'Évaluation complète sur les bases de données relationnelles : modélisation, SQL, normalisation et transactions.'
     );
     
+    // Quiz brouillon (année en cours 2025-2026)
     const quiz3 = new Quiz(
       '3',
       'Évaluation Mi-parcours - Réseaux',
@@ -144,9 +153,10 @@ export class QuizRepository implements IQuizRepository {
       'draft',
       [],
       ['class-4', 'class-5'],
-      new Date('2024-10-12'),
+      new Date('2025-11-10'),
       undefined,
-      'Mi-parcours'
+      'Mi-parcours',
+      'Quiz sur les protocoles réseau, modèle OSI, et architecture TCP/IP.'
     );
     
     return [quiz1, quiz2, quiz3];

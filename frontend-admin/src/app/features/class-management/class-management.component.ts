@@ -162,8 +162,9 @@ export class ClassManagementComponent implements OnInit {
       this.updateClassUseCase.execute(dto).subscribe({
         next: () => {
           this.toastService.success('Classe modifiée avec succès');
-          this.loadClasses();
           this.closeModal();
+          this.loadClasses();
+          // Rester sur la page des classes (pas de navigation)
         },
         error: (error) => {
           this.toastService.error(error.message || 'Erreur lors de la modification');
@@ -180,8 +181,9 @@ export class ClassManagementComponent implements OnInit {
       this.createClassUseCase.execute(dto).subscribe({
         next: () => {
           this.toastService.success('Classe créée avec succès');
-          this.loadClasses();
           this.closeModal();
+          this.loadClasses();
+          // Rester sur la page des classes (pas de navigation)
         },
         error: (error) => {
           this.toastService.error(error.message || 'Erreur lors de la création');
@@ -196,8 +198,9 @@ export class ClassManagementComponent implements OnInit {
       this.deleteClassUseCase.execute(selected.id).subscribe({
         next: () => {
           this.toastService.success('Classe supprimée avec succès');
-          this.loadClasses();
           this.closeModal();
+          this.loadClasses();
+          // Rester sur la page des classes (pas de navigation)
         },
         error: (error) => {
           this.toastService.error(error.message || 'Erreur lors de la suppression');

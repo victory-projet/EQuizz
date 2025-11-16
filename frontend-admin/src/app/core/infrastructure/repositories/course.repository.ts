@@ -48,7 +48,8 @@ export class CourseRepository implements ICourseRepository {
       return throwError(() => new Error(`Cours ${id} non trouvé`));
     }
 
-    this.courses[index] = { ...this.courses[index], ...updates } as Course;
+    // Mettre à jour les propriétés de l'objet existant
+    Object.assign(this.courses[index], updates);
     return of(this.courses[index]).pipe(delay(300));
   }
 

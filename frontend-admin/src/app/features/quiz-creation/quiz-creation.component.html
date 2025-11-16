@@ -47,24 +47,16 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="academicYear">Année académique *</label>
+            <label for="academicYear">Année académique</label>
             @if (isLoading()) {
-              <p class="loading-text">Chargement des années académiques...</p>
+              <p class="loading-text">Chargement...</p>
+            } @else {
+              <div class="readonly-field">
+                {{ getSelectedAcademicYearName() || 'Année en cours' }}
+              </div>
+              <small class="form-hint">Année académique active automatiquement sélectionnée</small>
             }
-            <select 
-              id="academicYear"
-              [(ngModel)]="selectedAcademicYear"
-              (ngModelChange)="onAcademicYearChange()"
-              [disabled]="isLoading()"
-            >
-              <option value="">Sélectionner une année</option>
-              @for (year of academicYears(); track year.id) {
-                <option [value]="year.id">{{ year.name }}</option>
-              }
-            </select>
-            @if (!isLoading() && academicYears().length === 0) {
-              <p class="error-text">Aucune année académique disponible</p>
-            }
+            <input type="hidden" [(ngModel)]="selectedAcademicYear" />
           </div>
 
           <div class="form-group">
@@ -96,6 +88,14 @@
   <!-- Step 2: Questions -->
   @if (currentStep() === 'questions') {
     <div class="step-content">
+      <div class="import-options">
+        <button class="btn-import-excel" (click)="openExcelImport()">
+          📊 Importer depuis Excel
+        </button>
+        <span class="separator">ou</span>
+        <span class="manual-text">Ajouter manuellement</span>
+      </div>
+
       <div class="questions-layout">
         <div class="question-form">
           <h2>Ajouter une question</h2>
@@ -121,36 +121,25 @@
 
           @if (questionType() === 'multiple_choice') {
             <div class="options-section">
-              <label>Options de réponse</label>
+              <label>Options de réponse (cochez la ou les bonnes réponses)</label>
               @for (option of questionOptions(); track $index; let i = $index) {
                 <div class="option-input">
+                  <input 
+                    type="checkbox" 
+                    [(ngModel)]="option.isCorrect"
+                    class="option-checkbox"
+                  />
                   <input 
                     type="text" 
                     [(ngModel)]="option.text"
                     placeholder="Option {{ i + 1 }}"
+                    class="option-text-input"
                   />
-                  <label class="checkbox-label">
-                    <input 
-                      type="checkbox" 
-                      [(ngModel)]="option.isCorrect"
-                    />
-                    <span>Correcte</span>
-                  </label>
                 </div>
               }
+              <p class="help-text">💡 Cochez la case à gauche pour marquer une option comme correcte</p>
             </div>
           }
-
-          <div class="form-group">
-            <label for="points">Points</label>
-            <input 
-              id="points"
-              type="number" 
-              [(ngModel)]="questionPoints"
-              min="1"
-              max="100"
-            />
-          </div>
 
           <button class="btn-add-question" (click)="addQuestion()">
             ➕ Ajouter la question
@@ -170,23 +159,22 @@
                 <div class="question-item">
                   <div class="question-header">
                     <span class="question-number">Q{{ i + 1 }}</span>
-                    <span class="question-type-badge">{{ question.type }}</span>
+                    <span class="question-type-badge">
+                      {{ question.type === 'multiple_choice' ? 'QCM' : 'QRO' }}
+                    </span>
                     <button class="btn-remove" (click)="removeQuestion(i)">🗑️</button>
                   </div>
                   <p class="question-text">{{ question.text }}</p>
                   @if (question.options && question.options.length > 0) {
                     <div class="question-options">
                       @for (opt of question.options; track $index) {
-                        <div class="option" [class.correct]="opt.isCorrect">
+                        <div class="option">
+                          <span class="option-letter">{{ getOptionLetter($index) }}.</span>
                           {{ opt.text }}
-                          @if (opt.isCorrect) {
-                            <span class="correct-badge">✓</span>
-                          }
                         </div>
                       }
                     </div>
                   }
-                  <span class="question-points">{{ question.points }} pts</span>
                 </div>
               }
             </div>
@@ -199,6 +187,14 @@
         <button class="btn-primary" (click)="nextStep()">Aperçu</button>
       </div>
     </div>
+
+    <!-- Excel Import Modal -->
+    @if (showExcelImportModal()) {
+      <app-excel-import-modal
+        (close)="closeExcelImport()"
+        (import)="onExcelImport($event)"
+      ></app-excel-import-modal>
+    }
   }
 
   <!-- Step 3: Preview -->
@@ -214,7 +210,6 @@
           }
           <div class="meta-info">
             <span>📚 {{ questions().length }} question(s)</span>
-            <span>⭐ {{ getTotalPoints() }} points au total</span>
           </div>
         </div>
 
@@ -223,7 +218,6 @@
             <div class="preview-question">
               <div class="question-header">
                 <span class="question-number">Question {{ i + 1 }}</span>
-                <span class="question-points">{{ question.points }} pts</span>
               </div>
               <p class="question-text">{{ question.text }}</p>
               @if (question.options && question.options.length > 0) {

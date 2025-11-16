@@ -38,7 +38,8 @@ export class ClassRepository implements IClassRepository {
       return throwError(() => new Error(`Classe ${id} non trouvée`));
     }
 
-    this.classes[index] = { ...this.classes[index], ...updates } as Class;
+    // Mettre à jour les propriétés de l'objet existant
+    Object.assign(this.classes[index], updates);
     return of(this.classes[index]).pipe(delay(300));
   }
 

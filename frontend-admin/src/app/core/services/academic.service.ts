@@ -29,6 +29,27 @@ export class AcademicService {
   }
 
   /**
+   * Récupérer l'année académique en cours (active)
+   */
+  getCurrentAcademicYear(): Observable<any | null> {
+    return this.getAllAcademicYearsUseCase.execute().pipe(
+      map(years => {
+        const currentYear = years.find(year => year.isActive);
+        if (currentYear) {
+          return {
+            id: currentYear.id,
+            name: currentYear.name,
+            isActive: currentYear.isActive,
+            startDate: currentYear.startDate,
+            endDate: currentYear.endDate
+          };
+        }
+        return null;
+      })
+    );
+  }
+
+  /**
    * Récupérer toutes les classes
    */
   getClasses(): Observable<any[]> {

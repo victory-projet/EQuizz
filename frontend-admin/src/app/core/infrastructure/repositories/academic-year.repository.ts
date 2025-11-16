@@ -88,29 +88,37 @@ export class AcademicYearRepository implements IAcademicYearRepository {
         '1',
         'Semestre 1',
         'semester',
-        new Date('2024-09-01'),
-        new Date('2025-01-31')
+        new Date('2025-09-01'),
+        new Date('2026-01-31')
       ),
       new Period(
         '2',
         'Semestre 2',
         'semester',
-        new Date('2025-02-01'),
-        new Date('2025-06-30')
+        new Date('2026-02-01'),
+        new Date('2026-06-30')
       )
     ];
 
     return [
       new AcademicYear(
         '1',
-        '2024-2025',
-        new Date('2024-09-01'),
-        new Date('2025-06-30'),
-        true,
+        '2025-2026',
+        new Date('2025-09-01'),
+        new Date('2026-06-30'),
+        true, // Année active en cours
         periods1
       ),
       new AcademicYear(
         '2',
+        '2024-2025',
+        new Date('2024-09-01'),
+        new Date('2025-06-30'),
+        false,
+        []
+      ),
+      new AcademicYear(
+        '3',
         '2023-2024',
         new Date('2023-09-01'),
         new Date('2024-06-30'),

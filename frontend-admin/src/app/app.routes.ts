@@ -29,8 +29,20 @@ export const routes: Routes = [
         loadComponent: () => import('./features/courses/courses.component').then(m => m.CoursesComponent)
       },
       {
+        path: 'quiz-management',
+        loadComponent: () => import('./features/quiz-management/quiz-management.component').then(m => m.QuizManagementComponent)
+      },
+      {
         path: 'quiz/create',
         loadComponent: () => import('./features/quiz-creation/quiz-creation.component').then(m => m.QuizCreationComponent)
+      },
+      {
+        path: 'quiz/edit/:id',
+        loadComponent: () => import('./features/quiz-creation/quiz-creation.component').then(m => m.QuizCreationComponent)
+      },
+      {
+        path: 'quiz/preview/:id',
+        loadComponent: () => import('./features/quiz-taking/quiz-taking.component').then(m => m.QuizTakingComponent)
       },
       {
         path: 'quiz/:id/take',

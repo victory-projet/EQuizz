@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Quiz } from '../../../../core/domain/entities/quiz.entity';
 import { QuizCardComponent } from '../quiz-card/quiz-card.component';
@@ -10,7 +10,11 @@ import { QuizCardComponent } from '../quiz-card/quiz-card.component';
   template: `
     <div class="quiz-list">
       @for (quiz of quizzes(); track quiz.id) {
-        <app-quiz-card [quiz]="quiz" />
+        <app-quiz-card 
+          [quiz]="quiz" 
+          (quizDeleted)="onQuizDeleted($event)"
+          (quizUpdated)="onQuizUpdated()"
+        />
       } @empty {
         <div class="empty-state">
           <span class="empty-icon">📝</span>
@@ -55,4 +59,14 @@ import { QuizCardComponent } from '../quiz-card/quiz-card.component';
 })
 export class QuizListComponent {
   quizzes = input.required<Quiz[]>();
+  quizDeleted = output<string>();
+  quizUpdated = output<void>();
+
+  onQuizDeleted(quizId: string): void {
+    this.quizDeleted.emit(quizId);
+  }
+
+  onQuizUpdated(): void {
+    this.quizUpdated.emit();
+  }
 }

@@ -2,15 +2,105 @@
   <div class="page-header">
     <div>
       <h1>Gestion des Quiz</h1>
-      <p class="subtitle">Créez et gérez vos quiz</p>
+      <p class="subtitle">Vue d'ensemble de tous vos questionnaires d'évaluation</p>
     </div>
-    <button class="btn-primary" (click)="onCreateQuiz()">
-      <span>➕</span>
-      Créer un quiz
+    <div class="header-actions">
+      <button class="btn-primary" (click)="onCreateQuiz()">
+        <span class="icon">➕</span>
+        Créer un Quiz
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon purple">📋</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ getTotalQuizzes() }}</div>
+        <div class="stat-label">Total Quiz</div>
+        <div class="stat-change positive">+3 ce mois</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon green">📈</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ getActiveQuizzes() }}</div>
+        <div class="stat-label">Quiz actifs</div>
+        <div class="stat-change">En cours</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon blue">👥</div>
+      <div class="stat-content">
+        <div class="stat-value">76%</div>
+        <div class="stat-label">Taux de participation</div>
+        <div class="stat-change positive">+12% vs mois dernier</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon orange">📝</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ getDraftQuizzes() }}</div>
+        <div class="stat-label">Brouillons</div>
+        <div class="stat-change">À finaliser</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filters -->
+  <div class="search-filter-bar">
+    <input 
+      type="text" 
+      class="search-input" 
+      placeholder="Rechercher un quiz par titre, UE ou classe..."
+      [(ngModel)]="searchTerm"
+      (input)="onSearch()"
+    />
+    <button class="btn-filter">
+      <span>🔍</span>
+      Filtres
+    </button>
+    <button class="btn-sort">
+      <span>⬇</span>
+      Trier par
     </button>
   </div>
 
-  <app-quiz-filters (filterChange)="onFilterChange($event)" />
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button 
+      class="tab" 
+      [class.active]="currentFilter() === 'all'"
+      (click)="setFilter('all')"
+    >
+      Tous ({{ getTotalQuizzes() }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="currentFilter() === 'active'"
+      (click)="setFilter('active')"
+    >
+      En cours ({{ getActiveQuizzes() }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="currentFilter() === 'draft'"
+      (click)="setFilter('draft')"
+    >
+      Brouillons ({{ getDraftQuizzes() }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="currentFilter() === 'closed'"
+      (click)="setFilter('closed')"
+    >
+      Clôturés ({{ getCompletedQuizzes() }})
+    </button>
+  </div>
 
   @if (isLoading()) {
     <div class="loading-state">
@@ -18,6 +108,26 @@
       <p>Chargement des quiz...</p>
     </div>
   } @else {
-    <app-quiz-list [quizzes]="filteredQuizzes()" />
+    <app-quiz-list 
+      [quizzes]="filteredQuizzes()" 
+      (quizDeleted)="onQuizDeleted($event)"
+      (quizUpdated)="loadQuizzes()"
+    />
+  }
+
+  <!-- Modal de choix de méthode -->
+  @if (showMethodModal()) {
+    <app-creation-method-modal
+      (close)="closeMethodModal()"
+      (methodSelected)="onMethodSelected($event)"
+    ></app-creation-method-modal>
+  }
+
+  <!-- Modal d'import Excel -->
+  @if (showExcelImportModal()) {
+    <app-excel-import-modal
+      (close)="closeExcelImportModal()"
+      (import)="onExcelImport($event)"
+    ></app-excel-import-modal>
   }
 </div>

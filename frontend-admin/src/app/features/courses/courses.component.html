@@ -45,8 +45,8 @@
     </div>
   </div>
 
-  <!-- Search -->
-  <div class="search-section">
+  <!-- Search and Filters -->
+  <div class="search-filter-bar">
     <input 
       type="text" 
       placeholder="Rechercher un cours par nom, code ou enseignant..."
@@ -54,44 +54,60 @@
       (ngModelChange)="onSearchChange()"
       class="search-input"
     />
+    <button class="btn-filter">🔍 Filtres</button>
+    <button class="btn-sort">⬇ Trier par</button>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button class="tab active">Tous ({{ totalCourses() }})</button>
+    <button class="tab">Actifs ({{ activeCourses() }})</button>
+    <button class="tab">Semestre 1</button>
+    <button class="tab">Semestre 2</button>
   </div>
 
   <!-- Courses Grid -->
-  <div class="courses-grid">
-    <div *ngFor="let course of filteredCourses()" class="course-card">
-      <div class="course-header">
-        <div class="course-code">{{ course.code }}</div>
-        <span class="status-badge active">
-          Actif
-        </span>
-      </div>
-
-      <h3 class="course-name">{{ course.name }}</h3>
-
-      <div class="course-details">
-        <div class="detail-item">
-          <span class="icon">👨‍🏫</span>
-          <span>{{ course.teacherId }}</span>
-        </div>
-        <div class="detail-item">
-          <span class="icon">👥</span>
-          <span>40 étudiants</span>
-        </div>
-        <div class="detail-item">
-          <span class="icon">📅</span>
-          <span>{{ course.semesterId }}</span>
+  <div class="cards-grid">
+    <div *ngFor="let course of filteredCourses()" class="content-card">
+      <div class="card-header">
+        <span class="status-badge en-cours">Actif</span>
+        <div class="card-menu">
+          <button class="menu-btn" (click)="toggleMenu(course.id)">⋮</button>
+          @if (showMenu === course.id) {
+            <div class="menu-dropdown" (click)="$event.stopPropagation()">
+              <button (click)="viewDetails(course); closeMenu()">👁️ Détails</button>
+              <button (click)="editCourse(course); closeMenu()">✏️ Modifier</button>
+              <button (click)="deleteCourse(course); closeMenu()" class="danger">🗑️ Supprimer</button>
+            </div>
+          }
         </div>
       </div>
 
-      <div class="course-actions">
-        <button class="btn-action btn-view" (click)="viewDetails(course)">
-          Détails
+      <div class="card-body">
+        <div class="course-code-badge">{{ course.code }}</div>
+        <h3>{{ course.name }}</h3>
+        <div class="card-stats">
+          <div class="stat">
+            <span class="stat-icon">👨‍🏫</span>
+            <span>{{ course.teacherId }}</span>
+          </div>
+          <div class="stat">
+            <span class="stat-icon">👥</span>
+            <span>40 étudiants</span>
+          </div>
+          <div class="stat">
+            <span class="stat-icon">📅</span>
+            <span>{{ course.semesterId }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button class="btn-outline" (click)="viewDetails(course)">
+          👁️ Détails
         </button>
-        <button class="btn-action btn-edit" (click)="editCourse(course)">
-          Modifier
-        </button>
-        <button class="btn-action btn-delete" (click)="deleteCourse(course)">
-          Supprimer
+        <button class="btn-secondary" (click)="editCourse(course)">
+          ✏️ Modifier
         </button>
       </div>
     </div>

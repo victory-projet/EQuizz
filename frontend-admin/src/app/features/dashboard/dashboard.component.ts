@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { AnalyticsData } from '../../core/models/quiz.interface';
 import { StatsGridComponent } from './components/stats-grid/stats-grid.component';
@@ -22,6 +23,7 @@ import { RecentActivitiesComponent } from './components/recent-activities/recent
 })
 export class DashboardComponent implements OnInit {
   private analyticsService = inject(AnalyticsService);
+  private router = inject(Router);
   
   analyticsData = signal<AnalyticsData | null>(null);
   isLoading = signal(true);
@@ -42,5 +44,21 @@ export class DashboardComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  navigateToCreateQuiz(): void {
+    this.router.navigate(['/quiz/create']);
+  }
+
+  navigateToClasses(): void {
+    this.router.navigate(['/classes']);
+  }
+
+  navigateToAnalytics(): void {
+    this.router.navigate(['/analytics']);
+  }
+
+  navigateToSettings(): void {
+    this.router.navigate(['/settings']);
   }
 }

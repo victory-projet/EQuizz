@@ -1,0 +1,57 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Créer un Nouveau Quiz</h2>
+      <button class="btn-close" (click)="onClose()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <p class="subtitle">Choisissez votre méthode de création</p>
+
+      <div class="methods-container">
+        <!-- Création Manuelle -->
+        <div class="method-card">
+          <div class="method-icon">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="24" r="24" fill="#6366f1"/>
+              <path d="M30 16L18 28L14 24" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M32 20L24 28" stroke="white" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>Création Manuelle</h3>
+          <p class="method-description">
+            Créez votre quiz en configurant manuellement tous les paramètres et questions
+          </p>
+          <button class="btn-method" (click)="onSelectMethod('manual')">
+            ✏️ Créer manuellement
+          </button>
+        </div>
+
+        <div class="separator">
+          <span>ou</span>
+        </div>
+
+        <!-- Import Excel -->
+        <div class="method-card">
+          <div class="method-icon">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="24" r="24" fill="#10b981"/>
+              <rect x="14" y="12" width="20" height="24" rx="2" stroke="white" stroke-width="2"/>
+              <line x1="14" y1="18" x2="34" y2="18" stroke="white" stroke-width="2"/>
+              <line x1="14" y1="24" x2="34" y2="24" stroke="white" stroke-width="2"/>
+              <line x1="14" y1="30" x2="34" y2="30" stroke="white" stroke-width="2"/>
+              <line x1="20" y1="12" x2="20" y2="36" stroke="white" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3>Import depuis Excel</h3>
+          <p class="method-description">
+            Importez vos questions depuis un fichier Excel pré-formaté
+          </p>
+          <button class="btn-method" (click)="onSelectMethod('excel')">
+            📊 Importer depuis Excel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

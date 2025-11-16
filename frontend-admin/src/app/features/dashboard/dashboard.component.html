@@ -37,19 +37,19 @@
       <div class="quick-actions-section">
         <h2 class="section-title">Actions rapides</h2>
         <div class="quick-actions-grid">
-          <button class="quick-action-card">
+          <button class="quick-action-card" (click)="navigateToCreateQuiz()">
             <span class="action-icon">➕</span>
             <span class="action-text">Créer un quiz</span>
           </button>
-          <button class="quick-action-card">
+          <button class="quick-action-card" (click)="navigateToClasses()">
             <span class="action-icon">👥</span>
             <span class="action-text">Gérer les classes</span>
           </button>
-          <button class="quick-action-card">
+          <button class="quick-action-card" (click)="navigateToAnalytics()">
             <span class="action-icon">📊</span>
             <span class="action-text">Voir les analyses</span>
           </button>
-          <button class="quick-action-card">
+          <button class="quick-action-card" (click)="navigateToSettings()">
             <span class="action-icon">⚙️</span>
             <span class="action-text">Paramètres</span>
           </button>

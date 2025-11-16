@@ -1,22 +1,24 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AcademicService } from '../../core/services/academic.service';
 import { ModalService } from '../../core/services/modal.service';
 import { ToastService } from '../../core/services/toast.service';
+import { ExcelImportModalComponent } from './components/excel-import-modal/excel-import-modal.component';
 
 // Clean Architecture - Use Cases
 import { CreateQuizUseCase } from '../../core/domain/use-cases/quiz/create-quiz.use-case';
-import { Quiz, Question, QuestionOption } from '../../core/domain/entities/quiz.entity';
+import { UpdateQuizUseCase } from '../../core/domain/use-cases/quiz/update-quiz.use-case';
+import { GetQuizByIdUseCase } from '../../core/domain/use-cases/quiz/get-quiz-by-id.use-case';
+import { Quiz, Question, QuestionOption, QuestionType } from '../../core/domain/entities/quiz.entity';
 
 interface LocalQuestion {
   id: string;
-  type: 'multiple_choice' | 'true_false' | 'short_answer';
+  type: 'multiple_choice' | 'short_answer';
   text: string;
   options?: LocalQuestionOption[];
   correctAnswer?: number | string;
-  points: number;
   order: number;
 }
 
@@ -28,16 +30,23 @@ interface LocalQuestionOption {
 @Component({
   selector: 'app-quiz-creation',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ExcelImportModalComponent],
   templateUrl: './quiz-creation.component.html',
   styleUrls: ['./quiz-creation.component.scss']
 })
-export class QuizCreationComponent implements OnInit {
+export class QuizCreationComponent implements OnInit, OnDestroy {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private createQuizUseCase = inject(CreateQuizUseCase);
+  private updateQuizUseCase = inject(UpdateQuizUseCase);
+  private getQuizByIdUseCase = inject(GetQuizByIdUseCase);
   private academicService = inject(AcademicService);
   private modalService = inject(ModalService);
   private toastService = inject(ToastService);
+
+  // Mode édition
+  isEditMode = signal(false);
+  editingQuizId = signal<string | null>(null);
 
   // Quiz data
   quizTitle = signal('');
@@ -51,8 +60,7 @@ export class QuizCreationComponent implements OnInit {
   
   // Current question being edited
   questionText = signal('');
-  questionType = signal<'multiple_choice' | 'true_false' | 'short_answer'>('multiple_choice');
-  questionPoints = signal(1);
+  questionType = signal<'multiple_choice' | 'short_answer'>('multiple_choice');
   questionOptions = signal<LocalQuestionOption[]>([
     { text: '', isCorrect: false },
     { text: '', isCorrect: false },
@@ -66,16 +74,237 @@ export class QuizCreationComponent implements OnInit {
   isLoading = signal(false);
   isSaving = signal(false);
 
+  // Auto-save
+  private autoSaveTimer: any = null;
+  private draftQuizId = signal<string | null>(null);
+  private hasUnsavedChanges = signal(false);
+
+  // Excel Import
+  showExcelImportModal = signal(false);
+
+  constructor() {
+    // Effet pour détecter les changements et déclencher l'auto-save
+    effect(() => {
+      // Observer les changements dans les données du quiz
+      const title = this.quizTitle();
+      const subject = this.selectedSubject();
+      const year = this.selectedAcademicYear();
+      const questionsCount = this.questions().length;
+
+      // Si on a des données minimales, marquer comme ayant des changements non sauvegardés
+      if (title || subject || year || questionsCount > 0) {
+        this.hasUnsavedChanges.set(true);
+        this.scheduleAutoSave();
+      }
+    });
+  }
+
   questionTypes = [
     { value: 'multiple_choice', label: 'Choix Multiple (QCM)' },
-    { value: 'true_false', label: 'Vrai/Faux' },
-    { value: 'short_answer', label: 'Réponse Courte' }
+    { value: 'short_answer', label: 'Réponse Courte (QRO)' }
   ];
 
   ngOnInit(): void {
     console.log('QuizCreationComponent initialized');
-    this.loadAcademicYears();
-    this.loadSubjects();
+    
+    // Vérifier si on est en mode édition
+    const quizId = this.route.snapshot.params['id'];
+    if (quizId) {
+      this.isEditMode.set(true);
+      this.editingQuizId.set(quizId);
+      this.loadQuizForEdit(quizId);
+    } else {
+      this.loadAcademicYears();
+      this.loadSubjects();
+      this.loadCurrentAcademicYear();
+      
+      // Vérifier si des questions ont été importées via le state du router
+      const navigation = this.router.getCurrentNavigation();
+      const state = navigation?.extras?.state || window.history.state;
+      if (state?.importedQuestions) {
+        this.handleImportedQuestions(state.importedQuestions);
+      }
+    }
+  }
+
+  /**
+   * Gère les questions importées depuis Excel
+   */
+  private handleImportedQuestions(importedQuestions: any[]): void {
+    const localQuestions: LocalQuestion[] = importedQuestions.map((q, index) => ({
+      id: `imported-${Date.now()}-${index}`,
+      type: q.type === 'multiple' ? 'multiple_choice' : 'short_answer',
+      text: q.question,
+      order: index + 1,
+      options: q.type === 'multiple' || q.type === 'close' ? [
+        { text: q.option1 || '', isCorrect: false },
+        { text: q.option2 || '', isCorrect: false },
+        { text: q.option3 || '', isCorrect: false },
+        { text: q.option4 || '', isCorrect: false }
+      ].filter(opt => opt.text.trim() !== '') : undefined
+    }));
+
+    this.questions.set(localQuestions);
+    
+    // Passer directement à l'étape des questions
+    this.currentStep.set('questions');
+    
+    this.toastService.success(`${localQuestions.length} question(s) importée(s) avec succès`);
+  }
+
+  /**
+   * Charge un quiz existant pour l'édition
+   */
+  private loadQuizForEdit(id: string): void {
+    this.isLoading.set(true);
+    this.getQuizByIdUseCase.execute(id).subscribe({
+      next: (quiz) => {
+        console.log('Quiz chargé:', quiz);
+        console.log('Nombre de questions:', quiz.questions.length);
+        
+        // Pré-remplir le formulaire avec les données du quiz
+        this.quizTitle.set(quiz.title);
+        this.quizDescription.set(quiz.description || '');
+        this.selectedSubject.set(quiz.subject);
+        this.selectedAcademicYear.set(quiz.classIds[0] || ''); // TODO: Améliorer
+        
+        // Charger les questions
+        const localQuestions: LocalQuestion[] = quiz.questions.map((q, index) => {
+          // Déterminer le type local
+          let localType: 'multiple_choice' | 'short_answer';
+          if (q.type === 'QCM' || q.type === 'closed') {
+            localType = 'multiple_choice';
+          } else {
+            localType = 'short_answer';
+          }
+
+          return {
+            id: q.id,
+            type: localType,
+            text: q.text,
+            order: index + 1,
+            options: q.options && q.options.length > 0 ? q.options.map(opt => ({
+              text: opt.text,
+              isCorrect: opt.isCorrect
+            })) : undefined
+          };
+        });
+        
+        console.log('Questions converties:', localQuestions);
+        this.questions.set(localQuestions);
+        
+        // Charger les données nécessaires
+        this.loadAcademicYears();
+        this.loadSubjects();
+        this.isLoading.set(false);
+        
+        this.toastService.info(`Quiz chargé avec ${localQuestions.length} question(s)`);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.toastService.error('Impossible de charger le quiz');
+        console.error('Error loading quiz:', err);
+        this.router.navigate(['/quiz-management']);
+      }
+    });
+  }
+
+  /**
+   * Charge l'année académique en cours et la pré-sélectionne
+   */
+  loadCurrentAcademicYear(): void {
+    this.academicService.getCurrentAcademicYear().subscribe({
+      next: (currentYear) => {
+        if (currentYear) {
+          this.selectedAcademicYear.set(currentYear.id);
+          // Charger les matières pour l'année en cours
+          this.onAcademicYearChange();
+        }
+      },
+      error: (err) => console.error('Error loading current academic year:', err)
+    });
+  }
+
+  ngOnDestroy(): void {
+    // Nettoyer le timer d'auto-save
+    if (this.autoSaveTimer) {
+      clearTimeout(this.autoSaveTimer);
+    }
+  }
+
+  /**
+   * Planifie un auto-save après 3 secondes d'inactivité
+   */
+  private scheduleAutoSave(): void {
+    // Annuler le timer précédent
+    if (this.autoSaveTimer) {
+      clearTimeout(this.autoSaveTimer);
+    }
+
+    // Planifier un nouveau save après 3 secondes
+    this.autoSaveTimer = setTimeout(() => {
+      this.performAutoSave();
+    }, 3000);
+  }
+
+  /**
+   * Effectue l'auto-save du brouillon
+   */
+  private performAutoSave(): void {
+    // Ne pas auto-sauvegarder si on n'a pas au minimum un titre
+    if (!this.quizTitle() || !this.hasUnsavedChanges()) {
+      return;
+    }
+
+    // Convertir les questions locales en questions du domaine
+    const domainQuestions = this.convertLocalQuestionsToQuestions();
+
+    const draftId = this.draftQuizId() || this.editingQuizId();
+
+    if (draftId) {
+      // Mettre à jour le brouillon existant
+      this.updateQuizUseCase.execute({
+        id: draftId,
+        title: this.quizTitle(),
+        description: this.quizDescription(),
+        subject: this.selectedSubject() || 'Non défini',
+        questions: domainQuestions,
+        classIds: ['class-1'] // TODO: Gérer les classes
+      }).subscribe({
+        next: () => {
+          this.hasUnsavedChanges.set(false);
+          console.log('Auto-save: brouillon mis à jour avec', domainQuestions.length, 'questions');
+        },
+        error: (err) => {
+          console.error('Erreur lors de l\'auto-save:', err);
+        }
+      });
+    } else {
+      // Créer un nouveau brouillon
+      const quiz = new Quiz(
+        `quiz-${Date.now()}`,
+        this.quizTitle(),
+        this.selectedSubject() || 'Non défini',
+        'draft',
+        domainQuestions,
+        ['class-1'], // TODO: Gérer les classes
+        new Date(),
+        undefined,
+        'Évaluation',
+        this.quizDescription()
+      );
+
+      this.createQuizUseCase.execute(quiz).subscribe({
+        next: (createdQuiz) => {
+          this.draftQuizId.set(createdQuiz.id);
+          this.hasUnsavedChanges.set(false);
+          console.log('Auto-save: nouveau brouillon créé', createdQuiz.id, 'avec', domainQuestions.length, 'questions');
+        },
+        error: (err) => {
+          console.error('Erreur lors de l\'auto-save:', err);
+        }
+      });
+    }
   }
 
   loadAcademicYears(): void {
@@ -129,7 +358,6 @@ export class QuizCreationComponent implements OnInit {
       id: Date.now().toString(),
       type: this.questionType(),
       text: this.questionText(),
-      points: this.questionPoints(),
       order: this.questions().length + 1,
       options: this.questionType() === 'multiple_choice' 
         ? this.questionOptions().filter(o => o.text.trim() !== '')
@@ -147,7 +375,6 @@ export class QuizCreationComponent implements OnInit {
   resetCurrentQuestion(): void {
     this.questionText.set('');
     this.questionType.set('multiple_choice');
-    this.questionPoints.set(1);
     this.questionOptions.set([
       { text: '', isCorrect: false },
       { text: '', isCorrect: false },
@@ -181,7 +408,17 @@ export class QuizCreationComponent implements OnInit {
   }
 
   async saveAsDraft(): Promise<void> {
-    await this.saveQuiz('draft');
+    // Forcer la sauvegarde immédiate du brouillon
+    this.hasUnsavedChanges.set(true);
+    this.performAutoSave();
+    
+    // Afficher un message de confirmation
+    this.toastService.success('Quiz enregistré comme brouillon');
+    
+    // Naviguer vers la liste des quiz après un court délai
+    setTimeout(() => {
+      this.router.navigate(['/quiz-management']);
+    }, 1000);
   }
 
   async publishQuiz(): Promise<void> {
@@ -198,50 +435,204 @@ export class QuizCreationComponent implements OnInit {
   private async saveQuiz(status: 'draft' | 'active'): Promise<void> {
     this.isSaving.set(true);
 
-    // Créer l'entité Quiz
-    const quiz = new Quiz(
-      `quiz-${Date.now()}`,
-      this.quizTitle(),
-      this.selectedSubject(),
-      status,
-      [], // Les questions seront ajoutées après
-      ['class-1'], // TODO: Sélectionner les classes
-      new Date(),
-      undefined,
-      'Évaluation'
-    );
+    // Convertir les LocalQuestion en Question
+    const domainQuestions = this.convertLocalQuestionsToQuestions();
 
-    this.createQuizUseCase.execute(quiz).subscribe({
-      next: (createdQuiz) => {
-        this.isSaving.set(false);
-        const message = status === 'active' 
-          ? 'Quiz publié avec succès !' 
-          : 'Quiz enregistré comme brouillon';
-        
-        this.toastService.success(message);
-        
-        // Délai pour permettre au toast de s'afficher avant la navigation
-        setTimeout(() => {
-          this.router.navigate(['/quiz-management']);
-        }, 1500);
-      },
-      error: (err) => {
-        this.isSaving.set(false);
-        this.toastService.error('Impossible de sauvegarder le quiz');
-        console.error('Error saving quiz:', err);
+    const draftId = this.draftQuizId() || this.editingQuizId();
+
+    if (draftId) {
+      // Mettre à jour le quiz existant
+      const quiz = new Quiz(
+        draftId,
+        this.quizTitle(),
+        this.selectedSubject(),
+        status,
+        domainQuestions,
+        ['class-1'], // TODO: Gérer les classes
+        new Date(),
+        undefined,
+        'Évaluation',
+        this.quizDescription()
+      );
+
+      this.updateQuizUseCase.execute({
+        id: draftId,
+        title: quiz.title,
+        description: quiz.description,
+        subject: quiz.subject,
+        status: status,
+        questions: domainQuestions,
+        classIds: quiz.classIds
+      }).subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.hasUnsavedChanges.set(false);
+          const message = status === 'active' 
+            ? 'Quiz publié avec succès !' 
+            : 'Quiz mis à jour avec succès';
+          
+          this.toastService.success(message);
+          
+          setTimeout(() => {
+            this.router.navigate(['/quiz-management']);
+          }, 1500);
+        },
+        error: (err) => {
+          this.isSaving.set(false);
+          this.toastService.error('Impossible de sauvegarder le quiz');
+          console.error('Error saving quiz:', err);
+        }
+      });
+    } else {
+      // Créer un nouveau quiz
+      const quiz = new Quiz(
+        `quiz-${Date.now()}`,
+        this.quizTitle(),
+        this.selectedSubject(),
+        status,
+        domainQuestions,
+        ['class-1'], // TODO: Sélectionner les classes
+        new Date(),
+        undefined,
+        'Évaluation',
+        this.quizDescription()
+      );
+
+      this.createQuizUseCase.execute(quiz).subscribe({
+        next: (createdQuiz) => {
+          this.draftQuizId.set(createdQuiz.id);
+          this.isSaving.set(false);
+          this.hasUnsavedChanges.set(false);
+          const message = status === 'active' 
+            ? 'Quiz publié avec succès !' 
+            : 'Quiz enregistré comme brouillon';
+          
+          this.toastService.success(message);
+          
+          setTimeout(() => {
+            this.router.navigate(['/quiz-management']);
+          }, 1500);
+        },
+        error: (err) => {
+          this.isSaving.set(false);
+          this.toastService.error('Impossible de sauvegarder le quiz');
+          console.error('Error saving quiz:', err);
+        }
+      });
+    }
+  }
+
+  /**
+   * Convertit les LocalQuestion en Question (entité du domaine)
+   */
+  private convertLocalQuestionsToQuestions(): Question[] {
+    return this.questions().map(localQ => {
+      // Convertir les options locales en QuestionOption
+      const options = (localQ.options || []).map((opt, index) => 
+        new QuestionOption(
+          `opt-${localQ.id}-${index}`,
+          opt.text,
+          opt.isCorrect
+        )
+      );
+
+      // Déterminer le type de question
+      let questionType: QuestionType;
+      if (localQ.type === 'multiple_choice') {
+        questionType = 'QCM';
+      } else if (localQ.type === 'short_answer') {
+        questionType = 'open';
+      } else {
+        questionType = 'open';
       }
+
+      // Créer la question du domaine
+      return new Question(
+        localQ.id,
+        localQ.text,
+        questionType,
+        1, // Points par défaut
+        options,
+        undefined, // correctAnswer sera défini plus tard
+        undefined  // explanation
+      );
     });
   }
 
-  cancel(): void {
-    this.router.navigate(['/quiz-management']);
-  }
-
-  getTotalPoints(): number {
-    return this.questions().reduce((sum, q) => sum + q.points, 0);
+  async cancel(): Promise<void> {
+    // Si on a des changements non sauvegardés, demander confirmation
+    if (this.hasUnsavedChanges()) {
+      const confirmed = await this.modalService.confirm(
+        'Quitter sans sauvegarder ?',
+        'Voulez-vous enregistrer ce quiz comme brouillon avant de quitter ?'
+      );
+      
+      if (confirmed) {
+        // Sauvegarder comme brouillon avant de quitter
+        this.performAutoSave();
+        // Attendre un peu pour que la sauvegarde se termine
+        setTimeout(() => {
+          this.router.navigate(['/quiz-management']);
+        }, 500);
+      } else {
+        this.router.navigate(['/quiz-management']);
+      }
+    } else {
+      this.router.navigate(['/quiz-management']);
+    }
   }
 
   getOptionLetter(index: number): string {
     return String.fromCharCode(65 + index); // A, B, C, D...
+  }
+
+  /**
+   * Retourne le nom de l'année académique sélectionnée
+   */
+  getSelectedAcademicYearName(): string {
+    const selectedId = this.selectedAcademicYear();
+    if (!selectedId) {
+      // Si pas d'ID, chercher l'année active
+      const activeYear = this.academicYears().find((y: any) => y.isActive);
+      return activeYear ? activeYear.name : '2025-2026';
+    }
+    const year = this.academicYears().find((y: any) => y.id === selectedId);
+    return year ? year.name : '2025-2026';
+  }
+
+  /**
+   * Ouvre le modal d'import Excel
+   */
+  openExcelImport(): void {
+    this.showExcelImportModal.set(true);
+  }
+
+  /**
+   * Ferme le modal d'import Excel
+   */
+  closeExcelImport(): void {
+    this.showExcelImportModal.set(false);
+  }
+
+  /**
+   * Importe les questions depuis Excel
+   */
+  onExcelImport(parsedQuestions: any[]): void {
+    const importedQuestions: LocalQuestion[] = parsedQuestions.map((q, index) => ({
+      id: `imported-${Date.now()}-${index}`,
+      type: q.type === 'multiple' ? 'multiple_choice' : 'short_answer',
+      text: q.question,
+      order: this.questions().length + index + 1,
+      options: q.type === 'multiple' || q.type === 'close' ? [
+        { text: q.option1 || '', isCorrect: false },
+        { text: q.option2 || '', isCorrect: false },
+        { text: q.option3 || '', isCorrect: false },
+        { text: q.option4 || '', isCorrect: false }
+      ].filter(opt => opt.text.trim() !== '') : undefined
+    }));
+
+    this.questions.update(q => [...q, ...importedQuestions]);
+    this.showExcelImportModal.set(false);
+    this.toastService.success(`${importedQuestions.length} question(s) importée(s) avec succès`);
   }
 }

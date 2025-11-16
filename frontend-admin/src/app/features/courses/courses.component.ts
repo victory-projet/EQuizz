@@ -108,8 +108,9 @@ export class CoursesComponent implements OnInit {
     this.createCourseUseCase.execute(dto).subscribe({
       next: () => {
         this.toastService.success('Cours créé avec succès');
-        this.loadCourses();
         this.showAddModal = false;
+        this.loadCourses();
+        // Rester sur la page des cours (pas de navigation)
       },
       error: (error) => {
         this.toastService.error(error.message || 'Erreur lors de la création');
@@ -144,9 +145,10 @@ export class CoursesComponent implements OnInit {
       this.updateCourseUseCase.execute(selected.id, dto).subscribe({
         next: () => {
           this.toastService.success('Cours modifié avec succès');
-          this.loadCourses();
           this.showEditModal = false;
           this.selectedCourse.set(null);
+          this.loadCourses();
+          // Rester sur la page des cours (pas de navigation)
         },
         error: (error) => {
           this.toastService.error(error.message || 'Erreur lors de la modification');
@@ -166,8 +168,9 @@ export class CoursesComponent implements OnInit {
       this.deleteCourseUseCase.execute(selected.id).subscribe({
         next: () => {
           this.toastService.success('Cours supprimé avec succès');
-          this.loadCourses();
           this.closeModal();
+          this.loadCourses();
+          // Rester sur la page des cours (pas de navigation)
         },
         error: (error) => {
           this.toastService.error(error.message || 'Erreur lors de la suppression');
@@ -187,5 +190,16 @@ export class CoursesComponent implements OnInit {
     this.showViewModal = false;
     this.showDeleteModal = false;
     this.selectedCourse.set(null);
+  }
+
+  // Menu management
+  showMenu: string | null = null;
+
+  toggleMenu(courseId: string): void {
+    this.showMenu = this.showMenu === courseId ? null : courseId;
+  }
+
+  closeMenu(): void {
+    this.showMenu = null;
   }
 }

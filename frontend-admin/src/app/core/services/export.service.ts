@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
 
 export interface ExportData {
   title: string;
@@ -122,56 +122,83 @@ export class ExportService {
   }
 
   /**
-   * Exporte les données en Excel
+   * Exporte les données en Excel avec ExcelJS (sécurisé)
    */
-  exportToExcel(data: ExportData): void {
-    const workbook = XLSX.utils.book_new();
+  async exportToExcel(data: ExportData): Promise<void> {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'EQuizz Admin';
+    workbook.created = new Date();
 
     // Feuille de statistiques
     if (data.stats && data.stats.length > 0) {
-      const statsData = [
-        ['Rapport:', data.title],
-        ['Date:', data.date],
-        [],
-        ['Indicateur', 'Valeur'],
-        ...data.stats.map(stat => [stat.label, stat.value])
-      ];
-
-      const statsSheet = XLSX.utils.aoa_to_sheet(statsData);
+      const statsSheet = workbook.addWorksheet('Statistiques');
       
-      // Styliser les en-têtes (largeur des colonnes)
-      statsSheet['!cols'] = [
-        { wch: 30 },
-        { wch: 20 }
-      ];
+      // En-tête
+      statsSheet.addRow(['Rapport:', data.title]);
+      statsSheet.addRow(['Date:', data.date]);
+      statsSheet.addRow([]);
+      
+      // Tableau des statistiques
+      const headerRow = statsSheet.addRow(['Indicateur', 'Valeur']);
+      headerRow.font = { bold: true };
+      headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF7571F9' }
+      };
+      headerRow.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+      
+      data.stats.forEach(stat => {
+        statsSheet.addRow([stat.label, stat.value]);
+      });
 
-      XLSX.utils.book_append_sheet(workbook, statsSheet, 'Statistiques');
+      // Largeur des colonnes
+      statsSheet.getColumn(1).width = 30;
+      statsSheet.getColumn(2).width = 20;
     }
 
     // Feuilles pour les tables supplémentaires
     if (data.tables && data.tables.length > 0) {
-      data.tables.forEach((table, index) => {
-        const tableData = [
-          [table.title],
-          [],
-          table.headers,
-          ...table.rows
-        ];
-
-        const tableSheet = XLSX.utils.aoa_to_sheet(tableData);
-        
-        // Largeur automatique des colonnes
-        const colWidths = table.headers.map(() => ({ wch: 20 }));
-        tableSheet['!cols'] = colWidths;
-
+      data.tables.forEach((table) => {
         const sheetName = table.title.substring(0, 31); // Excel limite à 31 caractères
-        XLSX.utils.book_append_sheet(workbook, tableSheet, sheetName);
+        const sheet = workbook.addWorksheet(sheetName);
+        
+        // Titre
+        sheet.addRow([table.title]);
+        sheet.addRow([]);
+        
+        // En-têtes
+        const headerRow = sheet.addRow(table.headers);
+        headerRow.font = { bold: true };
+        headerRow.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF7571F9' }
+        };
+        headerRow.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+        
+        // Données
+        table.rows.forEach(row => {
+          sheet.addRow(row);
+        });
+
+        // Largeur automatique des colonnes
+        table.headers.forEach((_, index) => {
+          sheet.getColumn(index + 1).width = 20;
+        });
       });
     }
 
     // Télécharger le fichier Excel
     const fileName = `${this.sanitizeFileName(data.title)}_${new Date().toISOString().split('T')[0]}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 
   /**

@@ -489,3 +489,62 @@
     }
   }
 }
+
+
+// Champ readonly pour année académique
+.readonly-field {
+  padding: 0.75rem 1rem;
+  background: #2d3142;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  color: #e5e7eb;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+// Import options section
+.import-options {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  .btn-import-excel {
+    padding: 0.75rem 1.5rem;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #059669;
+      transform: translateY(-1px);
+    }
+  }
+
+  .separator {
+    color: #9ca3af;
+    font-weight: 500;
+  }
+
+  .manual-text {
+    color: #6b7280;
+    font-weight: 500;
+  }
+}
