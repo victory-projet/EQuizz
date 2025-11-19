@@ -5,6 +5,29 @@ const quizzRepository = require('../repositories/quizz.repository');
 const etudiantRepository = require('../repositories/etudiant.repository');
 
 class QuizzService {
+
+   /**
+   * Gère la création d'un quizz. Valide les données avant de persister.
+   * @param {object} data - Les données du quizz.
+   * @returns {Promise<Quizz>}
+   */
+  async createNewQuizz(data) {
+    if (!data.titre) {
+      throw new Error("Le titre du quizz est obligatoire.");
+    }
+    // D'autres logiques métier peuvent être ajoutées ici...
+
+    return await quizzRepository.create(data);
+  }
+
+  /**
+   * Récupère le nombre total de quizz créés.
+   * @returns {Promise<number>}
+   */
+  async getQuizzCount() {
+    return await quizzRepository.count();
+  }
+
   /**
    * Récupère la liste des évaluations actives pour l'étudiant authentifié.
    * @param {string} userId - L'ID de l'utilisateur (étudiant).

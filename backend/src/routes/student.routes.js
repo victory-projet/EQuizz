@@ -21,6 +21,12 @@ router.get('/me', studentController.getMe);
 // --- Routes pour la consultation et la réponse aux Quizz ---
 // =========================================================
 
+// Route pour créer un nouveau quizz
+router.post('/quizzs', quizzController.createQuizz);
+
+// Route pour obtenir le nombre de quizz
+router.get('/quizzs/count', quizzController.getQuizzCount);
+
 // GET /api/student/quizzes - Obtenir la liste des quizz disponibles pour l'étudiant connecté
 router.get('/quizzes', quizzController.getAvailableQuizzes);
 
@@ -29,6 +35,7 @@ router.get('/quizzes/:id', quizzController.getQuizzDetails);
 
 // POST /api/student/quizzes/:id/submit - Soumettre les réponses à un quizz
 router.post('/quizzes/:id/submit', quizzController.submitReponses);
+
 
 
 module.exports = router;

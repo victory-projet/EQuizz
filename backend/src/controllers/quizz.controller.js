@@ -4,6 +4,30 @@ const quizzService = require('../services/quizz.service');
 
 class QuizzController {
   
+  /**
+   * Endpoint POST /api/quizzs
+   */
+  async createQuizz(req, res) {
+    try {
+      const nouveauQuizz = await quizzService.createNewQuizz(req.body);
+      res.status(201).json(nouveauQuizz);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  }
+
+  /**
+   * Endpoint GET /api/quizzs/count
+   */
+  async getQuizzCount(req, res) {
+    try {
+      const count = await quizzService.getQuizzCount();
+      res.status(200).json({ totalQuizzs: count });
+    } catch (error) {
+      res.status(500).json({ message: 'Erreur serveur lors du comptage.' });
+    }
+  }
+
   async getAvailableQuizzes(req, res) {
     try {
       // req.user.id est fourni par le middleware d'authentification

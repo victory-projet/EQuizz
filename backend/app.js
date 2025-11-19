@@ -19,12 +19,16 @@ const academicRoutes = require('./src/routes/academic.routes'); // Notre nouveau
 const evaluationRoutes = require('./src/routes/evaluation.routes');
 const studentRoutes = require('./src/routes/student.routes');
 const initRoutes = require('./src/routes/init.routes');
+const quizzRoutes = require('./src/routes/student.routes');
 
 // --- Middlewares Globaux ---
 // Middleware pour permettre au serveur de comprendre les requêtes JSON
 app.use(express.json());
 
 // --- Utilisation des Routeurs ---
+//route de creation e quizz
+app.use('/api', quizzRoutes); 
+
 // Toutes les routes définies dans authRoutes seront préfixées par /api/auth
 app.use('/api/auth', authRoutes);
 
@@ -55,3 +59,5 @@ db.sequelize.authenticate()
   .catch(err => {
     console.error('❌ Erreur lors de l\'initialisation:', err);
   });
+
+ 

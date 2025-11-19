@@ -2,8 +2,21 @@
 
 const db = require('../models');
 const { Op } = require('sequelize');
+const Quizz = require('../models/Quizz');
 
 class QuizzRepository {
+  
+  async create(quizzData) {
+    return await Quizz.create(quizzData);
+  }
+
+  /**
+   * Compte le nombre total de quizz existants.
+   * @returns {Promise<number>} Le nombre total de quizz.
+   */
+  async count() {
+    return await Quizz.count();
+  }
 
   /**
    * Trouve toutes les évaluations publiées et actives pour une classe donnée avec le statut pour l'étudiant.
