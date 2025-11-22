@@ -7,7 +7,7 @@ import { STORAGE_KEYS } from './constants';
  * Configure automatiquement l'URL de base et les headers d'authentification
  */
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://equizz-production.up.railway.app/api';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://equizz-backend.onrender.com/api';
 
 console.log('🌐 API URL configurée:', API_URL);
 
