@@ -46,8 +46,8 @@ class QuizzRepository {
       // Chercher le token de l'étudiant pour cette évaluation
       const sessionToken = await db.SessionToken.findOne({
         where: {
-          etudiantId: etudiantId,
-          evaluationId: evaluation.id
+          etudiant_id: etudiantId,
+          evaluation_id: evaluation.id
         }
       });
 

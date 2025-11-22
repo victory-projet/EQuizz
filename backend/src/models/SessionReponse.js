@@ -33,8 +33,6 @@ const SessionReponse = sequelize.define('SessionReponse', {
     type: DataTypes.DATE,
     allowNull: true,
   },
-}, {
-  underscored: true
 });
 
 module.exports = SessionReponse;

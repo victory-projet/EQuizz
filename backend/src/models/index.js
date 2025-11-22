@@ -60,8 +60,14 @@ Etudiant.belongsTo(Utilisateur, { foreignKey: 'id' });
 Ecole.hasMany(Classe, { foreignKey: { name: 'ecole_id', allowNull: false } });
 Classe.belongsTo(Ecole, { foreignKey: 'ecole_id' });
 
+AnneeAcademique.hasMany(Classe, { foreignKey: 'anneeAcademiqueId' });
+Classe.belongsTo(AnneeAcademique, { foreignKey: 'anneeAcademiqueId' });
+
 AnneeAcademique.hasMany(Semestre, { foreignKey: { name: 'annee_academique_id', allowNull: false }, onDelete: 'CASCADE' });
 Semestre.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id' });
+
+AnneeAcademique.hasMany(Cours, { foreignKey: { name: 'annee_academique_id', allowNull: true } });
+Cours.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id' });
 
 Semestre.hasMany(Cours, { foreignKey: { name: 'semestre_id', allowNull: false } });
 Cours.belongsTo(Semestre, { foreignKey: 'semestre_id' });

@@ -22,6 +22,13 @@ const Classe = sequelize.define('Classe', {
     // ex: "ING4"
   },
 
+  // Ajout du champ anneeAcademiqueId pour lier une classe à une année académique
+  anneeAcademiqueId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    field: 'annee_academique_id'
+  }
+
 });
 
 module.exports = Classe;

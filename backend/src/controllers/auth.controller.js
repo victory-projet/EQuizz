@@ -1,5 +1,6 @@
 const authService = require('../services/auth.service');
 const asyncHandler = require('../utils/asyncHandler');
+const db = require('../models');
 
 class AuthController {
   claimAccount = asyncHandler(async (req, res) => {
@@ -108,6 +109,51 @@ class AuthController {
     res.status(200).json({ 
       message: 'Déconnexion réussie' 
     });
+  });
+
+  // Mettre à jour le profil
+  updateProfile = asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    const { nom, prenom, email } = req.body;
+    
+    const utilisateur = await db.Utilisateur.findByPk(userId);
+    if (!utilisateur) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+
+    await utilisateur.update({ nom, prenom, email });
+    
+    res.status(200).json({
+      id: utilisateur.id,
+      nom: utilisateur.nom,
+      prenom: utilisateur.prenom,
+      email: utilisateur.email,
+      role: req.user.role,
+      estActif: utilisateur.estActif
+    });
+  });
+
+  // Changer le mot de passe
+  changePassword = asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+    
+    const utilisateur = await db.Utilisateur.findByPk(userId);
+    if (!utilisateur) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+
+    // Vérifier le mot de passe actuel
+    const isMatch = await utilisateur.isPasswordMatch(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Mot de passe actuel incorrect' });
+    }
+
+    // Mettre à jour le mot de passe
+    utilisateur.motDePasseHash = newPassword;
+    await utilisateur.save();
+    
+    res.status(200).json({ message: 'Mot de passe modifié avec succès' });
   });
 
   // Rafraîchir le token

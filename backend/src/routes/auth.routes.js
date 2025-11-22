@@ -13,5 +13,7 @@ router.post('/link-card', authController.linkCard);
 router.get('/me', authenticate, authController.getCurrentUser);
 router.post('/logout', authenticate, authController.logout);
 router.post('/refresh', authController.refreshToken);
+router.put('/profile', authenticate, authController.updateProfile);
+router.post('/change-password', authenticate, authController.changePassword);
 
 module.exports = router;

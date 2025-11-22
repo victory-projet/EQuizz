@@ -26,8 +26,7 @@ describe('Complete Workflow E2E Tests', () => {
     
     // 1. Créer l'école
     const ecole = await db.Ecole.create({
-      nom: 'Test School',
-      adresse: '123 Test St'
+      nom: 'Test School'
     });
 
     // 2. Créer l'admin
@@ -40,7 +39,12 @@ describe('Complete Workflow E2E Tests', () => {
 
     await db.Administrateur.create({
       id: adminUser.id,
-      ecole_id: ecole.id
+      utilisateurId: adminUser.id
+    });
+
+    // Recharger l'utilisateur avec ses relations pour le token
+    adminUser = await db.Utilisateur.findByPk(adminUser.id, {
+      include: [db.Administrateur]
     });
 
     adminToken = jwtService.generateToken(adminUser);
@@ -55,6 +59,9 @@ describe('Complete Workflow E2E Tests', () => {
 
     const semestre = await db.Semestre.create({
       nom: 'Semestre 1',
+      numero: 1,
+      dateDebut: '2024-09-01',
+      dateFin: '2025-01-31',
       annee_academique_id: annee.id
     });
 
@@ -95,6 +102,11 @@ describe('Complete Workflow E2E Tests', () => {
       id: etudiantUser.id,
       matricule: '20230001',
       classe_id: classe.id
+    });
+
+    // Recharger l'utilisateur avec ses relations pour le token
+    etudiantUser = await db.Utilisateur.findByPk(etudiantUser.id, {
+      include: [db.Etudiant]
     });
 
     etudiantToken = jwtService.generateToken(etudiantUser);
@@ -268,13 +280,19 @@ describe('Complete Workflow E2E Tests', () => {
   describe('Workflow: Notifications', () => {
     
     it('devrait créer des notifications lors de la publication', async () => {
+      // Recharger adminUser pour avoir l'ID correct
+      const admin = await db.Utilisateur.findOne({
+        where: { email: 'admin.test@saintjeaningenieur.org' },
+        include: [db.Administrateur]
+      });
+
       // Créer et publier une évaluation
       const evaluation = await db.Evaluation.create({
         titre: 'Test Eval',
         cours_id: cours.id,
         dateDebut: new Date(),
         dateFin: new Date(Date.now() + 86400000),
-        administrateur_id: adminUser.id,
+        administrateur_id: admin.Administrateur.id,
         statut: 'BROUILLON'
       });
 

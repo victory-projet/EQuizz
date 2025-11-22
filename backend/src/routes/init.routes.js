@@ -49,10 +49,10 @@ router.post('/seed', async (req, res) => {
 
         // 4. Créer les classes
         const classes = await db.Classe.bulkCreate([
-            { nom: 'ING4 ISI FR', niveau: 'ING4', ecole_id: ecole.id },
-            { nom: 'ING4 ISI EN', niveau: 'ING4', ecole_id: ecole.id },
-            { nom: 'ING5 ISI FR', niveau: 'ING5', ecole_id: ecole.id },
-            { nom: 'ING3 GC FR', niveau: 'ING3', ecole_id: ecole.id }
+            { nom: 'ING4 ISI FR', niveau: 'ING4', ecole_id: ecole.id, annee_academique_id: anneeAcademique.id },
+            { nom: 'ING4 ISI EN', niveau: 'ING4', ecole_id: ecole.id, annee_academique_id: anneeAcademique.id },
+            { nom: 'ING5 ISI FR', niveau: 'ING5', ecole_id: ecole.id, annee_academique_id: anneeAcademique.id },
+            { nom: 'ING3 GC FR', niveau: 'ING3', ecole_id: ecole.id, annee_academique_id: anneeAcademique.id }
         ], { transaction });
 
         // 5. Créer les utilisateurs (Administrateurs)
@@ -97,21 +97,24 @@ router.post('/seed', async (req, res) => {
             code: 'INF401',
             nom: 'Bases de Données Avancées',
             semestre_id: semestre1.id,
-            enseignant_id: enseignant1.id
+            enseignant_id: enseignant1.id,
+            annee_academique_id: anneeAcademique.id
         }, { transaction });
 
         const cours2 = await db.Cours.create({
             code: 'INF402',
             nom: 'Développement Web',
             semestre_id: semestre1.id,
-            enseignant_id: enseignant1.id
+            enseignant_id: enseignant1.id,
+            annee_academique_id: anneeAcademique.id
         }, { transaction });
 
         const cours3 = await db.Cours.create({
             code: 'MAT401',
             nom: 'Analyse Numérique',
             semestre_id: semestre1.id,
-            enseignant_id: enseignant2.id
+            enseignant_id: enseignant2.id,
+            annee_academique_id: anneeAcademique.id
         }, { transaction });
 
         // 8. Associer les cours aux classes

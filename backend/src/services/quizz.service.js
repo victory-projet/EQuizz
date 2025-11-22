@@ -34,8 +34,8 @@ class QuizzService {
     // Chercher le token de l'étudiant pour cette évaluation
     const sessionToken = await db.SessionToken.findOne({
       where: {
-        etudiantId: etudiantId,
-        evaluationId: quizz.evaluation_id
+        etudiant_id: etudiantId,
+        evaluation_id: quizz.evaluation_id
       }
     });
 
@@ -86,16 +86,16 @@ class QuizzService {
       // 2. Chercher ou créer le token anonyme pour cet étudiant
       let sessionToken = await db.SessionToken.findOne({
         where: {
-          etudiantId: etudiantId,
-          evaluationId: quizz.evaluation_id
+          etudiant_id: etudiantId,
+          evaluation_id: quizz.evaluation_id
         },
         transaction
       });
 
       if (!sessionToken) {
         sessionToken = await db.SessionToken.create({
-          etudiantId: etudiantId,
-          evaluationId: quizz.evaluation_id
+          etudiant_id: etudiantId,
+          evaluation_id: quizz.evaluation_id
         }, { transaction });
       }
 
@@ -107,7 +107,8 @@ class QuizzService {
 
       if (!session) {
         session = await db.SessionReponse.create({
-          evaluation_id: quizz.evaluation_id,
+          quizz_id: quizzId,
+          etudiant_id: etudiantId,
           tokenAnonyme: sessionToken.tokenAnonyme,
           statut: estFinal ? 'TERMINE' : 'EN_COURS',
           dateDebut: new Date(),

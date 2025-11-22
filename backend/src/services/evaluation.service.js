@@ -11,8 +11,9 @@ class EvaluationService {
   /**
    * Crée une Évaluation et son Quizz associé dans une transaction.
    * @param {object} data - Données pour l'évaluation. Doit contenir cours_id.
+   * @param {string} adminId - ID de l'administrateur qui crée l'évaluation.
    */
-  async create(data) {
+  async create(data, adminId) {
     const { classeIds, ...evaluationData } = data;
     if (!classeIds || !Array.isArray(classeIds) || classeIds.length === 0) {
       throw AppError.badRequest('Au moins une classe doit être ciblée.', 'CLASSES_REQUIRED');
@@ -25,6 +26,15 @@ class EvaluationService {
       if (!cours) {
         throw AppError.notFound('Cours non trouvé. Impossible de créer l\'évaluation.', 'COURS_NOT_FOUND');
       }
+
+      // Récupérer l'administrateur associé à l'utilisateur
+      const admin = await db.Administrateur.findOne({ where: { id: adminId } });
+      if (!admin) {
+        throw AppError.forbidden('Seuls les administrateurs peuvent créer des évaluations.', 'ADMIN_REQUIRED');
+      }
+
+      // Ajouter l'ID de l'administrateur aux données
+      evaluationData.administrateur_id = adminId;
 
       const evaluation = await evaluationRepository.create(evaluationData, transaction);
       await evaluation.addClasses(classeIds, { transaction });
@@ -174,6 +184,85 @@ class EvaluationService {
 
     const createdQuestions = await db.Question.bulkCreate(questionsToCreate);
     return { count: createdQuestions.length, questions: createdQuestions };
+  }
+
+  async close(id) {
+    const evaluation = await evaluationRepository.findById(id);
+    if (!evaluation) {
+      throw AppError.notFound('Évaluation non trouvée.', 'EVALUATION_NOT_FOUND');
+    }
+
+    if (evaluation.statut === 'CLOTUREE') {
+      throw AppError.badRequest('Cette évaluation est déjà clôturée.', 'ALREADY_CLOSED');
+    }
+
+    // Mettre à jour le statut
+    const updatedEvaluation = await evaluationRepository.update(id, { statut: 'CLOTUREE' });
+
+    // Envoyer les notifications de clôture
+    const notificationService = require('./notification.service');
+    await notificationService.notifyEvaluationClosed(id);
+
+    return updatedEvaluation;
+  }
+
+  async getSubmissions(id) {
+    const evaluation = await evaluationRepository.findById(id);
+    if (!evaluation) {
+      throw AppError.notFound('Évaluation non trouvée.', 'EVALUATION_NOT_FOUND');
+    }
+
+    // Récupérer les sessions de réponse avec les détails
+    const sessions = await db.SessionReponse.findAll({
+      where: { quizz_id: evaluation.Quizz.id },
+      include: [
+        {
+          model: db.Etudiant,
+          include: [
+            {
+              model: db.Utilisateur,
+              attributes: ['nom', 'prenom', 'email']
+            },
+            {
+              model: db.Classe,
+              attributes: ['nom']
+            }
+          ]
+        },
+        {
+          model: db.ReponseEtudiant,
+          include: [
+            {
+              model: db.Question,
+              attributes: ['enonce', 'typeQuestion', 'options']
+            }
+          ]
+        }
+      ],
+      order: [['dateDebut', 'DESC']]
+    });
+
+    // Formater les données
+    return sessions.map(session => ({
+      id: session.id,
+      etudiant: {
+        id: session.Etudiant.id,
+        nom: session.Etudiant.Utilisateur.nom,
+        prenom: session.Etudiant.Utilisateur.prenom,
+        email: session.Etudiant.Utilisateur.email,
+        matricule: session.Etudiant.matricule,
+        classe: session.Etudiant.Classe?.nom
+      },
+      dateDebut: session.dateDebut,
+      dateFin: session.dateFin,
+      estTermine: session.estTermine,
+      reponses: session.ReponseEtudiants.map(rep => ({
+        questionId: rep.question_id,
+        question: rep.Question.enonce,
+        reponse: rep.reponseTexte,
+        dateReponse: rep.createdAt
+      }))
+    }));
   }
   
 }

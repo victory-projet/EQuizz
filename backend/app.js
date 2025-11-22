@@ -1,10 +1,13 @@
 // backend/app.js
 
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
 
-// Charger dotenv uniquement en développement
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
+// Charger .env seulement s'il existe (développement local)
+const envPath = path.resolve(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  require('dotenv').config({ path: envPath });
 }
 
 const app = express();
@@ -67,7 +70,7 @@ if (process.env.NODE_ENV !== 'test') {
   db.sequelize.authenticate()
     .then(() => {
       console.log('✅ Connexion à la base de données établie avec succès.');
-      return db.sequelize.sync({ force: true }); // ATTENTION: Supprime et recrée toutes les tables
+      return db.sequelize.sync({ force: true });
     })
     .then(() => {
       console.log('✅ Base de données synchronisée avec succès.');

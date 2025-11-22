@@ -24,8 +24,7 @@ describe('Auth Integration Tests', () => {
     it('devrait connecter un utilisateur avec des identifiants valides', async () => {
       // Arrange - Créer un utilisateur de test
       const ecole = await db.Ecole.create({
-        nom: 'Test School',
-        adresse: '123 Test St'
+        nom: 'Test School'
       });
 
       const classe = await db.Classe.create({
@@ -73,7 +72,7 @@ describe('Auth Integration Tests', () => {
 
       // Assert
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty('message');
     });
 
     it('devrait valider les champs requis', async () => {
@@ -92,8 +91,7 @@ describe('Auth Integration Tests', () => {
     it('devrait lier une carte à un compte activé', async () => {
       // Arrange
       const ecole = await db.Ecole.create({
-        nom: 'Test School',
-        adresse: '123 Test St'
+        nom: 'Test School'
       });
 
       const classe = await db.Classe.create({
@@ -109,7 +107,7 @@ describe('Auth Integration Tests', () => {
         motDePasseHash: 'password123'
       });
 
-      await db.Etudiant.create({
+      const etudiant = await db.Etudiant.create({
         id: utilisateur.id,
         matricule: '20230001',
         classe_id: classe.id

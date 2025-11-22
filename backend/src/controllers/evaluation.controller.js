@@ -6,7 +6,9 @@ const ErrorHandler = require('../middlewares/errorHandler.middleware');
 
 class EvaluationController {
   create = asyncHandler(async (req, res) => {
-    const evaluation = await evaluationService.create(req.body);
+    // Récupérer l'ID de l'administrateur depuis le token JWT
+    const adminId = req.user.id;
+    const evaluation = await evaluationService.create(req.body, adminId);
     res.status(201).json(evaluation);
   });
 
@@ -73,6 +75,21 @@ class EvaluationController {
       message: 'Évaluation publiée avec succès. Les notifications ont été envoyées.',
       evaluation
     });
+  });
+
+  close = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const evaluation = await evaluationService.close(id);
+    res.status(200).json({
+      message: 'Évaluation clôturée avec succès.',
+      evaluation
+    });
+  });
+
+  getSubmissions = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const submissions = await evaluationService.getSubmissions(id);
+    res.status(200).json(submissions);
   });
 }
 

@@ -55,4 +55,10 @@ router.post('/quizz/:quizzId/import', upload.single('file'), evaluationControlle
 // POST /api/evaluations/:id/publish - Publier une évaluation
 router.post('/:id/publish', evaluationController.publish);
 
+// POST /api/evaluations/:id/close - Clôturer une évaluation
+router.post('/:id/close', evaluationController.close);
+
+// GET /api/evaluations/:id/submissions - Récupérer les soumissions d'une évaluation
+router.get('/:id/submissions', evaluationController.getSubmissions);
+
 module.exports = router;

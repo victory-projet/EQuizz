@@ -25,8 +25,7 @@ describe('Evaluation Integration Tests', () => {
 
     // Créer un admin de test
     const ecole = await db.Ecole.create({
-      nom: 'Test School',
-      adresse: '123 Test St'
+      nom: 'Test School'
     });
 
     adminUser = await db.Utilisateur.create({
@@ -38,7 +37,12 @@ describe('Evaluation Integration Tests', () => {
 
     await db.Administrateur.create({
       id: adminUser.id,
-      ecole_id: ecole.id
+      utilisateurId: adminUser.id
+    });
+
+    // Recharger l'utilisateur avec ses relations pour le token
+    adminUser = await db.Utilisateur.findByPk(adminUser.id, {
+      include: [db.Administrateur]
     });
 
     adminToken = jwtService.generateToken(adminUser);
@@ -53,6 +57,9 @@ describe('Evaluation Integration Tests', () => {
 
     const semestre = await db.Semestre.create({
       nom: 'Semestre 1',
+      numero: 1,
+      dateDebut: '2024-09-01',
+      dateFin: '2025-01-31',
       annee_academique_id: annee.id
     });
 

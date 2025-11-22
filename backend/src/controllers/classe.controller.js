@@ -40,6 +40,18 @@ class ClasseController {
     const result = await classeService.removeCoursFromClasse(classeId, coursId);
     res.status(200).json(result);
   });
+
+  addEtudiantToClasse = asyncHandler(async (req, res) => {
+    const { classeId, etudiantId } = req.params;
+    const result = await classeService.addEtudiantToClasse(classeId, etudiantId);
+    res.status(200).json(result);
+  });
+
+  removeEtudiantFromClasse = asyncHandler(async (req, res) => {
+    const { classeId, etudiantId } = req.params;
+    const result = await classeService.removeEtudiantFromClasse(classeId, etudiantId);
+    res.status(200).json(result);
+  });
 }
 
 module.exports = new ClasseController();
