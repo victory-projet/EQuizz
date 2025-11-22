@@ -35,7 +35,7 @@ const sequelize = new Sequelize(
     dialectOptions: {
       connectTimeout: 60000,
       ssl: process.env.NODE_ENV === 'production' ? {
-        rejectUnauthorized: true
+        rejectUnauthorized: false  // Accepter les certificats auto-signés d'Aiven
       } : false
     },
 
