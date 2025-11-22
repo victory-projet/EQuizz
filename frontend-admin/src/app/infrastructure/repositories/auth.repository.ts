@@ -1,53 +1,51 @@
 // src/app/core/infrastructure/repositories/auth.repository.ts
-import { Injectable } from '@angular/core';
-import { Observable, of, delay, throwError } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Observable, throwError, of, tap, map } from 'rxjs';
 import { User, AuthToken, LoginCredentials } from '../../core/domain/entities/user.entity';
 import { IAuthRepository, IUserRepository } from '../../core/domain/repositories/auth.repository.interface';
+import { ApiService } from '../http/api.service';
+import { AuthMapper } from '../mappers/auth.mapper';
+import { BackendAuthResponse } from '../http/interfaces/backend.interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthRepository implements IAuthRepository {
-  private currentUser: User | null = null;
-  private currentToken: AuthToken | null = null;
+  private apiService = inject(ApiService);
 
   login(credentials: LoginCredentials): Observable<AuthToken> {
-    // Mock validation
+    // Validation
     if (!credentials.isValid()) {
       return throwError(() => new Error('Identifiants invalides'));
     }
 
-    // Mock authentication
-    if (credentials.email === 'admin@equizz.com' && credentials.password === 'admin123') {
-      const token = new AuthToken(
-        'mock-access-token-' + Date.now(),
-        'mock-refresh-token-' + Date.now(),
-        3600,
-        'Bearer'
-      );
-
-      this.currentToken = token;
-      this.currentUser = new User(
-        'user-1',
-        credentials.email,
-        'Admin',
-        'User',
-        'admin',
-        true,
-        new Date(),
-        new Date()
-      );
-
-      return of(token).pipe(delay(500));
-    }
-
-    return throwError(() => new Error('Email ou mot de passe incorrect'));
+    // Appel API
+    const loginRequest = AuthMapper.toBackendLoginRequest(credentials);
+    
+    return this.apiService.post<BackendAuthResponse>('/auth/login', loginRequest).pipe(
+      tap(response => {
+        // Stocker le token
+        localStorage.setItem('auth_token', response.token);
+        localStorage.setItem('access_token', response.token);
+        
+        // Stocker les informations utilisateur
+        localStorage.setItem('user', JSON.stringify(response.user));
+      }),
+      map(response => AuthMapper.toAuthToken(response))
+    );
   }
 
   logout(): Observable<void> {
-    this.currentUser = null;
-    this.currentToken = null;
-    return of(void 0).pipe(delay(200));
+    // Appel API pour déconnexion côté serveur
+    return this.apiService.post<void>('/auth/logout', {}).pipe(
+      tap(() => {
+        // Nettoyer le localStorage
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+      })
+    );
   }
 
   refreshToken(refreshToken: string): Observable<AuthToken> {
@@ -55,66 +53,49 @@ export class AuthRepository implements IAuthRepository {
       return throwError(() => new Error('Refresh token invalide'));
     }
 
-    const newToken = new AuthToken(
-      'mock-access-token-' + Date.now(),
-      refreshToken,
-      3600,
-      'Bearer'
+    // Appel API pour rafraîchir le token
+    return this.apiService.post<{ token: string }>('/auth/refresh', { refreshToken }).pipe(
+      tap(response => {
+        // Mettre à jour le token dans le localStorage
+        localStorage.setItem('auth_token', response.token);
+        localStorage.setItem('access_token', response.token);
+      }),
+      map(response => new AuthToken(
+        response.token,
+        refreshToken,
+        3600,
+        'Bearer'
+      ))
     );
-
-    this.currentToken = newToken;
-    return of(newToken).pipe(delay(300));
   }
 
   getCurrentUser(): Observable<User> {
-    if (!this.currentUser) {
-      return throwError(() => new Error('Utilisateur non connecté'));
-    }
-    return of(this.currentUser).pipe(delay(200));
+    // Appel API pour récupérer l'utilisateur connecté
+    return this.apiService.get<any>('/auth/me').pipe(
+      tap(backendUser => {
+        // Mettre à jour le localStorage avec les données fraîches
+        localStorage.setItem('user', JSON.stringify(backendUser));
+      }),
+      map(backendUser => AuthMapper.toDomain(backendUser))
+    );
   }
 
   register(userData: Partial<User>, password: string): Observable<User> {
-    if (!userData.email || !userData.firstName || !userData.lastName) {
-      return throwError(() => new Error('Données utilisateur incomplètes'));
-    }
-
-    if (password.length < 6) {
-      return throwError(() => new Error('Le mot de passe doit contenir au moins 6 caractères'));
-    }
-
-    const user = new User(
-      `user-${Date.now()}`,
-      userData.email,
-      userData.firstName,
-      userData.lastName,
-      userData.role || 'student',
-      true,
-      new Date()
-    );
-
-    return of(user).pipe(delay(500));
+    // Non implémenté pour l'admin
+    // Les étudiants s'inscrivent via POST /api/auth/claim-account (mobile)
+    return throwError(() => new Error('Fonctionnalité non disponible pour l\'admin'));
   }
 
   resetPassword(email: string): Observable<void> {
-    if (!email || !email.includes('@')) {
-      return throwError(() => new Error('Email invalide'));
-    }
-
-    // Mock: envoyer un email de réinitialisation
-    return of(void 0).pipe(delay(500));
+    // Non implémenté
+    // TODO: Ajouter l'endpoint POST /api/auth/forgot-password dans le backend
+    return throwError(() => new Error('Fonctionnalité non disponible'));
   }
 
   changePassword(oldPassword: string, newPassword: string): Observable<void> {
-    if (!this.currentUser) {
-      return throwError(() => new Error('Utilisateur non connecté'));
-    }
-
-    if (newPassword.length < 6) {
-      return throwError(() => new Error('Le nouveau mot de passe doit contenir au moins 6 caractères'));
-    }
-
-    // Mock: changer le mot de passe
-    return of(void 0).pipe(delay(500));
+    // Non implémenté
+    // TODO: Ajouter l'endpoint PUT /api/auth/change-password dans le backend
+    return throwError(() => new Error('Fonctionnalité non disponible'));
   }
 }
 
@@ -122,101 +103,46 @@ export class AuthRepository implements IAuthRepository {
   providedIn: 'root'
 })
 export class UserRepository implements IUserRepository {
-  private users: User[] = this.initMockData();
+  private apiService = inject(ApiService);
 
   getAll(): Observable<User[]> {
-    return of([...this.users]).pipe(delay(300));
+    // TODO: Endpoint GET /api/users non disponible dans le backend
+    // Pour l'instant, retourner une erreur
+    return throwError(() => new Error('Endpoint GET /api/users non disponible. Fonctionnalité à implémenter dans le backend.'));
   }
 
   getById(id: string): Observable<User> {
-    const user = this.users.find(u => u.id === id);
-    if (!user) {
-      return throwError(() => new Error(`Utilisateur ${id} non trouvé`));
-    }
-    return of(user).pipe(delay(200));
+    // TODO: Endpoint GET /api/users/:id non disponible dans le backend
+    return throwError(() => new Error('Endpoint GET /api/users/:id non disponible. Fonctionnalité à implémenter dans le backend.'));
   }
 
   getByRole(role: string): Observable<User[]> {
-    const filtered = this.users.filter(u => u.role === role);
-    return of(filtered).pipe(delay(300));
+    // TODO: Endpoint GET /api/users?role=... non disponible dans le backend
+    return throwError(() => new Error('Endpoint GET /api/users?role=... non disponible. Fonctionnalité à implémenter dans le backend.'));
   }
 
   create(user: User): Observable<User> {
-    this.users.push(user);
-    return of(user).pipe(delay(300));
+    // TODO: Endpoint POST /api/users non disponible dans le backend
+    return throwError(() => new Error('Endpoint POST /api/users non disponible. Fonctionnalité à implémenter dans le backend.'));
   }
 
   update(id: string, updates: Partial<User>): Observable<User> {
-    const index = this.users.findIndex(u => u.id === id);
-    if (index === -1) {
-      return throwError(() => new Error(`Utilisateur ${id} non trouvé`));
-    }
-
-    this.users[index] = { ...this.users[index], ...updates } as User;
-    return of(this.users[index]).pipe(delay(300));
+    // TODO: Endpoint PUT /api/users/:id non disponible dans le backend
+    return throwError(() => new Error('Endpoint PUT /api/users/:id non disponible. Fonctionnalité à implémenter dans le backend.'));
   }
 
   delete(id: string): Observable<void> {
-    const index = this.users.findIndex(u => u.id === id);
-    if (index === -1) {
-      return throwError(() => new Error(`Utilisateur ${id} non trouvé`));
-    }
-
-    this.users.splice(index, 1);
-    return of(void 0).pipe(delay(300));
+    // TODO: Endpoint DELETE /api/users/:id non disponible dans le backend
+    return throwError(() => new Error('Endpoint DELETE /api/users/:id non disponible. Fonctionnalité à implémenter dans le backend.'));
   }
 
   activate(id: string): Observable<User> {
-    const index = this.users.findIndex(u => u.id === id);
-    if (index === -1) {
-      return throwError(() => new Error(`Utilisateur ${id} non trouvé`));
-    }
-
-    this.users[index].activate();
-    return of(this.users[index]).pipe(delay(300));
+    // TODO: Endpoint POST /api/users/:id/activate non disponible dans le backend
+    return throwError(() => new Error('Endpoint POST /api/users/:id/activate non disponible. Fonctionnalité à implémenter dans le backend.'));
   }
 
   deactivate(id: string): Observable<User> {
-    const index = this.users.findIndex(u => u.id === id);
-    if (index === -1) {
-      return throwError(() => new Error(`Utilisateur ${id} non trouvé`));
-    }
-
-    this.users[index].deactivate();
-    return of(this.users[index]).pipe(delay(300));
-  }
-
-  private initMockData(): User[] {
-    const admin = new User(
-      'user-1',
-      'admin@equizz.com',
-      'Admin',
-      'User',
-      'admin',
-      true,
-      new Date('2024-01-01')
-    );
-
-    const teacher = new User(
-      'user-2',
-      'teacher@equizz.com',
-      'Pierre',
-      'Durand',
-      'teacher',
-      true,
-      new Date('2024-01-15')
-    );
-
-    const student = new User(
-      'user-3',
-      'student@equizz.com',
-      'Jean',
-      'Dupont',
-      'student',
-      true,
-      new Date('2024-09-01')
-    );
-
-    return [admin, teacher, student];
+    // TODO: Endpoint POST /api/users/:id/deactivate non disponible dans le backend
+    return throwError(() => new Error('Endpoint POST /api/users/:id/deactivate non disponible. Fonctionnalité à implémenter dans le backend.'));
   }
 }
