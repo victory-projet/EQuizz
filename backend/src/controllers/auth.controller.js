@@ -59,6 +59,90 @@ class AuthController {
       message: 'Un email de confirmation a été envoyé. Veuillez vérifier votre boîte de réception pour valider l\'association de votre carte.' 
     });
   });
+
+  // Obtenir l'utilisateur connecté
+  getCurrentUser = asyncHandler(async (req, res) => {
+    const utilisateur = req.user; // Défini par le middleware authenticate
+    
+    // Déterminer le rôle et préparer les informations complètes
+    let role = 'ETUDIANT';
+    let additionalInfo = {};
+
+    if (utilisateur.Administrateur) {
+      role = 'ADMIN';
+    } else if (utilisateur.Enseignant) {
+      role = 'ENSEIGNANT';
+      additionalInfo = {
+        specialite: utilisateur.Enseignant.specialite
+      };
+    } else if (utilisateur.Etudiant) {
+      role = 'ETUDIANT';
+      additionalInfo = {
+        matricule: utilisateur.Etudiant.matricule,
+        idCarte: utilisateur.Etudiant.idCarte,
+        classe: utilisateur.Etudiant.Classe ? {
+          id: utilisateur.Etudiant.Classe.id,
+          nom: utilisateur.Etudiant.Classe.nom,
+          niveau: utilisateur.Etudiant.Classe.niveau
+        } : null
+      };
+    }
+    
+    res.status(200).json({
+      id: utilisateur.id,
+      nom: utilisateur.nom,
+      prenom: utilisateur.prenom,
+      email: utilisateur.email,
+      role,
+      estActif: true,
+      createdAt: utilisateur.createdAt,
+      updatedAt: utilisateur.updatedAt,
+      ...additionalInfo
+    });
+  });
+
+  // Déconnexion
+  logout = asyncHandler(async (req, res) => {
+    // Pour l'instant, la déconnexion est gérée côté client
+    // On pourrait ajouter une blacklist de tokens ici si nécessaire
+    res.status(200).json({ 
+      message: 'Déconnexion réussie' 
+    });
+  });
+
+  // Rafraîchir le token
+  refreshToken = asyncHandler(async (req, res) => {
+    const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
+      return res.status(400).json({ 
+        error: 'Refresh token manquant' 
+      });
+    }
+
+    // Pour l'instant, on génère simplement un nouveau token
+    // Dans une vraie application, on vérifierait le refresh token
+    const jwtService = require('../services/jwt.service');
+    
+    try {
+      // Vérifier le token
+      const decoded = jwtService.verifyToken(refreshToken);
+      
+      // Générer un nouveau token
+      const newToken = jwtService.generateToken({ 
+        id: decoded.id, 
+        email: decoded.email 
+      });
+      
+      res.status(200).json({ 
+        token: newToken 
+      });
+    } catch (error) {
+      res.status(401).json({ 
+        error: 'Refresh token invalide ou expiré' 
+      });
+    }
+  });
 }
 
 module.exports = new AuthController();
