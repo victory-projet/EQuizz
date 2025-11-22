@@ -63,6 +63,32 @@ class EvaluationService {
     return updatedEvaluation;
   }
 
+  async publish(id) {
+    const evaluation = await evaluationRepository.findById(id);
+    if (!evaluation) {
+      throw AppError.notFound('Évaluation non trouvée.', 'EVALUATION_NOT_FOUND');
+    }
+
+    if (evaluation.statut !== 'BROUILLON') {
+      throw AppError.badRequest('Seules les évaluations en brouillon peuvent être publiées.', 'INVALID_STATUS');
+    }
+
+    // Vérifier qu'il y a au moins une question
+    const questions = await db.Question.count({ where: { quizz_id: evaluation.Quizz.id } });
+    if (questions === 0) {
+      throw AppError.badRequest('Impossible de publier une évaluation sans questions.', 'NO_QUESTIONS');
+    }
+
+    // Mettre à jour le statut
+    const updatedEvaluation = await evaluationRepository.update(id, { statut: 'PUBLIEE' });
+
+    // Envoyer les notifications
+    const notificationService = require('./notification.service');
+    await notificationService.notifyNewEvaluation(id);
+
+    return updatedEvaluation;
+  }
+
   async delete(id) {
     const result = await evaluationRepository.delete(id);
     if (result === 0) {

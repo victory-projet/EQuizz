@@ -1,0 +1,209 @@
+<div class="analytics-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1>
+        <app-svg-icon name="Activity" class="title-icon" />
+        Rapports et Analyses
+      </h1>
+      <p class="subtitle">Vue d'ensemble des performances et analyses</p>
+    </div>
+    <div class="export-dropdown">
+      <button class="btn-primary" (click)="toggleExportMenu()">
+        <app-svg-icon name="Download" />
+        Exporter le rapport
+        <app-svg-icon [name]="showExportMenu() ? 'ChevronUp' : 'ChevronDown'" size="sm" />
+      </button>
+      @if (showExportMenu()) {
+        <div class="dropdown-menu">
+          <button class="dropdown-item" (click)="exportToPDF()">
+            <app-svg-icon name="FileText" />
+            <span class="text">Exporter en PDF</span>
+          </button>
+          <button class="dropdown-item" (click)="exportToExcel()">
+            <app-svg-icon name="FileSpreadsheet" />
+            <span class="text">Exporter en Excel</span>
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="filter-tabs">
+    <button 
+      class="tab" 
+      [class.active]="activeTab() === 'overview'"
+      (click)="setActiveTab('overview')"
+    >
+      <app-svg-icon name="BarChart3" />
+      Vue d'ensemble
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeTab() === 'sentiment'"
+      (click)="setActiveTab('sentiment')"
+    >
+      <app-svg-icon name="Smile" />
+      Analyse des sentiments
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeTab() === 'performance'"
+      (click)="setActiveTab('performance')"
+    >
+      <app-svg-icon name="Trophy" />
+      Performances
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des données...</p>
+    </div>
+  } @else {
+    <!-- Overview Tab -->
+    @if (activeTab() === 'overview') {
+      <div class="tab-content">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue">
+              <app-svg-icon name="FileText" />
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">Quiz créés</p>
+              <div class="stat-value">{{ stats().totalQuizzes }}</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon green">
+              <app-svg-icon name="CheckCircle" />
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">Réponses totales</p>
+              <div class="stat-value">{{ stats().totalResponses }}</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon purple">
+              <app-svg-icon name="Star" />
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">Score moyen</p>
+              <div class="stat-value">{{ stats().averageScore }}%</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon orange">
+              <app-svg-icon name="TrendingUp" />
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">Taux de participation</p>
+              <div class="stat-value">{{ stats().participationRate }}%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="activity-section">
+          <h3 class="section-title">Activité Récente</h3>
+          <div class="activity-grid">
+            @for (activity of recentActivity(); track $index) {
+              <div class="activity-card">
+                <div class="activity-icon">
+                  <app-svg-icon [name]="getActivityIcon(activity.icon)" />
+                </div>
+                <div class="activity-content">
+                  <div class="activity-action">{{ activity.action }}</div>
+                  <div class="activity-details">{{ activity.details }}</div>
+                </div>
+                <div class="activity-time">
+                  <app-svg-icon name="Clock" size="sm" />
+                  {{ activity.time }}
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Sentiment Tab -->
+    @if (activeTab() === 'sentiment') {
+      <div class="tab-content">
+        <div class="sentiment-section">
+          <h3 class="section-title">Analyse des Sentiments</h3>
+          
+          <div class="sentiment-stats">
+            <div class="sentiment-card positive">
+              <div class="sentiment-icon">
+                <app-svg-icon name="SmilePlus" />
+              </div>
+              <div class="sentiment-content">
+                <p class="sentiment-label">Positif</p>
+                <div class="sentiment-value">{{ stats().positiveSentiment }}%</div>
+              </div>
+            </div>
+
+            <div class="sentiment-card neutral">
+              <div class="sentiment-icon">
+                <app-svg-icon name="Minus" />
+              </div>
+              <div class="sentiment-content">
+                <p class="sentiment-label">Neutre</p>
+                <div class="sentiment-value">{{ stats().neutralSentiment }}%</div>
+              </div>
+            </div>
+
+            <div class="sentiment-card negative">
+              <div class="sentiment-icon">
+                <app-svg-icon name="Frown" />
+              </div>
+              <div class="sentiment-content">
+                <p class="sentiment-label">Négatif</p>
+                <div class="sentiment-value">{{ stats().negativeSentiment }}%</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sentiment Component -->
+          <app-sentiment-analysis />
+
+          <!-- Word Cloud Component -->
+          <div style="margin-top: 2rem;">
+            <app-word-cloud />
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Performance Tab -->
+    @if (activeTab() === 'performance') {
+      <div class="tab-content">
+        <div class="performance-section">
+          <h3 class="section-title">Top Performers</h3>
+          <div class="performers-grid">
+            @for (performer of topPerformers(); track $index) {
+              <div class="performer-card">
+                <div class="performer-rank">{{ $index + 1 }}</div>
+                <div class="performer-content">
+                  <div class="performer-name">{{ performer.name }}</div>
+                  <div class="performer-score">{{ performer.score }}%</div>
+                </div>
+                <div class="performer-trend" [class.up]="performer.trend === 'up'" [class.down]="performer.trend === 'down'">
+                  <app-svg-icon [name]="performer.trend === 'up' ? 'TrendingUp' : 'TrendingDown'" />
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

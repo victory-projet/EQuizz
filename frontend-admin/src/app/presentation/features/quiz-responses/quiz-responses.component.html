@@ -1,0 +1,234 @@
+<div class="quiz-responses">
+  <!-- Header -->
+  <div class="page-header">
+    <button class="btn-back" (click)="goBack()">
+      ← Retour
+    </button>
+    <div class="header-content">
+      <h1>{{ quizTitle() }}</h1>
+      <p class="subtitle">Réponses et résultats des étudiants</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="exportToExcel()">
+        📊 Excel
+      </button>
+      <button class="btn btn-primary" (click)="exportResponses()">
+        📄 PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">📝</div>
+      <div class="stat-content">
+        <h3>{{ totalResponses() }}</h3>
+        <p>Réponses</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-content">
+        <h3>{{ averageScore() }}%</h3>
+        <p>Score Moyen</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">✅</div>
+      <div class="stat-content">
+        <h3>{{ passRate() }}%</h3>
+        <p>Taux de Réussite</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⏱️</div>
+      <div class="stat-content">
+        <h3>{{ averageDuration() }} min</h3>
+        <p>Durée Moyenne</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+        placeholder="Rechercher un étudiant..."
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-group">
+      <label>Classe:</label>
+      <select [(ngModel)]="filterClass" (change)="onFilterChange()" class="filter-select">
+        <option value="all">Toutes les classes</option>
+        @for (className of getUniqueClasses(); track className) {
+          <option [value]="className">{{ className }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Statut:</label>
+      <select [(ngModel)]="filterStatus" (change)="onFilterChange()" class="filter-select">
+        <option value="all">Tous</option>
+        <option value="passed">Réussi (≥50%)</option>
+        <option value="failed">Échoué (<50%)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Responses Table -->
+  <div class="table-container">
+    <table class="responses-table">
+      <thead>
+        <tr>
+          <th>Étudiant</th>
+          <th>Classe</th>
+          <th>Score</th>
+          <th>Pourcentage</th>
+          <th>Durée</th>
+          <th>Date de soumission</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (response of filteredResponses(); track response.id) {
+          <tr>
+            <td>
+              <div class="student-info">
+                <div class="student-avatar">{{ response.studentName.charAt(0) }}</div>
+                <div>
+                  <div class="student-name">{{ response.studentName }}</div>
+                  <div class="student-email">{{ response.studentEmail }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="class-badge">{{ response.className }}</span>
+            </td>
+            <td>
+              <strong>{{ response.score }}/{{ response.maxScore }}</strong>
+            </td>
+            <td>
+              <span class="score-badge" [ngClass]="getScoreClass(response.percentage)">
+                {{ response.percentage }}%
+              </span>
+            </td>
+            <td>{{ formatDuration(response.duration) }}</td>
+            <td>{{ formatDate(response.submittedAt) }}</td>
+            <td>
+              <button class="btn-view" (click)="viewDetails(response)">
+                👁️ Voir détails
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="empty-state">
+              <p>Aucune réponse trouvée</p>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Detail Modal -->
+  @if (showDetailModal() && selectedResponse()) {
+    <div class="modal-overlay" (click)="closeDetailModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Détails de la réponse</h2>
+          <button class="btn-close" (click)="closeDetailModal()">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Student Info -->
+          <div class="response-header">
+            <div class="student-info-large">
+              <div class="student-avatar-large">{{ selectedResponse()!.studentName.charAt(0) }}</div>
+              <div>
+                <h3>{{ selectedResponse()!.studentName }}</h3>
+                <p>{{ selectedResponse()!.studentEmail }}</p>
+                <span class="class-badge">{{ selectedResponse()!.className }}</span>
+              </div>
+            </div>
+            <div class="response-stats">
+              <div class="stat-item">
+                <span class="stat-label">Score:</span>
+                <span class="stat-value">{{ selectedResponse()!.score }}/{{ selectedResponse()!.maxScore }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Pourcentage:</span>
+                <span class="stat-value" [ngClass]="getScoreClass(selectedResponse()!.percentage)">
+                  {{ selectedResponse()!.percentage }}%
+                </span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Durée:</span>
+                <span class="stat-value">{{ formatDuration(selectedResponse()!.duration) }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Soumis le:</span>
+                <span class="stat-value">{{ formatDate(selectedResponse()!.submittedAt) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Answers -->
+          <div class="answers-section">
+            <h3>Réponses détaillées</h3>
+            @for (answer of selectedResponse()!.answers; track answer.questionId; let i = $index) {
+              <div class="answer-card">
+                <div class="answer-header">
+                  <span class="question-number">Question {{ i + 1 }}</span>
+                  <span class="question-type-badge">{{ answer.questionType }}</span>
+                  <span class="points-badge" [class.correct]="answer.isCorrect !== false">
+                    {{ answer.points }}/{{ answer.maxPoints }} pts
+                  </span>
+                </div>
+
+                <div class="question-text">{{ answer.questionText }}</div>
+
+                @if (answer.questionType === 'QCM') {
+                  <div class="answer-content">
+                    <div class="answer-row">
+                      <strong>Réponse de l'étudiant:</strong>
+                      <span [class.correct]="answer.isCorrect" [class.incorrect]="!answer.isCorrect">
+                        {{ answer.studentAnswer }}
+                        {{ answer.isCorrect ? '✓' : '✗' }}
+                      </span>
+                    </div>
+                    @if (!answer.isCorrect) {
+                      <div class="answer-row correct-answer">
+                        <strong>Réponse correcte:</strong>
+                        <span>{{ answer.correctAnswer }}</span>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="answer-content">
+                    <div class="open-answer">
+                      <strong>Réponse de l'étudiant:</strong>
+                      <p class="student-answer-text">{{ answer.studentAnswer }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="closeDetailModal()">Fermer</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

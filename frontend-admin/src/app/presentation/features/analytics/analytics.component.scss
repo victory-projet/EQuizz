@@ -1,0 +1,518 @@
+// src/app/presentation/features/analytics/analytics.component.scss
+@import '../../../../styles.scss';
+
+.analytics-page {
+  min-height: 100vh;
+  animation: fadeIn $transition-base;
+}
+
+// ============================================
+// PAGE HEADER
+// ============================================
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: $spacing-8;
+  gap: $spacing-4;
+  flex-wrap: wrap;
+
+  h1 {
+    font-size: $text-3xl;
+    font-weight: $font-bold;
+    color: $text-primary;
+    margin: 0;
+    line-height: $leading-tight;
+
+    @media (max-width: $breakpoint-md) {
+      font-size: $text-2xl;
+    }
+  }
+
+  .subtitle {
+    font-size: $text-base;
+    color: $text-secondary;
+    margin: $spacing-2 0 0 0;
+  }
+}
+
+// ============================================
+// EXPORT DROPDOWN
+// ============================================
+.export-dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + $spacing-2);
+  right: 0;
+  min-width: 200px;
+  background: $bg-primary;
+  border: $border-width solid $border-color;
+  border-radius: $radius-base;
+  box-shadow: $shadow-lg;
+  overflow: hidden;
+  z-index: 100;
+  animation: slideDown $transition-fast;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  width: 100%;
+  padding: $spacing-3 $spacing-4;
+  font-size: $text-sm;
+  color: $text-primary;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  app-svg-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: $primary-50;
+    color: $primary-700;
+  }
+}
+
+// ============================================
+// FILTER TABS
+// ============================================
+.filter-tabs {
+  display: flex;
+  gap: $spacing-2;
+  margin-bottom: $spacing-6;
+  flex-wrap: wrap;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-2 $spacing-4;
+  font-size: $text-sm;
+  font-weight: $font-medium;
+  color: $text-secondary;
+  background: $bg-primary;
+  border: $border-width-2 solid $border-color;
+  border-radius: $radius-base;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  app-svg-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: $primary-50;
+    border-color: $primary-300;
+    color: $primary-700;
+  }
+
+  &.active {
+    background: $primary-500;
+    border-color: $primary-500;
+    color: $text-inverse;
+    font-weight: $font-semibold;
+  }
+}
+
+// ============================================
+// LOADING STATE
+// ============================================
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: $spacing-4;
+
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid $neutral-200;
+    border-top-color: $primary-500;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  p {
+    font-size: $text-base;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+// ============================================
+// TAB CONTENT
+// ============================================
+.tab-content {
+  animation: fadeIn $transition-base;
+}
+
+// ============================================
+// STATS GRID
+// ============================================
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: $spacing-4;
+  margin-bottom: $spacing-8;
+
+  @media (max-width: $breakpoint-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-5;
+  background: $bg-primary;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  border: $border-width solid $border-color;
+  transition: all $transition-base;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+    border-color: $primary-200;
+  }
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: $radius-lg;
+  flex-shrink: 0;
+
+  app-svg-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  &.blue { 
+    background: rgba($info-500, 0.1); 
+    color: $info-600;
+  }
+  &.green { 
+    background: rgba($success-500, 0.1); 
+    color: $success-600;
+  }
+  &.purple { 
+    background: rgba($primary-500, 0.1); 
+    color: $primary-600;
+  }
+  &.orange { 
+    background: rgba($warning-500, 0.1); 
+    color: $warning-600;
+  }
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: $text-sm;
+  color: $text-secondary;
+  margin-bottom: $spacing-1;
+  font-weight: $font-medium;
+}
+
+.stat-value {
+  font-size: $text-3xl;
+  font-weight: $font-bold;
+  color: $text-primary;
+}
+
+// ============================================
+// ACTIVITY SECTION
+// ============================================
+.activity-section,
+.sentiment-section,
+.performance-section {
+  background: $bg-primary;
+  border-radius: $radius-lg;
+  padding: $spacing-6;
+  box-shadow: $shadow-sm;
+  border: $border-width solid $border-color;
+  margin-bottom: $spacing-6;
+}
+
+.section-title {
+  font-size: $text-xl;
+  font-weight: $font-semibold;
+  color: $text-primary;
+  margin: 0 0 $spacing-6 0;
+}
+
+.activity-grid {
+  display: grid;
+  gap: $spacing-3;
+}
+
+.activity-card {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-4;
+  background: $bg-secondary;
+  border-radius: $radius-base;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $primary-50;
+    transform: translateX(4px);
+  }
+}
+
+.activity-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: $primary-100;
+  border-radius: $radius-base;
+  flex-shrink: 0;
+
+  app-svg-icon {
+    width: 24px;
+    height: 24px;
+    color: $primary-600;
+  }
+}
+
+.activity-content {
+  flex: 1;
+}
+
+.activity-action {
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+  color: $text-primary;
+  margin-bottom: $spacing-1;
+}
+
+.activity-details {
+  font-size: $text-sm;
+  color: $text-secondary;
+}
+
+.activity-time {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+  font-size: $text-xs;
+  color: $text-tertiary;
+  white-space: nowrap;
+
+  app-svg-icon {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+// ============================================
+// SENTIMENT STATS
+// ============================================
+.sentiment-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-4;
+  margin-bottom: $spacing-8;
+}
+
+.sentiment-card {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-5;
+  border-radius: $radius-lg;
+  border: $border-width solid $border-color;
+  transition: all $transition-base;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+
+  &.positive {
+    background: rgba($success-500, 0.05);
+    border-left: 4px solid $success-500;
+  }
+
+  &.neutral {
+    background: rgba($neutral-400, 0.05);
+    border-left: 4px solid $neutral-400;
+  }
+
+  &.negative {
+    background: rgba($error-500, 0.05);
+    border-left: 4px solid $error-500;
+  }
+}
+
+.sentiment-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: $radius-lg;
+  flex-shrink: 0;
+
+  app-svg-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .positive & {
+    background: rgba($success-500, 0.1);
+    color: $success-600;
+  }
+
+  .neutral & {
+    background: rgba($neutral-400, 0.1);
+    color: $neutral-600;
+  }
+
+  .negative & {
+    background: rgba($error-500, 0.1);
+    color: $error-600;
+  }
+}
+
+.sentiment-content {
+  flex: 1;
+}
+
+.sentiment-label {
+  font-size: $text-sm;
+  color: $text-secondary;
+  margin-bottom: $spacing-1;
+  font-weight: $font-medium;
+}
+
+.sentiment-value {
+  font-size: $text-3xl;
+  font-weight: $font-bold;
+  color: $text-primary;
+}
+
+// ============================================
+// PERFORMERS
+// ============================================
+.performers-grid {
+  display: grid;
+  gap: $spacing-3;
+}
+
+.performer-card {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-5;
+  background: $bg-secondary;
+  border-radius: $radius-base;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $primary-50;
+    transform: translateX(4px);
+  }
+}
+
+.performer-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, $primary-500, $primary-600);
+  color: $text-inverse;
+  font-size: $text-xl;
+  font-weight: $font-bold;
+  border-radius: $radius-base;
+  flex-shrink: 0;
+}
+
+.performer-content {
+  flex: 1;
+}
+
+.performer-name {
+  font-size: $text-base;
+  font-weight: $font-semibold;
+  color: $text-primary;
+  margin-bottom: $spacing-1;
+}
+
+.performer-score {
+  font-size: $text-2xl;
+  font-weight: $font-bold;
+  color: $primary-600;
+}
+
+.performer-trend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-base;
+  flex-shrink: 0;
+
+  app-svg-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  &.up {
+    background: rgba($success-500, 0.1);
+    color: $success-600;
+  }
+
+  &.down {
+    background: rgba($error-500, 0.1);
+    color: $error-600;
+  }
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

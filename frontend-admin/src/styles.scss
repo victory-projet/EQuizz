@@ -1,1 +1,573 @@
-/* You can add global styles to this file, and also import other style files */
+// ============================================
+// EQUIZZ ADMIN - GLOBAL STYLES
+// Design System basé sur #3A5689
+// ============================================
+
+// ============================================
+// 1. DESIGN TOKENS
+// ============================================
+
+// Couleurs principales
+$primary-50: #f0f4f8;
+$primary-100: #d9e2ec;
+$primary-200: #bcccdc;
+$primary-300: #9fb3c8;
+$primary-400: #829ab1;
+$primary-500: #3A5689; // Couleur principale
+$primary-600: #2e4a75;
+$primary-700: #243b5e;
+$primary-800: #1a2d47;
+$primary-900: #102030;
+
+// Couleurs secondaires (complémentaires)
+$secondary-50: #fff7ed;
+$secondary-100: #ffedd5;
+$secondary-200: #fed7aa;
+$secondary-300: #fdba74;
+$secondary-400: #fb923c;
+$secondary-500: #f97316;
+$secondary-600: #ea580c;
+$secondary-700: #c2410c;
+$secondary-800: #9a3412;
+$secondary-900: #7c2d12;
+
+// Couleurs neutres
+$neutral-50: #fafafa;
+$neutral-100: #f5f5f5;
+$neutral-200: #e5e5e5;
+$neutral-300: #d4d4d4;
+$neutral-400: #a3a3a3;
+$neutral-500: #737373;
+$neutral-600: #525252;
+$neutral-700: #404040;
+$neutral-800: #262626;
+$neutral-900: #171717;
+
+// Couleurs sémantiques
+$success-50: #f0fdf4;
+$success-500: #22c55e;
+$success-600: #16a34a;
+$success-700: #15803d;
+
+$warning-50: #fffbeb;
+$warning-500: #f59e0b;
+$warning-600: #d97706;
+$warning-700: #b45309;
+
+$error-50: #fef2f2;
+$error-500: #ef4444;
+$error-600: #dc2626;
+$error-700: #b91c1c;
+
+$info-50: #eff6ff;
+$info-500: #3b82f6;
+$info-600: #2563eb;
+$info-700: #1d4ed8;
+
+// Couleurs de fond
+$bg-primary: #ffffff;
+$bg-secondary: $neutral-50;
+$bg-tertiary: $neutral-100;
+$bg-dark: $primary-900;
+
+// Couleurs de texte
+$text-primary: $neutral-900;
+$text-secondary: $neutral-600;
+$text-tertiary: $neutral-400;
+$text-inverse: #ffffff;
+
+// ============================================
+// 2. SPACING (8px grid system)
+// ============================================
+$spacing-0: 0;
+$spacing-1: 0.25rem;  // 4px
+$spacing-2: 0.5rem;   // 8px
+$spacing-3: 0.75rem;  // 12px
+$spacing-4: 1rem;     // 16px
+$spacing-5: 1.25rem;  // 20px
+$spacing-6: 1.5rem;   // 24px
+$spacing-8: 2rem;     // 32px
+$spacing-10: 2.5rem;  // 40px
+$spacing-12: 3rem;    // 48px
+$spacing-16: 4rem;    // 64px
+$spacing-20: 5rem;    // 80px
+$spacing-24: 6rem;    // 96px
+
+// ============================================
+// 3. TYPOGRAPHY
+// ============================================
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+$font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-family-mono: 'Fira Code', 'Courier New', monospace;
+
+// Font sizes
+$text-xs: 0.75rem;    // 12px
+$text-sm: 0.875rem;   // 14px
+$text-base: 1rem;     // 16px
+$text-lg: 1.125rem;   // 18px
+$text-xl: 1.25rem;    // 20px
+$text-2xl: 1.5rem;    // 24px
+$text-3xl: 1.875rem;  // 30px
+$text-4xl: 2.25rem;   // 36px
+$text-5xl: 3rem;      // 48px
+
+// Font weights
+$font-light: 300;
+$font-normal: 400;
+$font-medium: 500;
+$font-semibold: 600;
+$font-bold: 700;
+$font-extrabold: 800;
+
+// Line heights
+$leading-none: 1;
+$leading-tight: 1.25;
+$leading-snug: 1.375;
+$leading-normal: 1.5;
+$leading-relaxed: 1.625;
+$leading-loose: 2;
+
+// ============================================
+// 4. BORDERS & RADIUS
+// ============================================
+$border-width: 1px;
+$border-width-2: 2px;
+$border-width-4: 4px;
+
+$border-color: $neutral-200;
+$border-color-hover: $neutral-300;
+$border-color-focus: $primary-500;
+
+$radius-none: 0;
+$radius-sm: 0.25rem;   // 4px
+$radius-base: 0.5rem;  // 8px
+$radius-md: 0.75rem;   // 12px
+$radius-lg: 1rem;      // 16px
+$radius-xl: 1.5rem;    // 24px
+$radius-full: 9999px;
+
+// ============================================
+// 5. SHADOWS
+// ============================================
+$shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+$shadow-base: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+$shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+$shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+$shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+
+// ============================================
+// 6. TRANSITIONS
+// ============================================
+$transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slower: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+// ============================================
+// 7. BREAKPOINTS
+// ============================================
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-2xl: 1536px;
+
+// ============================================
+// 8. Z-INDEX SCALE
+// ============================================
+$z-dropdown: 1000;
+$z-sticky: 1020;
+$z-fixed: 1030;
+$z-modal-backdrop: 1040;
+$z-modal: 1050;
+$z-popover: 1060;
+$z-tooltip: 1070;
+
+// ============================================
+// 9. GLOBAL RESET & BASE STYLES
+// ============================================
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: $font-family-base;
+  font-size: $text-base;
+  font-weight: $font-normal;
+  line-height: $leading-normal;
+  color: $text-primary;
+  background-color: $bg-secondary;
+  min-height: 100vh;
+}
+
+// ============================================
+// 10. TYPOGRAPHY CLASSES
+// ============================================
+h1, h2, h3, h4, h5, h6 {
+  font-weight: $font-semibold;
+  line-height: $leading-tight;
+  color: $text-primary;
+  margin-bottom: $spacing-4;
+}
+
+h1 { font-size: $text-4xl; }
+h2 { font-size: $text-3xl; }
+h3 { font-size: $text-2xl; }
+h4 { font-size: $text-xl; }
+h5 { font-size: $text-lg; }
+h6 { font-size: $text-base; }
+
+p {
+  margin-bottom: $spacing-4;
+  line-height: $leading-relaxed;
+}
+
+a {
+  color: $primary-500;
+  text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $primary-600;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary-500;
+    outline-offset: 2px;
+    border-radius: $radius-sm;
+  }
+}
+
+// ============================================
+// 11. UTILITY CLASSES
+// ============================================
+
+// Container
+.container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 $spacing-4;
+
+  @media (min-width: $breakpoint-sm) { max-width: 640px; }
+  @media (min-width: $breakpoint-md) { max-width: 768px; }
+  @media (min-width: $breakpoint-lg) { max-width: 1024px; }
+  @media (min-width: $breakpoint-xl) { max-width: 1280px; }
+  @media (min-width: $breakpoint-2xl) { max-width: 1536px; }
+}
+
+// Card
+.card {
+  background: $bg-primary;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  padding: $spacing-6;
+  transition: box-shadow $transition-base;
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+}
+
+// Button base
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-2;
+  padding: $spacing-3 $spacing-6;
+  font-size: $text-sm;
+  font-weight: $font-medium;
+  line-height: 1;
+  border-radius: $radius-base;
+  border: none;
+  cursor: pointer;
+  transition: all $transition-fast;
+  white-space: nowrap;
+  user-select: none;
+
+  &:focus-visible {
+    outline: 2px solid $primary-500;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background: $primary-500;
+  color: $text-inverse;
+
+  &:hover:not(:disabled) {
+    background: $primary-600;
+    transform: translateY(-1px);
+    box-shadow: $shadow-md;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+.btn-secondary {
+  background: $neutral-100;
+  color: $text-primary;
+
+  &:hover:not(:disabled) {
+    background: $neutral-200;
+  }
+}
+
+.btn-ghost {
+  background: transparent;
+  color: $primary-500;
+
+  &:hover:not(:disabled) {
+    background: $primary-50;
+  }
+}
+
+.btn-danger {
+  background: $error-500;
+  color: $text-inverse;
+
+  &:hover:not(:disabled) {
+    background: $error-600;
+  }
+}
+
+.btn-sm {
+  padding: $spacing-2 $spacing-4;
+  font-size: $text-xs;
+}
+
+.btn-lg {
+  padding: $spacing-4 $spacing-8;
+  font-size: $text-base;
+}
+
+// Input base
+.input {
+  width: 100%;
+  padding: $spacing-3 $spacing-4;
+  font-size: $text-sm;
+  line-height: $leading-normal;
+  color: $text-primary;
+  background: $bg-primary;
+  border: $border-width solid $border-color;
+  border-radius: $radius-base;
+  transition: all $transition-fast;
+
+  &::placeholder {
+    color: $text-tertiary;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: $border-color-hover;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $border-color-focus;
+    box-shadow: 0 0 0 3px rgba($primary-500, 0.1);
+  }
+
+  &:disabled {
+    background: $neutral-100;
+    cursor: not-allowed;
+  }
+
+  &.error {
+    border-color: $error-500;
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba($error-500, 0.1);
+    }
+  }
+}
+
+// Badge
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-1;
+  padding: $spacing-1 $spacing-3;
+  font-size: $text-xs;
+  font-weight: $font-medium;
+  border-radius: $radius-full;
+  white-space: nowrap;
+}
+
+.badge-primary { background: $primary-100; color: $primary-700; }
+.badge-success { background: $success-50; color: $success-700; }
+.badge-warning { background: $warning-50; color: $warning-700; }
+.badge-error { background: $error-50; color: $error-700; }
+.badge-info { background: $info-50; color: $info-700; }
+
+// Spacing utilities
+.mt-0 { margin-top: $spacing-0; }
+.mt-2 { margin-top: $spacing-2; }
+.mt-4 { margin-top: $spacing-4; }
+.mt-6 { margin-top: $spacing-6; }
+.mt-8 { margin-top: $spacing-8; }
+
+.mb-0 { margin-bottom: $spacing-0; }
+.mb-2 { margin-bottom: $spacing-2; }
+.mb-4 { margin-bottom: $spacing-4; }
+.mb-6 { margin-bottom: $spacing-6; }
+.mb-8 { margin-bottom: $spacing-8; }
+
+.p-0 { padding: $spacing-0; }
+.p-2 { padding: $spacing-2; }
+.p-4 { padding: $spacing-4; }
+.p-6 { padding: $spacing-6; }
+.p-8 { padding: $spacing-8; }
+
+// Text utilities
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.text-primary { color: $text-primary; }
+.text-secondary { color: $text-secondary; }
+.text-tertiary { color: $text-tertiary; }
+
+.font-medium { font-weight: $font-medium; }
+.font-semibold { font-weight: $font-semibold; }
+.font-bold { font-weight: $font-bold; }
+
+// Flexbox utilities
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: $spacing-2; }
+.gap-4 { gap: $spacing-4; }
+.gap-6 { gap: $spacing-6; }
+
+// Grid utilities
+.grid { display: grid; }
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+// ============================================
+// 12. ANIMATIONS
+// ============================================
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-fadeIn { animation: fadeIn $transition-base; }
+.animate-slideInUp { animation: slideInUp $transition-base; }
+.animate-slideInDown { animation: slideInDown $transition-base; }
+.animate-spin { animation: spin 1s linear infinite; }
+
+// ============================================
+// 13. SCROLLBAR STYLING
+// ============================================
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: $neutral-100;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $neutral-300;
+  border-radius: $radius-full;
+
+  &:hover {
+    background: $neutral-400;
+  }
+}
+
+// ============================================
+// 14. SELECTION
+// ============================================
+::selection {
+  background: rgba($primary-500, 0.2);
+  color: $text-primary;
+}
+
+// ============================================
+// 15. FOCUS VISIBLE (Accessibility)
+// ============================================
+:focus-visible {
+  outline: 2px solid $primary-500;
+  outline-offset: 2px;
+}
+
+// ============================================
+// 16. MATERIAL DESIGN OVERRIDES
+// ============================================
+
+// Custom Material theme with our colors
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-flat-button {
+  border-radius: $radius-base !important;
+  font-weight: $font-medium !important;
+}
+
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+// ============================================
+// 17. PRINT STYLES
+// ============================================
+@media print {
+  body {
+    background: white;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

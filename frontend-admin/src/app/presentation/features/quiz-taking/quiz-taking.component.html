@@ -1,0 +1,136 @@
+<div class="quiz-taking-container" *ngIf="!isSubmitted">
+  <!-- Header -->
+  <div class="quiz-header">
+    <div class="header-content">
+      <h1>{{ quizTitle }}</h1>
+      <div class="quiz-meta">
+        <span class="meta-item">
+          <mat-icon>quiz</mat-icon>
+          {{ questions.length }} questions
+        </span>
+        <span class="meta-item">
+          <mat-icon>check_circle</mat-icon>
+          {{ answeredCount }} / {{ questions.length }} répondues
+        </span>
+      </div>
+    </div>
+    <button mat-button color="warn" (click)="cancel()">
+      <mat-icon>close</mat-icon>
+      Quitter
+    </button>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-section">
+    <mat-progress-bar mode="determinate" [value]="progress" color="primary"></mat-progress-bar>
+    <span class="progress-text">Question {{ currentQuestionIndex + 1 }} / {{ questions.length }}</span>
+  </div>
+
+  <!-- Question Card -->
+  <mat-card class="question-card" @slideIn>
+    <div class="question-header">
+      <span class="question-number">Question {{ currentQuestionIndex + 1 }}</span>
+      <span class="question-points">{{ currentQuestion.points }} point(s)</span>
+    </div>
+
+    <div class="question-text">
+      {{ currentQuestion.text }}
+    </div>
+
+    <!-- Multiple Choice -->
+    <div *ngIf="currentQuestion.type === 'multiple'" class="answer-section">
+      <mat-radio-group 
+        [value]="getAnswer(currentQuestion.id)"
+        (change)="saveAnswer(currentQuestion.id, $event.value)"
+        class="radio-group">
+        <mat-radio-button 
+          *ngFor="let option of currentQuestion.options; let i = index"
+          [value]="i"
+          class="radio-option">
+          <span class="option-letter">{{ String.fromCharCode(65 + i) }}.</span>
+          <span class="option-text">{{ option }}</span>
+        </mat-radio-button>
+      </mat-radio-group>
+    </div>
+
+    <!-- True/False -->
+    <div *ngIf="currentQuestion.type === 'close'" class="answer-section">
+      <mat-radio-group 
+        [value]="getAnswer(currentQuestion.id)"
+        (change)="saveAnswer(currentQuestion.id, $event.value)"
+        class="radio-group">
+        <mat-radio-button 
+          *ngFor="let option of currentQuestion.options; let i = index"
+          [value]="i"
+          class="radio-option">
+          <span class="option-text">{{ option }}</span>
+        </mat-radio-button>
+      </mat-radio-group>
+    </div>
+
+    <!-- Open Question -->
+    <div *ngIf="currentQuestion.type === 'open'" class="answer-section">
+      <div class="textarea-wrapper">
+        <label class="textarea-label">Votre réponse</label>
+        <textarea 
+          rows="6"
+          class="textarea-input"
+          [value]="getAnswer(currentQuestion.id) || ''"
+          (input)="onTextareaInput($event, currentQuestion.id)"
+          placeholder="Rédigez votre réponse ici..."></textarea>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Navigation Dots -->
+  <div class="navigation-dots">
+    <button 
+      *ngFor="let question of questions; let i = index"
+      class="dot"
+      [class.active]="i === currentQuestionIndex"
+      [class.answered]="isQuestionAnswered(question.id)"
+      (click)="goToQuestion(i)"
+      [attr.aria-label]="'Aller à la question ' + (i + 1)">
+      {{ i + 1 }}
+    </button>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="navigation-buttons">
+    <button 
+      mat-stroked-button 
+      (click)="previousQuestion()"
+      [disabled]="isFirstQuestion">
+      <mat-icon>chevron_left</mat-icon>
+      Précédent
+    </button>
+
+    <button 
+      mat-raised-button 
+      color="primary"
+      *ngIf="!isLastQuestion"
+      (click)="nextQuestion()">
+      Suivant
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+
+    <button 
+      mat-raised-button 
+      color="accent"
+      *ngIf="isLastQuestion"
+      (click)="submitQuiz()">
+      <mat-icon>send</mat-icon>
+      Soumettre
+    </button>
+  </div>
+</div>
+
+<!-- Submission Confirmation -->
+<div class="submission-confirmation" *ngIf="isSubmitted">
+  <mat-card class="confirmation-card">
+    <mat-icon class="success-icon">check_circle</mat-icon>
+    <h2>Quiz Soumis avec Succès!</h2>
+    <p>Vos réponses ont été enregistrées.</p>
+    <p class="redirect-text">Redirection en cours...</p>
+  </mat-card>
+</div>

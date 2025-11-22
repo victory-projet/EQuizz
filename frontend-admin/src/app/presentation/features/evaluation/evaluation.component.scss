@@ -1,0 +1,544 @@
+// src/app/features/evaluation/evaluation.component.scss
+@use '../../shared/styles/common-page' as *;
+
+/* === PAGE CONTAINER === */
+.evaluation-page {
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* === HEADER === */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  .header-content {
+    h1 {
+      margin: 0;
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: #111827;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      margin: 0.25rem 0 0;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+  }
+
+  .btn-primary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #1d4ed8;
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #1e40af;
+      transform: translateY(-1px);
+    }
+  }
+}
+
+/* === STATS GRID === */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .stat-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+
+    &.blue {
+      background-color: #dbeafe;
+      color: #2563eb;
+    }
+
+    &.green {
+      background-color: #d1fae5;
+      color: #059669;
+    }
+
+    &.purple {
+      background-color: #e9d5ff;
+      color: #7c3aed;
+    }
+
+    &.orange {
+      background-color: #fed7aa;
+      color: #ea580c;
+    }
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+  }
+}
+
+/* === SEARCH SECTION === */
+.search-section {
+  margin-bottom: 1.5rem;
+
+  .search-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+}
+
+/* === TABS === */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0;
+
+  .tab {
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    border-radius: 0.5rem 0.5rem 0 0;
+
+    &:hover {
+      color: #1d4ed8;
+      background: #f3f4f6;
+    }
+
+    &.active {
+      color: #1d4ed8;
+      background: #eff6ff;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #1d4ed8;
+      }
+    }
+  }
+}
+
+/* === QUIZ GRID === */
+.quiz-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* === QUIZ CARD === */
+.quiz-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+  }
+
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+
+    .quiz-type {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+
+      &.status-active {
+        background-color: #d1fae5;
+        color: #065f46;
+      }
+
+      &.status-draft {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+
+      &.status-closed {
+        background-color: #f3f4f6;
+        color: #4b5563;
+      }
+    }
+  }
+
+  .quiz-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+
+  .quiz-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+
+    .detail-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  .participation-section {
+    padding: 1rem;
+    background-color: #f9fafb;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+
+    .participation-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.75rem;
+
+      .label {
+        color: #6b7280;
+        font-weight: 500;
+      }
+
+      .value {
+        color: #111827;
+        font-weight: 600;
+      }
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 0.5rem;
+      background: #e5e7eb;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 100%);
+        transition: width 0.3s ease;
+      }
+    }
+
+    .deadline {
+      font-size: 0.75rem;
+      color: #dc2626;
+      font-weight: 500;
+    }
+  }
+
+  .quiz-actions {
+    display: flex;
+    gap: 0.5rem;
+
+    .btn-action {
+      flex: 1;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      transition: all 0.2s ease;
+      border: none;
+      cursor: pointer;
+
+      &.btn-view {
+        background-color: #eff6ff;
+        color: #1d4ed8;
+
+        &:hover {
+          background-color: #dbeafe;
+        }
+      }
+
+      &.btn-edit {
+        background-color: #fffbeb;
+        color: #d97706;
+
+        &:hover {
+          background-color: #fde68a;
+        }
+      }
+
+      &.btn-delete {
+        background-color: #fee2e2;
+        color: #dc2626;
+
+        &:hover {
+          background-color: #fecaca;
+        }
+      }
+    }
+  }
+}
+
+/* === EMPTY STATE === */
+.empty-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* === MODAL STYLES === */
+
+// Results View
+.results-view {
+  .detail-section {
+    margin-bottom: 2rem;
+
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+
+      .quiz-type-large {
+        background-color: #dbeafe;
+        color: #1d4ed8;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 700;
+      }
+
+      .status-badge-large {
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+
+        &.status-active {
+          background-color: #d1fae5;
+          color: #065f46;
+        }
+
+        &.status-draft {
+          background-color: #fef3c7;
+          color: #92400e;
+        }
+
+        &.status-closed {
+          background-color: #f3f4f6;
+          color: #4b5563;
+        }
+      }
+    }
+
+    .quiz-title-large {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .detail-item-large {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background-color: #f9fafb;
+      border-radius: 0.5rem;
+
+      .detail-icon {
+        font-size: 2rem;
+      }
+
+      .detail-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+      }
+
+      .detail-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #111827;
+      }
+    }
+  }
+}
+
+// Delete Confirmation
+.delete-confirmation {
+  text-align: center;
+  padding: 1rem 0;
+
+  .warning-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .warning-text {
+    font-size: 1rem;
+    color: #111827;
+    margin-bottom: 0.5rem;
+  }
+
+  .warning-subtext {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 2rem;
+  }
+}
+
+// Modal Actions
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 2rem;
+
+  .btn-secondary,
+  .btn-primary,
+  .btn-danger {
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+  }
+
+  .btn-secondary {
+    background-color: white;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+
+    &:hover {
+      background-color: #f9fafb;
+    }
+  }
+
+  .btn-primary {
+    background-color: #1d4ed8;
+    color: white;
+
+    &:hover {
+      background-color: #1e40af;
+    }
+  }
+
+  .btn-danger {
+    background-color: #dc2626;
+    color: white;
+
+    &:hover {
+      background-color: #b91c1c;
+    }
+  }
+}

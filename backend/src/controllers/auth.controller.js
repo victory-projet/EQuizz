@@ -15,18 +15,18 @@ class AuthController {
     const { token, utilisateur } = await authService.login(loginIdentifier, motDePasse);
     
     // Déterminer le rôle et préparer les informations complètes
-    let role = 'etudiant';
+    let role = 'ETUDIANT';
     let additionalInfo = {};
 
     if (utilisateur.Administrateur) {
-      role = 'admin';
+      role = 'ADMIN';
     } else if (utilisateur.Enseignant) {
-      role = 'enseignant';
+      role = 'ENSEIGNANT';
       additionalInfo = {
         specialite: utilisateur.Enseignant.specialite
       };
     } else if (utilisateur.Etudiant) {
-      role = 'etudiant';
+      role = 'ETUDIANT';
       additionalInfo = {
         matricule: utilisateur.Etudiant.matricule,
         idCarte: utilisateur.Etudiant.idCarte,
@@ -49,6 +49,14 @@ class AuthController {
         role,
         ...additionalInfo
       }
+    });
+  });
+
+  linkCard = asyncHandler(async (req, res) => {
+    const { matricule, idCarte } = req.body;
+    await authService.linkCardToAccount(matricule, idCarte);
+    res.status(200).json({ 
+      message: 'Un email de confirmation a été envoyé. Veuillez vérifier votre boîte de réception pour valider l\'association de votre carte.' 
     });
   });
 }

@@ -1,0 +1,140 @@
+<div class="academic-year-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1>
+        <app-svg-icon name="Calendar" class="title-icon" />
+        Années Académiques
+      </h1>
+      <p class="subtitle">Gérez les années académiques et les périodes</p>
+    </div>
+    <button class="btn-primary" (click)="addYear()">
+      <app-svg-icon name="Plus" />
+      Nouvelle Année
+    </button>
+  </div>
+
+  <!-- Current Year Card (Featured) -->
+  @if (currentYear) {
+    <div class="current-year-card">
+      <div class="card-header">
+        <div class="featured-badge">
+          <app-svg-icon name="Star" />
+          Année en cours
+        </div>
+        <div class="status-badge active">
+          <app-svg-icon name="Check" />
+          Active
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="year-title">{{ currentYear.name }}</h2>
+        <div class="year-dates">
+          <div class="date-item">
+            <app-svg-icon name="CalendarDays" />
+            <span>{{ currentYear.startDate | date:'dd/MM/yyyy' }} - {{ currentYear.endDate | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+        @if (currentYear.semesters.length > 0) {
+          <div class="semesters-section">
+            <p class="semesters-label">Semestres</p>
+            <div class="semester-chips">
+              @for (semester of currentYear.semesters; track semester.id) {
+                <span class="semester-chip">
+                  <app-svg-icon name="BookOpen" />
+                  {{ semester.name }}
+                </span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- All Years Section -->
+  <div class="years-section">
+    <h3 class="section-title">Toutes les Années Académiques</h3>
+    
+    @if (academicYears.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <app-svg-icon name="Calendar" />
+        </div>
+        <h3>Aucune année académique</h3>
+        <p>Commencez par créer votre première année académique</p>
+        <button class="btn-primary" (click)="addYear()">
+          <app-svg-icon name="Plus" />
+          Créer une année
+        </button>
+      </div>
+    } @else {
+      <div class="years-grid">
+        @for (year of academicYears; track year.id) {
+          <div class="year-card">
+            <div class="year-header">
+              <div class="year-name">{{ year.name }}</div>
+              <div class="year-status">
+                <span class="status-badge" [class.active]="year.isActive">
+                  @if (year.isActive) {
+                    <app-svg-icon name="Check"></app-svg-icon>
+                  }
+                  {{ year.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="year-details">
+              <div class="detail-item">
+                <app-svg-icon name="CalendarDays"></app-svg-icon>
+                <span>{{ year.startDate | date:'dd/MM/yyyy' }} - {{ year.endDate | date:'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="detail-item">
+                <app-svg-icon name="BookOpen"></app-svg-icon>
+                <span>{{ year.semesters.length }} semestre(s)</span>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <button class="btn-outline" (click)="addSemester(year)">
+                <app-svg-icon name="Plus" />
+                Semestre
+              </button>
+              <button class="btn-secondary" (click)="editYear(year)">
+                <app-svg-icon name="Edit" />
+                Modifier
+              </button>
+              <button class="btn-danger-outline" (click)="deleteYear(year)">
+                <app-svg-icon name="Trash2" />
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Modals -->
+<app-academic-year-form-modal
+  [isOpen]="showYearFormModal"
+  [mode]="yearFormMode"
+  [academicYear]="getYearFormData()"
+  (close)="closeYearFormModal()"
+  (save)="onSaveYear($event)">
+</app-academic-year-form-modal>
+
+<app-semester-form-modal
+  [isOpen]="showSemesterFormModal"
+  [academicYearId]="selectedYear?.id || ''"
+  [academicYearName]="selectedYear?.name || ''"
+  (close)="closeSemesterFormModal()"
+  (save)="onSaveSemester($event)">
+</app-semester-form-modal>
+
+<app-confirmation-modal
+  [isOpen]="showDeleteModal"
+  [data]="confirmationData"
+  (confirm)="onConfirmDelete()"
+  (cancel)="closeDeleteModal()">
+</app-confirmation-modal>

@@ -48,4 +48,11 @@ router.delete('/questions/:questionId', evaluationController.removeQuestion);
 // dans un champ de formulaire nommé 'file'.
 router.post('/quizz/:quizzId/import', upload.single('file'), evaluationController.importQuestions);
 
+// =========================================================
+// --- Route pour publier une évaluation ---
+// =========================================================
+
+// POST /api/evaluations/:id/publish - Publier une évaluation
+router.post('/:id/publish', evaluationController.publish);
+
 module.exports = router;

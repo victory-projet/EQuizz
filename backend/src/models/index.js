@@ -93,14 +93,21 @@ Question.belongsTo(Quizz, { foreignKey: 'quizz_id' });
 
 
 // --- 4. Processus de Réponse (Anonyme) ---
-Evaluation.hasMany(SessionReponse, { foreignKey: { name: 'evaluation_id', allowNull: false } });
-SessionReponse.belongsTo(Evaluation, { foreignKey: 'evaluation_id' });
+Quizz.hasMany(SessionReponse, { foreignKey: { name: 'quizz_id', allowNull: false } });
+SessionReponse.belongsTo(Quizz, { foreignKey: 'quizz_id' });
+
+Etudiant.hasMany(SessionReponse, { foreignKey: { name: 'etudiant_id', allowNull: false } });
+SessionReponse.belongsTo(Etudiant, { foreignKey: 'etudiant_id' });
 
 SessionReponse.hasMany(ReponseEtudiant, { foreignKey: { name: 'session_reponse_id', allowNull: false }, onDelete: 'CASCADE' });
 ReponseEtudiant.belongsTo(SessionReponse, { foreignKey: 'session_reponse_id' });
 
 Question.hasMany(ReponseEtudiant, { foreignKey: { name: 'question_id', allowNull: false } });
 ReponseEtudiant.belongsTo(Question, { foreignKey: 'question_id' });
+
+// Relation SessionToken pour l'anonymat
+Etudiant.hasMany(SessionToken, { foreignKey: { name: 'etudiant_id', allowNull: false } });
+SessionToken.belongsTo(Etudiant, { foreignKey: 'etudiant_id' });
 
 
 // --- 5. Modules Annexes (Notification, Analyse) ---

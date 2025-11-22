@@ -48,6 +48,64 @@ class EmailService {
       throw new Error('Le service d\'email n\'a pas pu envoyer le message.');
     }
   }
+
+  async sendNotificationEmail(email, titre, message) {
+    const msg = {
+      to: email,
+      from: verifiedSender,
+      subject: titre,
+      html: `
+        <h2>${titre}</h2>
+        <p>${message}</p>
+        <p>Connectez-vous à EQuizz pour plus de détails.</p>
+        <a href="http://lien-vers-le-frontend">Accéder à EQuizz</a>
+      `,
+    };
+
+    try {
+      await sgMail.send(msg);
+      console.log(`✅ Email de notification envoyé à ${email}`);
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'envoi de l\'email de notification:', error);
+      if (error.response) {
+        console.error(error.response.body);
+      }
+      throw new Error('Le service d\'email n\'a pas pu envoyer la notification.');
+    }
+  }
+
+  async sendCardLinkConfirmation(etudiant, idCarte) {
+    const utilisateur = etudiant.Utilisateur;
+    
+    const msg = {
+      to: utilisateur.email,
+      from: verifiedSender,
+      subject: 'Confirmation d\'association de carte - EQuizz',
+      html: `
+        <h1>Association de carte confirmée</h1>
+        <p>Bonjour ${utilisateur.prenom},</p>
+        <p>Votre carte a été associée avec succès à votre compte EQuizz.</p>
+        <ul>
+          <li><strong>Matricule :</strong> ${etudiant.matricule}</li>
+          <li><strong>ID Carte :</strong> ${idCarte}</li>
+        </ul>
+        <p>Vous pouvez maintenant utiliser votre carte pour vous connecter rapidement à l'application.</p>
+        <p>Si vous n'êtes pas à l'origine de cette action, veuillez contacter l'administration immédiatement.</p>
+        <a href="http://lien-vers-le-frontend">Accéder à EQuizz</a>
+      `,
+    };
+
+    try {
+      await sgMail.send(msg);
+      console.log(`✅ Email de confirmation d'association de carte envoyé à ${utilisateur.email}`);
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'envoi de l\'email de confirmation:', error);
+      if (error.response) {
+        console.error(error.response.body);
+      }
+      throw new Error('Le service d\'email n\'a pas pu envoyer la confirmation.');
+    }
+  }
 }
 
 module.exports = new EmailService();

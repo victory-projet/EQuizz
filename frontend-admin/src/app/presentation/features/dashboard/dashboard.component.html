@@ -1,0 +1,69 @@
+<div class="dashboard-container">
+  <div class="page-header">
+    <div>
+      <h1>Tableau de bord</h1>
+      <p class="subtitle">Vue d'ensemble de votre plateforme EQUIZZ</p>
+    </div>
+    <button class="btn-primary" (click)="loadDashboardData()">
+      <app-svg-icon name="RefreshCw" size="sm" />
+      Actualiser
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <app-loading-spinner size="lg" />
+      <p>Chargement des données...</p>
+    </div>
+  } @else if (analyticsData()) {
+    <div class="dashboard-content">
+      <app-stats-grid [data]="analyticsData()!" />
+      
+      <div class="dashboard-grid">
+        <div class="chart-section">
+          <app-participation-chart />
+        </div>
+        
+        <div class="alerts-section">
+          <app-alerts-panel />
+        </div>
+      </div>
+
+      <div class="activities-section">
+        <app-recent-activities />
+      </div>
+
+      <!-- Quick Actions Section -->
+      <div class="quick-actions-section">
+        <h2 class="section-title">Actions rapides</h2>
+        <div class="quick-actions-grid">
+          <button class="quick-action-card" (click)="navigateToCreateQuiz()">
+            <app-svg-icon name="Plus" size="xl" />
+            <span class="action-text">Créer un quiz</span>
+          </button>
+          <button class="quick-action-card" (click)="navigateToClasses()">
+            <app-svg-icon name="Users" size="xl" />
+            <span class="action-text">Gérer les classes</span>
+          </button>
+          <button class="quick-action-card" (click)="navigateToAnalytics()">
+            <app-svg-icon name="Activity" size="xl" />
+            <span class="action-text">Voir les analyses</span>
+          </button>
+          <button class="quick-action-card" (click)="navigateToSettings()">
+            <app-svg-icon name="Settings" size="xl" />
+            <span class="action-text">Paramètres</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="error-state">
+      <app-svg-icon name="Info" size="xl" />
+      <p>Impossible de charger les données</p>
+      <button class="btn-primary" (click)="loadDashboardData()">
+        <app-svg-icon name="RefreshCw" size="sm" />
+        Réessayer
+      </button>
+    </div>
+  }
+</div>

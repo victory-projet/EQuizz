@@ -1,0 +1,448 @@
+@import '../../../../styles.scss';
+
+.quiz-preview-container {
+  min-height: 100vh;
+  padding: $spacing-6;
+  max-width: 1000px;
+  margin: 0 auto;
+  animation: fadeIn $transition-base;
+}
+
+// ============================================
+// HEADER
+// ============================================
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-8;
+  gap: $spacing-4;
+  flex-wrap: wrap;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-2 $spacing-4;
+  background: rgba($info-500, 0.1);
+  color: $info-700;
+  border-radius: $radius-full;
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+  margin-bottom: $spacing-4;
+
+  app-svg-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.header-content h1 {
+  font-size: $text-3xl;
+  font-weight: $font-bold;
+  color: $text-primary;
+  margin: 0 0 $spacing-2 0;
+}
+
+.description {
+  font-size: $text-base;
+  color: $text-secondary;
+  margin: 0 0 $spacing-4 0;
+}
+
+.quiz-meta {
+  display: flex;
+  gap: $spacing-6;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  font-size: $text-sm;
+  color: $text-secondary;
+
+  app-svg-icon {
+    width: 18px;
+    height: 18px;
+    color: $primary-500;
+  }
+}
+
+.btn-close {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-3 $spacing-5;
+  background: $bg-secondary;
+  color: $text-primary;
+  border: $border-width-2 solid $border-color;
+  border-radius: $radius-base;
+  font-size: $text-sm;
+  font-weight: $font-medium;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  app-svg-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background: $error-50;
+    border-color: $error-500;
+    color: $error-700;
+  }
+}
+
+// ============================================
+// PROGRESS
+// ============================================
+.progress-section {
+  margin-bottom: $spacing-6;
+}
+
+.progress-bar {
+  height: 8px;
+  background: $bg-secondary;
+  border-radius: $radius-full;
+  overflow: hidden;
+  margin-bottom: $spacing-2;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $primary-500, $primary-600);
+  transition: width $transition-base;
+  border-radius: $radius-full;
+}
+
+.progress-text {
+  display: block;
+  text-align: center;
+  font-size: $text-sm;
+  color: $text-secondary;
+  font-weight: $font-medium;
+}
+
+// ============================================
+// QUESTION CARD
+// ============================================
+.question-card {
+  background: $bg-primary;
+  border-radius: $radius-lg;
+  border: $border-width solid $border-color;
+  box-shadow: $shadow-sm;
+  padding: $spacing-8;
+  margin-bottom: $spacing-6;
+  animation: slideIn $transition-base;
+}
+
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-6;
+  padding-bottom: $spacing-4;
+  border-bottom: $border-width-2 solid $border-color;
+  flex-wrap: wrap;
+  gap: $spacing-3;
+}
+
+.question-number {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  font-size: $text-lg;
+  font-weight: $font-semibold;
+  color: $primary-600;
+
+  app-svg-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.question-meta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+}
+
+.question-type {
+  padding: $spacing-1 $spacing-3;
+  background: $primary-50;
+  color: $primary-700;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: $font-bold;
+}
+
+.question-points {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+  padding: $spacing-1 $spacing-3;
+  background: $warning-50;
+  color: $warning-700;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: $font-bold;
+
+  app-svg-icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.question-text {
+  font-size: $text-lg;
+  color: $text-primary;
+  line-height: 1.6;
+  margin-bottom: $spacing-6;
+}
+
+// ============================================
+// ANSWER SECTION
+// ============================================
+.answer-section {
+  margin-top: $spacing-6;
+}
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-3;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  padding: $spacing-4;
+  background: $bg-secondary;
+  border: $border-width-2 solid $border-color;
+  border-radius: $radius-base;
+  transition: all $transition-fast;
+
+  &.preview-mode {
+    cursor: default;
+    opacity: 0.8;
+  }
+}
+
+.option-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: $primary-500;
+  color: $text-inverse;
+  border-radius: $radius-base;
+  font-weight: $font-bold;
+  font-size: $text-sm;
+  flex-shrink: 0;
+}
+
+.option-radio {
+  width: 20px;
+  height: 20px;
+  border: $border-width-2 solid $border-color;
+  border-radius: $radius-full;
+  flex-shrink: 0;
+}
+
+.option-text {
+  flex: 1;
+  font-size: $text-base;
+  color: $text-primary;
+}
+
+.textarea-preview {
+  padding: $spacing-5;
+  background: $bg-secondary;
+  border: $border-width-2 dashed $border-color;
+  border-radius: $radius-base;
+}
+
+.textarea-label {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+  color: $text-primary;
+  margin-bottom: $spacing-3;
+
+  app-svg-icon {
+    width: 16px;
+    height: 16px;
+    color: $primary-500;
+  }
+}
+
+.textarea-placeholder {
+  font-size: $text-sm;
+  color: $text-tertiary;
+  font-style: italic;
+  padding: $spacing-4;
+  background: $bg-primary;
+  border-radius: $radius-base;
+}
+
+// ============================================
+// NAVIGATION DOTS
+// ============================================
+.navigation-dots {
+  display: flex;
+  justify-content: center;
+  gap: $spacing-2;
+  margin-bottom: $spacing-6;
+  flex-wrap: wrap;
+}
+
+.dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: $bg-secondary;
+  border: $border-width-2 solid $border-color;
+  border-radius: $radius-base;
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $primary-50;
+    border-color: $primary-300;
+    color: $primary-700;
+  }
+
+  &.active {
+    background: $primary-500;
+    border-color: $primary-500;
+    color: $text-inverse;
+    transform: scale(1.1);
+  }
+}
+
+// ============================================
+// NAVIGATION BUTTONS
+// ============================================
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: $spacing-4;
+}
+
+.btn-outline,
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-3 $spacing-6;
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+  border-radius: $radius-base;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  app-svg-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-outline {
+  background: transparent;
+  border: $border-width-2 solid $border-color;
+  color: $text-secondary;
+
+  &:hover:not(:disabled) {
+    background: $primary-50;
+    border-color: $primary-500;
+    color: $primary-700;
+  }
+}
+
+.btn-primary {
+  background: $primary-500;
+  border: none;
+  color: $text-inverse;
+
+  &:hover:not(:disabled) {
+    background: $primary-600;
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: $breakpoint-md) {
+  .quiz-preview-container {
+    padding: $spacing-4;
+  }
+
+  .preview-header {
+    flex-direction: column;
+  }
+
+  .header-content h1 {
+    font-size: $text-2xl;
+  }
+
+  .question-card {
+    padding: $spacing-5;
+  }
+
+  .navigation-buttons {
+    flex-direction: column;
+
+    .btn-outline,
+    .btn-primary {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}

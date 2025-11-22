@@ -1,0 +1,363 @@
+﻿Folder PATH listing for volume New Volume
+Volume serial number is 52F5-B468
+D:\SJI\INGE4\S1\PROJETDESYNTHESE\EQUIZZ\FRONTEND-ADMIN\SRC\APP
+|   app.html
+|   app.scss
+|   app.spec.ts
+|   app.ts
+|   
++---config
+|       app.config.ts
+|       app.routes.ts
+|       providers.config.ts
+|       
++---core
+|   +---application
+|   |   |   README.md
+|   |   |   
+|   |   +---dto
+|   |   +---ports
+|   |   \---use-cases
+|   |       |   EXAMPLE_USE_CASE.md
+|   |       |   index.ts
+|   |       |   
+|   |       +---academic-year
+|   |       |       add-period.use-case.ts
+|   |       |       create-academic-year.use-case.ts
+|   |       |       delete-academic-year.use-case.ts
+|   |       |       get-all-academic-years.use-case.ts
+|   |       |       index.ts
+|   |       |       update-academic-year.use-case.ts
+|   |       |       
+|   |       +---auth
+|   |       |       get-current-user.use-case.ts
+|   |       |       index.ts
+|   |       |       login.use-case.ts
+|   |       |       logout.use-case.ts
+|   |       |       register.use-case.ts
+|   |       |       
+|   |       +---class
+|   |       |       add-student-to-class.use-case.ts
+|   |       |       create-class.use-case.ts
+|   |       |       delete-class.use-case.ts
+|   |       |       get-all-classes.use-case.ts
+|   |       |       index.ts
+|   |       |       update-class.use-case.ts
+|   |       |       
+|   |       +---course
+|   |       |       create-course.use-case.ts
+|   |       |       delete-course.use-case.ts
+|   |       |       get-all-courses.use-case.ts
+|   |       |       index.ts
+|   |       |       update-course.use-case.ts
+|   |       |       
+|   |       \---quiz
+|   |               add-question.use-case.ts
+|   |               create-quiz.use-case.ts
+|   |               delete-quiz.use-case.ts
+|   |               get-all-quizzes.use-case.ts
+|   |               get-quiz-by-id.use-case.ts
+|   |               index.ts
+|   |               publish-quiz.use-case.ts
+|   |               submit-quiz.use-case.ts
+|   |               update-quiz.use-case.ts
+|   |               
+|   +---domain
+|   |   |   README.md
+|   |   |   
+|   |   +---entities
+|   |   |       academic-year.entity.ts
+|   |   |       class.entity.ts
+|   |   |       course.entity.ts
+|   |   |       index.ts
+|   |   |       quiz.entity.ts
+|   |   |       user.entity.ts
+|   |   |       
+|   |   \---repositories
+|   |           academic-year.repository.interface.ts
+|   |           auth.repository.interface.ts
+|   |           class.repository.interface.ts
+|   |           course.repository.interface.ts
+|   |           index.ts
+|   |           quiz.repository.interface.ts
+|   |           
+|   +---models
+|   |       answer.interface.ts
+|   |       class.interface.ts
+|   |       course.interface.ts
+|   |       enums.ts
+|   |       evaluation-type.interface.ts
+|   |       index.ts
+|   |       quiz.interface.ts
+|   |       README.md
+|   |       student.interface.ts
+|   |       teacher.interface.ts
+|   |       
+|   \---services
+|           academic.service.ts
+|           analytics.service.ts
+|           auth.service.ts
+|           error-handler.service.ts
+|           export.service.ts
+|           EXPORT_SERVICE_GUIDE.md
+|           index.ts
+|           modal.service.ts
+|           notification.service.ts
+|           quiz-draft.service.ts
+|           quiz.service.ts
+|           toast.service.ts
+|           
++---infrastructure
+|   |   README.md
+|   |   
+|   +---guards
+|   |       auth.guard.ts
+|   |       index.ts
+|   |       
+|   +---http
+|   |       auth.interceptor.ts
+|   |       error.interceptor.ts
+|   |       index.ts
+|   |       
+|   +---mappers
+|   +---repositories
+|   |       academic-year.repository.ts
+|   |       auth.repository.ts
+|   |       class.repository.ts
+|   |       course.repository.ts
+|   |       index.ts
+|   |       quiz.repository.ts
+|   |       
+|   \---storage
+\---presentation
+    |   README.md
+    |   
+    +---features
+    |   +---academic-year
+    |   |   |   academic-year.component.html
+    |   |   |   academic-year.component.scss
+    |   |   |   academic-year.component.ts
+    |   |   |   README.md
+    |   |   |   
+    |   |   \---components
+    |   |       |   index.ts
+    |   |       |   
+    |   |       +---academic-year-form-modal
+    |   |       |       academic-year-form-modal.component.html
+    |   |       |       academic-year-form-modal.component.scss
+    |   |       |       academic-year-form-modal.component.ts
+    |   |       |       
+    |   |       \---semester-form-modal
+    |   |               semester-form-modal.component.html
+    |   |               semester-form-modal.component.scss
+    |   |               semester-form-modal.component.ts
+    |   |               
+    |   +---analytics
+    |   |   |   analytics.component.html
+    |   |   |   analytics.component.scss
+    |   |   |   analytics.component.ts
+    |   |   |   
+    |   |   \---components
+    |   |       \---sentiment-analysis
+    |   |               sentiment-analysis.component.ts
+    |   |               
+    |   +---class-management
+    |   |       class-management.component.html
+    |   |       class-management.component.scss
+    |   |       class-management.component.ts
+    |   |       
+    |   +---courses
+    |   |       courses.component.html
+    |   |       courses.component.scss
+    |   |       courses.component.ts
+    |   |       
+    |   +---dashboard
+    |   |   |   dashboard.component.html
+    |   |   |   dashboard.component.scss
+    |   |   |   dashboard.component.ts
+    |   |   |   
+    |   |   \---components
+    |   |       +---alerts-panel
+    |   |       |       alerts-panel.component.ts
+    |   |       |       
+    |   |       +---participation-chart
+    |   |       |       participation-chart.component.ts
+    |   |       |       
+    |   |       +---recent-activities
+    |   |       |       recent-activities.component.ts
+    |   |       |       
+    |   |       \---stats-grid
+    |   |               stats-grid.component.ts
+    |   |               
+    |   +---evaluation
+    |   |       evaluation.component.html
+    |   |       evaluation.component.scss
+    |   |       evaluation.component.ts
+    |   |       
+    |   +---quiz-creation
+    |   |   |   quiz-creation.component.html
+    |   |   |   quiz-creation.component.scss
+    |   |   |   quiz-creation.component.ts
+    |   |   |   
+    |   |   \---components
+    |   |       +---creation-method-modal
+    |   |       |       creation-method-modal.component.html
+    |   |       |       creation-method-modal.component.scss
+    |   |       |       creation-method-modal.component.ts
+    |   |       |       
+    |   |       \---excel-import-modal
+    |   |               excel-import-modal.component.html
+    |   |               excel-import-modal.component.scss
+    |   |               excel-import-modal.component.ts
+    |   |               
+    |   +---quiz-management
+    |   |   |   quiz-management.component.html
+    |   |   |   quiz-management.component.scss
+    |   |   |   quiz-management.component.ts
+    |   |   |   
+    |   |   \---components
+    |   |       +---quiz-card
+    |   |       |       quiz-card.component.ts
+    |   |       |       
+    |   |       +---quiz-filters
+    |   |       |       quiz-filters.component.ts
+    |   |       |       
+    |   |       +---quiz-list
+    |   |       |       quiz-list.component.ts
+    |   |       |       
+    |   |       \---quiz-stats
+    |   |               quiz-stats.component.ts
+    |   |               
+    |   \---quiz-taking
+    |           quiz-taking.component.html
+    |           quiz-taking.component.scss
+    |           quiz-taking.component.ts
+    |           
+    +---layouts
+    +---pages
+    |   +---error
+    |   |       error.component.ts
+    |   |       
+    |   +---home
+    |   |       home.component.html
+    |   |       home.component.scss
+    |   |       home.component.ts
+    |   |       
+    |   \---login
+    |           login.component.html
+    |           login.component.scss
+    |           login.component.ts
+    |           
+    \---shared
+        +---components
+        |   |   index.ts
+        |   |   README.md
+        |   |   
+        |   +---base-modal
+        |   |       base-modal.component.ts
+        |   |       
+        |   +---class-details
+        |   |       class-details.component.html
+        |   |       class-details.component.scss
+        |   |       class-details.component.ts
+        |   |       
+        |   +---class-form
+        |   |       class-form.component.html
+        |   |       class-form.component.scss
+        |   |       class-form.component.ts
+        |   |       
+        |   +---confirmation-modal
+        |   |       confirmation-modal.component.html
+        |   |       confirmation-modal.component.scss
+        |   |       confirmation-modal.component.ts
+        |   |       
+        |   +---error-modal
+        |   |       error-modal.component.html
+        |   |       error-modal.component.scss
+        |   |       error-modal.component.ts
+        |   |       
+        |   +---footer
+        |   |       footer.component.ts
+        |   |       
+        |   +---header
+        |   |       header.component.html
+        |   |       header.component.scss
+        |   |       header.component.ts
+        |   |       
+        |   +---layout
+        |   |       layout.component.html
+        |   |       layout.component.scss
+        |   |       layout.component.ts
+        |   |       
+        |   +---loading
+        |   |       loading.component.html
+        |   |       loading.component.scss
+        |   |       loading.component.ts
+        |   |       
+        |   +---loading-spinner
+        |   |       loading-spinner.component.ts
+        |   |       
+        |   +---modal
+        |   |       modal.component.html
+        |   |       modal.component.scss
+        |   |       modal.component.ts
+        |   |       
+        |   +---modals
+        |   |   |   index.ts
+        |   |   |   
+        |   |   +---class-modal
+        |   |   |       class-modal.component.ts
+        |   |   |       
+        |   |   +---create-modal
+        |   |   |       create-modal.component.ts
+        |   |   |       
+        |   |   +---delete-modal
+        |   |   |       delete-modal.component.ts
+        |   |   |       
+        |   |   +---edit-modal
+        |   |   |       edit-modal.component.ts
+        |   |   |       
+        |   |   \---generate-quiz-modal
+        |   |           generate-quiz-modal.component.ts
+        |   |           
+        |   +---search-bar
+        |   |       search-bar.component.ts
+        |   |       
+        |   +---sidebar
+        |   |       sidebar.component.html
+        |   |       sidebar.component.scss
+        |   |       sidebar.component.ts
+        |   |       
+        |   +---status-badge
+        |   |       status-badge.component.ts
+        |   |       
+        |   +---svg-icon
+        |   |       svg-icon.html
+        |   |       svg-icon.scss
+        |   |       svg-icon.spec.ts
+        |   |       svg-icon.ts
+        |   |       
+        |   \---toast
+        |           toast.component.html
+        |           toast.component.scss
+        |           toast.component.ts
+        |           
+        +---examples
+        |       modal-usage.example.ts
+        |       
+        +---interfaces
+        |       analytics.interface.ts
+        |       index.ts
+        |       user.interface.ts
+        |       
+        +---pipes
+        |       date-format.pipe.ts
+        |       index.ts
+        |       
+        \---styles
+                common-page.scss
+                modal.scss
+                MODAL_STYLES_GUIDE.md
+                utilities.scss
+                variables.scss
+                

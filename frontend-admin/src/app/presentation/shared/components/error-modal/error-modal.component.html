@@ -1,0 +1,61 @@
+<!-- src/app/shared/components/error-modal/error-modal.component.html -->
+<div class="modal-backdrop" *ngIf="isOpen" (click)="onBackdropClick($event)">
+  <div class="modal-container error-modal" [class]="getErrorClass()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-content">
+        <div class="icon-wrapper">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10" stroke-width="2"/>
+            <line x1="12" y1="8" x2="12" y2="12" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="16" r="1" fill="currentColor"/>
+          </svg>
+        </div>
+        <h2>{{ title }}</h2>
+      </div>
+      <button class="close-btn" (click)="onClose()" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <line x1="18" y1="6" x2="6" y2="18" stroke-width="2" stroke-linecap="round"/>
+          <line x1="6" y1="6" x2="18" y2="18" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <div class="error-message">
+        {{ error?.message || 'Une erreur inattendue s\'est produite' }}
+      </div>
+
+      <div class="error-code" *ngIf="error?.code">
+        <span class="label">Code:</span>
+        <span class="value">{{ error?.code }}</span>
+      </div>
+
+      <!-- Details Toggle -->
+      <button 
+        class="details-toggle" 
+        (click)="toggleDetails()"
+        *ngIf="error?.details"
+        type="button">
+        <svg class="icon" [class.rotated]="showDetails" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="6 9 12 15 18 9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        {{ showDetails ? 'Masquer' : 'Afficher' }} les détails techniques
+      </button>
+
+      <!-- Details -->
+      <div class="error-details" *ngIf="showDetails && error?.details">
+        <div class="details-header">Détails techniques</div>
+        <pre class="details-content">{{ error?.details | json }}</pre>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn btn-primary" (click)="onClose()" type="button">
+        Fermer
+      </button>
+    </div>
+  </div>
+</div>

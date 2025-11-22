@@ -1,0 +1,307 @@
+// src/app/presentation/features/quiz-management/quiz-management.component.scss
+@import '../../../../styles.scss';
+
+.quiz-management-container {
+  min-height: 100vh;
+  animation: fadeIn $transition-base;
+}
+
+// ============================================
+// PAGE HEADER
+// ============================================
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: $spacing-8;
+  gap: $spacing-4;
+  flex-wrap: wrap;
+
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+    font-size: $text-3xl;
+    font-weight: $font-bold;
+    color: $text-primary;
+    margin: 0;
+
+    .title-icon {
+      color: $primary-500;
+    }
+
+    @media (max-width: $breakpoint-md) {
+      font-size: $text-2xl;
+    }
+  }
+
+  .subtitle {
+    font-size: $text-base;
+    color: $text-secondary;
+    margin: $spacing-2 0 0 0;
+  }
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-3 $spacing-6;
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+  color: $text-inverse;
+  background: $primary-500;
+  border: none;
+  border-radius: $radius-base;
+  cursor: pointer;
+  transition: all $transition-fast;
+  white-space: nowrap;
+
+  &:hover {
+    background: $primary-600;
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// SEARCH SECTION
+// ============================================
+.search-section {
+  margin-bottom: $spacing-6;
+}
+
+.search-wrapper {
+  position: relative;
+  max-width: 600px;
+}
+
+.search-icon {
+  position: absolute;
+  left: $spacing-3;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $text-tertiary;
+  width: 20px;
+  height: 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: $spacing-3 $spacing-4 $spacing-3 $spacing-10;
+  font-size: $text-sm;
+  color: $text-primary;
+  background: $bg-primary;
+  border: $border-width-2 solid $border-color;
+  border-radius: $radius-base;
+  transition: all $transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-500;
+    box-shadow: 0 0 0 3px rgba($primary-500, 0.1);
+  }
+
+  &::placeholder {
+    color: $text-tertiary;
+  }
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-3 $spacing-6;
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+  color: $text-inverse;
+  background: $primary-500;
+  border: none;
+  border-radius: $radius-base;
+  cursor: pointer;
+  transition: all $transition-fast;
+  white-space: nowrap;
+
+  .icon {
+    font-size: $text-lg;
+  }
+
+  &:hover {
+    background: $primary-600;
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// STATS GRID
+// ============================================
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: $spacing-4;
+  margin-bottom: $spacing-8;
+
+  @media (max-width: $breakpoint-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-5;
+  background: $bg-primary;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  border: $border-width solid $border-color;
+  transition: all $transition-base;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+    border-color: $primary-200;
+  }
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: $radius-lg;
+  flex-shrink: 0;
+
+  app-svg-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  &.blue { 
+    background: rgba($info-500, 0.1); 
+    color: $info-600;
+  }
+  &.green { 
+    background: rgba($success-500, 0.1); 
+    color: $success-600;
+  }
+  &.purple { 
+    background: rgba($primary-500, 0.1); 
+    color: $primary-600;
+  }
+  &.orange { 
+    background: rgba($warning-500, 0.1); 
+    color: $warning-600;
+  }
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: $text-sm;
+  color: $text-secondary;
+  margin-bottom: $spacing-1;
+  font-weight: $font-medium;
+}
+
+.stat-value {
+  font-size: $text-3xl;
+  font-weight: $font-bold;
+  color: $text-primary;
+}
+
+
+
+// ============================================
+// FILTER TABS
+// ============================================
+.filter-tabs {
+  display: flex;
+  gap: $spacing-2;
+  margin-bottom: $spacing-6;
+  flex-wrap: wrap;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-2 $spacing-4;
+  font-size: $text-sm;
+  font-weight: $font-medium;
+  color: $text-secondary;
+  background: $bg-primary;
+  border: $border-width-2 solid $border-color;
+  border-radius: $radius-base;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  app-svg-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: $primary-50;
+    border-color: $primary-300;
+    color: $primary-700;
+  }
+
+  &.active {
+    background: $primary-500;
+    border-color: $primary-500;
+    color: $text-inverse;
+    font-weight: $font-semibold;
+  }
+}
+
+// ============================================
+// LOADING STATE
+// ============================================
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: $spacing-4;
+
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid $neutral-200;
+    border-top-color: $primary-500;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  p {
+    font-size: $text-base;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

@@ -1,0 +1,80 @@
+<header class="app-header">
+  <div class="header-left">
+    <button class="menu-toggle" (click)="toggleSidebar.emit()" title="Toggle menu">
+      <app-svg-icon name="Menu" size="md" />
+    </button>
+    
+    <div class="logo">
+      <img src="/assets/logo1.png" alt="EQUIZZ" class="logo-img" />
+      <span class="logo-text">EQUIZZ Admin</span>
+    </div>
+  </div>
+
+  <div class="header-center">
+    <app-search-bar />
+  </div>
+
+  <div class="header-right">
+    <!-- Notifications -->
+    <button class="icon-btn" title="Notifications">
+      <app-svg-icon name="Bell" size="md" />
+      @if (notificationCount() > 0) {
+        <span class="notification-badge">{{ notificationCount() }}</span>
+      }
+    </button>
+
+    <!-- User Menu -->
+    @if (currentUser()) {
+      <div class="user-menu">
+        <button class="user-btn" (click)="toggleUserMenu()">
+          <div class="user-avatar">
+            <span>{{ getUserInitials() }}</span>
+          </div>
+          <div class="user-details">
+            <span class="user-name">{{ getUserName() }}</span>
+            <span class="user-role">{{ getUserRole() }}</span>
+          </div>
+          <app-svg-icon 
+            name="ChevronDown" 
+            size="sm" 
+            [class.rotated]="isUserMenuOpen()"
+          />
+        </button>
+
+        @if (isUserMenuOpen()) {
+          <div class="user-dropdown animate-slideInDown">
+            <div class="user-info">
+              <div class="user-avatar-large">
+                <span>{{ getUserInitials() }}</span>
+              </div>
+              <div class="user-info-text">
+                <p class="user-name-large">{{ getUserName() }}</p>
+                <p class="user-email">{{ getUserEmail() }}</p>
+                <span class="user-role-badge">{{ getUserRole() }}</span>
+              </div>
+            </div>
+            
+            <div class="dropdown-divider"></div>
+            
+            <button class="dropdown-item" (click)="onProfile()">
+              <app-svg-icon name="User" size="sm" />
+              <span>Mon profil</span>
+            </button>
+            
+            <button class="dropdown-item" (click)="onSettings()">
+              <app-svg-icon name="Settings" size="sm" />
+              <span>Paramètres</span>
+            </button>
+            
+            <div class="dropdown-divider"></div>
+            
+            <button class="dropdown-item danger" (click)="onLogout()">
+              <app-svg-icon name="LogOut" size="sm" />
+              <span>Déconnexion</span>
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</header>

@@ -1,0 +1,83 @@
+<div class="notifications-history">
+  <div class="page-header">
+    <div>
+      <h1>
+        <app-svg-icon name="Bell" class="title-icon" />
+        Historique des Notifications
+      </h1>
+      <p class="subtitle">Suivi des notifications envoyées aux étudiants</p>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon purple">
+        <app-svg-icon name="Mail" />
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Total envoyées</p>
+        <div class="stat-value">{{ stats().total }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">
+        <app-svg-icon name="CheckCircle" />
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Réussies</p>
+        <div class="stat-value">{{ stats().sent }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange">
+        <app-svg-icon name="AlertCircle" />
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Échouées</p>
+        <div class="stat-value">{{ stats().failed }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon blue">
+        <app-svg-icon name="Clock" />
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">En attente</p>
+        <div class="stat-value">{{ stats().pending }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="notifications-list">
+    <h2>Notifications récentes</h2>
+    @for (log of logs(); track log.id) {
+      <div class="notification-card" [class]="log.status">
+        <div class="notification-header">
+          <span class="notification-type">{{ getTypeLabel(log.type) }}</span>
+          <span class="notification-status" [class]="log.status">
+            {{ getStatusLabel(log.status) }}
+          </span>
+        </div>
+        <div class="notification-message">{{ log.message }}</div>
+        <div class="notification-footer">
+          <span class="notification-recipients">
+            👥 {{ log.recipients }} destinataire(s)
+          </span>
+          <span class="notification-date">
+            {{ formatDate(log.sentAt) }}
+          </span>
+        </div>
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <app-svg-icon name="Inbox" />
+        </div>
+        <h3>Aucune notification</h3>
+        <p>Aucune notification envoyée pour le moment</p>
+      </div>
+    }
+  </div>
+</div>

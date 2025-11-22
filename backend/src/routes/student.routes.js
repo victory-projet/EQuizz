@@ -30,5 +30,19 @@ router.get('/quizzes/:id', quizzController.getQuizzDetails);
 // POST /api/student/quizzes/:id/submit - Soumettre les réponses à un quizz
 router.post('/quizzes/:id/submit', quizzController.submitReponses);
 
+// =========================================================
+// --- Routes pour les notifications ---
+// =========================================================
+
+const notificationController = require('../controllers/notification.controller');
+
+// GET /api/student/notifications - Obtenir les notifications de l'étudiant
+router.get('/notifications', notificationController.getMyNotifications);
+
+// PUT /api/student/notifications/:id/read - Marquer une notification comme lue
+router.put('/notifications/:id/read', notificationController.markAsRead);
+
+// PUT /api/student/notifications/read-all - Marquer toutes les notifications comme lues
+router.put('/notifications/read-all', notificationController.markAllAsRead);
 
 module.exports = router;

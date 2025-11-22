@@ -65,6 +65,15 @@ class EvaluationController {
       questions: result.questions 
     });
   });
+
+  publish = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const evaluation = await evaluationService.publish(id);
+    res.status(200).json({
+      message: 'Évaluation publiée avec succès. Les notifications ont été envoyées.',
+      evaluation
+    });
+  });
 }
 
 module.exports = new EvaluationController();

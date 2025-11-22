@@ -1,0 +1,389 @@
+<div class="user-management" @fadeInUp>
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>
+        <app-svg-icon name="Users" class="title-icon"></app-svg-icon>
+        Gestion des Utilisateurs
+      </h1>
+      <p class="subtitle">Gérer les comptes administrateurs, enseignants et étudiants</p>
+    </div>
+    <button class="btn-primary" (click)="addUser()">
+      <app-svg-icon name="Plus"></app-svg-icon>
+      Nouvel Utilisateur
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon blue">
+        <app-svg-icon name="Users"></app-svg-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Total Utilisateurs</div>
+        <div class="stat-value">{{ totalUsers() }}</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon green">
+        <app-svg-icon name="CheckCircle2"></app-svg-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Actifs</div>
+        <div class="stat-value">{{ activeUsers() }}</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon purple">
+        <app-svg-icon name="GraduationCap"></app-svg-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Étudiants</div>
+        <div class="stat-value">{{ totalStudents() }}</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon orange">
+        <app-svg-icon name="User"></app-svg-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Enseignants</div>
+        <div class="stat-value">{{ totalTeachers() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <app-svg-icon name="Search" class="search-icon"></app-svg-icon>
+      <input
+        type="text"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="onSearchChange($event)"
+        placeholder="Rechercher par nom, email..."
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-tabs">
+      <button
+        class="filter-tab"
+        [class.active]="currentFilter() === 'all'"
+        (click)="setFilter('all')">
+        <app-svg-icon name="List"></app-svg-icon>
+        Tous
+      </button>
+      <button
+        class="filter-tab"
+        [class.active]="currentFilter() === 'admin'"
+        (click)="setFilter('admin')">
+        <app-svg-icon name="Shield"></app-svg-icon>
+        Administrateurs
+      </button>
+      <button
+        class="filter-tab"
+        [class.active]="currentFilter() === 'teacher'"
+        (click)="setFilter('teacher')">
+        <app-svg-icon name="User"></app-svg-icon>
+        Enseignants
+      </button>
+      <button
+        class="filter-tab"
+        [class.active]="currentFilter() === 'student'"
+        (click)="setFilter('student')">
+        <app-svg-icon name="GraduationCap"></app-svg-icon>
+        Étudiants
+      </button>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="table-container">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Rôle</th>
+          <th>Classe</th>
+          <th>Statut</th>
+          <th>Date création</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of filteredUsers(); track user.id) {
+          <tr>
+            <td>
+              <div class="user-name">
+                <div class="user-avatar">{{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}</div>
+                <span>{{ user.firstName }} {{ user.lastName }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="email-cell">
+                <app-svg-icon name="Mail"></app-svg-icon>
+                {{ user.email }}
+              </div>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">
+                @if (user.role === 'admin') {
+                  <app-svg-icon name="Shield"></app-svg-icon>
+                } @else if (user.role === 'teacher') {
+                  <app-svg-icon name="User"></app-svg-icon>
+                } @else {
+                  <app-svg-icon name="GraduationCap"></app-svg-icon>
+                }
+                {{ getRoleLabel(user.role) }}
+              </span>
+            </td>
+            <td>
+              @if (user.role === 'student') {
+                @if (user.className) {
+                  <span class="class-badge">
+                    <app-svg-icon name="School"></app-svg-icon>
+                    {{ user.className }}
+                  </span>
+                } @else {
+                  <button class="btn-link" (click)="assignClass(user)">
+                    <app-svg-icon name="Plus"></app-svg-icon>
+                    Assigner
+                  </button>
+                }
+              } @else {
+                <span class="text-muted">-</span>
+              }
+            </td>
+            <td>
+              <span class="status-badge" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+                <app-svg-icon [name]="user.isActive ? 'CheckCircle2' : 'XCircle'"></app-svg-icon>
+                {{ user.isActive ? 'Actif' : 'Inactif' }}
+              </span>
+            </td>
+            <td>
+              <div class="date-cell">
+                <app-svg-icon name="Calendar"></app-svg-icon>
+                {{ formatDate(user.createdAt) }}
+              </div>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn-icon" (click)="editUser(user)" title="Modifier">
+                  <app-svg-icon name="Edit2"></app-svg-icon>
+                </button>
+                <button 
+                  class="btn-icon" 
+                  (click)="toggleUserStatus(user)" 
+                  [title]="user.isActive ? 'Désactiver' : 'Activer'">
+                  <app-svg-icon [name]="user.isActive ? 'Lock' : 'Unlock'"></app-svg-icon>
+                </button>
+                @if (user.role === 'student') {
+                  <button class="btn-icon" (click)="assignClass(user)" title="Assigner classe">
+                    <app-svg-icon name="School"></app-svg-icon>
+                  </button>
+                }
+                <button class="btn-icon btn-danger" (click)="deleteUser(user)" title="Supprimer">
+                  <app-svg-icon name="Trash2"></app-svg-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="empty-state">
+              <div class="empty-content">
+                <app-svg-icon name="Users"></app-svg-icon>
+                <p>Aucun utilisateur trouvé</p>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Form Modal -->
+  @if (showFormModal()) {
+    <app-modal
+      [title]="formMode === 'create' ? 'Nouvel Utilisateur' : 'Modifier Utilisateur'"
+      (close)="closeModal()">
+      <form class="modal-form">
+        <div class="form-group">
+          <label>
+            <app-svg-icon name="Mail"></app-svg-icon>
+            Email *
+          </label>
+          <input
+            type="email"
+            [(ngModel)]="formData.email"
+            name="email"
+            class="form-control"
+            placeholder="email@example.com"
+            [disabled]="formMode === 'edit'"
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>
+              <app-svg-icon name="User"></app-svg-icon>
+              Prénom *
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="formData.firstName"
+              name="firstName"
+              class="form-control"
+              placeholder="Prénom"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>
+              <app-svg-icon name="User"></app-svg-icon>
+              Nom *
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="formData.lastName"
+              name="lastName"
+              class="form-control"
+              placeholder="Nom"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <app-svg-icon name="Shield"></app-svg-icon>
+            Rôle *
+          </label>
+          <select [(ngModel)]="formData.role" name="role" class="form-control">
+            <option value="student">Étudiant</option>
+            <option value="teacher">Enseignant</option>
+            <option value="admin">Administrateur</option>
+          </select>
+        </div>
+
+        @if (formData.role === 'student') {
+          <div class="form-group">
+            <label>
+              <app-svg-icon name="School"></app-svg-icon>
+              Classe
+            </label>
+            <select [(ngModel)]="formData.classId" name="classId" class="form-control">
+              <option value="">Aucune classe</option>
+              @for (class of classes(); track class.id) {
+                <option [value]="class.id">{{ class.name }}</option>
+              }
+            </select>
+          </div>
+        }
+
+        @if (formMode === 'create') {
+          <div class="form-group">
+            <label>
+              <app-svg-icon name="Lock"></app-svg-icon>
+              Mot de passe *
+            </label>
+            <input
+              type="password"
+              [(ngModel)]="formData.password"
+              name="password"
+              class="form-control"
+              placeholder="••••••••"
+            />
+          </div>
+        }
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="formData.isActive" name="isActive" />
+            <span>Compte actif</span>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeModal()">
+            <app-svg-icon name="X"></app-svg-icon>
+            Annuler
+          </button>
+          <button type="button" class="btn-primary" (click)="saveUser()">
+            <app-svg-icon name="Check"></app-svg-icon>
+            {{ formMode === 'create' ? 'Créer' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </app-modal>
+  }
+
+  <!-- Assign Class Modal -->
+  @if (showAssignClassModal()) {
+    <app-modal title="Assigner à une classe" (close)="closeModal()">
+      <div class="modal-form">
+        <p class="modal-description">
+          Sélectionnez la classe pour <strong>{{ selectedUser()?.firstName }} {{ selectedUser()?.lastName }}</strong>
+        </p>
+        
+        <div class="form-group">
+          <label>
+            <app-svg-icon name="School"></app-svg-icon>
+            Classe *
+          </label>
+          <select [(ngModel)]="formData.classId" name="classId" class="form-control">
+            <option value="">Sélectionner une classe</option>
+            @for (class of classes(); track class.id) {
+              <option [value]="class.id">{{ class.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeModal()">
+            <app-svg-icon name="X"></app-svg-icon>
+            Annuler
+          </button>
+          <button type="button" class="btn-primary" (click)="saveClassAssignment()">
+            <app-svg-icon name="Check"></app-svg-icon>
+            Assigner
+          </button>
+        </div>
+      </div>
+    </app-modal>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  @if (showDeleteModal()) {
+    <app-modal 
+      [title]="'Confirmer la suppression'" 
+      [size]="'small'" 
+      (close)="closeModal()">
+      <div class="delete-confirmation">
+        <div class="warning-icon">
+          <app-svg-icon name="AlertTriangle"></app-svg-icon>
+        </div>
+        <p class="warning-text">
+          Êtes-vous sûr de vouloir supprimer l'utilisateur <strong>{{ selectedUser()?.firstName }} {{ selectedUser()?.lastName }}</strong> ?
+        </p>
+        <p class="warning-subtext">Cette action est irréversible.</p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeModal()">
+            <app-svg-icon name="X"></app-svg-icon>
+            Annuler
+          </button>
+          <button type="button" class="btn-danger" (click)="confirmDelete()">
+            <app-svg-icon name="Trash2"></app-svg-icon>
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </app-modal>
+  }
+</div>

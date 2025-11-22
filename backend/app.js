@@ -15,10 +15,13 @@ const db = require('./src/models'); // Importer db pour la connexion
 
 // --- Importation des Routeurs ---
 const authRoutes = require('./src/routes/auth.routes');
-const academicRoutes = require('./src/routes/academic.routes'); // Notre nouveau routeur
+const academicRoutes = require('./src/routes/academic.routes');
 const evaluationRoutes = require('./src/routes/evaluation.routes');
 const studentRoutes = require('./src/routes/student.routes');
 const initRoutes = require('./src/routes/init.routes');
+const reportRoutes = require('./src/routes/report.routes');
+const notificationRoutes = require('./src/routes/notification.routes');
+const dashboardRoutes = require('./src/routes/dashboard.routes');
 
 // --- Middlewares Globaux ---
 // Configuration CORS pour autoriser les requêtes depuis le frontend
@@ -39,17 +42,14 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 // --- Utilisation des Routeurs ---
-// Toutes les routes définies dans authRoutes seront préfixées par /api/auth
 app.use('/api/auth', authRoutes);
-
-// Toutes les routes définies dans academicRoutes seront préfixées par /api/academic
 app.use('/api/academic', academicRoutes);
-
 app.use('/api/evaluations', evaluationRoutes);
-
 app.use('/api/student', studentRoutes);
-
 app.use('/api/init', initRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // --- Route 404 pour les endpoints non trouvés ---
 app.use((req, res, next) => {
@@ -60,24 +60,28 @@ app.use((req, res, next) => {
 });
 
 // --- Middleware de gestion d'erreurs (doit être en dernier) ---
-const ErrorHandler = require('./src/middlewares/errorHandler.middleware');
-app.use(ErrorHandler.handle);
+const errorHandler = require('./src/middlewares/errorHandler.middleware');
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
-// Démarrer le serveur et tester la connexion à la base de données
-db.sequelize.authenticate()
-  .then(() => {
-    console.log('✅ Connexion à la base de données établie avec succès.');
-    // Synchroniser la base de données avant de démarrer le serveur
-    return db.sequelize.sync({ alter: true });
-  })
-  .then(() => {
-    console.log('✅ Base de données synchronisée avec succès.');
-    app.listen(PORT, () => {
-      console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+// Démarrer le serveur seulement si ce n'est pas un test
+if (process.env.NODE_ENV !== 'test') {
+  db.sequelize.authenticate()
+    .then(() => {
+      console.log('✅ Connexion à la base de données établie avec succès.');
+      return db.sequelize.sync({ force: true }); // ATTENTION: Supprime et recrée toutes les tables
+    })
+    .then(() => {
+      console.log('✅ Base de données synchronisée avec succès.');
+      app.listen(PORT, () => {
+        console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+      });
+    })
+    .catch(err => {
+      console.error('❌ Erreur lors de l\'initialisation:', err);
     });
-  })
-  .catch(err => {
-    console.error('❌ Erreur lors de l\'initialisation:', err);
-  });
+}
+
+// Exporter l'app pour les tests
+module.exports = app;

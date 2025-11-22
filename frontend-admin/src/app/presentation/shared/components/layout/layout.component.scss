@@ -1,0 +1,113 @@
+// src/app/presentation/shared/components/layout/layout.component.scss
+@import '../../../../../styles.scss';
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: $bg-secondary;
+}
+
+.layout-body {
+  display: flex;
+  flex: 1;
+  position: relative;
+  margin-top: 64px; // Header height
+}
+
+.layout-main {
+  flex: 1;
+  margin-left: 260px; // Sidebar width
+  transition: margin-left $transition-base;
+
+  @media (max-width: $breakpoint-lg) {
+    margin-left: 0;
+  }
+}
+
+.layout-content {
+  padding: $spacing-6;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+
+  @media (max-width: $breakpoint-md) {
+    padding: $spacing-4;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    padding: $spacing-3;
+  }
+}
+
+// Page header
+.page-header {
+  margin-bottom: $spacing-6;
+
+  @media (max-width: $breakpoint-md) {
+    margin-bottom: $spacing-4;
+  }
+}
+
+.page-title {
+  font-size: $text-3xl;
+  font-weight: $font-bold;
+  color: $text-primary;
+  margin: 0 0 $spacing-2 0;
+
+  @media (max-width: $breakpoint-md) {
+    font-size: $text-2xl;
+  }
+}
+
+.page-description {
+  font-size: $text-base;
+  color: $text-secondary;
+  margin: 0;
+  line-height: $leading-relaxed;
+}
+
+// Breadcrumbs
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  margin-bottom: $spacing-4;
+  flex-wrap: wrap;
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  font-size: $text-sm;
+  color: $text-secondary;
+
+  a {
+    color: $text-secondary;
+    transition: color $transition-fast;
+
+    &:hover {
+      color: $primary-500;
+    }
+  }
+
+  &.active {
+    color: $text-primary;
+    font-weight: $font-medium;
+  }
+
+  &:not(:last-child)::after {
+    content: '/';
+    margin-left: $spacing-2;
+    color: $text-tertiary;
+  }
+}
+
+// Loading state
+.layout-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}

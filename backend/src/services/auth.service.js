@@ -49,6 +49,33 @@ class AuthService {
 
     return { token, utilisateur }; // On retourne le token et les infos utilisateur
   }
+
+  async linkCardToAccount(matricule, idCarte) {
+    // 1. Trouver l'étudiant par matricule
+    const etudiant = await etudiantRepository.findByMatricule(matricule);
+    if (!etudiant) {
+      throw AppError.notFound('Étudiant non trouvé.', 'STUDENT_NOT_FOUND');
+    }
+
+    // 2. Vérifier que le compte est activé
+    if (!etudiant.Utilisateur.motDePasseHash) {
+      throw AppError.badRequest('Vous devez d\'abord activer votre compte avant de lier une carte.', 'ACCOUNT_NOT_ACTIVATED');
+    }
+
+    // 3. Vérifier que la carte n'est pas déjà utilisée
+    const existingCard = await etudiantRepository.findByIdCarte(idCarte);
+    if (existingCard) {
+      throw AppError.conflict('Cette carte est déjà associée à un autre compte.', 'CARD_ALREADY_LINKED');
+    }
+
+    // 4. Associer la carte à l'étudiant
+    await etudiantRepository.updateIdCarte(etudiant.id, idCarte);
+
+    // 5. Envoyer un email de confirmation
+    await emailService.sendCardLinkConfirmation(etudiant, idCarte);
+
+    return true;
+  }
   
 }
 

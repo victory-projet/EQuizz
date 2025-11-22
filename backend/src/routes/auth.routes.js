@@ -8,4 +8,7 @@ router.post('/claim-account', claimAccountValidationRules(), validate, authContr
 
 router.post('/login', loginValidationRules(), validate, authController.login);
 
+// Route pour lier une carte à un compte
+router.post('/link-card', authController.linkCard);
+
 module.exports = router;

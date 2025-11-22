@@ -1,0 +1,294 @@
+<div class="quiz-creation-container" id="quiz-creation">
+  <!-- Creation Method Modal -->
+  @if (showCreationMethodModal()) {
+    <app-creation-method-modal
+      (close)="closeCreationMethodModal()"
+      (methodSelected)="onCreationMethodSelected($event)"
+    ></app-creation-method-modal>
+  }
+
+  <div class="page-header">
+    <h1>{{ currentStep() === 'info' ? 'Créer un Quiz' : currentStep() === 'questions' ? 'Ajouter des Questions' : 'Aperçu du Quiz' }}</h1>
+    <div class="steps-indicator">
+      <div class="step" [class.active]="currentStep() === 'info'" [class.completed]="currentStep() !== 'info'">
+        <span class="step-number">1</span>
+        <span class="step-label">Informations</span>
+      </div>
+      <div class="step-divider"></div>
+      <div class="step" [class.active]="currentStep() === 'questions'" [class.completed]="currentStep() === 'preview'">
+        <span class="step-number">2</span>
+        <span class="step-label">Questions</span>
+      </div>
+      <div class="step-divider"></div>
+      <div class="step" [class.active]="currentStep() === 'preview'">
+        <span class="step-number">3</span>
+        <span class="step-label">Aperçu</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 1: Quiz Info -->
+  @if (currentStep() === 'info') {
+    <div class="step-content">
+      <div class="form-card">
+        <h2>Informations du Quiz</h2>
+        
+        <div class="form-group">
+          <label for="title">Titre du quiz *</label>
+          <input 
+            id="title"
+            type="text" 
+            [(ngModel)]="quizTitle"
+            placeholder="Ex: Mathématiques - Chapitre 5"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+            id="description"
+            [(ngModel)]="quizDescription"
+            placeholder="Description du quiz..."
+            rows="4"
+          ></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="academicYear">Année académique</label>
+            @if (isLoading()) {
+              <p class="loading-text">Chargement...</p>
+            } @else {
+              <div class="readonly-field">
+                {{ getSelectedAcademicYearName() || 'Année en cours' }}
+              </div>
+              <small class="form-hint">Année académique active automatiquement sélectionnée</small>
+            }
+            <input type="hidden" [(ngModel)]="selectedAcademicYear" />
+          </div>
+
+          <div class="form-group">
+            <label for="subject">Matière *</label>
+            <select 
+              id="subject"
+              [(ngModel)]="selectedSubject"
+              [disabled]="subjects().length === 0"
+            >
+              <option value="">Sélectionner une matière</option>
+              @for (subject of subjects(); track subject.id) {
+                <option [value]="subject.id">{{ subject.name }}</option>
+              }
+            </select>
+            @if (subjects().length === 0 && !isLoading()) {
+              <p class="info-text">Aucune matière disponible</p>
+            }
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="semester">Semestre *</label>
+            <select 
+              id="semester"
+              [(ngModel)]="selectedSemester"
+            >
+              <option value="">Sélectionner un semestre</option>
+              @for (semester of semesters(); track semester.id) {
+                <option [value]="semester.id">{{ semester.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="classes">Classes *</label>
+            <select 
+              id="classes"
+              [(ngModel)]="selectedClasses"
+              multiple
+              [disabled]="classes().length === 0"
+              style="min-height: 100px;"
+            >
+              @for (class of classes(); track class.id) {
+                <option [value]="class.id">{{ class.name }}</option>
+              }
+            </select>
+            <small class="form-hint">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs classes</small>
+            @if (classes().length === 0 && !isLoading()) {
+              <p class="info-text">Aucune classe disponible</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn-secondary" (click)="cancel()">Annuler</button>
+        <button class="btn-primary" (click)="nextStep()">Suivant</button>
+      </div>
+    </div>
+  }
+
+  <!-- Step 2: Questions -->
+  @if (currentStep() === 'questions') {
+    <div class="step-content">
+      <div class="import-options">
+        <button class="btn-import-excel" (click)="openExcelImport()">
+          📊 Importer depuis Excel
+        </button>
+        <span class="separator">ou</span>
+        <span class="manual-text">Ajouter manuellement</span>
+      </div>
+
+      <div class="questions-layout">
+        <div class="question-form">
+          <h2>Ajouter une question</h2>
+          
+          <div class="form-group">
+            <label for="questionType">Type de question</label>
+            <select id="questionType" [(ngModel)]="questionType">
+              @for (type of questionTypes; track type.value) {
+                <option [value]="type.value">{{ type.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="questionText">Question *</label>
+            <textarea 
+              id="questionText"
+              [(ngModel)]="questionText"
+              placeholder="Saisissez votre question..."
+              rows="3"
+            ></textarea>
+          </div>
+
+          @if (questionType() === 'multiple_choice') {
+            <div class="options-section">
+              <label>Options de réponse (cochez la ou les bonnes réponses)</label>
+              @for (option of questionOptions(); track $index; let i = $index) {
+                <div class="option-input">
+                  <input 
+                    type="checkbox" 
+                    [(ngModel)]="option.isCorrect"
+                    class="option-checkbox"
+                  />
+                  <input 
+                    type="text" 
+                    [(ngModel)]="option.text"
+                    placeholder="Option {{ i + 1 }}"
+                    class="option-text-input"
+                  />
+                </div>
+              }
+              <p class="help-text">💡 Cochez la case à gauche pour marquer une option comme correcte</p>
+            </div>
+          }
+
+          <button class="btn-add-question" (click)="addQuestion()">
+            ➕ Ajouter la question
+          </button>
+        </div>
+
+        <div class="questions-list">
+          <h2>Questions ajoutées ({{ questions().length }})</h2>
+          
+          @if (questions().length === 0) {
+            <div class="empty-state">
+              <p>Aucune question ajoutée</p>
+            </div>
+          } @else {
+            <div class="questions-items">
+              @for (question of questions(); track question.id; let i = $index) {
+                <div class="question-item">
+                  <div class="question-header">
+                    <span class="question-number">Q{{ i + 1 }}</span>
+                    <span class="question-type-badge">
+                      {{ question.type === 'multiple_choice' ? 'QCM' : 'QRO' }}
+                    </span>
+                    <button class="btn-remove" (click)="removeQuestion(i)">🗑️</button>
+                  </div>
+                  <p class="question-text">{{ question.text }}</p>
+                  @if (question.options && question.options.length > 0) {
+                    <div class="question-options">
+                      @for (opt of question.options; track $index) {
+                        <div class="option">
+                          <span class="option-letter">{{ getOptionLetter($index) }}.</span>
+                          {{ opt.text }}
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn-secondary" (click)="previousStep()">Précédent</button>
+        <button class="btn-primary" (click)="nextStep()">Aperçu</button>
+      </div>
+    </div>
+
+    <!-- Excel Import Modal -->
+    @if (showExcelImportModal()) {
+      <app-excel-import-modal
+        (close)="closeExcelImport()"
+        (import)="onExcelImport($event)"
+      ></app-excel-import-modal>
+    }
+  }
+
+  <!-- Step 3: Preview -->
+  @if (currentStep() === 'preview') {
+    <div class="step-content">
+      <div class="preview-card">
+        <h2>Aperçu du Quiz</h2>
+        
+        <div class="quiz-info">
+          <h3>{{ quizTitle() }}</h3>
+          @if (quizDescription()) {
+            <p class="description">{{ quizDescription() }}</p>
+          }
+          <div class="meta-info">
+            <span>📚 {{ questions().length }} question(s)</span>
+          </div>
+        </div>
+
+        <div class="preview-questions">
+          @for (question of questions(); track question.id; let i = $index) {
+            <div class="preview-question">
+              <div class="question-header">
+                <span class="question-number">Question {{ i + 1 }}</span>
+              </div>
+              <p class="question-text">{{ question.text }}</p>
+              @if (question.options && question.options.length > 0) {
+                <div class="question-options">
+                  @for (opt of question.options; track $index) {
+                    <div class="option" [class.correct]="opt.isCorrect">
+                      <span class="option-letter">{{ getOptionLetter($index) }}</span>
+                      {{ opt.text }}
+                      @if (opt.isCorrect) {
+                        <span class="correct-indicator">✓ Bonne réponse</span>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn-secondary" (click)="previousStep()">Précédent</button>
+        <button class="btn-outline" (click)="saveAsDraft()" [disabled]="isSaving()">
+          Enregistrer comme brouillon
+        </button>
+        <button class="btn-primary" (click)="publishQuiz()" [disabled]="isSaving()">
+          {{ isSaving() ? 'Publication...' : '🚀 Publier le quiz' }}
+        </button>
+      </div>
+    </div>
+  }
+</div>

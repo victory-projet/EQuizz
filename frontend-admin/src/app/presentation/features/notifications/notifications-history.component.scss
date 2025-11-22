@@ -1,0 +1,288 @@
+// src/app/presentation/features/notifications/notifications-history.component.scss
+@import '../../../../styles.scss';
+
+.notifications-history {
+  min-height: 100vh;
+  animation: fadeIn $transition-base;
+}
+
+// ============================================
+// PAGE HEADER
+// ============================================
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: $spacing-8;
+  gap: $spacing-4;
+  flex-wrap: wrap;
+
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+    font-size: $text-3xl;
+    font-weight: $font-bold;
+    color: $text-primary;
+    margin: 0;
+
+    .title-icon {
+      color: $primary-500;
+    }
+
+    @media (max-width: $breakpoint-md) {
+      font-size: $text-2xl;
+    }
+  }
+
+  .subtitle {
+    font-size: $text-base;
+    color: $text-secondary;
+    margin: $spacing-2 0 0 0;
+  }
+}
+
+// ============================================
+// STATS GRID
+// ============================================
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: $spacing-4;
+  margin-bottom: $spacing-8;
+
+  @media (max-width: $breakpoint-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-5;
+  background: $bg-primary;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  border: $border-width solid $border-color;
+  transition: all $transition-base;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+    border-color: $primary-200;
+  }
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: $radius-lg;
+  flex-shrink: 0;
+
+  app-svg-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  &.blue { 
+    background: rgba($info-500, 0.1); 
+    color: $info-600;
+  }
+  &.green { 
+    background: rgba($success-500, 0.1); 
+    color: $success-600;
+  }
+  &.purple { 
+    background: rgba($primary-500, 0.1); 
+    color: $primary-600;
+  }
+  &.orange { 
+    background: rgba($warning-500, 0.1); 
+    color: $warning-600;
+  }
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: $text-sm;
+  color: $text-secondary;
+  margin-bottom: $spacing-1;
+  font-weight: $font-medium;
+}
+
+.stat-value {
+  font-size: $text-3xl;
+  font-weight: $font-bold;
+  color: $text-primary;
+}
+
+// ============================================
+// NOTIFICATIONS LIST
+// ============================================
+.notifications-list {
+  background: $bg-primary;
+  border-radius: $radius-lg;
+  padding: $spacing-6;
+  box-shadow: $shadow-sm;
+  border: $border-width solid $border-color;
+
+  h2 {
+    font-size: $text-xl;
+    font-weight: $font-semibold;
+    color: $text-primary;
+    margin: 0 0 $spacing-6 0;
+  }
+}
+
+.notification-card {
+  background: $bg-secondary;
+  border-radius: $radius-base;
+  padding: $spacing-5;
+  margin-bottom: $spacing-4;
+  border-left: 4px solid $primary-500;
+  transition: all $transition-fast;
+
+  &:hover {
+    transform: translateX(4px);
+    box-shadow: $shadow-sm;
+  }
+
+  &.sent {
+    border-left-color: $success-500;
+  }
+
+  &.failed {
+    border-left-color: $error-500;
+  }
+
+  &.pending {
+    border-left-color: $warning-500;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-3;
+  flex-wrap: wrap;
+  gap: $spacing-2;
+}
+
+.notification-type {
+  padding: $spacing-1 $spacing-3;
+  background: $neutral-200;
+  border-radius: $radius-base;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  color: $text-primary;
+}
+
+.notification-status {
+  padding: $spacing-1 $spacing-3;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+
+  &.sent {
+    background: rgba($success-500, 0.1);
+    color: $success-700;
+  }
+
+  &.failed {
+    background: rgba($error-500, 0.1);
+    color: $error-700;
+  }
+
+  &.pending {
+    background: rgba($warning-500, 0.1);
+    color: $warning-700;
+  }
+}
+
+.notification-message {
+  font-weight: $font-medium;
+  color: $text-primary;
+  margin-bottom: $spacing-3;
+  line-height: 1.5;
+}
+
+.notification-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: $text-sm;
+  color: $text-secondary;
+  flex-wrap: wrap;
+  gap: $spacing-2;
+}
+
+// ============================================
+// EMPTY STATE
+// ============================================
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-16 $spacing-8;
+  background: $bg-primary;
+  border-radius: $radius-lg;
+  border: $border-width-2 dashed $border-color;
+  text-align: center;
+
+  .empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: $primary-50;
+    border-radius: $radius-full;
+    margin-bottom: $spacing-4;
+
+    app-svg-icon {
+      width: 40px;
+      height: 40px;
+      color: $primary-500;
+    }
+  }
+
+  h3 {
+    font-size: $text-xl;
+    font-weight: $font-semibold;
+    color: $text-primary;
+    margin: 0 0 $spacing-2 0;
+  }
+
+  p {
+    font-size: $text-base;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
+}
