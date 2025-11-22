@@ -71,8 +71,9 @@ NODE_ENV=production
 PORT=10000
 DB_DIALECT=mysql
 
-# Informations depuis Aiven
+# Informations depuis Aiven (IMPORTANT: vérifiez bien ces valeurs)
 DB_HOST=mysql-xxxxx.aivencloud.com
+DB_PORT=12345
 DB_USER=avnadmin
 DB_PASSWORD=votre_mot_de_passe_aiven
 DB_NAME=defaultdb
@@ -196,10 +197,23 @@ export const environment = {
 - Vérifiez les logs dans Render Dashboard
 - Vérifiez que toutes les variables d'environnement sont définies
 
-### Erreur de connexion à la base :
-- Vérifiez que le service Aiven est bien démarré
-- Vérifiez les informations de connexion (host, user, password)
-- Aiven peut prendre 2-3 minutes pour démarrer
+### Erreur de connexion à la base (ETIMEDOUT) :
+1. **Vérifiez que TOUTES les variables d'environnement sont configurées sur Render**
+   - Allez dans Environment → vérifiez DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
+   - Cliquez sur "Save Changes" après avoir ajouté les variables
+   
+2. **Vérifiez que le service Aiven MySQL est démarré**
+   - Allez sur https://console.aiven.io
+   - Le statut doit être "Running" (vert)
+   - Notez bien le Host ET le Port (pas seulement le host)
+   
+3. **Vérifiez les informations de connexion depuis Aiven**
+   - Dans Aiven, onglet "Overview"
+   - Copiez exactement : Host, Port, User, Password, Database
+   - Le port n'est PAS 3306 par défaut sur Aiven (souvent 12xxx)
+   
+4. **Après avoir modifié les variables, redéployez**
+   - Sur Render, cliquez sur "Manual Deploy" → "Clear build cache & deploy"
 
 ### Le service est lent :
 - Normal pour le plan gratuit après inactivité

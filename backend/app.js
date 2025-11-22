@@ -1,13 +1,10 @@
 // backend/app.js
 
-const path = require('path');
-const fs = require('fs');
 const express = require('express');
 
-// Charger .env seulement s'il existe (développement local)
-const envPath = path.resolve(__dirname, '.env');
-if (fs.existsSync(envPath)) {
-  require('dotenv').config({ path: envPath });
+// Charger dotenv uniquement en développement
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
 }
 
 const app = express();
