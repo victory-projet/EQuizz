@@ -1,5 +1,6 @@
 const { Utilisateur, Administrateur, Enseignant, Etudiant } = require('../models');
 const bcrypt = require('bcryptjs');
+const emailService = require('../services/email.service');
 
 // Récupérer tous les utilisateurs avec leurs rôles
 exports.getAllUtilisateurs = async (req, res) => {
@@ -137,6 +138,11 @@ exports.createUtilisateur = async (req, res) => {
     const userData = utilisateurComplet.toJSON();
     userData.role = role;
 
+    // Envoyer un email de bienvenue si c'est un admin ou enseignant avec mot de passe
+    if ((role === 'ADMIN' || role === 'ENSEIGNANT') && motDePasse) {
+      await emailService.sendWelcomeEmail(userData, motDePasse);
+    }
+
     res.status(201).json(userData);
   } catch (error) {
     console.error('Erreur lors de la création de l\'utilisateur:', error);
@@ -234,6 +240,11 @@ exports.resetPassword = async (req, res) => {
     }
 
     await utilisateur.update({ motDePasseHash: nouveauMotDePasse });
+    
+    // Envoyer un email avec le nouveau mot de passe
+    const userData = utilisateur.toJSON();
+    await emailService.sendPasswordResetEmail(userData, nouveauMotDePasse);
+    
     res.json({ message: 'Mot de passe réinitialisé avec succès' });
   } catch (error) {
     console.error('Erreur lors de la réinitialisation du mot de passe:', error);

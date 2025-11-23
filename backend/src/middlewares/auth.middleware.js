@@ -33,7 +33,27 @@ const isAdmin = (req, res, next) => {
   }
 };
 
+// Middleware pour autoriser certains rôles
+const authorize = (roles = []) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return next(AppError.unauthorized('Authentification requise.', 'AUTH_REQUIRED'));
+    }
+
+    // Convertir les rôles en majuscules pour la comparaison
+    const allowedRoles = roles.map(role => role.toUpperCase());
+    const userRole = req.user.role ? req.user.role.toUpperCase() : '';
+
+    if (allowedRoles.length && !allowedRoles.includes(userRole)) {
+      return next(AppError.forbidden(`Accès refusé. Rôle requis: ${roles.join(', ')}`, 'ROLE_REQUIRED'));
+    }
+
+    next();
+  };
+};
+
 module.exports = {
   authenticate,
   isAdmin,
+  authorize,
 };
