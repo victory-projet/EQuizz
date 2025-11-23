@@ -7,9 +7,9 @@ exports.getAllUtilisateurs = async (req, res) => {
   try {
     const utilisateurs = await Utilisateur.findAll({
       include: [
-        { model: Administrateur, as: 'administrateur' },
-        { model: Enseignant, as: 'enseignant' },
-        { model: Etudiant, as: 'etudiant' }
+        { model: Administrateur },
+        { model: Enseignant },
+        { model: Etudiant }
       ],
       order: [['createdAt', 'DESC']]
     });
@@ -17,12 +17,13 @@ exports.getAllUtilisateurs = async (req, res) => {
     // Ajouter le rôle à chaque utilisateur
     const utilisateursAvecRole = utilisateurs.map(user => {
       const userData = user.toJSON();
-      if (userData.administrateur) {
+      if (userData.Administrateur) {
         userData.role = 'ADMIN';
-      } else if (userData.enseignant) {
+      } else if (userData.Enseignant) {
         userData.role = 'ENSEIGNANT';
-      } else if (userData.etudiant) {
+      } else if (userData.Etudiant) {
         userData.role = 'ETUDIANT';
+        userData.matricule = userData.Etudiant.matricule;
       }
       return userData;
     });
@@ -40,9 +41,9 @@ exports.getUtilisateurById = async (req, res) => {
     const { id } = req.params;
     const utilisateur = await Utilisateur.findByPk(id, {
       include: [
-        { model: Administrateur, as: 'administrateur' },
-        { model: Enseignant, as: 'enseignant' },
-        { model: Etudiant, as: 'etudiant' }
+        { model: Administrateur },
+        { model: Enseignant },
+        { model: Etudiant }
       ]
     });
 
@@ -51,12 +52,13 @@ exports.getUtilisateurById = async (req, res) => {
     }
 
     const userData = utilisateur.toJSON();
-    if (userData.administrateur) {
+    if (userData.Administrateur) {
       userData.role = 'ADMIN';
-    } else if (userData.enseignant) {
+    } else if (userData.Enseignant) {
       userData.role = 'ENSEIGNANT';
-    } else if (userData.etudiant) {
+    } else if (userData.Etudiant) {
       userData.role = 'ETUDIANT';
+      userData.matricule = userData.Etudiant.matricule;
     }
 
     res.json(userData);
@@ -129,14 +131,17 @@ exports.createUtilisateur = async (req, res) => {
     // Récupérer l'utilisateur complet avec son rôle
     const utilisateurComplet = await Utilisateur.findByPk(utilisateur.id, {
       include: [
-        { model: Administrateur, as: 'administrateur' },
-        { model: Enseignant, as: 'enseignant' },
-        { model: Etudiant, as: 'etudiant' }
+        { model: Administrateur },
+        { model: Enseignant },
+        { model: Etudiant }
       ]
     });
 
     const userData = utilisateurComplet.toJSON();
     userData.role = role;
+    if (role === 'ETUDIANT' && userData.Etudiant) {
+      userData.matricule = userData.Etudiant.matricule;
+    }
 
     // Envoyer un email de bienvenue si c'est un admin ou enseignant avec mot de passe
     if ((role === 'ADMIN' || role === 'ENSEIGNANT') && motDePasse) {
@@ -158,9 +163,9 @@ exports.updateUtilisateur = async (req, res) => {
 
     const utilisateur = await Utilisateur.findByPk(id, {
       include: [
-        { model: Administrateur, as: 'administrateur' },
-        { model: Enseignant, as: 'enseignant' },
-        { model: Etudiant, as: 'etudiant' }
+        { model: Administrateur },
+        { model: Enseignant },
+        { model: Etudiant }
       ]
     });
 
@@ -177,26 +182,27 @@ exports.updateUtilisateur = async (req, res) => {
     });
 
     // Mettre à jour la spécialité si c'est un enseignant
-    if (utilisateur.enseignant && specialite !== undefined) {
-      await utilisateur.enseignant.update({ specialite });
+    if (utilisateur.Enseignant && specialite !== undefined) {
+      await utilisateur.Enseignant.update({ specialite });
     }
 
     // Récupérer l'utilisateur mis à jour
     const utilisateurMisAJour = await Utilisateur.findByPk(id, {
       include: [
-        { model: Administrateur, as: 'administrateur' },
-        { model: Enseignant, as: 'enseignant' },
-        { model: Etudiant, as: 'etudiant' }
+        { model: Administrateur },
+        { model: Enseignant },
+        { model: Etudiant }
       ]
     });
 
     const userData = utilisateurMisAJour.toJSON();
-    if (userData.administrateur) {
+    if (userData.Administrateur) {
       userData.role = 'ADMIN';
-    } else if (userData.enseignant) {
+    } else if (userData.Enseignant) {
       userData.role = 'ENSEIGNANT';
-    } else if (userData.etudiant) {
+    } else if (userData.Etudiant) {
       userData.role = 'ETUDIANT';
+      userData.matricule = userData.Etudiant.matricule;
     }
 
     res.json(userData);
