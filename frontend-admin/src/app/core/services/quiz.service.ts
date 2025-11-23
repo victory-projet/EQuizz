@@ -1,173 +1,231 @@
-import { Injectable, inject } from '@angular/core';
-import { Observable, of, delay, throwError } from 'rxjs';
-import { Quiz, Question } from '../models/quiz.interface';
+import { Injectable } from '@angular/core';
+import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
+import { map, tap, shareReplay } from 'rxjs/operators';
+
+import { QuizRepository } from '../../infrastructure/repositories/quiz.repository';
+import { 
+  SimpleEvaluation, 
+  SimpleQuiz, 
+  SimpleQuestion, 
+  SimpleQuizSession 
+} from '../models/simplified.interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class QuizService {
-  private quizzes: Quiz[] = this.initMockData();
+  private evaluationsSubject = new BehaviorSubject<SimpleEvaluation[]>([]);
+  public evaluations$ = this.evaluationsSubject.asObservable();
 
-  getQuizzes(): Observable<Quiz[]> {
-    return of([...this.quizzes]).pipe(delay(300));
+  constructor(private quizRepository: QuizRepository) {}
+
+  // ============================================
+  // ÉVALUATIONS
+  // ============================================
+
+  getEvaluations(): Observable<SimpleEvaluation[]> {
+    return this.quizRepository.findAll().pipe(
+      tap(evaluations => this.evaluationsSubject.next(evaluations)),
+      shareReplay(1)
+    );
   }
 
-  getQuizById(id: string): Observable<Quiz> {
-    const quiz = this.quizzes.find(q => q.id === id);
-    if (!quiz) {
-      return throwError(() => new Error(`Quiz ${id} non trouvé`));
-    }
-    return of(quiz).pipe(delay(200));
+  getEvaluationById(id: string): Observable<SimpleEvaluation> {
+    return this.quizRepository.findById(id);
   }
 
-  createQuiz(quizData: Partial<Quiz>): Observable<Quiz> {
-    const newQuiz: Quiz = {
-      id: `quiz-${Date.now()}`,
-      title: quizData.title || '',
-      description: quizData.description || '',
-      courseId: quizData.courseId || '',
-      classId: quizData.classId || '',
-      teacherId: quizData.teacherId || '',
-      academicYearId: quizData.academicYearId || '',
-      duration: quizData.duration || 60,
-      totalPoints: quizData.totalPoints || 0,
-      passingScore: quizData.passingScore || 50,
-      allowLateSubmission: quizData.allowLateSubmission ?? false,
-      shuffleQuestions: quizData.shuffleQuestions ?? false,
-      showResults: quizData.showResults ?? true,
-      maxAttempts: quizData.maxAttempts || 1,
-      status: quizData.status || 'draft',
-      questions: [],
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    this.quizzes.unshift(newQuiz);
-    return of(newQuiz).pipe(delay(500));
+  getEvaluationsByCourse(courseId: string): Observable<SimpleEvaluation[]> {
+    return this.quizRepository.findByCourse(courseId);
   }
 
-  updateQuiz(id: string, quizData: Partial<Quiz>): Observable<Quiz> {
-    const index = this.quizzes.findIndex(q => q.id === id);
-    if (index === -1) {
-      return throwError(() => new Error(`Quiz ${id} non trouvé`));
-    }
-
-    this.quizzes[index] = {
-      ...this.quizzes[index],
-      ...quizData,
-      updatedAt: new Date()
-    };
-
-    return of(this.quizzes[index]).pipe(delay(300));
+  getEvaluationsByTeacher(teacherId: string): Observable<SimpleEvaluation[]> {
+    return this.quizRepository.findByTeacher(teacherId);
   }
 
-  deleteQuiz(id: string): Observable<void> {
-    const index = this.quizzes.findIndex(q => q.id === id);
-    if (index === -1) {
-      return throwError(() => new Error(`Quiz ${id} non trouvé`));
-    }
-
-    this.quizzes.splice(index, 1);
-    return of(void 0).pipe(delay(300));
+  getEvaluationsByStudent(studentId: string): Observable<SimpleEvaluation[]> {
+    return this.quizRepository.findByStudent(studentId);
   }
 
-  addQuestion(quizId: string, questionData: Partial<Question>): Observable<Question> {
-    const quiz = this.quizzes.find(q => q.id === quizId);
-    if (!quiz) {
-      return throwError(() => new Error(`Quiz ${quizId} non trouvé`));
-    }
-
-    if (!quiz.questions) {
-      quiz.questions = [];
-    }
-
-    const newQuestion: Question = {
-      id: `question-${Date.now()}`,
-      quizId: quizId,
-      type: questionData.type || 'multiple_choice',
-      text: questionData.text || '',
-      points: questionData.points || 1,
-      required: questionData.required ?? true,
-      order: quiz.questions.length + 1,
-      options: questionData.options || []
-    };
-
-    quiz.questions.push(newQuestion);
-    return of(newQuestion).pipe(delay(300));
+  createEvaluation(data: Partial<SimpleEvaluation>): Observable<SimpleEvaluation> {
+    return this.quizRepository.create(data).pipe(
+      tap(() => this.refreshEvaluations())
+    );
   }
 
-  updateQuestion(quizId: string, questionId: string, questionData: Partial<Question>): Observable<Question> {
-    const quiz = this.quizzes.find(q => q.id === quizId);
-    if (!quiz || !quiz.questions) {
-      return throwError(() => new Error(`Quiz ${quizId} non trouvé`));
-    }
-
-    const questionIndex = quiz.questions.findIndex(q => q.id === questionId);
-    if (questionIndex === -1) {
-      return throwError(() => new Error(`Question ${questionId} non trouvée`));
-    }
-
-    quiz.questions[questionIndex] = {
-      ...quiz.questions[questionIndex],
-      ...questionData
-    };
-
-    return of(quiz.questions[questionIndex]).pipe(delay(300));
+  updateEvaluation(id: string, data: Partial<SimpleEvaluation>): Observable<SimpleEvaluation> {
+    return this.quizRepository.update(id, data).pipe(
+      tap(() => this.refreshEvaluations())
+    );
   }
 
-  deleteQuestion(quizId: string, questionId: string): Observable<void> {
-    const quiz = this.quizzes.find(q => q.id === quizId);
-    if (!quiz || !quiz.questions) {
-      return throwError(() => new Error(`Quiz ${quizId} non trouvé`));
-    }
-
-    const questionIndex = quiz.questions.findIndex(q => q.id === questionId);
-    if (questionIndex === -1) {
-      return throwError(() => new Error(`Question ${questionId} non trouvée`));
-    }
-
-    quiz.questions.splice(questionIndex, 1);
-    return of(void 0).pipe(delay(300));
+  deleteEvaluation(id: string): Observable<void> {
+    return this.quizRepository.delete(id).pipe(
+      tap(() => this.refreshEvaluations())
+    );
   }
 
-  private initMockData(): Quiz[] {
-    return [
-      {
-        id: 'quiz-1',
-        title: 'Quiz de démonstration - Algorithmique',
-        description: 'Un quiz de test pour démontrer les fonctionnalités',
-        courseId: 'course-1',
-        classId: 'class-1',
-        teacherId: 'teacher-1',
-        academicYearId: '1',
-        duration: 60,
-        totalPoints: 10,
-        passingScore: 50,
-        allowLateSubmission: false,
-        shuffleQuestions: true,
-        showResults: true,
-        maxAttempts: 1,
-        status: 'published',
-        questions: [
-          {
-            id: 'q1',
-            quizId: 'quiz-1',
-            type: 'multiple_choice',
-            text: 'Quelle est la complexité temporelle de la recherche binaire ?',
-            points: 2,
-            required: true,
-            order: 1,
-            options: [
-              { id: 'opt1', questionId: 'q1', text: 'O(n)', isCorrect: false, order: 1 },
-              { id: 'opt2', questionId: 'q1', text: 'O(log n)', isCorrect: true, order: 2 },
-              { id: 'opt3', questionId: 'q1', text: 'O(n²)', isCorrect: false, order: 3 },
-              { id: 'opt4', questionId: 'q1', text: 'O(1)', isCorrect: false, order: 4 }
-            ]
-          }
-        ],
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date('2024-01-15')
-      }
-    ];
+  publishEvaluation(id: string): Observable<SimpleEvaluation> {
+    return this.quizRepository.publish(id).pipe(
+      tap(() => this.refreshEvaluations())
+    );
+  }
+
+  closeEvaluation(id: string): Observable<SimpleEvaluation> {
+    return this.quizRepository.close(id).pipe(
+      tap(() => this.refreshEvaluations())
+    );
+  }
+
+  // ============================================
+  // QUIZ
+  // ============================================
+
+  getQuizByEvaluation(evaluationId: string): Observable<SimpleQuiz> {
+    return this.quizRepository.getQuizByEvaluation(evaluationId);
+  }
+
+  updateQuiz(evaluationId: string, data: Partial<SimpleQuiz>): Observable<SimpleQuiz> {
+    return this.quizRepository.updateQuiz(evaluationId, data);
+  }
+
+  // ============================================
+  // QUESTIONS
+  // ============================================
+
+  getQuestions(quizId: string): Observable<SimpleQuestion[]> {
+    return this.quizRepository.getQuestions(quizId);
+  }
+
+  addQuestion(quizId: string, data: Partial<SimpleQuestion>): Observable<SimpleQuestion> {
+    return this.quizRepository.addQuestion(quizId, data);
+  }
+
+  updateQuestion(questionId: string, data: Partial<SimpleQuestion>): Observable<SimpleQuestion> {
+    return this.quizRepository.updateQuestion(questionId, data);
+  }
+
+  deleteQuestion(questionId: string): Observable<void> {
+    return this.quizRepository.deleteQuestion(questionId);
+  }
+
+  // ============================================
+  // SESSIONS
+  // ============================================
+
+  getEvaluationSessions(evaluationId: string): Observable<SimpleQuizSession[]> {
+    return this.quizRepository.getEvaluationSessions(evaluationId);
+  }
+
+  getStudentSession(evaluationId: string, studentId: string): Observable<SimpleQuizSession> {
+    return this.quizRepository.getStudentSession(evaluationId, studentId);
+  }
+
+  startSession(evaluationId: string, studentId: string): Observable<SimpleQuizSession> {
+    return this.quizRepository.startSession(evaluationId, studentId);
+  }
+
+  submitSession(sessionId: string): Observable<SimpleQuizSession> {
+    return this.quizRepository.submitSession(sessionId);
+  }
+
+  saveAnswer(sessionId: string, questionId: string, content: string): Observable<void> {
+    return this.quizRepository.saveAnswer(sessionId, questionId, content);
+  }
+
+  // ============================================
+  // DONNÉES COMBINÉES
+  // ============================================
+
+  getEvaluationWithQuiz(evaluationId: string): Observable<{
+    evaluation: SimpleEvaluation;
+    quiz: SimpleQuiz;
+    questions: SimpleQuestion[];
+  }> {
+    return combineLatest([
+      this.getEvaluationById(evaluationId),
+      this.getQuizByEvaluation(evaluationId)
+    ]).pipe(
+      map(([evaluation, quiz]) => ({
+        evaluation,
+        quiz,
+        questions: []
+      }))
+    );
+  }
+
+  getEvaluationWithSessions(evaluationId: string): Observable<{
+    evaluation: SimpleEvaluation;
+    sessions: SimpleQuizSession[];
+  }> {
+    return combineLatest([
+      this.getEvaluationById(evaluationId),
+      this.getEvaluationSessions(evaluationId)
+    ]).pipe(
+      map(([evaluation, sessions]) => ({
+        evaluation,
+        sessions
+      }))
+    );
+  }
+
+  // ============================================
+  // STATISTIQUES
+  // ============================================
+
+  getEvaluationStats(evaluationId: string): Observable<{
+    totalSessions: number;
+    completedSessions: number;
+    inProgressSessions: number;
+    participationRate: number;
+  }> {
+    return this.getEvaluationSessions(evaluationId).pipe(
+      map(sessions => {
+        const totalSessions = sessions.length;
+        const completedSessions = sessions.filter(s => s.status === 'TERMINE').length;
+        const inProgressSessions = sessions.filter(s => s.status === 'EN_COURS').length;
+        
+        return {
+          totalSessions,
+          completedSessions,
+          inProgressSessions,
+          participationRate: totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0
+        };
+      })
+    );
+  }
+
+  // ============================================
+  // FILTRES ET RECHERCHE
+  // ============================================
+
+  filterEvaluationsByStatus(status: SimpleEvaluation['status']): Observable<SimpleEvaluation[]> {
+    return this.evaluations$.pipe(
+      map(evaluations => evaluations.filter(e => e.status === status))
+    );
+  }
+
+  filterEvaluationsByType(type: SimpleEvaluation['type']): Observable<SimpleEvaluation[]> {
+    return this.evaluations$.pipe(
+      map(evaluations => evaluations.filter(e => e.type === type))
+    );
+  }
+
+  searchEvaluations(query: string): Observable<SimpleEvaluation[]> {
+    return this.evaluations$.pipe(
+      map(evaluations => 
+        evaluations.filter(e => 
+          e.title.toLowerCase().includes(query.toLowerCase()) ||
+          e.description.toLowerCase().includes(query.toLowerCase())
+        )
+      )
+    );
+  }
+
+  // ============================================
+  // MÉTHODES PRIVÉES
+  // ============================================
+
+  private refreshEvaluations(): void {
+    this.getEvaluations().subscribe();
   }
 }

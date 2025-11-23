@@ -22,30 +22,22 @@ export class AnalyticsComponent implements OnInit {
   showExportMenu = signal(false);
 
   stats = signal({
-    totalQuizzes: 24,
-    totalResponses: 1250,
-    averageScore: 72,
-    participationRate: 85,
-    positiveSentiment: 78,
-    neutralSentiment: 15,
-    negativeSentiment: 7
+    totalQuizzes: 0,
+    totalResponses: 0,
+    averageScore: 0,
+    participationRate: 0,
+    positiveSentiment: 0,
+    neutralSentiment: 0,
+    negativeSentiment: 0
   });
 
-  recentActivity = signal([
-    { action: 'Quiz créé', details: 'Évaluation Algorithmique', time: '2 heures', icon: 'FileText' },
-    { action: 'Quiz publié', details: 'Base de Données Avancée', time: '5 heures', icon: 'Send' },
-    { action: 'Résultats analysés', details: 'Réseaux Informatiques', time: '1 jour', icon: 'BarChart' }
-  ]);
+  recentActivity = signal<Array<{ action: string; details: string; time: string; icon: string }>>([]);
 
   getActivityIcon(icon: string): string {
     return icon;
   }
 
-  topPerformers = signal([
-    { name: 'L1 Info A', score: 85, trend: 'up' as const },
-    { name: 'L2 Info', score: 82, trend: 'up' as const },
-    { name: 'L1 Info B', score: 78, trend: 'down' as const }
-  ]);
+  topPerformers = signal<Array<{ name: string; score: number; trend: 'up' | 'down' }>>([]);
 
   ngOnInit(): void {
     this.loadAnalytics();
@@ -55,11 +47,26 @@ export class AnalyticsComponent implements OnInit {
     this.isLoading.set(true);
     this.analyticsService.getOverviewData().subscribe({
       next: (data) => {
-        this.stats.update(s => ({
-          ...s,
-          totalQuizzes: data.totalQuizzes,
-          averageScore: data.averageScore
-        }));
+        this.stats.set({
+          totalQuizzes: data.totalQuizzes || 0,
+          totalResponses: 0, // À calculer depuis les résultats
+          averageScore: data.averageScore || 0,
+          participationRate: data.participationRate || 0,
+          positiveSentiment: 0, // À implémenter avec analyse de sentiment
+          neutralSentiment: 0,
+          negativeSentiment: 0
+        });
+
+        // Mapper les activités récentes
+        this.recentActivity.set(
+          (data.recentActivities || []).map(activity => ({
+            action: this.getActionLabel(activity.type),
+            details: activity.message,
+            time: this.getRelativeTime(activity.timestamp),
+            icon: this.getActivityIconForType(activity.type)
+          }))
+        );
+
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -67,6 +74,37 @@ export class AnalyticsComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  private getActionLabel(type: string): string {
+    const labels: Record<string, string> = {
+      quiz_published: 'Quiz publié',
+      quiz_created: 'Quiz créé',
+      quiz_completed: 'Quiz complété',
+      results_analyzed: 'Résultats analysés'
+    };
+    return labels[type] || type;
+  }
+
+  private getActivityIconForType(type: string): string {
+    const icons: Record<string, string> = {
+      quiz_published: 'Send',
+      quiz_created: 'FileText',
+      quiz_completed: 'CheckCircle',
+      results_analyzed: 'BarChart'
+    };
+    return icons[type] || 'FileText';
+  }
+
+  private getRelativeTime(date: Date): string {
+    const now = new Date();
+    const diff = now.getTime() - new Date(date).getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days} jour${days > 1 ? 's' : ''}`;
+    if (hours > 0) return `${hours} heure${hours > 1 ? 's' : ''}`;
+    return 'Récent';
   }
 
   setActiveTab(tab: 'overview' | 'sentiment' | 'performance'): void {

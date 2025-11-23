@@ -1,63 +1,57 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { ApiService } from '../../infrastructure/http/api.service';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AnalyticsData, QuizResult } from '../models/quiz.interface';
+import { DashboardRepository, DashboardData } from '../../infrastructure/repositories/dashboard.repository';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AnalyticsService {
-  private http = inject(HttpClient);
-  private apiUrl = '/api/analytics';
+  private api = inject(ApiService);
+  private dashboardRepo = inject(DashboardRepository);
 
   getOverviewData(): Observable<AnalyticsData> {
-    // Mock data temporaire en attendant l'API
-    const mockData: AnalyticsData = {
-      totalQuizzes: 24,
-      activeQuizzes: 8,
-      totalStudents: 156,
-      averageScore: 75.5,
-      participationRate: 82.3,
-      recentActivities: [
-        {
-          id: '1',
-          type: 'quiz_completed',
-          message: 'Quiz "Algorithmique" complété par 45 étudiants',
-          timestamp: new Date()
-        },
-        {
-          id: '2',
-          type: 'quiz_created',
-          message: 'Nouveau quiz "Base de données" créé',
-          timestamp: new Date()
-        }
-      ],
-      alerts: [
-        {
-          id: '1',
-          type: 'warning',
-          message: 'Le quiz "Programmation Web" se termine dans 2 jours',
-          timestamp: new Date()
-        }
-      ]
-    };
-    return of(mockData);
-    // return this.http.get<AnalyticsData>(`${this.apiUrl}/overview`);
+    return this.dashboardRepo.getAdminDashboard().pipe(
+      map(data => this.mapToAnalyticsData(data))
+    );
   }
 
   getQuizResults(quizId: string): Observable<QuizResult[]> {
-    return this.http.get<QuizResult[]>(`${this.apiUrl}/quiz/${quizId}/results`);
+    return this.api.get<QuizResult[]>(`/api/evaluations/${quizId}/results`);
   }
 
   getStudentResults(studentId: string): Observable<QuizResult[]> {
-    return this.http.get<QuizResult[]>(`${this.apiUrl}/student/${studentId}/results`);
+    return this.api.get<QuizResult[]>(`/api/student/${studentId}/results`);
   }
 
   getAcademicYearStats(academicYearId: string): Observable<AnalyticsData> {
-    return this.http.get<AnalyticsData>(`${this.apiUrl}/academic-year/${academicYearId}`);
+    return this.api.get<any>(`/api/academic/annees-academiques/${academicYearId}/stats`).pipe(
+      map(data => this.mapToAnalyticsData(data))
+    );
   }
 
   getSubjectStats(subjectId: string): Observable<AnalyticsData> {
-    return this.http.get<AnalyticsData>(`${this.apiUrl}/subject/${subjectId}`);
+    return this.api.get<any>(`/api/academic/cours/${subjectId}/stats`).pipe(
+      map(data => this.mapToAnalyticsData(data))
+    );
+  }
+
+  private mapToAnalyticsData(data: DashboardData | any): AnalyticsData {
+    return {
+      totalQuizzes: data.totalQuizzes || 0,
+      activeQuizzes: data.activeQuizzes || 0,
+      totalStudents: data.totalStudents || 0,
+      averageScore: 0, // À calculer depuis les résultats
+      participationRate: data.averageParticipation || 0,
+      recentActivities: data.recentEvaluations?.map((e: any) => ({
+        id: e.id,
+        type: 'quiz_published',
+        message: `Quiz "${e.title}" - ${e.course}`,
+        timestamp: e.startDate
+      })) || [],
+      alerts: [] // À implémenter si nécessaire
+    };
   }
 }

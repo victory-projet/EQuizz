@@ -1,5 +1,5 @@
 // src/app/presentation/pages/login/login.component.ts
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -15,7 +15,7 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private loginUseCase = inject(LoginUseCase);
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -26,6 +26,15 @@ export class LoginComponent {
   isLoading = false;
   errorMessage = '';
   rememberMe = false;
+
+  ngOnInit(): void {
+    // Vérifier si l'utilisateur est déjà connecté
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      // Rediriger vers le dashboard si déjà connecté
+      this.router.navigate(['/dashboard']);
+    }
+  }
 
   onLogin(): void {
     if (!this.email || !this.password) {

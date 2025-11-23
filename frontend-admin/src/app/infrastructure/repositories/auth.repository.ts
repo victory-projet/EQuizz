@@ -93,9 +93,10 @@ export class AuthRepository implements IAuthRepository {
   }
 
   changePassword(oldPassword: string, newPassword: string): Observable<void> {
-    // Non implémenté
-    // TODO: Ajouter l'endpoint PUT /api/auth/change-password dans le backend
-    return throwError(() => new Error('Fonctionnalité non disponible'));
+    return this.apiService.post<void>('/auth/change-password', {
+      currentPassword: oldPassword,
+      newPassword: newPassword
+    });
   }
 }
 

@@ -139,7 +139,7 @@ export class CoursesComponent implements OnInit {
       next: (years) => {
         this.academicYears.set(years);
         // Trouver l'année active
-        const activeYear = years.find(y => y.isActive);
+        const activeYear = years.find(y => y.isCurrent);
         if (activeYear) {
           this.currentAcademicYearId.set(activeYear.id);
         }

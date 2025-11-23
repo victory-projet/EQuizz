@@ -3,7 +3,6 @@ import { Quiz, Question, QuestionOption } from '../../core/domain/entities/quiz.
 import {
   BackendEvaluation,
   BackendQuestion,
-  BackendReponse,
   BackendEvaluationRequest,
   BackendQuestionRequest
 } from '../http/interfaces/backend.interfaces';
@@ -17,19 +16,34 @@ export class QuizMapper {
    * Convertir BackendEvaluation vers Quiz (Domain)
    */
   static toQuiz(backend: BackendEvaluation): Quiz {
-    const questions = backend.quizz?.questions?.map(q => this.toQuestion(q)) || [];
-    const classIds = backend.classeId ? [backend.classeId.toString()] : [];
-    
+    const questions = backend.Quizz?.Questions?.map((q: BackendQuestion) => this.toQuestion(q)) || [];
+
+    // Extraire les IDs des classes depuis le tableau Classes
+    let classIds: string[] = [];
+    if (backend.Classes && Array.isArray(backend.Classes)) {
+      classIds = backend.Classes.map(c => c.id.toString());
+    }
+
+    // Extraire l'ID du cours depuis l'objet Cours ou depuis cours_id
+    const courseId = backend.Cours?.id?.toString() || backend.cours_id?.toString() || '';
+
+    // Mapper le statut backend vers le statut frontend
+    let status: 'draft' | 'published' | 'active' | 'closed' = 'draft';
+    if (backend.statut === 'BROUILLON') status = 'draft';
+    else if (backend.statut === 'PUBLIEE') status = 'published';
+    else if (backend.statut === 'EN_COURS') status = 'active';
+    else if (backend.statut === 'CLOTUREE') status = 'closed';
+
     return new Quiz(
       backend.id.toString(),
       backend.titre,
-      backend.coursId.toString(), // subject
-      backend.statut as any, // status
+      courseId, // subject
+      status, // status
       questions,
       classIds,
       new Date(backend.dateDebut), // createdDate
       backend.dateFin ? new Date(backend.dateFin) : undefined, // endDate
-      backend.description || '', // type
+      backend.typeEvaluation || 'MI_PARCOURS', // type
       backend.description || '', // description
       '', // semesterId
       '' // academicYearId
@@ -40,14 +54,22 @@ export class QuizMapper {
    * Convertir Quiz vers BackendEvaluationRequest
    */
   static toBackendEvaluationRequest(quiz: Quiz): BackendEvaluationRequest {
+    // Mapper le statut frontend vers le statut backend
+    let statut: 'BROUILLON' | 'PUBLIEE' | 'EN_COURS' | 'CLOTUREE' = 'BROUILLON';
+    if (quiz.status === 'draft') statut = 'BROUILLON';
+    else if (quiz.status === 'published') statut = 'PUBLIEE';
+    else if (quiz.status === 'active') statut = 'EN_COURS';
+    else if (quiz.status === 'closed') statut = 'CLOTUREE';
+
     return {
       titre: quiz.title,
       description: quiz.description,
-      coursId: parseInt(quiz.subject),
-      classeId: quiz.classIds.length > 0 ? parseInt(quiz.classIds[0]) : undefined,
+      cours_id: quiz.subject,
       dateDebut: quiz.createdDate.toISOString(),
       dateFin: quiz.endDate?.toISOString(),
-      statut: quiz.status
+      datePublication: quiz.status === 'published' ? new Date().toISOString() : undefined,
+      typeEvaluation: quiz.type as 'MI_PARCOURS' | 'FIN_SEMESTRE',
+      statut: statut
     };
   }
 
@@ -59,13 +81,19 @@ export class QuizMapper {
    * Convertir BackendQuestion vers Question (Domain)
    */
   static toQuestion(backend: BackendQuestion): Question {
-    const options = backend.reponses?.map(r => this.toQuestionOption(r)) || [];
-    
+    const options = backend.options?.map((opt: any, index: number) =>
+      new QuestionOption(
+        index.toString(),
+        opt.texte || opt.text || '',
+        opt.estCorrecte || opt.isCorrect || false
+      )
+    ) || [];
+
     return new Question(
       backend.id.toString(),
-      backend.texte,
-      backend.type as any,
-      backend.points,
+      backend.enonce,
+      backend.typeQuestion as any,
+      1, // points par défaut
       options,
       undefined, // correctAnswer - à déterminer depuis les options
       undefined // explanation
@@ -76,31 +104,22 @@ export class QuizMapper {
    * Convertir Question vers BackendQuestionRequest
    */
   static toBackendQuestionRequest(question: Question): BackendQuestionRequest {
+    // Mapper le type de question frontend vers backend
+    let typeQuestion: 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE' = 'CHOIX_MULTIPLE';
+    if (question.type === 'QCM' || question.type === 'closed') {
+      typeQuestion = 'CHOIX_MULTIPLE';
+    } else if (question.type === 'open') {
+      typeQuestion = 'REPONSE_OUVERTE';
+    }
+
     return {
-      type: question.type,
-      texte: question.text,
-      points: question.points,
-      ordre: 1, // ordre par défaut
-      reponses: question.options.map((opt, index) => ({
+      enonce: question.text,
+      typeQuestion: typeQuestion,
+      options: question.options.map((opt, index) => ({
         texte: opt.text,
         estCorrecte: opt.isCorrect,
         ordre: index + 1
       }))
     };
-  }
-
-  // ============================================
-  // OPTION DE QUESTION
-  // ============================================
-
-  /**
-   * Convertir BackendReponse vers QuestionOption (Domain)
-   */
-  static toQuestionOption(backend: BackendReponse): QuestionOption {
-    return new QuestionOption(
-      backend.id.toString(),
-      backend.texte,
-      backend.estCorrecte
-    );
   }
 }

@@ -5,7 +5,8 @@ import { LayoutComponent } from '../presentation/shared/components/layout/layout
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('../presentation/pages/home/home.component').then(m => m.HomeComponent)
+    redirectTo: 'login',
+    pathMatch: 'full'
   },
   {
     path: 'login',

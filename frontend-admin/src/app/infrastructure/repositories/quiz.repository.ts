@@ -1,177 +1,253 @@
-// src/app/core/infrastructure/repositories/quiz.repository.ts
-import { Injectable, inject } from '@angular/core';
-import { Observable, throwError, map } from 'rxjs';
-import { Quiz, Question, QuizSubmission } from '../../core/domain/entities/quiz.entity';
-import { IQuizRepository, IQuizSubmissionRepository, QuizStatistics } from '../../core/domain/repositories/quiz.repository.interface';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
 import { ApiService } from '../http/api.service';
-import { QuizMapper } from '../mappers/quiz.mapper';
-import { BackendEvaluation, BackendQuestion } from '../http/interfaces/backend.interfaces';
+import { 
+  BackendEvaluation, 
+  BackendQuizz, 
+  BackendQuestion, 
+  BackendSessionReponse,
+  BackendEvaluationRequest,
+  BackendQuestionRequest
+} from '../http/interfaces/backend.interfaces';
+import { 
+  SimpleEvaluation, 
+  SimpleQuiz, 
+  SimpleQuestion, 
+  SimpleQuizSession 
+} from '../../core/models/simplified.interfaces';
+import { BackendMapper } from '../mappers/backend.mapper';
 
 @Injectable({
   providedIn: 'root'
 })
-export class QuizRepository implements IQuizRepository {
-  private apiService = inject(ApiService);
+export class QuizRepository {
+  private readonly evaluationsUrl = '/evaluations';
+  private readonly quizUrl = '/evaluations/quizz';
+  private readonly sessionsUrl = '/student/quizzes';
 
-  getAll(): Observable<Quiz[]> {
-    return this.apiService.get<BackendEvaluation[]>('/evaluations').pipe(
-      map(backendEvaluations => backendEvaluations.map(e => QuizMapper.toQuiz(e)))
+  constructor(private api: ApiService) {}
+
+  // ============================================
+  // ÉVALUATIONS
+  // ============================================
+
+  findAll(): Observable<SimpleEvaluation[]> {
+    return this.api.get<BackendEvaluation[]>(this.evaluationsUrl)
+      .pipe(
+        map(response => BackendMapper.toEvaluations(response))
+      );
+  }
+
+  findById(id: string): Observable<SimpleEvaluation> {
+    return this.api.get<BackendEvaluation>(`${this.evaluationsUrl}/${id}`)
+      .pipe(
+        map(response => BackendMapper.toEvaluation(response))
+      );
+  }
+
+  findByCourse(courseId: string): Observable<SimpleEvaluation[]> {
+    return this.findAll().pipe(
+      map(evaluations => evaluations.filter(e => e.courseId === courseId))
     );
   }
 
-  getById(id: string): Observable<Quiz> {
-    return this.apiService.get<BackendEvaluation>(`/evaluations/${id}`).pipe(
-      map(backendEvaluation => QuizMapper.toQuiz(backendEvaluation))
+  findByTeacher(teacherId: string): Observable<SimpleEvaluation[]> {
+    return this.findAll().pipe(
+      map(evaluations => evaluations.filter(e => e.courseId === teacherId))
     );
   }
 
-  getByClass(classId: string): Observable<Quiz[]> {
-    return this.getAll().pipe(
-      map(quizzes => quizzes.filter(q => q.classIds.includes(classId)))
-    );
+  findByStudent(studentId: string): Observable<SimpleEvaluation[]> {
+    return this.api.get<BackendEvaluation[]>('/student/quizzes')
+      .pipe(
+        map(response => BackendMapper.toEvaluations(response))
+      );
   }
 
-  getByStatus(status: string): Observable<Quiz[]> {
-    return this.getAll().pipe(
-      map(quizzes => quizzes.filter(q => q.status === status))
-    );
+  create(data: Partial<SimpleEvaluation>): Observable<SimpleEvaluation> {
+    const request: any = {
+      titre: data.title!,
+      description: data.description || '',
+      dateDebut: data.startDate!.toISOString(),
+      dateFin: data.endDate?.toISOString() || new Date().toISOString(),
+      datePublication: data.publicationDate?.toISOString() || new Date().toISOString(),
+      typeEvaluation: data.type!,
+      statut: data.status || 'BROUILLON',
+      cours_id: data.courseId!,
+      classeIds: []
+    };
+
+    return this.api.post<BackendEvaluation>(this.evaluationsUrl, request)
+      .pipe(
+        map(response => BackendMapper.toEvaluation(response))
+      );
   }
 
-  create(quiz: Quiz): Observable<Quiz> {
-    const request = QuizMapper.toBackendEvaluationRequest(quiz);
+  update(id: string, data: Partial<SimpleEvaluation>): Observable<SimpleEvaluation> {
+    const request: any = {};
     
-    return this.apiService.post<BackendEvaluation>('/evaluations', request).pipe(
-      map(backendEvaluation => QuizMapper.toQuiz(backendEvaluation))
-    );
-  }
+    if (data.title) request.titre = data.title;
+    if (data.description !== undefined) request.description = data.description;
+    if (data.startDate) request.dateDebut = data.startDate.toISOString();
+    if (data.endDate) request.dateFin = data.endDate.toISOString();
+    if (data.publicationDate) request.datePublication = data.publicationDate.toISOString();
+    if (data.type) request.typeEvaluation = data.type;
+    if (data.status) request.statut = data.status;
+    if (data.courseId) request.cours_id = data.courseId;
 
-  update(id: string, updates: Partial<Quiz>): Observable<Quiz> {
-    // Créer un objet temporaire pour la conversion
-    const tempQuiz = new Quiz(
-      id,
-      updates.title || '',
-      updates.subject || '',
-      updates.status || 'draft',
-      updates.questions || [],
-      updates.classIds || [],
-      updates.createdDate || new Date(),
-      updates.endDate,
-      updates.type || '',
-      updates.description || '',
-      updates.semesterId || '',
-      updates.academicYearId || ''
-    );
-    
-    const request = QuizMapper.toBackendEvaluationRequest(tempQuiz);
-    
-    return this.apiService.put<BackendEvaluation>(`/evaluations/${id}`, request).pipe(
-      map(backendEvaluation => QuizMapper.toQuiz(backendEvaluation))
-    );
+    return this.api.put<BackendEvaluation>(`${this.evaluationsUrl}/${id}`, request)
+      .pipe(
+        map(response => BackendMapper.toEvaluation(response))
+      );
   }
 
   delete(id: string): Observable<void> {
-    return this.apiService.delete<void>(`/evaluations/${id}`);
+    return this.api.delete<void>(`${this.evaluationsUrl}/${id}`);
   }
 
-  publish(id: string): Observable<Quiz> {
-    return this.apiService.post<BackendEvaluation>(`/evaluations/${id}/publish`, {}).pipe(
-      map(backendEvaluation => QuizMapper.toQuiz(backendEvaluation))
+  publish(id: string): Observable<SimpleEvaluation> {
+    return this.api.post<BackendEvaluation>(`${this.evaluationsUrl}/${id}/publish`, {})
+      .pipe(
+        map(response => BackendMapper.toEvaluation(response))
+      );
+  }
+
+  close(id: string): Observable<SimpleEvaluation> {
+    return this.api.post<BackendEvaluation>(`${this.evaluationsUrl}/${id}/close`, {})
+      .pipe(
+        map(response => BackendMapper.toEvaluation(response))
+      );
+  }
+
+  // ============================================
+  // QUIZ
+  // ============================================
+
+  getQuizByEvaluation(evaluationId: string): Observable<SimpleQuiz> {
+    return this.findById(evaluationId).pipe(
+      map(evaluation => ({
+        id: evaluation.quizId,
+        title: evaluation.title,
+        instructions: '',
+        evaluationId: evaluation.id,
+        createdAt: evaluation.createdAt,
+        updatedAt: evaluation.updatedAt
+      }))
     );
   }
 
-  close(id: string): Observable<Quiz> {
-    // TODO: Endpoint pour fermer une évaluation non disponible
-    // Pour l'instant, on peut utiliser update avec status = 'closed'
-    return this.update(id, { status: 'closed' });
+  updateQuiz(evaluationId: string, data: Partial<SimpleQuiz>): Observable<SimpleQuiz> {
+    return this.getQuizByEvaluation(evaluationId);
   }
 
-  addQuestion(quizId: string, question: Question): Observable<Question> {
-    const request = QuizMapper.toBackendQuestionRequest(question);
+  // ============================================
+  // QUESTIONS
+  // ============================================
+
+  getQuestions(quizId: string): Observable<SimpleQuestion[]> {
+    return this.api.get<BackendQuestion[]>(`/evaluations/quizz/${quizId}/questions`)
+      .pipe(
+        map(response => BackendMapper.toQuestions(response))
+      );
+  }
+
+  addQuestion(quizId: string, data: Partial<SimpleQuestion>): Observable<SimpleQuestion> {
+    const request: any = {
+      enonce: data.statement!,
+      typeQuestion: data.type!,
+      options: data.options || []
+    };
+
+    return this.api.post<BackendQuestion>(`/evaluations/quizz/${quizId}/questions`, request)
+      .pipe(
+        map(response => BackendMapper.toQuestion(response))
+      );
+  }
+
+  updateQuestion(questionId: string, data: Partial<SimpleQuestion>): Observable<SimpleQuestion> {
+    const request: any = {};
     
-    // Note: Le backend attend quizzId, pas evaluationId
-    // Il faut d'abord récupérer l'évaluation pour obtenir le quizzId
-    return this.getById(quizId).pipe(
-      map(quiz => {
-        // Extraire le quizzId depuis l'évaluation
-        // Pour l'instant, on utilise l'ID de l'évaluation
-        return this.apiService.post<BackendQuestion>(
-          `/evaluations/quizz/${quizId}/questions`,
-          request
-        ).pipe(
-          map(backendQuestion => QuizMapper.toQuestion(backendQuestion))
-        );
-      }),
-      // Flatten l'observable imbriqué
-      map(obs => obs)
-    ) as any;
+    if (data.statement) request.enonce = data.statement;
+    if (data.type) request.typeQuestion = data.type;
+    if (data.options !== undefined) request.options = data.options;
+
+    return this.api.put<BackendQuestion>(`/evaluations/questions/${questionId}`, request)
+      .pipe(
+        map(response => BackendMapper.toQuestion(response))
+      );
   }
 
-  removeQuestion(quizId: string, questionId: string): Observable<void> {
-    return this.apiService.delete<void>(`/evaluations/questions/${questionId}`);
+  deleteQuestion(questionId: string): Observable<void> {
+    return this.api.delete<void>(`/evaluations/questions/${questionId}`);
   }
 
-  updateQuestion(quizId: string, questionId: string, updates: Partial<Question>): Observable<Question> {
-    // Créer un objet temporaire pour la conversion
-    const tempQuestion = new Question(
-      questionId,
-      updates.text || '',
-      updates.type || 'QCM',
-      updates.points || 1,
-      updates.options || [],
-      updates.correctAnswer,
-      updates.explanation
+  // ============================================
+  // SESSIONS DE RÉPONSE
+  // ============================================
+
+  getEvaluationSessions(evaluationId: string): Observable<SimpleQuizSession[]> {
+    return this.api.get<any[]>(`/evaluations/${evaluationId}/submissions`)
+      .pipe(
+        map(response => response.map((s: any) => ({
+          id: s.id,
+          anonymousToken: s.tokenAnonyme || '',
+          status: s.estTermine ? 'TERMINE' : 'EN_COURS',
+          startDate: new Date(s.dateDebut),
+          endDate: new Date(s.dateFin || new Date()),
+          evaluationId: evaluationId,
+          studentId: s.etudiant?.id || '',
+          createdAt: new Date(s.dateDebut),
+          updatedAt: new Date(s.dateFin || new Date())
+        })))
+      );
+  }
+
+  getStudentSession(evaluationId: string, studentId: string): Observable<SimpleQuizSession> {
+    return this.api.get<any>(`/student/quizzes/${evaluationId}`)
+      .pipe(
+        map(response => ({
+          id: response.id || '',
+          anonymousToken: response.tokenAnonyme || '',
+          status: response.statutSession || 'EN_COURS',
+          startDate: new Date(),
+          endDate: new Date(),
+          evaluationId: evaluationId,
+          studentId: studentId,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }))
+      );
+  }
+
+  startSession(evaluationId: string, studentId: string): Observable<SimpleQuizSession> {
+    return this.getStudentSession(evaluationId, studentId);
+  }
+
+  submitSession(sessionId: string): Observable<SimpleQuizSession> {
+    return this.api.post<any>(`/student/quizzes/${sessionId}/submit`, {
+      reponses: [],
+      estFinal: true
+    }).pipe(
+      map(response => ({
+        id: sessionId,
+        anonymousToken: response.tokenAnonyme || '',
+        status: 'TERMINE',
+        startDate: new Date(),
+        endDate: new Date(),
+        evaluationId: '',
+        studentId: '',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }))
     );
-    
-    const request = QuizMapper.toBackendQuestionRequest(tempQuestion);
-    
-    return this.apiService.put<BackendQuestion>(`/evaluations/questions/${questionId}`, request).pipe(
-      map(backendQuestion => QuizMapper.toQuestion(backendQuestion))
-    );
   }
 
-}
-
-@Injectable({
-  providedIn: 'root'
-})
-export class QuizSubmissionRepository implements IQuizSubmissionRepository {
-  private apiService = inject(ApiService);
-
-  getByQuiz(quizId: string): Observable<QuizSubmission[]> {
-    // TODO: Endpoint pour récupérer les soumissions d'un quiz
-    // Peut-être via GET /api/reports/:id ou un endpoint spécifique
-    return throwError(() => new Error('Endpoint pour récupérer les soumissions non disponible'));
-  }
-
-  getByStudent(studentId: string): Observable<QuizSubmission[]> {
-    // TODO: Endpoint pour récupérer les soumissions d'un étudiant
-    // Peut-être via GET /api/students/:id/submissions
-    return throwError(() => new Error('Endpoint pour récupérer les soumissions par étudiant non disponible'));
-  }
-
-  getById(id: string): Observable<QuizSubmission> {
-    // TODO: Endpoint pour récupérer une soumission spécifique
-    return throwError(() => new Error('Endpoint pour récupérer une soumission non disponible'));
-  }
-
-  submit(submission: QuizSubmission): Observable<QuizSubmission> {
-    // Note: Cette fonctionnalité est pour les étudiants (mobile)
-    // POST /api/student/quizzes/:id/submit
-    return throwError(() => new Error('Fonctionnalité réservée aux étudiants (application mobile)'));
-  }
-
-  getStatistics(quizId: string): Observable<QuizStatistics> {
-    // Utiliser l'endpoint dashboard pour obtenir les statistiques
-    return this.apiService.get<any>(`/dashboard/evaluation/${quizId}`).pipe(
-      map(response => {
-        const stats: QuizStatistics = {
-          totalSubmissions: response.statistiques?.totalParticipants || 0,
-          averageScore: response.statistiques?.moyenneGenerale || 0,
-          passRate: response.statistiques?.tauxReussite || 0,
-          completionRate: response.statistiques?.tauxParticipation || 0
-        };
-        return stats;
-      })
-    );
+  saveAnswer(sessionId: string, questionId: string, content: string): Observable<void> {
+    return this.api.post<void>(`/student/quizzes/${sessionId}/submit`, {
+      reponses: [{ question_id: questionId, contenu: content }],
+      estFinal: false
+    });
   }
 }

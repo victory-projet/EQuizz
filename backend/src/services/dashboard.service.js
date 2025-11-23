@@ -31,8 +31,8 @@ class DashboardService {
       limit: 5,
       order: [['createdAt', 'DESC']],
       include: [
-        { model: db.Cours },
-        { model: db.Classe }
+        { model: db.Cours, required: false },
+        { model: db.Classe, required: false }
       ]
     });
 
@@ -52,11 +52,11 @@ class DashboardService {
       evaluationsRecentes: evaluationsRecentes.map(e => ({
         id: e.id,
         titre: e.titre,
-        cours: e.Cours.nom,
+        cours: e.Cours ? e.Cours.nom : 'N/A',
         statut: e.statut,
         dateDebut: e.dateDebut,
         dateFin: e.dateFin,
-        nombreClasses: e.Classes.length
+        nombreClasses: e.Classes ? e.Classes.length : 0
       })),
       statsParCours
     };

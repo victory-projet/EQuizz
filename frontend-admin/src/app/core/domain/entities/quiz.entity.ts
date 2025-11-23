@@ -4,7 +4,7 @@
  */
 
 export type QuestionType = 'QCM' | 'closed' | 'open';
-export type QuizStatus = 'draft' | 'active' | 'closed';
+export type QuizStatus = 'draft' | 'published' | 'active' | 'closed';
 
 export class Quiz {
   constructor(

@@ -1,79 +1,76 @@
-// src/app/core/infrastructure/repositories/academic-year.repository.ts
-import { Injectable, inject } from '@angular/core';
-import { Observable, throwError, map } from 'rxjs';
-import { AcademicYear, Period } from '../../core/domain/entities/academic-year.entity';
-import { IAcademicYearRepository } from '../../core/domain/repositories/academic-year.repository.interface';
-import { ApiService } from '../http/api.service';
-import { AcademicMapper } from '../mappers/academic.mapper';
-import { BackendAnneeAcademique, BackendSemestre } from '../http/interfaces/backend.interfaces';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
-/**
- * Repository Implementation - Academic Year
- * Implémentation concrète pour l'accès aux données via l'API backend
- */
+import { ApiService } from '../http/api.service';
+import { BackendAnneeAcademique, BackendAnneeAcademiqueRequest } from '../http/interfaces/backend.interfaces';
+import { SimpleAcademicYear } from '../../core/models/simplified.interfaces';
+import { BackendMapper } from '../mappers/backend.mapper';
+
 @Injectable({
   providedIn: 'root'
 })
-export class AcademicYearRepository implements IAcademicYearRepository {
-  private apiService = inject(ApiService);
+export class AcademicYearRepository {
+  private readonly baseUrl = '/academic/annees-academiques';
 
-  getAll(): Observable<AcademicYear[]> {
-    return this.apiService.get<BackendAnneeAcademique[]>('/academic/annees-academiques').pipe(
-      map(backendYears => backendYears.map(y => AcademicMapper.toAcademicYear(y)))
-    );
+  constructor(private api: ApiService) {}
+
+  findAll(): Observable<SimpleAcademicYear[]> {
+    return this.api.get<BackendAnneeAcademique[]>(this.baseUrl)
+      .pipe(
+        map(response => BackendMapper.toAcademicYears(response))
+      );
   }
 
-  getById(id: string): Observable<AcademicYear> {
-    return this.apiService.get<BackendAnneeAcademique>(`/academic/annees-academiques/${id}`).pipe(
-      map(backendYear => AcademicMapper.toAcademicYear(backendYear))
-    );
+  findById(id: string): Observable<SimpleAcademicYear> {
+    return this.api.get<BackendAnneeAcademique>(`${this.baseUrl}/${id}`)
+      .pipe(
+        map(response => BackendMapper.toAcademicYear(response))
+      );
   }
 
-  getActive(): Observable<AcademicYear | null> {
-    return this.getAll().pipe(
-      map(years => years.find(y => y.isActive) || null)
-    );
+  create(data: Partial<SimpleAcademicYear>): Observable<SimpleAcademicYear> {
+    const request: BackendAnneeAcademiqueRequest = {
+      libelle: data.label!,
+      dateDebut: data.startDate!.toISOString().split('T')[0],
+      dateFin: data.endDate!.toISOString().split('T')[0],
+      estCourante: data.isCurrent || false
+    };
+
+    return this.api.post<BackendAnneeAcademique>(this.baseUrl, request)
+      .pipe(
+        map(response => BackendMapper.toAcademicYear(response))
+      );
   }
 
-  create(year: AcademicYear): Observable<AcademicYear> {
-    const request = AcademicMapper.toBackendAnneeAcademiqueRequest(year);
+  update(id: string, data: Partial<SimpleAcademicYear>): Observable<SimpleAcademicYear> {
+    const request: Partial<BackendAnneeAcademiqueRequest> = {};
     
-    return this.apiService.post<BackendAnneeAcademique>('/academic/annees-academiques', request).pipe(
-      map(backendYear => AcademicMapper.toAcademicYear(backendYear))
-    );
-  }
+    if (data.label) request.libelle = data.label;
+    if (data.startDate) request.dateDebut = data.startDate.toISOString().split('T')[0];
+    if (data.endDate) request.dateFin = data.endDate.toISOString().split('T')[0];
+    if (data.isCurrent !== undefined) request.estCourante = data.isCurrent;
 
-  update(id: string, updates: Partial<AcademicYear>): Observable<AcademicYear> {
-    // Créer un objet temporaire pour la conversion
-    const tempYear = new AcademicYear(
-      id,
-      updates.name || '',
-      updates.startDate || new Date(),
-      updates.endDate || new Date(),
-      updates.isActive ?? false,
-      updates.periods || []
-    );
-    
-    const request = AcademicMapper.toBackendAnneeAcademiqueRequest(tempYear);
-    
-    return this.apiService.put<BackendAnneeAcademique>(`/academic/annees-academiques/${id}`, request).pipe(
-      map(backendYear => AcademicMapper.toAcademicYear(backendYear))
-    );
+    return this.api.put<BackendAnneeAcademique>(`${this.baseUrl}/${id}`, request)
+      .pipe(
+        map(response => BackendMapper.toAcademicYear(response))
+      );
   }
 
   delete(id: string): Observable<void> {
-    return this.apiService.delete<void>(`/academic/annees-academiques/${id}`);
+    return this.api.delete<void>(`${this.baseUrl}/${id}`);
   }
 
-  addPeriod(yearId: string, period: Period): Observable<Period> {
-    const request = AcademicMapper.toBackendSemestreRequest(period, parseInt(yearId));
-    
-    return this.apiService.post<BackendSemestre>('/academic/semestres', request).pipe(
-      map(backendSemestre => AcademicMapper.toPeriod(backendSemestre))
+  findCurrent(): Observable<SimpleAcademicYear | null> {
+    return this.findAll().pipe(
+      map(years => {
+        const current = years.find(y => y.isCurrent);
+        return current || null;
+      })
     );
   }
 
-  removePeriod(yearId: string, periodId: string): Observable<void> {
-    return this.apiService.delete<void>(`/academic/semestres/${periodId}`);
+  setCurrent(id: string): Observable<SimpleAcademicYear> {
+    return this.update(id, { isCurrent: true });
   }
 }

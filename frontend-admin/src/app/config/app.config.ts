@@ -7,44 +7,40 @@ import { routes } from './app.routes';
 import { authInterceptor } from '../infrastructure/http/auth.interceptor';
 import { errorInterceptor } from '../infrastructure/http/error.interceptor';
 
-// Clean Architecture - Repository Providers
-import { IAcademicYearRepository } from '../core/domain/repositories/academic-year.repository.interface';
-import { AcademicYearRepository } from '../infrastructure/repositories/academic-year.repository';
-import { IQuizRepository, IQuizSubmissionRepository } from '../core/domain/repositories/quiz.repository.interface';
-import { QuizRepository, QuizSubmissionRepository } from '../infrastructure/repositories/quiz.repository';
-import { IClassRepository, IStudentRepository } from '../core/domain/repositories/class.repository.interface';
-import { ClassRepository, StudentRepository } from '../infrastructure/repositories/class.repository';
-import { ICourseRepository, ITeacherRepository } from '../core/domain/repositories/course.repository.interface';
-import { CourseRepository, TeacherRepository } from '../infrastructure/repositories/course.repository';
+// Repository Interfaces
 import { IAuthRepository, IUserRepository } from '../core/domain/repositories/auth.repository.interface';
-import { AuthRepository, UserRepository } from '../infrastructure/repositories/auth.repository';
+import { IAcademicYearRepository } from '../core/domain/repositories/academic-year.repository.interface';
+import { IQuizRepository } from '../core/domain/repositories/quiz.repository.interface';
+import { IClassRepository } from '../core/domain/repositories/class.repository.interface';
+import { ICourseRepository } from '../core/domain/repositories/course.repository.interface';
+import { INotificationRepository } from '../core/domain/repositories/notification.repository.interface';
+
+// Repository Implementations
+import { AuthRepository } from '../infrastructure/repositories/auth.repository';
+import { UserRepository } from '../infrastructure/repositories/user.repository';
+import { AcademicYearRepository } from '../infrastructure/repositories/academic-year.repository';
+import { QuizRepository } from '../infrastructure/repositories/quiz.repository';
+import { ClassRepository } from '../infrastructure/repositories/class.repository';
+import { CourseRepository } from '../infrastructure/repositories/course.repository';
+import { NotificationRepository } from '../infrastructure/repositories/notification.repository';
+import { DashboardRepository } from '../infrastructure/repositories/dashboard.repository';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
     provideAnimations(),
-    
-    // Clean Architecture - Dependency Injection
-    // Principe: Dependency Inversion - dépendre d'abstractions
-    
-    // Academic Year
-    { provide: IAcademicYearRepository, useClass: AcademicYearRepository },
-    
-    // Quiz
-    { provide: IQuizRepository, useClass: QuizRepository },
-    { provide: IQuizSubmissionRepository, useClass: QuizSubmissionRepository },
-    
-    // Class
-    { provide: IClassRepository, useClass: ClassRepository },
-    { provide: IStudentRepository, useClass: StudentRepository },
-    
-    // Course
-    { provide: ICourseRepository, useClass: CourseRepository },
-    { provide: ITeacherRepository, useClass: TeacherRepository },
-    
-    // Auth
+
+    // Repository Providers - Map interfaces to implementations
     { provide: IAuthRepository, useClass: AuthRepository },
     { provide: IUserRepository, useClass: UserRepository },
+    { provide: IAcademicYearRepository, useClass: AcademicYearRepository },
+    { provide: IQuizRepository, useClass: QuizRepository },
+    { provide: IClassRepository, useClass: ClassRepository },
+    { provide: ICourseRepository, useClass: CourseRepository },
+    { provide: INotificationRepository, useClass: NotificationRepository },
+
+    // Additional repositories without interfaces
+    DashboardRepository
   ]
 };

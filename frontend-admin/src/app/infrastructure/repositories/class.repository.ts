@@ -1,118 +1,98 @@
-// src/app/core/infrastructure/repositories/class.repository.ts
-import { Injectable, inject } from '@angular/core';
-import { Observable, throwError, map } from 'rxjs';
-import { Class, Student } from '../../core/domain/entities/class.entity';
-import { IClassRepository, IStudentRepository } from '../../core/domain/repositories/class.repository.interface';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
 import { ApiService } from '../http/api.service';
-import { AcademicMapper } from '../mappers/academic.mapper';
-import { BackendClasse } from '../http/interfaces/backend.interfaces';
+import { BackendClasse, BackendClasseRequest } from '../http/interfaces/backend.interfaces';
+import { SimpleClass } from '../../core/models/simplified.interfaces';
+import { BackendMapper } from '../mappers/backend.mapper';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ClassRepository implements IClassRepository {
-  private apiService = inject(ApiService);
+export class ClassRepository {
+  private readonly baseUrl = '/academic/classes';
 
-  getAll(): Observable<Class[]> {
-    return this.apiService.get<BackendClasse[]>('/academic/classes').pipe(
-      map(backendClasses => backendClasses.map(c => AcademicMapper.toClass(c)))
-    );
+  constructor(private api: ApiService) {}
+
+  findAll(): Observable<SimpleClass[]> {
+    return this.api.get<BackendClasse[]>(this.baseUrl)
+      .pipe(
+        map(response => BackendMapper.toClasses(response))
+      );
   }
 
-  getById(id: string): Observable<Class> {
-    return this.apiService.get<BackendClasse>(`/academic/classes/${id}`).pipe(
-      map(backendClass => AcademicMapper.toClass(backendClass))
-    );
+  findById(id: string): Observable<SimpleClass> {
+    return this.api.get<BackendClasse>(`${this.baseUrl}/${id}`)
+      .pipe(
+        map(response => BackendMapper.toClass(response))
+      );
   }
 
-  getByAcademicYear(yearId: string): Observable<Class[]> {
-    return this.getAll().pipe(
-      map(classes => classes.filter(c => c.academicYearId === yearId))
-    );
+  findByAcademicYear(academicYearId: string): Observable<SimpleClass[]> {
+    return this.api.get<BackendClasse[]>(`${this.baseUrl}/academic-year/${academicYearId}`)
+      .pipe(
+        map(response => BackendMapper.toClasses(response))
+      );
   }
 
-  create(classEntity: Class): Observable<Class> {
-    const request = AcademicMapper.toBackendClasseRequest(classEntity);
+  create(data: Partial<SimpleClass>): Observable<SimpleClass> {
+    const request: BackendClasseRequest = {
+      nom: data.name!,
+      niveau: data.level!,
+      anneeAcademiqueId: data.academicYearId!,
+      ecoleId: data.schoolId
+    };
+
+    return this.api.post<BackendClasse>(this.baseUrl, request)
+      .pipe(
+        map(response => BackendMapper.toClass(response))
+      );
+  }
+
+  update(id: string, data: Partial<SimpleClass>): Observable<SimpleClass> {
+    const request: Partial<BackendClasseRequest> = {};
     
-    return this.apiService.post<BackendClasse>('/academic/classes', request).pipe(
-      map(backendClass => AcademicMapper.toClass(backendClass))
-    );
-  }
+    if (data.name) request.nom = data.name;
+    if (data.level) request.niveau = data.level;
+    if (data.academicYearId) request.anneeAcademiqueId = data.academicYearId;
+    if (data.schoolId) request.ecoleId = data.schoolId;
 
-  update(id: string, updates: Partial<Class>): Observable<Class> {
-    // Créer un objet temporaire pour la conversion
-    const tempClass = new Class(
-      id,
-      updates.name || '',
-      updates.level || '',
-      updates.academicYearId || '',
-      updates.studentIds || [],
-      updates.courseIds || [],
-      updates.createdAt || new Date()
-    );
-    
-    const request = AcademicMapper.toBackendClasseRequest(tempClass);
-    
-    return this.apiService.put<BackendClasse>(`/academic/classes/${id}`, request).pipe(
-      map(backendClass => AcademicMapper.toClass(backendClass))
-    );
+    return this.api.put<BackendClasse>(`${this.baseUrl}/${id}`, request)
+      .pipe(
+        map(response => BackendMapper.toClass(response))
+      );
   }
 
   delete(id: string): Observable<void> {
-    return this.apiService.delete<void>(`/academic/classes/${id}`);
+    return this.api.delete<void>(`${this.baseUrl}/${id}`);
   }
 
-  addStudent(classId: string, studentId: string): Observable<void> {
-    // TODO: Endpoint pour ajouter un étudiant à une classe
-    // Peut-être via PUT /academic/classes/:id avec la liste des étudiants
-    return throwError(() => new Error('Fonctionnalité non implémentée'));
+  addStudent(classId: string, studentId: string): Observable<SimpleClass> {
+    return this.api.post<BackendClasse>(`${this.baseUrl}/${classId}/etudiants/${studentId}`, {})
+      .pipe(
+        map(response => BackendMapper.toClass(response))
+      );
   }
 
-  removeStudent(classId: string, studentId: string): Observable<void> {
-    // TODO: Endpoint pour retirer un étudiant d'une classe
-    return throwError(() => new Error('Fonctionnalité non implémentée'));
+  removeStudent(classId: string, studentId: string): Observable<SimpleClass> {
+    return this.api.delete<BackendClasse>(`${this.baseUrl}/${classId}/etudiants/${studentId}`)
+      .pipe(
+        map(response => BackendMapper.toClass(response))
+      );
   }
 
-  getStudents(classId: string): Observable<Student[]> {
-    // TODO: Endpoint GET /api/classes/:id/students non disponible
-    // Pour l'instant, retourner un tableau vide
-    return throwError(() => new Error('Endpoint GET /api/classes/:id/students non disponible'));
-  }
-}
-
-@Injectable({
-  providedIn: 'root'
-})
-export class StudentRepository implements IStudentRepository {
-  private apiService = inject(ApiService);
-
-  getAll(): Observable<Student[]> {
-    // TODO: Endpoint GET /api/students non disponible dans le backend
-    return throwError(() => new Error('Endpoint GET /api/students non disponible. Fonctionnalité à implémenter dans le backend.'));
+  addCourse(classId: string, courseId: string): Observable<SimpleClass> {
+    return this.api.post<BackendClasse>(`${this.baseUrl}/${classId}/cours/${courseId}`, {})
+      .pipe(
+        map(response => BackendMapper.toClass(response))
+      );
   }
 
-  getById(id: string): Observable<Student> {
-    // TODO: Endpoint GET /api/students/:id non disponible dans le backend
-    return throwError(() => new Error('Endpoint GET /api/students/:id non disponible. Fonctionnalité à implémenter dans le backend.'));
-  }
-
-  getByClass(classId: string): Observable<Student[]> {
-    // TODO: Endpoint GET /api/classes/:id/students non disponible dans le backend
-    return throwError(() => new Error('Endpoint GET /api/classes/:id/students non disponible. Fonctionnalité à implémenter dans le backend.'));
-  }
-
-  create(student: Student): Observable<Student> {
-    // TODO: Endpoint POST /api/students non disponible dans le backend
-    return throwError(() => new Error('Endpoint POST /api/students non disponible. Fonctionnalité à implémenter dans le backend.'));
-  }
-
-  update(id: string, updates: Partial<Student>): Observable<Student> {
-    // TODO: Endpoint PUT /api/students/:id non disponible dans le backend
-    return throwError(() => new Error('Endpoint PUT /api/students/:id non disponible. Fonctionnalité à implémenter dans le backend.'));
-  }
-
-  delete(id: string): Observable<void> {
-    // TODO: Endpoint DELETE /api/students/:id non disponible dans le backend
-    return throwError(() => new Error('Endpoint DELETE /api/students/:id non disponible. Fonctionnalité à implémenter dans le backend.'));
+  removeCourse(classId: string, courseId: string): Observable<SimpleClass> {
+    return this.api.delete<BackendClasse>(`${this.baseUrl}/${classId}/cours/${courseId}`)
+      .pipe(
+        map(response => BackendMapper.toClass(response))
+      );
   }
 }

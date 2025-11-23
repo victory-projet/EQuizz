@@ -22,14 +22,14 @@ export class AcademicMapper {
    * Convertir BackendAnneeAcademique vers AcademicYear (Domain)
    */
   static toAcademicYear(backend: BackendAnneeAcademique): AcademicYear {
-    const periods = backend.semestres?.map(s => this.toPeriod(s)) || [];
+    const periods = backend.Semestres?.map((s: BackendSemestre) => this.toPeriod(s)) || [];
     
     return new AcademicYear(
       backend.id.toString(),
-      backend.nom,
+      backend.libelle,
       new Date(backend.dateDebut),
       new Date(backend.dateFin),
-      backend.estActive,
+      backend.estCourante,
       periods
     );
   }
@@ -39,10 +39,10 @@ export class AcademicMapper {
    */
   static toBackendAnneeAcademiqueRequest(year: AcademicYear): BackendAnneeAcademiqueRequest {
     return {
-      nom: year.name,
+      libelle: year.name,
       dateDebut: year.startDate.toISOString().split('T')[0],
       dateFin: year.endDate.toISOString().split('T')[0],
-      estActive: year.isActive
+      estCourante: year.isActive
     };
   }
 
@@ -57,7 +57,7 @@ export class AcademicMapper {
     return new Period(
       backend.id.toString(),
       backend.nom,
-      backend.type as 'semester' | 'trimester',
+      backend.numero === 1 ? 'semester' : 'trimester',
       new Date(backend.dateDebut),
       new Date(backend.dateFin)
     );
@@ -66,10 +66,10 @@ export class AcademicMapper {
   /**
    * Convertir Period vers BackendSemestreRequest
    */
-  static toBackendSemestreRequest(period: Period, anneeAcademiqueId: number): BackendSemestreRequest {
+  static toBackendSemestreRequest(period: Period, anneeAcademiqueId: string): BackendSemestreRequest {
     return {
       nom: period.name,
-      type: period.type,
+      numero: period.type === 'semester' ? 1 : 2,
       dateDebut: period.startDate.toISOString().split('T')[0],
       dateFin: period.endDate.toISOString().split('T')[0],
       anneeAcademiqueId
@@ -84,14 +84,14 @@ export class AcademicMapper {
    * Convertir BackendClasse vers Class (Domain)
    */
   static toClass(backend: BackendClasse): Class {
-    const studentIds = backend.etudiants?.map(e => e.id.toString()) || [];
-    const courseIds = backend.cours?.map(c => c.id.toString()) || [];
+    const studentIds = backend.Etudiants?.map((e: any) => e.id.toString()) || [];
+    const courseIds = backend.Cours?.map((c: any) => c.id.toString()) || [];
     
     return new Class(
       backend.id.toString(),
       backend.nom,
       backend.niveau,
-      backend.anneeAcademiqueId.toString(),
+      backend.AnneeAcademique?.id?.toString() || backend.annee_academique_id?.toString() || '',
       studentIds,
       courseIds,
       backend.createdAt ? new Date(backend.createdAt) : new Date()
@@ -105,7 +105,7 @@ export class AcademicMapper {
     return {
       nom: classEntity.name,
       niveau: classEntity.level,
-      anneeAcademiqueId: parseInt(classEntity.academicYearId)
+      anneeAcademiqueId: classEntity.academicYearId
     };
   }
 
@@ -117,14 +117,17 @@ export class AcademicMapper {
    * Convertir BackendCours vers Course (Domain)
    */
   static toCourse(backend: BackendCours): Course {
+    // Extraire l'ID de l'enseignant depuis l'objet Enseignant ou depuis enseignant_id
+    const teacherId = backend.Enseignant?.id?.toString() || backend.enseignant_id?.toString() || '';
+    
     return new Course(
       backend.id.toString(),
       backend.code,
       backend.nom,
-      backend.description || '',
-      backend.enseignantId?.toString() || '',
-      backend.anneeAcademiqueId.toString(),
-      backend.semestreId?.toString() || '',
+      '',
+      teacherId,
+      backend.AnneeAcademique?.id?.toString() || backend.annee_academique_id?.toString() || '',
+      backend.Semestre?.id?.toString() || backend.semestre_id?.toString() || '',
       backend.createdAt ? new Date(backend.createdAt) : new Date()
     );
   }
@@ -136,10 +139,10 @@ export class AcademicMapper {
     return {
       code: course.code,
       nom: course.name,
-      description: course.description,
-      enseignantId: course.teacherId ? parseInt(course.teacherId) : undefined,
-      anneeAcademiqueId: parseInt(course.academicYearId),
-      semestreId: course.semesterId ? parseInt(course.semesterId) : undefined
+      estArchive: false,
+      enseignantId: course.teacherId || undefined,
+      anneeAcademiqueId: course.academicYearId,
+      semestreId: course.semesterId || undefined
     };
   }
 }

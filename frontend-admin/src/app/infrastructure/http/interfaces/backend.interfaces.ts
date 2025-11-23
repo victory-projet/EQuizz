@@ -1,4 +1,6 @@
 // Interfaces pour les réponses du backend
+// ⚠️ IMPORTANT: Ces interfaces doivent correspondre EXACTEMENT aux modèles backend
+// Les types UUID du backend sont représentés par des strings en TypeScript
 
 // ============================================
 // RÉPONSE GÉNÉRIQUE
@@ -21,7 +23,7 @@ export interface BackendAuthResponse {
 }
 
 export interface BackendUser {
-  id: number;
+  id: string;  // ✅ UUID
   email: string;
   prenom: string;
   nom: string;
@@ -36,23 +38,23 @@ export interface BackendUser {
 // ============================================
 
 export interface BackendAnneeAcademique {
-  id: number;
-  nom: string;
+  id: string;  // ✅ UUID
+  libelle: string;  // ✅ Nom correct du backend
   dateDebut: string;
   dateFin: string;
-  estActive: boolean;
-  semestres?: BackendSemestre[];
+  estCourante: boolean;  // ✅ Nom correct du backend
+  Semestres?: BackendSemestre[];
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface BackendSemestre {
-  id: number;
+  id: string;  // ✅ UUID
   nom: string;
-  type: string;
+  numero: number;  // ✅ Ajouté (1 ou 2)
   dateDebut: string;
   dateFin: string;
-  anneeAcademiqueId: number;
+  annee_academique_id: string;  // ✅ UUID (snake_case comme backend)
   createdAt?: string;
   updatedAt?: string;
 }
@@ -62,24 +64,29 @@ export interface BackendSemestre {
 // ============================================
 
 export interface BackendClasse {
-  id: number;
+  id: string;  // ✅ UUID
   nom: string;
   niveau: string;
-  anneeAcademiqueId: number;
-  etudiants?: BackendEtudiant[];
-  cours?: BackendCours[];
+  annee_academique_id?: string;  // ✅ UUID (snake_case comme backend)
+  ecole_id?: string;  // ✅ UUID (snake_case comme backend)
+  Etudiants?: BackendEtudiant[];
+  Cours?: BackendCours[];
+  Ecole?: BackendEcole;
+  AnneeAcademique?: BackendAnneeAcademique;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface BackendEtudiant {
-  id: number;
+  id: string;  // ✅ UUID
   prenom: string;
   nom: string;
   email: string;
-  numeroEtudiant: string;
-  classeId?: number;
-  utilisateurId?: number;
+  matricule: string;  // ✅ Nom correct du backend
+  idCarte?: string;  // ✅ Ajouté
+  classe_id?: string;  // ✅ UUID (snake_case comme backend)
+  Classe?: BackendClasse;
+  Utilisateur?: BackendUser;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -89,25 +96,27 @@ export interface BackendEtudiant {
 // ============================================
 
 export interface BackendCours {
-  id: number;
+  id: string;  // ✅ UUID
   code: string;
   nom: string;
-  description?: string;
-  enseignantId?: number;
-  anneeAcademiqueId: number;
-  semestreId?: number;
-  enseignant?: BackendEnseignant;
+  estArchive: boolean;  // ✅ Ajouté
+  enseignant_id?: string;  // ✅ UUID (snake_case comme backend)
+  annee_academique_id?: string;  // ✅ UUID (snake_case comme backend)
+  semestre_id?: string;  // ✅ UUID (snake_case comme backend)
+  Enseignant?: BackendEnseignant;
+  Semestre?: BackendSemestre;
+  AnneeAcademique?: BackendAnneeAcademique;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface BackendEnseignant {
-  id: number;
+  id: string;  // ✅ UUID
   prenom: string;
   nom: string;
   email: string;
-  departement?: string;
-  utilisateurId?: number;
+  specialite?: string;  // ✅ Nom correct du backend
+  Utilisateur?: BackendUser;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -117,11 +126,8 @@ export interface BackendEnseignant {
 // ============================================
 
 export interface BackendEcole {
-  id: number;
+  id: string;  // ✅ UUID
   nom: string;
-  adresse?: string;
-  telephone?: string;
-  email?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -131,48 +137,80 @@ export interface BackendEcole {
 // ============================================
 
 export interface BackendEvaluation {
-  id: number;
+  id: string;  // ✅ UUID
   titre: string;
   description?: string;
-  coursId: number;
-  classeId?: number;
   dateDebut: string;
   dateFin?: string;
-  duree?: number;
-  statut: string;
-  quizz?: BackendQuizz;
-  cours?: BackendCours;
-  classe?: BackendClasse;
+  datePublication?: string;  // ✅ Ajouté
+  typeEvaluation: 'MI_PARCOURS' | 'FIN_SEMESTRE';  // ✅ Ajouté
+  statut: 'BROUILLON' | 'PUBLIEE' | 'EN_COURS' | 'CLOTUREE';
+  cours_id?: string;  // ✅ UUID (snake_case comme backend)
+  Cours?: BackendCours;
+  Quizz?: BackendQuizz;
+  Classes?: BackendClasse[];  // ✅ Relation many-to-many
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface BackendQuizz {
-  id: number;
-  evaluationId: number;
-  questions?: BackendQuestion[];
+  id: string;  // ✅ UUID
+  titre: string;  // ✅ Ajouté
+  instructions?: string;  // ✅ Ajouté
+  evaluation_id: string;  // ✅ UUID (snake_case comme backend)
+  Questions?: BackendQuestion[];
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface BackendQuestion {
-  id: number;
-  quizzId: number;
-  type: string;
-  texte: string;
-  points: number;
-  ordre: number;
-  reponses?: BackendReponse[];
+  id: string;  // ✅ UUID
+  quizz_id: string;  // ✅ UUID (snake_case comme backend)
+  enonce: string;  // ✅ Nom correct du backend
+  typeQuestion: 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE';  // ✅ Nom correct
+  options?: any[];  // ✅ JSON array
   createdAt?: string;
   updatedAt?: string;
 }
 
-export interface BackendReponse {
-  id: number;
-  questionId: number;
-  texte: string;
-  estCorrecte: boolean;
-  ordre: number;
+// ============================================
+// RÉPONSES
+// ============================================
+
+export interface BackendSessionReponse {
+  id: string;  // ✅ UUID
+  tokenAnonyme: string;  // ✅ Ajouté
+  statut: 'EN_COURS' | 'TERMINE';
+  dateDebut: string;
+  dateFin?: string;
+  quizz_id: string;  // ✅ UUID (snake_case comme backend)
+  etudiant_id: string;  // ✅ UUID (snake_case comme backend)
+  ReponseEtudiants?: BackendReponseEtudiant[];
+  Quizz?: BackendQuizz;
+  Etudiant?: BackendEtudiant;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface BackendReponseEtudiant {
+  id: string;  // ✅ UUID
+  contenu: string;
+  question_id: string;  // ✅ UUID (snake_case comme backend)
+  session_reponse_id: string;  // ✅ UUID (snake_case comme backend)
+  Question?: BackendQuestion;
+  SessionReponse?: BackendSessionReponse;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// ============================================
+// ADMINISTRATEUR
+// ============================================
+
+export interface BackendAdministrateur {
+  id: string;  // ✅ UUID
+  profil?: string;  // ✅ URL du profil
+  Utilisateur?: BackendUser;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -215,12 +253,11 @@ export interface BackendRapport {
 // ============================================
 
 export interface BackendNotification {
-  id: number;
-  utilisateurId: number;
+  id: string;  // ✅ UUID
+  evaluation_id?: string;  // ✅ UUID (snake_case comme backend)
   titre: string;
   message: string;
-  type: string;
-  estLue: boolean;
+  typeNotification: 'NOUVELLE_EVALUATION' | 'RAPPEL_EVALUATION' | 'EVALUATION_BIENTOT_FERMEE';  // ✅ Nom correct
   createdAt: string;
   updatedAt?: string;
 }
@@ -235,54 +272,51 @@ export interface BackendLoginRequest {
 }
 
 export interface BackendAnneeAcademiqueRequest {
-  nom: string;
+  libelle: string;  // ✅ Nom correct
   dateDebut: string;
   dateFin: string;
-  estActive?: boolean;
+  estCourante?: boolean;  // ✅ Nom correct
 }
 
 export interface BackendSemestreRequest {
   nom: string;
-  type: string;
+  numero: number;  // ✅ Ajouté
   dateDebut: string;
   dateFin: string;
-  anneeAcademiqueId: number;
+  anneeAcademiqueId: string;  // ✅ UUID (camelCase pour request)
 }
 
 export interface BackendClasseRequest {
   nom: string;
   niveau: string;
-  anneeAcademiqueId: number;
+  anneeAcademiqueId: string;  // ✅ UUID (camelCase pour request)
+  ecoleId?: string;  // ✅ UUID (camelCase pour request)
 }
 
 export interface BackendCoursRequest {
   code: string;
   nom: string;
-  description?: string;
-  enseignantId?: number;
-  anneeAcademiqueId: number;
-  semestreId?: number;
+  estArchive?: boolean;  // ✅ Ajouté
+  enseignantId?: string;  // ✅ UUID (camelCase pour request)
+  anneeAcademiqueId: string;  // ✅ UUID (camelCase pour request)
+  semestreId?: string;  // ✅ UUID (camelCase pour request)
 }
 
 export interface BackendEvaluationRequest {
   titre: string;
   description?: string;
-  coursId: number;
-  classeId?: number;
   dateDebut: string;
   dateFin?: string;
-  duree?: number;
-  statut?: string;
+  datePublication?: string;  // ✅ Ajouté
+  typeEvaluation: 'MI_PARCOURS' | 'FIN_SEMESTRE';  // ✅ Ajouté
+  statut?: 'BROUILLON' | 'PUBLIEE' | 'EN_COURS' | 'CLOTUREE';
+  cours_id: string;  // ✅ UUID (snake_case pour request)
+  classeIds?: string[];  // ✅ Array d'UUIDs
 }
 
 export interface BackendQuestionRequest {
-  type: string;
-  texte: string;
-  points: number;
-  ordre: number;
-  reponses?: {
-    texte: string;
-    estCorrecte: boolean;
-    ordre: number;
-  }[];
+  enonce: string;  // ✅ Nom correct
+  typeQuestion: 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE';  // ✅ Nom correct
+  options?: any[];  // ✅ JSON array
 }
+
