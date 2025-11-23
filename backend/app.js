@@ -22,6 +22,7 @@ const initRoutes = require('./src/routes/init.routes');
 const reportRoutes = require('./src/routes/report.routes');
 const notificationRoutes = require('./src/routes/notification.routes');
 const dashboardRoutes = require('./src/routes/dashboard.routes');
+const utilisateurRoutes = require('./src/routes/utilisateur.routes');
 
 // --- Middlewares Globaux ---
 // Configuration CORS pour autoriser les requêtes depuis le frontend
@@ -50,6 +51,7 @@ app.use('/api/init', initRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/utilisateurs', utilisateurRoutes);
 
 // --- Route 404 pour les endpoints non trouvés ---
 app.use((req, res, next) => {
