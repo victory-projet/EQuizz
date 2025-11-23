@@ -14,7 +14,7 @@ class AuthController {
     const loginIdentifier = email || matricule;
 
     const { token, utilisateur } = await authService.login(loginIdentifier, motDePasse);
-    
+
     // Déterminer le rôle et préparer les informations complètes
     let role = 'ETUDIANT';
     let additionalInfo = {};
@@ -38,7 +38,7 @@ class AuthController {
         } : null
       };
     }
-    
+
     // Retourner toutes les informations non sensibles
     res.status(200).json({
       token,
@@ -48,6 +48,7 @@ class AuthController {
         prenom: utilisateur.prenom,
         email: utilisateur.email,
         role,
+        estActif: utilisateur.estActif,
         ...additionalInfo
       }
     });
@@ -56,15 +57,15 @@ class AuthController {
   linkCard = asyncHandler(async (req, res) => {
     const { matricule, idCarte } = req.body;
     await authService.linkCardToAccount(matricule, idCarte);
-    res.status(200).json({ 
-      message: 'Un email de confirmation a été envoyé. Veuillez vérifier votre boîte de réception pour valider l\'association de votre carte.' 
+    res.status(200).json({
+      message: 'Un email de confirmation a été envoyé. Veuillez vérifier votre boîte de réception pour valider l\'association de votre carte.'
     });
   });
 
   // Obtenir l'utilisateur connecté
   getCurrentUser = asyncHandler(async (req, res) => {
     const utilisateur = req.user; // Défini par le middleware authenticate
-    
+
     // Déterminer le rôle et préparer les informations complètes
     let role = 'ETUDIANT';
     let additionalInfo = {};
@@ -88,7 +89,7 @@ class AuthController {
         } : null
       };
     }
-    
+
     res.status(200).json({
       id: utilisateur.id,
       nom: utilisateur.nom,
@@ -106,8 +107,8 @@ class AuthController {
   logout = asyncHandler(async (req, res) => {
     // Pour l'instant, la déconnexion est gérée côté client
     // On pourrait ajouter une blacklist de tokens ici si nécessaire
-    res.status(200).json({ 
-      message: 'Déconnexion réussie' 
+    res.status(200).json({
+      message: 'Déconnexion réussie'
     });
   });
 
@@ -115,14 +116,14 @@ class AuthController {
   updateProfile = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     const { nom, prenom, email } = req.body;
-    
+
     const utilisateur = await db.Utilisateur.findByPk(userId);
     if (!utilisateur) {
       return res.status(404).json({ error: 'Utilisateur non trouvé' });
     }
 
     await utilisateur.update({ nom, prenom, email });
-    
+
     res.status(200).json({
       id: utilisateur.id,
       nom: utilisateur.nom,
@@ -137,7 +138,7 @@ class AuthController {
   changePassword = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     const { currentPassword, newPassword } = req.body;
-    
+
     const utilisateur = await db.Utilisateur.findByPk(userId);
     if (!utilisateur) {
       return res.status(404).json({ error: 'Utilisateur non trouvé' });
@@ -152,40 +153,40 @@ class AuthController {
     // Mettre à jour le mot de passe
     utilisateur.motDePasseHash = newPassword;
     await utilisateur.save();
-    
+
     res.status(200).json({ message: 'Mot de passe modifié avec succès' });
   });
 
   // Rafraîchir le token
   refreshToken = asyncHandler(async (req, res) => {
     const { refreshToken } = req.body;
-    
+
     if (!refreshToken) {
-      return res.status(400).json({ 
-        error: 'Refresh token manquant' 
+      return res.status(400).json({
+        error: 'Refresh token manquant'
       });
     }
 
     // Pour l'instant, on génère simplement un nouveau token
     // Dans une vraie application, on vérifierait le refresh token
     const jwtService = require('../services/jwt.service');
-    
+
     try {
       // Vérifier le token
       const decoded = jwtService.verifyToken(refreshToken);
-      
+
       // Générer un nouveau token
-      const newToken = jwtService.generateToken({ 
-        id: decoded.id, 
-        email: decoded.email 
+      const newToken = jwtService.generateToken({
+        id: decoded.id,
+        email: decoded.email
       });
-      
-      res.status(200).json({ 
-        token: newToken 
+
+      res.status(200).json({
+        token: newToken
       });
     } catch (error) {
-      res.status(401).json({ 
-        error: 'Refresh token invalide ou expiré' 
+      res.status(401).json({
+        error: 'Refresh token invalide ou expiré'
       });
     }
   });

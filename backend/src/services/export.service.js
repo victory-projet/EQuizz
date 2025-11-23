@@ -171,7 +171,7 @@ class ExportService {
         question.options.forEach(opt => { distribution[opt] = 0; });
         
         reponses.forEach(r => {
-          if (r.contenu && distribution.hasOwnProperty(r.contenu)) {
+          if (r.contenu && Object.prototype.hasOwnProperty.call(distribution, r.contenu)) {
             distribution[r.contenu]++;
           }
         });

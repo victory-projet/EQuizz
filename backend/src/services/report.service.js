@@ -233,7 +233,7 @@ class ReportService {
         });
 
         reponses.forEach(reponse => {
-          if (reponse.contenu && distribution.hasOwnProperty(reponse.contenu)) {
+          if (reponse.contenu && Object.prototype.hasOwnProperty.call(distribution, reponse.contenu)) {
             distribution[reponse.contenu]++;
           }
         });

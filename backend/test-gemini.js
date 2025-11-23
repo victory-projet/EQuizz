@@ -10,24 +10,24 @@ async function testGemini() {
 
   const testCases = [
     {
-      text: "Ce cours est vraiment excellent! Le professeur explique très bien et les exemples sont pertinents.",
-      expected: "POSITIF"
+      text: 'Ce cours est vraiment excellent! Le professeur explique très bien et les exemples sont pertinents.',
+      expected: 'POSITIF'
     },
     {
-      text: "Le cours est intéressant mais parfois un peu difficile à suivre.",
-      expected: "NEUTRE"
+      text: 'Le cours est intéressant mais parfois un peu difficile à suivre.',
+      expected: 'NEUTRE'
     },
     {
-      text: "Je trouve ce cours ennuyeux et les explications ne sont pas claires.",
-      expected: "NEGATIF"
+      text: 'Je trouve ce cours ennuyeux et les explications ne sont pas claires.',
+      expected: 'NEGATIF'
     },
     {
-      text: "Cours génial, j'ai beaucoup appris. Le prof est passionné et ça se ressent!",
-      expected: "POSITIF"
+      text: 'Cours génial, j\'ai beaucoup appris. Le prof est passionné et ça se ressent!',
+      expected: 'POSITIF'
     },
     {
-      text: "Trop de théorie, pas assez de pratique. C'est dommage.",
-      expected: "NEGATIF"
+      text: 'Trop de théorie, pas assez de pratique. C\'est dommage.',
+      expected: 'NEGATIF'
     }
   ];
 
@@ -62,11 +62,11 @@ async function testGemini() {
   console.log('\n📝 Test extraction de mots-clés...\n');
   
   const comments = [
-    "Le cours est excellent, très intéressant",
-    "J'ai beaucoup appris, le prof est passionné",
-    "Cours intéressant mais difficile",
-    "Excellent contenu, bien expliqué",
-    "Le professeur est très pédagogue"
+    'Le cours est excellent, très intéressant',
+    'J\'ai beaucoup appris, le prof est passionné',
+    'Cours intéressant mais difficile',
+    'Excellent contenu, bien expliqué',
+    'Le professeur est très pédagogue'
   ];
 
   try {

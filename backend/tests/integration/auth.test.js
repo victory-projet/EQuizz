@@ -126,10 +126,10 @@ describe('Auth Integration Tests', () => {
       expect(response.body).toHaveProperty('message');
 
       // Vérifier que la carte a été liée
-      const etudiant = await db.Etudiant.findOne({
+      const etudiantUpdated = await db.Etudiant.findOne({
         where: { matricule: '20230001' }
       });
-      expect(etudiant.idCarte).toBe('CARD123456');
+      expect(etudiantUpdated.idCarte).toBe('CARD123456');
     });
   });
 });

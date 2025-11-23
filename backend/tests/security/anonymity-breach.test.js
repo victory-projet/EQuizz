@@ -70,11 +70,11 @@ describe('Sécurité - Tests de Violation d\'Anonymat', () => {
 
   describe('Injection SQL', () => {
     it('devrait échapper les caractères spéciaux dans les requêtes', () => {
-      const maliciousInput = "'; DROP TABLE Etudiant; --";
+      const maliciousInput = '\'; DROP TABLE Etudiant; --';
       
       // Sequelize devrait échapper automatiquement
       // Vérifier que l'input malicieux ne peut pas être exécuté
-      expect(maliciousInput).toContain("'");
+      expect(maliciousInput).toContain('\'');
       // En production, Sequelize utilise des requêtes préparées
     });
   });

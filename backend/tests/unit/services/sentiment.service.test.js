@@ -8,7 +8,7 @@ describe('SentimentService', () => {
     
     it('devrait analyser un texte positif', () => {
       // Arrange
-      const text = "This course is excellent and very interesting!";
+      const text = 'This course is excellent and very interesting!';
 
       // Act
       const result = sentimentService.analyzeText(text);
@@ -22,7 +22,7 @@ describe('SentimentService', () => {
 
     it('devrait analyser un texte négatif', () => {
       // Arrange
-      const text = "This course is terrible and boring.";
+      const text = 'This course is terrible and boring.';
 
       // Act
       const result = sentimentService.analyzeText(text);
@@ -34,7 +34,7 @@ describe('SentimentService', () => {
 
     it('devrait analyser un texte neutre', () => {
       // Arrange
-      const text = "The course covers various topics.";
+      const text = 'The course covers various topics.';
 
       // Act
       const result = sentimentService.analyzeText(text);
@@ -68,9 +68,9 @@ describe('SentimentService', () => {
     it('devrait extraire les mots-clés d\'un ensemble de textes', () => {
       // Arrange
       const texts = [
-        "The course is excellent and interesting",
-        "Very interesting content and excellent teacher",
-        "Excellent course with great examples"
+        'The course is excellent and interesting',
+        'Very interesting content and excellent teacher',
+        'Excellent course with great examples'
       ];
 
       // Act
@@ -90,7 +90,7 @@ describe('SentimentService', () => {
 
     it('devrait filtrer les stop words', () => {
       // Arrange
-      const texts = ["The course is very good"];
+      const texts = ['The course is very good'];
 
       // Act
       const keywords = sentimentService.extractKeywords(texts, 10);
