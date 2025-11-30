@@ -329,52 +329,51 @@ class DashboardService {
    * Récupère les mots-clés les plus fréquents
    */
   async getTopKeywords(filters = {}, limit = 10) {
-    const whereClause = this.buildWhereClause(filters);
-
-    const evaluations = await db.Evaluation.findAll({
-      where: whereClause,
-      include: [
-        {
-          model: db.Quizz,
-          include: [
-            {
-              model: db.Question,
-              where: { type: { [Op.in]: ['REPONSE_OUVERTE', 'TEXTE_LIBRE'] } },
-              required: false,
-              include: [
-                {
-                  model: db.ReponseEtudiant,
-                  where: { reponseTexte: { [Op.ne]: null } },
-                  required: false
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    });
-
-    // Collecter tous les mots des réponses ouvertes
-    const wordFrequency = new Map();
-
-    evaluations.forEach(evaluation => {
-      evaluation.Quizz.Questions.forEach(question => {
-        question.ReponseEtudiants.forEach(reponse => {
-          if (reponse.reponseTexte) {
-            // Nettoyer et extraire les mots
-            const words = reponse.reponseTexte
-              .toLowerCase()
-              .replace(/[^\wàâäéèêëïîôùûüÿæœç\s]/g, '')
-              .split(/\s+/)
-              .filter(word => word.length > 3); // Mots de plus de 3 caractères
-
-            words.forEach(word => {
-              wordFrequency.set(word, (wordFrequency.get(word) || 0) + 1);
-            });
+    try {
+      // Récupérer directement les réponses textuelles
+      const reponses = await db.ReponseEtudiant.findAll({
+        where: {
+          reponseTexte: { [Op.ne]: null }
+        },
+        include: [
+          {
+            model: db.Question,
+            where: { type: { [Op.in]: ['REPONSE_OUVERTE', 'TEXTE_LIBRE'] } },
+            required: true,
+            include: [
+              {
+                model: db.Quizz,
+                required: true,
+                include: [
+                  {
+                    model: db.Evaluation,
+                    where: this.buildWhereClause(filters),
+                    required: true
+                  }
+                ]
+              }
+            ]
           }
-        });
+        ]
       });
-    });
+
+      // Collecter tous les mots des réponses ouvertes
+      const wordFrequency = new Map();
+
+      reponses.forEach(reponse => {
+        if (reponse.reponseTexte) {
+          // Nettoyer et extraire les mots
+          const words = reponse.reponseTexte
+            .toLowerCase()
+            .replace(/[^\wàâäéèêëïîôùûüÿæœç\s]/g, '')
+            .split(/\s+/)
+            .filter(word => word.length > 3); // Mots de plus de 3 caractères
+
+          words.forEach(word => {
+            wordFrequency.set(word, (wordFrequency.get(word) || 0) + 1);
+          });
+        }
+      });
 
     // Mots à exclure (stop words français)
     const stopWords = new Set([
@@ -391,6 +390,10 @@ class DashboardService {
       .slice(0, limit);
 
     return keywords;
+    } catch (error) {
+      console.error('Erreur getTopKeywords:', error);
+      return [];
+    }
   }
 
   /**
