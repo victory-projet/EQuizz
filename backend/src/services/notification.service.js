@@ -61,7 +61,7 @@ class NotificationService {
   async notifyNewEvaluation(evaluationId) {
     const evaluation = await db.Evaluation.findByPk(evaluationId, {
       include: [
-        { model: db.Cours },
+        { model: db.Cours, required: false }, // Cours peut être singularisé en "Cour"
         { 
           model: db.Classe,
           include: [{ model: db.Etudiant }]
@@ -87,11 +87,14 @@ class NotificationService {
       return { sent: 0 };
     }
 
+    // Le backend retourne "Cour" (singulier) à cause de Sequelize singularize
+    const coursNom = evaluation.Cour?.nom || evaluation.Cours?.nom || 'ce cours';
+    
     const notification = await this.createNotification(
       evaluationId,
       'NOUVELLE_EVALUATION',
       'Nouvelle évaluation disponible',
-      `L'évaluation "${evaluation.titre}" pour le cours "${evaluation.Cours.nom}" est maintenant disponible. Merci de la compléter avant le ${new Date(evaluation.dateFin).toLocaleDateString('fr-FR')}.`
+      `L'évaluation "${evaluation.titre}" pour le cours "${coursNom}" est maintenant disponible. Merci de la compléter avant le ${new Date(evaluation.dateFin).toLocaleDateString('fr-FR')}.`
     );
 
     return this.sendToEtudiants(notification.id, etudiantIds);
@@ -113,7 +116,7 @@ class NotificationService {
     return etudiant.getNotifications({
       through: { where: whereClause },
       order: [['createdAt', 'DESC']],
-      include: [{ model: db.Evaluation, include: [{ model: db.Cours }] }]
+      include: [{ model: db.Evaluation, include: [{ model: db.Cours, required: false }] }]
     });
   }
 

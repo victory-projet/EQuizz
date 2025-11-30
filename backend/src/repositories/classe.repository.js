@@ -12,7 +12,8 @@ class ClasseRepository {
       include: [
         { model: db.Ecole }, // Inclure l'école à laquelle la classe appartient
         { model: db.AnneeAcademique }, // Inclure l'année académique
-        { model: db.Cours }  // Inclure les cours associés à cette classe
+        { model: db.Cours },  // Inclure les cours associés à cette classe
+        { model: db.Etudiant } // Inclure les étudiants de la classe
       ],
       order: [['nom', 'ASC']]
     });
@@ -23,7 +24,8 @@ class ClasseRepository {
       include: [
         { model: db.Ecole },
         { model: db.AnneeAcademique },
-        { model: db.Cours }
+        { model: db.Cours },
+        { model: db.Etudiant }
       ]
     });
   }
