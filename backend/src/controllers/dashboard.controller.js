@@ -5,7 +5,17 @@ const asyncHandler = require('../utils/asyncHandler');
 
 class DashboardController {
   getAdminDashboard = asyncHandler(async (req, res) => {
-    const dashboard = await dashboardService.getAdminDashboard();
+    const { year, semester, classe, cours, enseignant } = req.query;
+    
+    const filters = {
+      year: year || null,
+      semester: semester || 'all',
+      classeId: classe || 'all',
+      coursId: cours || 'all',
+      enseignantId: enseignant || 'all'
+    };
+
+    const dashboard = await dashboardService.getAdminDashboard(filters);
     res.status(200).json(dashboard);
   });
 
