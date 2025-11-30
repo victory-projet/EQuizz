@@ -74,7 +74,11 @@ class ReportService {
         cours: evaluation.Cour?.nom || evaluation.Cours?.nom || 'Non défini',
         dateDebut: evaluation.dateDebut,
         dateFin: evaluation.dateFin,
-        statut: evaluation.statut
+        statut: evaluation.statut,
+        classes: evaluation.Classes?.map(c => ({
+          id: c.id,
+          nom: c.nom
+        })) || []
       },
       statistics: stats,
       sentimentAnalysis,
