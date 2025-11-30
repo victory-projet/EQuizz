@@ -138,35 +138,60 @@ const nombreRepondants = await db.SessionReponse.count({
   /**
    * Analyse les sentiments des réponses ouvertes
    */
-  async getSentimentAnalysis(evaluationId, classeId = null) {
-    const whereClause = {
-      '$Question.Quizz.Evaluation.id$': evaluationId,
-      '$Question.typeQuestion$': 'REPONSE_OUVERTE'
+   async getSentimentAnalysis(evaluationId, classeId = null) {
+  // Récupérer l'évaluation avec toutes les réponses
+  const evaluation = await db.Evaluation.findByPk(evaluationId, {
+    include: [
+      {
+        model: db.Quizz,
+        include: [
+          {
+            model: db.Question,
+            where: { typeQuestion: 'REPONSE_OUVERTE' },  // Filtrer directement ici
+            required: false,
+            include: [
+              {
+                model: db.ReponseEtudiant,
+                include: [
+                  { 
+                    model: db.SessionReponse,
+                    attributes: ['id']
+                  },
+                  { model: db.AnalyseReponse }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  });
+
+  if (!evaluation || !evaluation.Quizz) {
+    return {
+      total: 0,
+      sentiments: {
+        positif: 0,
+        neutre: 0,
+        negatif: 0,
+        positifPct: '0',
+        neutrePct: '0',
+        negatifPct: '0'
+      },
+      keywords: [],
+      summary: null
     };
+  }
 
-    if (classeId) {
-      whereClause['$Etudiant.classe_id$'] = classeId;
+  // Collecter toutes les réponses ouvertes
+  const reponses = [];
+  evaluation.Quizz.Questions.forEach(question => {
+    if (question.ReponseEtudiants) {
+      question.ReponseEtudiants.forEach(reponse => {
+        reponses.push(reponse);
+      });
     }
-
-    const reponses = await db.ReponseEtudiant.findAll({
-      where: whereClause,
-      include: [
-        {
-          model: db.Question,
-          include: [
-            {
-              model: db.Quizz,
-              include: [{ model: db.Evaluation }]
-            }
-          ]
-        },
-        { 
-          model: db.SessionReponse,
-          attributes: ['id']  // Seulement les infos de session
-        },
-        { model: db.AnalyseReponse }
-      ]
-    });
+  });
 
     // Compter les sentiments
     const sentimentCounts = {
