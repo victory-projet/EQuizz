@@ -71,7 +71,7 @@ class ReportService {
       evaluation: {
         id: evaluation.id,
         titre: evaluation.titre,
-        cours: evaluation.Cours.nom,
+        cours: evaluation.Cour?.nom || evaluation.Cours?.nom || 'Non défini',
         dateDebut: evaluation.dateDebut,
         dateFin: evaluation.dateFin,
         statut: evaluation.statut
@@ -138,8 +138,8 @@ const nombreRepondants = await db.SessionReponse.count({
   /**
    * Analyse les sentiments des réponses ouvertes
    */
-   async getSentimentAnalysis(evaluationId, classeId = null) {
-  // Récupérer l'évaluation avec toutes les réponses
+  async getSentimentAnalysis(evaluationId, classeId = null) {
+  // Récupérer l'évaluation avec les questions de type REPONSE_OUVERTE
   const evaluation = await db.Evaluation.findByPk(evaluationId, {
     include: [
       {
@@ -147,11 +147,12 @@ const nombreRepondants = await db.SessionReponse.count({
         include: [
           {
             model: db.Question,
-            where: { typeQuestion: 'REPONSE_OUVERTE' },  // Filtrer directement ici
+            where: { typeQuestion: 'REPONSE_OUVERTE' },
             required: false,
             include: [
               {
                 model: db.ReponseEtudiant,
+                attributes: ['id', 'contenu'],
                 include: [
                   { 
                     model: db.SessionReponse,
@@ -185,64 +186,61 @@ const nombreRepondants = await db.SessionReponse.count({
 
   // Collecter toutes les réponses ouvertes
   const reponses = [];
-  evaluation.Quizz.Questions.forEach(question => {
-    if (question.ReponseEtudiants) {
-      question.ReponseEtudiants.forEach(reponse => {
-        reponses.push(reponse);
-      });
+  if (evaluation.Quizz.Questions) {
+    evaluation.Quizz.Questions.forEach(question => {
+      if (question.ReponseEtudiants) {
+        question.ReponseEtudiants.forEach(reponse => {
+          reponses.push(reponse);
+        });
+      }
+    });
+  }
+
+  // Compter les sentiments
+  const sentimentCounts = {
+    POSITIF: 0,
+    NEUTRE: 0,
+    NEGATIF: 0
+  };
+
+  const textes = [];
+  reponses.forEach(reponse => {
+    if (reponse.AnalyseReponse) {
+      sentimentCounts[reponse.AnalyseReponse.sentiment]++;
+    }
+    if (reponse.contenu) {
+      textes.push(reponse.contenu);
     }
   });
 
-    // Compter les sentiments
-    const sentimentCounts = {
-      POSITIF: 0,
-      NEUTRE: 0,
-      NEGATIF: 0
-    };
+  // Extraire les mots-clés
+  const keywords = await sentimentService.extractKeywords(textes, 20);
 
-    const textes = [];
-    reponses.forEach(reponse => {
-      if (reponse.AnalyseReponse) {
-        sentimentCounts[reponse.AnalyseReponse.sentiment]++;
-      }
-      if (reponse.contenu) {
-        textes.push(reponse.contenu);
-      }
-    });
-
-    // Extraire les mots-clés
-    const keywords = await sentimentService.extractKeywords(textes, 20);
-
-    // Générer un résumé avec Gemini (si disponible)
-    let summary = null;
-    if (sentimentService.generateSummary && textes.length > 0) {
-      try {
-        summary = await sentimentService.generateSummary(textes);
-      } catch (error) {
-        console.error('Erreur génération résumé:', error);
-      }
+  // Générer un résumé avec Gemini (si disponible)
+  let summary = null;
+  if (sentimentService.generateSummary && textes.length > 0) {
+    try {
+      summary = await sentimentService.generateSummary(textes);
+    } catch (error) {
+      console.error('Erreur génération résumé:', error);
     }
-
-    const total = reponses.length;
-    return {
-      total,
-      sentiments: {
-        positif: sentimentCounts.POSITIF,
-        neutre: sentimentCounts.NEUTRE,
-        negatif: sentimentCounts.NEGATIF,
-        positifPct: total > 0 ? ((sentimentCounts.POSITIF / total) * 100).toFixed(2) : 0,
-        neutrePct: total > 0 ? ((sentimentCounts.NEUTRE / total) * 100).toFixed(2) : 0,
-        negatifPct: total > 0 ? ((sentimentCounts.NEGATIF / total) * 100).toFixed(2) : 0
-      },
-      keywords,
-      summary,
-      reponses: reponses.map(r => ({
-        texte: r.contenu,
-        sentiment: r.AnalyseReponse?.sentiment,
-        score: r.AnalyseReponse?.score
-      }))
-    };
   }
+
+  const total = reponses.length;
+  return {
+    total,
+    sentiments: {
+      positif: sentimentCounts.POSITIF,
+      neutre: sentimentCounts.NEUTRE,
+      negatif: sentimentCounts.NEGATIF,
+      positifPct: total > 0 ? ((sentimentCounts.POSITIF / total) * 100).toFixed(2) : '0',
+      neutrePct: total > 0 ? ((sentimentCounts.NEUTRE / total) * 100).toFixed(2) : '0',
+      negatifPct: total > 0 ? ((sentimentCounts.NEGATIF / total) * 100).toFixed(2) : '0'
+    },
+    keywords,
+    summary
+  };
+}
 
   /**
    * Récupère les détails des questions avec répartition des réponses
