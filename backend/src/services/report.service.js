@@ -17,7 +17,7 @@ class ReportService {
   async generateReport(evaluationId, classeId = null) {
     const evaluation = await db.Evaluation.findByPk(evaluationId, {
       include: [
-        { model: db.Cours },
+        { model: db.Cours, required: false },
         { model: db.Classe },
         {
           model: db.Quizz,
@@ -28,7 +28,15 @@ class ReportService {
                 {
                   model: db.ReponseEtudiant,
                   include: [
-                    { model: db.Etudiant, include: [{ model: db.Classe }] },
+                    { 
+                      model: db.SessionReponse,
+                      include: [
+                        { 
+                          model: db.Etudiant, 
+                          include: [{ model: db.Classe }] 
+                        }
+                      ]
+                    },
                     { model: db.AnalyseReponse }
                   ]
                 }
@@ -47,7 +55,9 @@ class ReportService {
     let reponses = [];
     evaluation.Quizz.Questions.forEach(question => {
       question.ReponseEtudiants.forEach(reponse => {
-        if (!classeId || reponse.Etudiant.Classe.id === classeId) {
+        // L'étudiant est accessible via SessionReponse
+        const etudiant = reponse.SessionReponse?.Etudiant;
+        if (etudiant && (!classeId || etudiant.Classe?.id === classeId)) {
           reponses.push(reponse);
         }
       });
@@ -149,7 +159,10 @@ class ReportService {
             }
           ]
         },
-        { model: db.Etudiant },
+        { 
+          model: db.SessionReponse,
+          include: [{ model: db.Etudiant }]
+        },
         { model: db.AnalyseReponse }
       ]
     });
