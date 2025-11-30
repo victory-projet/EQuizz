@@ -30,12 +30,7 @@ class ReportService {
                   include: [
                     { 
                       model: db.SessionReponse,
-                      include: [
-                        { 
-                          model: db.Etudiant, 
-                          include: [{ model: db.Classe }] 
-                        }
-                      ]
+                      attributes: ['id', 'dateDebut', 'dateFin', 'estTerminee'],  // Seulement les infos de session
                     },
                     { model: db.AnalyseReponse }
                   ]
@@ -107,22 +102,28 @@ class ReportService {
       }
     }
 
-    // Nombre d'étudiants ayant répondu
-    const whereClause = classeId ? { '$Etudiant.classe_id$': classeId } : {};
-    
-    const reponsesUniques = await db.SessionReponse.findAll({
-      where: { quizz_id: evaluation.Quizz.id },
-      include: [
-        {
-          model: db.Etudiant,
-          where: classeId ? { classe_id: classeId } : {},
-          required: true
-        }
-      ],
-      group: ['etudiant_id']
-    });
+   // Nombre d'étudiants ayant répondu (anonymat complet - on compte les sessions uniques)
+const whereClause = { quizz_id: evaluation.Quizz.id };
 
-    const nombreRepondants = reponsesUniques.length;
+if (classeId) {
+  whereClause['$Etudiant.classe_id$'] = classeId;
+}
+
+// Utiliser COUNT DISTINCT pour éviter les problèmes de GROUP BY
+const nombreRepondants = await db.SessionReponse.count({
+  where: whereClause,
+  include: classeId ? [
+    {
+      model: db.Etudiant,
+      attributes: [],  // Pas d'attributs pour respecter l'anonymat
+      where: { classe_id: classeId },
+      required: true
+    }
+  ] : [],
+  distinct: true,
+  col: 'id'
+});
+
     const tauxParticipation = totalEtudiants > 0 
       ? ((nombreRepondants / totalEtudiants) * 100).toFixed(2)
       : 0;
@@ -161,7 +162,7 @@ class ReportService {
         },
         { 
           model: db.SessionReponse,
-          include: [{ model: db.Etudiant }]
+          attributes: ['id']  // Seulement les infos de session
         },
         { model: db.AnalyseReponse }
       ]
