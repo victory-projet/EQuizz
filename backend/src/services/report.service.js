@@ -30,7 +30,7 @@ class ReportService {
                   include: [
                     { 
                       model: db.SessionReponse,
-                      attributes: ['id', 'dateDebut', 'dateFin', 'estTerminee'],  // Seulement les infos de session
+                      attributes: ['id', 'dateDebut', 'dateFin', 'statut'],  // Seulement les infos de session
                     },
                     { model: db.AnalyseReponse }
                   ]
