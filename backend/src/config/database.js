@@ -1,13 +1,19 @@
-const path = require('path');
-const fs = require('fs');
-
-// Charger .env seulement s'il existe (développement local)
-const envPath = path.resolve(__dirname, '../../.env');
-if (fs.existsSync(envPath)) {
-  require('dotenv').config({ path: envPath });
+// Charger dotenv uniquement en développement
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
 }
 
 const { Sequelize } = require('sequelize');
+
+// Log de debug pour vérifier les variables (masquer le mot de passe)
+console.log('🔍 Configuration DB:', {
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  database: process.env.DB_NAME,
+  dialect: process.env.DB_DIALECT,
+  hasPassword: !!process.env.DB_PASSWORD
+});
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
@@ -15,8 +21,23 @@ const sequelize = new Sequelize(
   process.env.DB_PASSWORD,
   {
     host: process.env.DB_HOST,
-    dialect: process.env.DB_DIALECT ,
+    port: process.env.DB_PORT || 3306,
+    dialect: process.env.DB_DIALECT,
     logging: false,
+    
+    // Options de connexion pour éviter les timeouts
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    },
+    dialectOptions: {
+      connectTimeout: 60000,
+      ssl: process.env.NODE_ENV === 'production' ? {
+        rejectUnauthorized: false  // Accepter les certificats auto-signés d'Aiven
+      } : false
+    },
 
     // --- Options globales pour tous les modèles ---
     define: {

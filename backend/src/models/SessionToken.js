@@ -26,13 +26,13 @@ const SessionToken = sequelize.define('SessionToken', {
   },
 
   // Référence à l'étudiant (dans cette table séparée uniquement)
-  etudiantId: {
+  etudiant_id: {
     type: DataTypes.UUID,
     allowNull: false,
   },
 
   // Référence à l'évaluation
-  evaluationId: {
+  evaluation_id: {
     type: DataTypes.UUID,
     allowNull: false,
   },
@@ -48,7 +48,7 @@ const SessionToken = sequelize.define('SessionToken', {
     beforeValidate: (sessionToken) => {
       // Toujours régénérer le token avec les IDs pour plus de sécurité
       const hash = crypto.createHash('sha256');
-      hash.update(`${sessionToken.etudiantId}-${sessionToken.evaluationId}-${Date.now()}-${Math.random()}`);
+      hash.update(`${sessionToken.etudiant_id}-${sessionToken.evaluation_id}-${Date.now()}-${Math.random()}`);
       sessionToken.tokenAnonyme = hash.digest('hex');
     }
   }

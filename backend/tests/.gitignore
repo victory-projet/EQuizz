@@ -1,0 +1,4 @@
+# Ignorer les fichiers générés par les tests
+coverage/
+*.log
+.DS_Store

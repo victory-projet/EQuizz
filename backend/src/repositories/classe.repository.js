@@ -11,7 +11,9 @@ class ClasseRepository {
     return db.Classe.findAll({
       include: [
         { model: db.Ecole }, // Inclure l'école à laquelle la classe appartient
-        { model: db.Cours }  // Inclure les cours associés à cette classe
+        { model: db.AnneeAcademique }, // Inclure l'année académique
+        { model: db.Cours },  // Inclure les cours associés à cette classe
+        { model: db.Etudiant } // Inclure les étudiants de la classe
       ],
       order: [['nom', 'ASC']]
     });
@@ -21,7 +23,9 @@ class ClasseRepository {
     return db.Classe.findByPk(id, {
       include: [
         { model: db.Ecole },
-        { model: db.Cours }
+        { model: db.AnneeAcademique },
+        { model: db.Cours },
+        { model: db.Etudiant }
       ]
     });
   }

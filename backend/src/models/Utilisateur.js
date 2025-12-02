@@ -8,6 +8,13 @@ const Utilisateur = sequelize.define('Utilisateur', {
     defaultValue: DataTypes.UUIDV4, // Génère un UUID automatiquement
     primaryKey: true,
   },
+
+  estActif: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    allowNull: false,
+    // Permet de désactiver un compte sans le supprimer
+  },
   
   nom: {
     type: DataTypes.STRING,

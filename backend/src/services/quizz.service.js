@@ -5,29 +5,6 @@ const quizzRepository = require('../repositories/quizz.repository');
 const etudiantRepository = require('../repositories/etudiant.repository');
 
 class QuizzService {
-
-   /**
-   * Gère la création d'un quizz. Valide les données avant de persister.
-   * @param {object} data - Les données du quizz.
-   * @returns {Promise<Quizz>}
-   */
-  async createNewQuizz(data) {
-    if (!data.titre) {
-      throw new Error("Le titre du quizz est obligatoire.");
-    }
-    // D'autres logiques métier peuvent être ajoutées ici...
-
-    return await quizzRepository.create(data);
-  }
-
-  /**
-   * Récupère le nombre total de quizz créés.
-   * @returns {Promise<number>}
-   */
-  async getQuizzCount() {
-    return await quizzRepository.count();
-  }
-
   /**
    * Récupère la liste des évaluations actives pour l'étudiant authentifié.
    * @param {string} userId - L'ID de l'utilisateur (étudiant).
@@ -57,8 +34,8 @@ class QuizzService {
     // Chercher le token de l'étudiant pour cette évaluation
     const sessionToken = await db.SessionToken.findOne({
       where: {
-        etudiantId: etudiantId,
-        evaluationId: quizz.evaluation_id
+        etudiant_id: etudiantId,
+        evaluation_id: quizz.evaluation_id
       }
     });
 
@@ -109,16 +86,16 @@ class QuizzService {
       // 2. Chercher ou créer le token anonyme pour cet étudiant
       let sessionToken = await db.SessionToken.findOne({
         where: {
-          etudiantId: etudiantId,
-          evaluationId: quizz.evaluation_id
+          etudiant_id: etudiantId,
+          evaluation_id: quizz.evaluation_id
         },
         transaction
       });
 
       if (!sessionToken) {
         sessionToken = await db.SessionToken.create({
-          etudiantId: etudiantId,
-          evaluationId: quizz.evaluation_id
+          etudiant_id: etudiantId,
+          evaluation_id: quizz.evaluation_id
         }, { transaction });
       }
 
@@ -130,7 +107,8 @@ class QuizzService {
 
       if (!session) {
         session = await db.SessionReponse.create({
-          evaluation_id: quizz.evaluation_id,
+          quizz_id: quizzId,
+          etudiant_id: etudiantId,
           tokenAnonyme: sessionToken.tokenAnonyme,
           statut: estFinal ? 'TERMINE' : 'EN_COURS',
           dateDebut: new Date(),

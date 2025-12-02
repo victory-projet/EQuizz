@@ -1,74 +1,57 @@
 // backend/src/controllers/classe.controller.js
 
 const classeService = require('../services/classe.service');
+const asyncHandler = require('../utils/asyncHandler');
 
 class ClasseController {
-  async create(req, res) {
-    try {
-      const classe = await classeService.create(req.body);
-      res.status(201).json(classe);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  }
+  create = asyncHandler(async (req, res) => {
+    const classe = await classeService.create(req.body);
+    res.status(201).json(classe);
+  });
 
-  async findAll(req, res) {
-    try {
-      const classes = await classeService.findAll();
-      res.status(200).json(classes);
-    } catch (error) {
-      res.status(500).json({ message: 'Erreur lors de la récupération des classes.' });
-    }
-  }
+  findAll = asyncHandler(async (req, res) => {
+    const classes = await classeService.findAll();
+    res.status(200).json(classes);
+  });
 
-  async findOne(req, res) {
-    try {
-      const classe = await classeService.findOne(req.params.id);
-      res.status(200).json(classe);
-    } catch (error) {
-      res.status(404).json({ message: error.message });
-    }
-  }
+  findOne = asyncHandler(async (req, res) => {
+    const classe = await classeService.findOne(req.params.id);
+    res.status(200).json(classe);
+  });
 
-  async update(req, res) {
-    try {
-      const updatedClasse = await classeService.update(req.params.id, req.body);
-      res.status(200).json(updatedClasse);
-    } catch (error) {
-      res.status(404).json({ message: error.message });
-    }
-  }
+  update = asyncHandler(async (req, res) => {
+    const updatedClasse = await classeService.update(req.params.id, req.body);
+    res.status(200).json(updatedClasse);
+  });
 
-  async delete(req, res) {
-    try {
-      const result = await classeService.delete(req.params.id);
-      res.status(200).json(result);
-    } catch (error) {
-      res.status(404).json({ message: error.message });
-    }
-  }
+  delete = asyncHandler(async (req, res) => {
+    const result = await classeService.delete(req.params.id);
+    res.status(200).json(result);
+  });
 
-  // --- Contrôleurs pour la relation Plusieurs-à-Plusieurs ---
+  addCoursToClasse = asyncHandler(async (req, res) => {
+    const { classeId, coursId } = req.params;
+    const result = await classeService.addCoursToClasse(classeId, coursId);
+    res.status(200).json(result);
+  });
 
-  async addCoursToClasse(req, res) {
-    try {
-      const { classeId, coursId } = req.params;
-      const result = await classeService.addCoursToClasse(classeId, coursId);
-      res.status(200).json(result);
-    } catch (error) {
-      res.status(404).json({ message: error.message });
-    }
-  }
+  removeCoursFromClasse = asyncHandler(async (req, res) => {
+    const { classeId, coursId } = req.params;
+    const result = await classeService.removeCoursFromClasse(classeId, coursId);
+    res.status(200).json(result);
+  });
 
-  async removeCoursFromClasse(req, res) {
-    try {
-      const { classeId, coursId } = req.params;
-      const result = await classeService.removeCoursFromClasse(classeId, coursId);
-      res.status(200).json(result);
-    } catch (error) {
-      res.status(404).json({ message: error.message });
-    }
-  }
+  addEtudiantToClasse = asyncHandler(async (req, res) => {
+    const { classeId, etudiantId } = req.params;
+    const result = await classeService.addEtudiantToClasse(classeId, etudiantId);
+    res.status(200).json(result);
+  });
+
+  removeEtudiantFromClasse = asyncHandler(async (req, res) => {
+    const { classeId, etudiantId } = req.params;
+    const result = await classeService.removeEtudiantFromClasse(classeId, etudiantId);
+    res.status(200).json(result);
+  });
 }
 
 module.exports = new ClasseController();

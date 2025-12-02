@@ -1,0 +1,39 @@
+{
+  "evaluations": [
+    {
+      "id": "eval-001",
+      "titre": "Évaluation JavaScript - Semestre 1",
+      "dateDebut": "2025-11-01T08:00:00Z",
+      "dateFin": "2025-11-30T23:59:59Z",
+      "estPubliee": true,
+      "cours_id": "cours-001"
+    },
+    {
+      "id": "eval-002",
+      "titre": "Évaluation Node.js - Semestre 1",
+      "dateDebut": "2025-11-15T08:00:00Z",
+      "dateFin": "2025-12-15T23:59:59Z",
+      "estPubliee": true,
+      "cours_id": "cours-002"
+    }
+  ],
+  "cours": [
+    {
+      "id": "cours-001",
+      "nom": "JavaScript Avancé",
+      "code": "JS-401"
+    },
+    {
+      "id": "cours-002",
+      "nom": "Node.js et Express",
+      "code": "NODE-402"
+    }
+  ],
+  "classes": [
+    {
+      "id": "classe-001",
+      "nom": "INGE4-A",
+      "niveau": "M1"
+    }
+  ]
+}

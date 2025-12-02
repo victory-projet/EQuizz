@@ -1,0 +1,58 @@
+{
+  "questions": [
+    {
+      "id": "q-001",
+      "enonce": "Qu'est-ce qu'une closure en JavaScript ?",
+      "typeQuestion": "QCM",
+      "options": [
+        {
+          "texte": "Une fonction qui a accès aux variables de son scope parent",
+          "estCorrecte": true
+        },
+        {
+          "texte": "Une fonction anonyme",
+          "estCorrecte": false
+        },
+        {
+          "texte": "Une fonction asynchrone",
+          "estCorrecte": false
+        }
+      ],
+      "quizz_id": "quizz-001"
+    },
+    {
+      "id": "q-002",
+      "enonce": "Expliquez la différence entre let et const",
+      "typeQuestion": "OUVERTE",
+      "quizz_id": "quizz-001"
+    },
+    {
+      "id": "q-003",
+      "enonce": "Quel est le résultat de: typeof null ?",
+      "typeQuestion": "QCM",
+      "options": [
+        {
+          "texte": "null",
+          "estCorrecte": false
+        },
+        {
+          "texte": "object",
+          "estCorrecte": true
+        },
+        {
+          "texte": "undefined",
+          "estCorrecte": false
+        }
+      ],
+      "quizz_id": "quizz-001"
+    }
+  ],
+  "quizz": [
+    {
+      "id": "quizz-001",
+      "titre": "Quiz JavaScript",
+      "instructions": "Répondez à toutes les questions",
+      "evaluation_id": "eval-001"
+    }
+  ]
+}

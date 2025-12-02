@@ -6,11 +6,35 @@ const coursRepository = require('../repositories/cours.repository');
 
 class ClasseService {
   async create(data) {
-    const ecole = await ecoleRepository.findById(data.ecole_id);
+    let ecoleId = data.ecole_id;
+    
+    // Si ecole_id n'est pas fourni, récupérer l'école depuis une classe existante ou la première école
+    if (!ecoleId) {
+      // Essayer de récupérer l'école depuis une classe existante
+      const existingClasse = await classeRepository.findAll();
+      if (existingClasse && existingClasse.length > 0 && existingClasse[0].ecole_id) {
+        ecoleId = existingClasse[0].ecole_id;
+      } else {
+        // Sinon, récupérer la première école disponible
+        const ecoles = await ecoleRepository.findAll();
+        if (ecoles && ecoles.length > 0) {
+          ecoleId = ecoles[0].id;
+        }
+      }
+    }
+    
+    if (!ecoleId) {
+      throw new Error('École non trouvée. Impossible de créer la classe.');
+    }
+    
+    const ecole = await ecoleRepository.findById(ecoleId);
     if (!ecole) {
       throw new Error('École non trouvée. Impossible de créer la classe.');
     }
-    return classeRepository.create(data);
+    
+    // Ajouter l'ecole_id aux données
+    const dataWithEcole = { ...data, ecole_id: ecoleId };
+    return classeRepository.create(dataWithEcole);
   }
 
   async findAll() {
@@ -69,6 +93,36 @@ class ClasseService {
     // La méthode removeCours est aussi ajoutée par Sequelize
     await classe.removeCours(cours);
     return { message: 'Cours retiré de la classe avec succès.' };
+  }
+
+  async addEtudiantToClasse(classeId, etudiantId) {
+    const classe = await classeRepository.findById(classeId);
+    if (!classe) {
+      throw new Error('Classe non trouvée.');
+    }
+    const etudiantRepository = require('../repositories/etudiant.repository');
+    const etudiant = await etudiantRepository.findById(etudiantId);
+    if (!etudiant) {
+      throw new Error('Étudiant non trouvé.');
+    }
+    // Mettre à jour la classe_id de l'étudiant
+    await etudiant.update({ classe_id: classeId });
+    return { message: 'Étudiant ajouté à la classe avec succès.' };
+  }
+
+  async removeEtudiantFromClasse(classeId, etudiantId) {
+    const classe = await classeRepository.findById(classeId);
+    if (!classe) {
+      throw new Error('Classe non trouvée.');
+    }
+    const etudiantRepository = require('../repositories/etudiant.repository');
+    const etudiant = await etudiantRepository.findById(etudiantId);
+    if (!etudiant) {
+      throw new Error('Étudiant non trouvé.');
+    }
+    // Retirer la classe_id de l'étudiant
+    await etudiant.update({ classe_id: null });
+    return { message: 'Étudiant retiré de la classe avec succès.' };
   }
 }
 

@@ -27,6 +27,31 @@ class EtudiantRepository {
       attributes: ['id', 'matricule', 'idCarte', 'classe_id']
     });
   }
+
+  async findByMatricule(matricule) {
+    return db.Etudiant.findOne({
+      where: { matricule },
+      include: [{
+        model: db.Utilisateur,
+        required: true
+      }]
+    });
+  }
+
+  async findByIdCarte(idCarte) {
+    return db.Etudiant.findOne({
+      where: { idCarte }
+    });
+  }
+
+  async updateIdCarte(etudiantId, idCarte) {
+    const etudiant = await db.Etudiant.findByPk(etudiantId);
+    if (!etudiant) {
+      throw new Error('Étudiant non trouvé');
+    }
+    etudiant.idCarte = idCarte;
+    return etudiant.save();
+  }
   
 }
 

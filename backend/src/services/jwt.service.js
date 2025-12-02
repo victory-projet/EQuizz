@@ -18,6 +18,14 @@ class JwtService {
 
     return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
   }
+
+  verifyToken(token) {
+    try {
+      return jwt.verify(token, JWT_SECRET);
+    } catch (error) {
+      throw new Error('Token invalide ou expiré');
+    }
+  }
 }
 
 module.exports = new JwtService();

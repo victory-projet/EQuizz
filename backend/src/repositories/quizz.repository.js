@@ -2,21 +2,8 @@
 
 const db = require('../models');
 const { Op } = require('sequelize');
-const Quizz = require('../models/Quizz');
 
 class QuizzRepository {
-  
-  async create(quizzData) {
-    return await Quizz.create(quizzData);
-  }
-
-  /**
-   * Compte le nombre total de quizz existants.
-   * @returns {Promise<number>} Le nombre total de quizz.
-   */
-  async count() {
-    return await Quizz.count();
-  }
 
   /**
    * Trouve toutes les évaluations publiées et actives pour une classe donnée avec le statut pour l'étudiant.
@@ -59,8 +46,8 @@ class QuizzRepository {
       // Chercher le token de l'étudiant pour cette évaluation
       const sessionToken = await db.SessionToken.findOne({
         where: {
-          etudiantId: etudiantId,
-          evaluationId: evaluation.id
+          etudiant_id: etudiantId,
+          evaluation_id: evaluation.id
         }
       });
 

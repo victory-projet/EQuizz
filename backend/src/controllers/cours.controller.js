@@ -1,52 +1,33 @@
 // backend/src/controllers/cours.controller.js
 
 const coursService = require('../services/cours.service');
+const asyncHandler = require('../utils/asyncHandler');
 
 class CoursController {
-  async create(req, res) {
-    try {
-      const cours = await coursService.create(req.body);
-      res.status(201).json(cours);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  }
+  create = asyncHandler(async (req, res) => {
+    const cours = await coursService.create(req.body);
+    res.status(201).json(cours);
+  });
 
-  async findAll(req, res) {
-    try {
-      const coursList = await coursService.findAll();
-      res.status(200).json(coursList);
-    } catch (error) {
-      res.status(500).json({ message: 'Erreur lors de la récupération des cours.' });
-    }
-  }
+  findAll = asyncHandler(async (req, res) => {
+    const coursList = await coursService.findAll();
+    res.status(200).json(coursList);
+  });
 
-  async findOne(req, res) {
-    try {
-      const cours = await coursService.findOne(req.params.id);
-      res.status(200).json(cours);
-    } catch (error) {
-      res.status(404).json({ message: error.message });
-    }
-  }
+  findOne = asyncHandler(async (req, res) => {
+    const cours = await coursService.findOne(req.params.id);
+    res.status(200).json(cours);
+  });
 
-  async update(req, res) {
-    try {
-      const updatedCours = await coursService.update(req.params.id, req.body);
-      res.status(200).json(updatedCours);
-    } catch (error) {
-      res.status(404).json({ message: error.message });
-    }
-  }
+  update = asyncHandler(async (req, res) => {
+    const updatedCours = await coursService.update(req.params.id, req.body);
+    res.status(200).json(updatedCours);
+  });
 
-  async delete(req, res) {
-    try {
-      const result = await coursService.delete(req.params.id);
-      res.status(200).json(result);
-    } catch (error) {
-      res.status(404).json({ message: error.message });
-    }
-  }
+  delete = asyncHandler(async (req, res) => {
+    const result = await coursService.delete(req.params.id);
+    res.status(200).json(result);
+  });
 }
 
 module.exports = new CoursController();
