@@ -63,7 +63,6 @@ app.use((req, res, next) => {
 
 // --- Middleware de gestion d'erreurs (doit être en dernier) ---
 const errorHandler = require('./src/middlewares/errorHandler.middleware');
-const { FORCE } = require('sequelize/lib/index-hints');
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
@@ -73,7 +72,7 @@ if (process.env.NODE_ENV !== 'test') {
   db.sequelize.authenticate()
     .then(() => {
       console.log('✅ Connexion à la base de données établie avec succès.');
-      return db.sequelize.sync({ force: true });// Vérifier la connexion
+      return db.sequelize.authenticate(); // Vérifier la connexion
     })
     .then(() => {
       console.log('✅ Base de données synchronisée avec succès.');
