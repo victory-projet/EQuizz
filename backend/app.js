@@ -72,7 +72,7 @@ if (process.env.NODE_ENV !== 'test') {
   db.sequelize.authenticate()
     .then(() => {
       console.log('✅ Connexion à la base de données établie avec succès.');
-      return db.sequelize.sync();
+      return db.sequelize.authenticate(); // Vérifier la connexion
     })
     .then(() => {
       console.log('✅ Base de données synchronisée avec succès.');
