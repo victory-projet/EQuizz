@@ -1,6 +1,6 @@
 // Domain Entity - User
 export interface User {
-  id: number;
+  id: string;
   nom: string;
   prenom: string;
   email: string;
@@ -22,22 +22,22 @@ export interface Enseignant extends User {
 
 export interface Etudiant extends User {
   role: 'ETUDIANT';
-  classeId?: number;
+  classeId?: string;
   classe?: Classe;
   numeroCarteEtudiant?: string;
 }
 
 export interface Classe {
-  id: number;
+  id: string;
   nom: string;
-  anneeAcademiqueId: number;
+  anneeAcademiqueId: string;
   anneeAcademique?: AnneeAcademique;
   dateCreation: Date;
   dateModification: Date;
 }
 
 export interface AnneeAcademique {
-  id: number;
+  id: string;
   libelle: string;
   dateDebut: Date;
   dateFin: Date;

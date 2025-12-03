@@ -17,7 +17,11 @@ class UtilisateurRepository {
         attributes: ['matricule', 'idCarte'], // Inclure tous les attributs nécessaires
         include: [{
           model: db.Classe,
-          attributes: ['id', 'nom', 'niveau']
+          attributes: ['id', 'nom', 'niveau'],
+          include: [
+            { model: db.Ecole, attributes: ['id', 'nom'] },
+            { model: db.AnneeAcademique, attributes: ['id', 'nom'] }
+          ]
         }],
         required: false, // On met 'false' car un admin n'a pas de profil étudiant
       }, {
@@ -34,6 +38,31 @@ class UtilisateurRepository {
   async findByEmail(email) {
     return db.Utilisateur.findOne({
       where: { email }
+    });
+  }
+
+  async findByIdWithRoles(id) {
+    return db.Utilisateur.findByPk(id, {
+      include: [{
+        model: db.Etudiant,
+        attributes: ['matricule', 'idCarte'],
+        include: [{
+          model: db.Classe,
+          attributes: ['id', 'nom', 'niveau'],
+          include: [
+            { model: db.Ecole, attributes: ['id', 'nom'] },
+            { model: db.AnneeAcademique, attributes: ['id', 'nom'] }
+          ]
+        }],
+        required: false,
+      }, {
+        model: db.Administrateur,
+        required: false,
+      }, {
+        model: db.Enseignant,
+        attributes: ['specialite'],
+        required: false,
+      }]
     });
   }
 }

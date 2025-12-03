@@ -19,7 +19,7 @@ export default function Page2() {
     const illustration = require('@/assets/images/illustration3.png');
 
     return (
-        
+
         <View style={styles.container}>
             <LinearGradient
                 colors={['#3A5689', '#6D8DC7']}
@@ -31,21 +31,20 @@ export default function Page2() {
             </LinearGradient>
 
             <Text style={styles.title}>Evaluez vos enseignements
-            simplement</Text>
+                simplement</Text>
 
             <Text style={styles.subtitle}>
-                Ton feedback pour un 
+                Ton feedback pour un
                 meilleur enseignement.
             </Text>
 
             <View style={styles.buttonsContainer}>
                 <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-                <Text style={styles.skipText}>Ignorer</Text>
+                    <Text style={styles.skipText}>Ignorer</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-                <Text style={styles.nextText}>Suivant 
+                    <Text style={styles.nextText}>Suivant</Text>
                     <MaterialIcons name="arrow-forward-ios" size={20} color="#3A5689" />
-                </Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -56,6 +55,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'space-between',
+        backgroundColor: '#F5F5F5',
     },
     illustrationContainer: {
         alignItems: 'center',
@@ -76,6 +76,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 10,
         marginTop: 20,
+        paddingHorizontal: 20,
     },
     subtitle: {
         fontSize: 16,
@@ -91,31 +92,38 @@ const styles = StyleSheet.create({
         width: '100%',
         paddingHorizontal: 40,
         marginBottom: 50,
-        fontSize: 30
+        alignItems: 'center',
     },
     skipButton: {
-        flex: 1,
-        backgroundColor: 'transparent',
-        paddingVertical: 15,
-        alignItems: 'flex-start', // Aligné à gauche
+        backgroundColor: 'rgba(58, 86, 137, 0.1)',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#3A5689',
     },
     skipText: {
-        color: '#212121',
+        color: '#3A5689',
         fontSize: 16,
         fontWeight: 'bold',
     },
     nextButton: {
-        flex: 1,
-        
-        borderRadius: 25,
-        alignItems: 'flex-end', // Aligné à droite
-        marginLeft: 20, // Espacement entre boutons
+        backgroundColor: '#3A5689',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
     },
     nextText: {
-        color: '#212121', // Bleu pour contraster
-        fontSize: 15,
+        color: 'white',
+        fontSize: 16,
         fontWeight: 'bold',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
+        marginRight: 5,
     },
 });

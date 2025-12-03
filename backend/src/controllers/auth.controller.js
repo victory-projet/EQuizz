@@ -1,6 +1,7 @@
 const authService = require('../services/auth.service');
 const asyncHandler = require('../utils/asyncHandler');
 const db = require('../models');
+const utilisateurRepository = require('../repositories/utilisateur.repository');
 
 class AuthController {
   claimAccount = asyncHandler(async (req, res) => {
@@ -35,6 +36,14 @@ class AuthController {
           id: utilisateur.Etudiant.Classe.id,
           nom: utilisateur.Etudiant.Classe.nom,
           niveau: utilisateur.Etudiant.Classe.niveau
+        } : null,
+        ecole: utilisateur.Etudiant.Classe?.Ecole ? {
+          id: utilisateur.Etudiant.Classe.Ecole.id,
+          nom: utilisateur.Etudiant.Classe.Ecole.nom
+        } : null,
+        anneeAcademique: utilisateur.Etudiant.Classe?.AnneeAcademique ? {
+          id: utilisateur.Etudiant.Classe.AnneeAcademique.id,
+          nom: utilisateur.Etudiant.Classe.AnneeAcademique.nom
         } : null
       };
     }
@@ -64,7 +73,13 @@ class AuthController {
 
   // Obtenir l'utilisateur connecté
   getCurrentUser = asyncHandler(async (req, res) => {
-    const utilisateur = req.user; // Défini par le middleware authenticate
+    // req.user contient seulement le payload du token (id, email, role)
+    // Il faut récupérer l'utilisateur complet depuis la base de données
+    const utilisateur = await utilisateurRepository.findByIdWithRoles(req.user.id);
+
+    if (!utilisateur) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
 
     // Déterminer le rôle et préparer les informations complètes
     let role = 'ETUDIANT';
@@ -86,6 +101,14 @@ class AuthController {
           id: utilisateur.Etudiant.Classe.id,
           nom: utilisateur.Etudiant.Classe.nom,
           niveau: utilisateur.Etudiant.Classe.niveau
+        } : null,
+        ecole: utilisateur.Etudiant.Classe?.Ecole ? {
+          id: utilisateur.Etudiant.Classe.Ecole.id,
+          nom: utilisateur.Etudiant.Classe.Ecole.nom
+        } : null,
+        anneeAcademique: utilisateur.Etudiant.Classe?.AnneeAcademique ? {
+          id: utilisateur.Etudiant.Classe.AnneeAcademique.id,
+          nom: utilisateur.Etudiant.Classe.AnneeAcademique.nom
         } : null
       };
     }

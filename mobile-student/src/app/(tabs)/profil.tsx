@@ -17,10 +17,10 @@ export default function Profil() {
             'Êtes-vous sûr de vouloir vous déconnecter ?',
             [
                 { text: 'Annuler', style: 'cancel' },
-                { 
-                    text: 'Se déconnecter', 
-                    onPress: async () => await logout(), 
-                    style: 'destructive' 
+                {
+                    text: 'Se déconnecter',
+                    onPress: async () => await logout(),
+                    style: 'destructive'
                 }
             ]
         );
@@ -29,7 +29,7 @@ export default function Profil() {
     const handleChangeAvatar = async () => {
         try {
             const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            
+
             if (!permissionResult.granted) {
                 Alert.alert(
                     'Permission requise',
@@ -84,8 +84,8 @@ export default function Profil() {
 
             {/* Avatar positionné au-dessus du header */}
             <View style={styles.avatarSection}>
-                <TouchableOpacity 
-                    style={styles.avatarContainer} 
+                <TouchableOpacity
+                    style={styles.avatarContainer}
                     onPress={handleChangeAvatar}
                     activeOpacity={0.8}
                 >
@@ -108,16 +108,16 @@ export default function Profil() {
                     {utilisateur.prenom} {utilisateur.nom}
                 </Text>
                 <Text style={styles.classInfo}>
-                    {utilisateur.Classe?.nom || 'Inge 4 - ISI FR'}
+                    {utilisateur.classe?.nom || 'Inge 4 - ISI FR'}
                 </Text>
                 <Text style={styles.schoolInfo}>
-                    {utilisateur.Ecole?.nom || 'Saint Jean Ingénieur'}
+                    {utilisateur.ecole?.nom || 'Saint Jean Ingénieur'}
                 </Text>
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
 
-                
+
 
                 {/* Section des champs de formulaire */}
                 <View style={styles.formSection}>
@@ -157,7 +157,7 @@ export default function Profil() {
                         <Text style={styles.fieldLabel}>Année Académique</Text>
                         <View style={styles.fieldValue}>
                             <Text style={styles.fieldText}>
-                                {utilisateur.anneeScolaire || '2025-2026'}
+                                {utilisateur.anneeAcademique?.nom || '2025-2026'}
                             </Text>
                         </View>
                     </View>
@@ -167,7 +167,7 @@ export default function Profil() {
                         <Text style={styles.fieldLabel}>Niveau</Text>
                         <View style={styles.fieldValue}>
                             <Text style={styles.fieldText}>
-                                {utilisateur.Classe?.Niveau?.nom || '4'}
+                                {utilisateur.classe?.niveau || '4'}
                             </Text>
                         </View>
                     </View>
@@ -177,7 +177,7 @@ export default function Profil() {
                         <Text style={styles.fieldLabel}>Classe</Text>
                         <View style={styles.fieldValue}>
                             <Text style={styles.fieldText}>
-                                {utilisateur.Classe?.nom || 'Inge ISI FR'}
+                                {utilisateur.classe?.nom || 'Inge ISI FR'}
                             </Text>
                         </View>
                     </View>
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        top:-40
+        top: -40
     },
     avatarSection: {
         alignItems: 'center',
@@ -274,9 +274,9 @@ const styles = StyleSheet.create({
         borderColor: '#fff',
         top: -60,
         position: 'relative',
-        borderWidth:2,
+        borderWidth: 2,
         height: 150,
-        paddingTop:65
+        paddingTop: 65
     },
     fullName: {
         fontSize: 22,
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     formSection: {
         marginHorizontal: 20,
         //marginTop: 24,
-        
+
     },
     formField: {
         marginBottom: 16,

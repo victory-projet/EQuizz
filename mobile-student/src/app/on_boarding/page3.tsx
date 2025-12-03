@@ -4,7 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { completeOnboarding } from '@/src/utils/onboarding';
 
-export default function Page2() {
+export default function Page3() {
     const router = useRouter();
 
     const handleStart = () => {
@@ -16,16 +16,15 @@ export default function Page2() {
 
     return (
         <View style={styles.mainContainer}>
-        <View style={styles.leftView}/>
+            <View style={styles.leftView} />
 
-        <View style={styles.rightView}/>
-        <Image source={peekingCharacter} style={styles.character} />
-        <TouchableOpacity style={styles.startButton} onPress={handleStart}>
-            <Text style={styles.startText}>Commencer
+            <View style={styles.rightView} />
+            <Image source={peekingCharacter} style={styles.character} />
+            <TouchableOpacity style={styles.startButton} onPress={handleStart}>
+                <Text style={styles.startText}>Commencer</Text>
                 <MaterialIcons name="arrow-forward-ios" size={20} color="#3A5689" style={styles.icon} />
-            </Text>
-        </TouchableOpacity>
-        
+            </TouchableOpacity>
+
         </View>
     );
 }
@@ -62,6 +61,7 @@ const styles = StyleSheet.create({
         left: '21%',
         backgroundColor: 'white',
         paddingVertical: 15,
+        paddingHorizontal: 20,
         borderRadius: 8,
         elevation: 5,
         shadowColor: '#000',
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'center',
     },
-    icon:{
-        marginTop:100
+    icon: {
+        marginLeft: 5
     }
 });
