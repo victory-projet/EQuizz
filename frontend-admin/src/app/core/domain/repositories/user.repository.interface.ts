@@ -9,6 +9,8 @@ export interface CreateUserDto {
   role: 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT';
   specialite?: string;
   matricule?: string;
+  classeId?: number | string;  // Support des IDs numériques et UUID (string pour UUID, number pour integer)
+  numeroCarteEtudiant?: string;
 }
 
 export interface UpdateUserDto {
@@ -17,6 +19,9 @@ export interface UpdateUserDto {
   email?: string;
   estActif?: boolean;
   specialite?: string;
+  matricule?: string;
+  classeId?: number | string;  // Support des IDs numériques et UUID (string pour UUID, number pour integer)
+  numeroCarteEtudiant?: string;
 }
 
 export abstract class UserRepositoryInterface {

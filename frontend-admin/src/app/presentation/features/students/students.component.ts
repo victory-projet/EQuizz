@@ -58,13 +58,18 @@ export class StudentsComponent implements OnInit {
     this.userUseCase.getAllUsers().subscribe({
       next: (users: User[]) => {
         const students = users.filter((u: User) => u.role === 'ETUDIANT') as Etudiant[];
-        console.log('📚 Étudiants chargés:', students);
+        console.log('📚 Étudiants chargés:', students.length, 'étudiants');
+        if (students.length > 0) {
+          console.log('📚 Premier étudiant (détails):', JSON.stringify(students[0], null, 2));
+        }
         this.students.set(students);
         this.applyFilters();
         this.isLoading.set(false);
       },
       error: (error: any) => {
-        console.error('Erreur lors du chargement des étudiants:', error);
+        console.error('❌ Erreur lors du chargement des étudiants:', error);
+        console.error('   Status:', error.status);
+        console.error('   Message:', error.error?.message || error.message);
         this.errorMessage.set('Erreur lors du chargement des étudiants');
         this.isLoading.set(false);
       }
@@ -176,23 +181,42 @@ export class StudentsComponent implements OnInit {
 
   createStudent(): void {
     this.isLoading.set(true);
-    const data = {
+    const data: any = {
       nom: this.formData.nom,
       prenom: this.formData.prenom,
       email: this.formData.email,
       role: 'ETUDIANT' as const,
-      matricule: this.formData.matricule || undefined
+      matricule: this.formData.matricule || undefined,
+      classe_id: this.formData.classeId || undefined, // Backend attend classe_id (snake_case)
+      numeroCarteEtudiant: this.formData.numeroCarteEtudiant || undefined
     };
 
+    console.log('📤 Données envoyées pour création:', JSON.stringify(data, null, 2));
+
     this.userUseCase.createUser(data).subscribe({
-      next: () => {
-        this.successMessage.set('Étudiant créé avec succès');
+      next: (createdUser: any) => {
+        console.log('✅ Étudiant créé:', JSON.stringify(createdUser, null, 2));
+        
+        // Vérifier si le backend a bien sauvegardé la classe
+        if (data.classe_id && !createdUser.classe) {
+          console.warn('⚠️ Le backend n\'a pas sauvegardé la classe');
+          console.warn('   Envoyé classe_id:', data.classe_id);
+          console.warn('   Reçu classe:', createdUser.classe);
+          this.successMessage.set('Étudiant créé, mais la classe n\'a pas été assignée. Veuillez contacter l\'administrateur.');
+        } else {
+          this.successMessage.set('Étudiant créé avec succès');
+        }
+        
         this.closeModal();
         this.loadStudents();
-        setTimeout(() => this.successMessage.set(''), 3000);
+        setTimeout(() => this.successMessage.set(''), 5000);
       },
       error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la création');
+        console.error('❌ Erreur création:', error);
+        console.error('   Status:', error.status);
+        console.error('   Message:', error.error?.message || error.message);
+        console.error('   Détails:', JSON.stringify(error.error, null, 2));
+        this.errorMessage.set(error.error?.message || error.message || 'Erreur lors de la création');
         this.isLoading.set(false);
       }
     });
@@ -203,21 +227,41 @@ export class StudentsComponent implements OnInit {
     if (!student) return;
 
     this.isLoading.set(true);
-    const data = {
+    const data: any = {
       nom: this.formData.nom,
       prenom: this.formData.prenom,
-      email: this.formData.email
+      email: this.formData.email,
+      matricule: this.formData.matricule || undefined,
+      classe_id: this.formData.classeId || undefined, // Backend attend classe_id (snake_case)
+      numeroCarteEtudiant: this.formData.numeroCarteEtudiant || undefined
     };
 
+    console.log('📤 Données envoyées pour mise à jour:', JSON.stringify(data, null, 2));
+
     this.userUseCase.updateUser(student.id.toString(), data).subscribe({
-      next: () => {
-        this.successMessage.set('Étudiant mis à jour avec succès');
+      next: (updatedUser: any) => {
+        console.log('✅ Étudiant mis à jour:', JSON.stringify(updatedUser, null, 2));
+        
+        // Vérifier si le backend a bien sauvegardé la classe
+        if (data.classe_id && !updatedUser.classe) {
+          console.warn('⚠️ Le backend n\'a pas sauvegardé la classe');
+          console.warn('   Envoyé classe_id:', data.classe_id);
+          console.warn('   Reçu classe:', updatedUser.classe);
+          this.successMessage.set('Étudiant mis à jour, mais la classe n\'a pas été assignée. Veuillez contacter l\'administrateur.');
+        } else {
+          this.successMessage.set('Étudiant mis à jour avec succès');
+        }
+        
         this.closeModal();
         this.loadStudents();
-        setTimeout(() => this.successMessage.set(''), 3000);
+        setTimeout(() => this.successMessage.set(''), 5000);
       },
       error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la mise à jour');
+        console.error('❌ Erreur mise à jour:', error);
+        console.error('   Status:', error.status);
+        console.error('   Message:', error.error?.message || error.message);
+        console.error('   Détails:', JSON.stringify(error.error, null, 2));
+        this.errorMessage.set(error.error?.message || error.message || 'Erreur lors de la mise à jour');
         this.isLoading.set(false);
       }
     });

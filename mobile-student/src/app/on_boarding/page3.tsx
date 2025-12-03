@@ -1,36 +1,40 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView } from 'react-native';
 import React from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { completeOnboarding } from '@/src/utils/onboarding';
 
-export default function Page2() {
+export default function Page3() {
     const router = useRouter();
 
-    const handleStart = () => {
-        completeOnboarding();
+    const handleStart = async () => {
+        await completeOnboarding();
         router.replace('/(auth)/Views/LoginScreen');
     };
 
     const peekingCharacter = require('@/assets/images/illustration2.png');
 
     return (
-        <View style={styles.mainContainer}>
-        <View style={styles.leftView}/>
-
-        <View style={styles.rightView}/>
-        <Image source={peekingCharacter} style={styles.character} />
-        <TouchableOpacity style={styles.startButton} onPress={handleStart}>
-            <Text style={styles.startText}>Commencer
-                <MaterialIcons name="arrow-forward-ios" size={20} color="#3A5689" style={styles.icon} />
-            </Text>
-        </TouchableOpacity>
-        
-        </View>
+        <SafeAreaView style={styles.safeArea}>
+            <View style={styles.mainContainer}>
+                <View style={styles.leftView}/>
+                <View style={styles.rightView}/>
+                <Image source={peekingCharacter} style={styles.character} />
+                <TouchableOpacity style={styles.startButton} onPress={handleStart}>
+                    <Text style={styles.startText}>Commencer
+                        <MaterialIcons name="arrow-forward-ios" size={20} color="#3A5689" style={styles.icon} />
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#6D8DC7',
+    },
     mainContainer: {
         flex: 1,
         flexDirection: 'row',
@@ -62,6 +66,7 @@ const styles = StyleSheet.create({
         left: '21%',
         backgroundColor: 'white',
         paddingVertical: 15,
+        paddingHorizontal: 20,
         borderRadius: 8,
         elevation: 5,
         shadowColor: '#000',
@@ -81,6 +86,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     icon:{
-        marginTop:100
+        marginLeft: 5
     }
 });

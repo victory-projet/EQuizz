@@ -22,7 +22,7 @@ export interface Enseignant extends User {
 
 export interface Etudiant extends User {
   role: 'ETUDIANT';
-  classeId?: number;
+  classeId?: number | string;  // Support des IDs numériques et UUID
   classe?: Classe;
   numeroCarteEtudiant?: string;
 }

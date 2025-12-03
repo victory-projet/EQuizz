@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -12,62 +12,76 @@ export default function Page2() {
         router.push('/on_boarding/page3');
     };
 
-    const handleSkip = () => {
-        completeOnboarding();
+    const handleSkip = async () => {
+        await completeOnboarding();
         router.replace('/(auth)/Views/LoginScreen');
     };
     const illustration = require('@/assets/images/illustration3.png');
 
     return (
-        
-        <View style={styles.container}>
-            <LinearGradient
-                colors={['#3A5689', '#6D8DC7']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.illustrationContainer}
+        <SafeAreaView style={styles.safeArea}>
+            <ScrollView 
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
             >
-                <Image source={illustration} style={styles.illustration} />
-            </LinearGradient>
+                <LinearGradient
+                    colors={['#3A5689', '#6D8DC7']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={styles.illustrationContainer}
+                >
+                    <Image source={illustration} style={styles.illustration} />
+                </LinearGradient>
 
-            <Text style={styles.title}>Evaluez vos enseignements
-            simplement</Text>
+                <Text style={styles.title}>Evaluez vos enseignements
+                simplement</Text>
 
-            <Text style={styles.subtitle}>
-                Ton feedback pour un 
-                meilleur enseignement.
-            </Text>
-
-            <View style={styles.buttonsContainer}>
-                <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-                <Text style={styles.skipText}>Ignorer</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-                <Text style={styles.nextText}>Suivant 
-                    <MaterialIcons name="arrow-forward-ios" size={20} color="#3A5689" />
+                <Text style={styles.subtitle}>
+                    Ton feedback pour un 
+                    meilleur enseignement.
                 </Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+
+                <View style={styles.buttonsContainer}>
+                    <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+                        <Text style={styles.skipText}>Ignorer</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+                        <Text style={styles.nextText}>Suivant 
+                            <MaterialIcons name="arrow-forward-ios" size={20} color="white" />
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    safeArea: {
         flex: 1,
+        backgroundColor: 'white',
+    },
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
         justifyContent: 'space-between',
+        paddingBottom: 30,
     },
     illustrationContainer: {
         alignItems: 'center',
         borderBottomRightRadius: 200,
         borderBottomLeftRadius: 200,
         backgroundColor: '#3A5689',
-        height: 600
+        height: 400,
+        justifyContent: 'center',
     },
     illustration: {
-        marginTop: 200,
-        width: 300,
-        height: 400,
+        width: 250,
+        height: 300,
+        resizeMode: 'contain',
     },
     title: {
         fontSize: 24,
@@ -75,7 +89,8 @@ const styles = StyleSheet.create({
         color: 'black',
         textAlign: 'center',
         marginBottom: 10,
-        marginTop: 20,
+        marginTop: 30,
+        paddingHorizontal: 20,
     },
     subtitle: {
         fontSize: 16,
@@ -83,21 +98,21 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 24,
         marginHorizontal: 40,
-        marginBottom: 100,
+        marginBottom: 30,
     },
     buttonsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'center',
         width: '100%',
         paddingHorizontal: 40,
-        marginBottom: 50,
-        fontSize: 30
+        marginTop: 20,
     },
     skipButton: {
         flex: 1,
         backgroundColor: 'transparent',
         paddingVertical: 15,
-        alignItems: 'flex-start', // Aligné à gauche
+        alignItems: 'flex-start',
     },
     skipText: {
         color: '#212121',
@@ -106,16 +121,17 @@ const styles = StyleSheet.create({
     },
     nextButton: {
         flex: 1,
-        
+        backgroundColor: '#3A5689',
         borderRadius: 25,
-        alignItems: 'flex-end', // Aligné à droite
-        marginLeft: 20, // Espacement entre boutons
-    },
-    nextText: {
-        color: '#212121', // Bleu pour contraster
-        fontSize: 15,
-        fontWeight: 'bold',
+        alignItems: 'center',
+        marginLeft: 20,
         paddingVertical: 15,
         paddingHorizontal: 20,
+        justifyContent: 'center',
+    },
+    nextText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });

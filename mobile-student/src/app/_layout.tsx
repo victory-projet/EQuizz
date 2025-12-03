@@ -9,6 +9,7 @@ function RootLayoutNav() {
   const router = useRouter();
   const navigationRef = useNavigationContainerRef();
   const [isNavigationReady, setIsNavigationReady] = useState(false);
+  const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
 
   // Attendre que la navigation soit prête
   useEffect(() => {
@@ -18,30 +19,40 @@ function RootLayoutNav() {
     return unsubscribe;
   }, [navigationRef]);
 
+  // Charger l'état de l'onboarding au démarrage et quand on change de segment
   useEffect(() => {
-    // Ne rien faire si la navigation n'est pas prête
-    if (!isNavigationReady) {
-      console.log('⏳ Navigation not ready yet...');
+    const checkOnboarding = async () => {
+      const completed = await isOnboardingCompleted();
+      setOnboardingDone(completed);
+      console.log('🔍 Onboarding status loaded:', completed);
+    };
+    checkOnboarding();
+  }, [segments]); // Recharger quand les segments changent
+
+  useEffect(() => {
+    // Ne rien faire si la navigation n'est pas prête ou si l'état de l'onboarding n'est pas chargé
+    if (!isNavigationReady || onboardingDone === null) {
+      console.log('⏳ Waiting for navigation or onboarding status...', { isNavigationReady, onboardingDone });
       return;
     }
 
     console.log('🔄 Navigation useEffect:', { 
       isAuthenticated, 
       isLoading, 
-      onboardingCompleted: isOnboardingCompleted(),
+      onboardingCompleted: onboardingDone,
       segments: segments[0] 
     });
     
     const inOnboardingGroup = segments[0] === 'on_boarding';
     const inAuthGroup = segments[0] === '(auth)';
-    const inTabsGroup = segments[0] === '(tabs)';
-    const onboardingDone = isOnboardingCompleted();
 
-    // PRIORITÉ 1 : Si l'onboarding n'est pas complété, toujours rediriger vers onboarding
+    // PRIORITÉ 1 : Si l'onboarding n'est pas complété, rester sur onboarding
     if (!onboardingDone) {
       if (!inOnboardingGroup) {
         console.log('➡️ Redirecting to onboarding (not completed)...');
         router.replace('/on_boarding');
+      } else {
+        console.log('✅ Already on onboarding, no redirect needed');
       }
       return;
     }
@@ -55,14 +66,14 @@ function RootLayoutNav() {
     // PRIORITÉ 3 : Gérer l'authentification après l'onboarding
     if (!isAuthenticated && !inAuthGroup) {
       console.log('➡️ Redirecting to login...');
-      router.replace('/(auth)');
+      router.replace('/(auth)/Views/LoginScreen');
     } else if (isAuthenticated && (inAuthGroup || inOnboardingGroup)) {
       console.log('➡️ Redirecting to accueil...');
       router.replace('/(tabs)/accueil');
     } else {
       console.log('✅ No navigation needed');
     }
-  }, [isAuthenticated, isLoading, segments, isNavigationReady]);
+  }, [isAuthenticated, isLoading, segments, isNavigationReady, onboardingDone]);
 
   return (
     <Stack

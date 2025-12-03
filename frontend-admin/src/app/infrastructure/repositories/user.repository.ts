@@ -50,22 +50,26 @@ export class UserRepository implements UserRepositoryInterface {
       email: data.email,
       role: data.role,
       estActif: data.estActif,
-      dateCreation: new Date(data.createdAt),
-      dateModification: new Date(data.updatedAt)
+      dateCreation: new Date(data.createdAt || data.dateCreation),
+      dateModification: new Date(data.updatedAt || data.dateModification)
     };
 
     // Ajouter les propriétés spécifiques selon le rôle
-    if (data.role === 'ETUDIANT' && data.Etudiant) {
+    if (data.role === 'ETUDIANT') {
+      // Support de plusieurs formats de réponse du backend
+      const etudiantData = data.Etudiant || data;
       return {
         ...baseUser,
-        matricule: data.Etudiant.matricule,
-        classeId: data.Etudiant.classe_id,
-        numeroCarteEtudiant: data.Etudiant.idCarte
+        matricule: etudiantData.matricule || data.matricule,
+        classeId: data.classeId || etudiantData.classe_id || etudiantData.classeId,
+        classe: data.classe || etudiantData.Classe || null,
+        numeroCarteEtudiant: etudiantData.idCarte || etudiantData.numeroCarteEtudiant || data.numeroCarteEtudiant
       } as any;
-    } else if (data.role === 'ENSEIGNANT' && data.Enseignant) {
+    } else if (data.role === 'ENSEIGNANT') {
+      const enseignantData = data.Enseignant || data;
       return {
         ...baseUser,
-        specialite: data.Enseignant.specialite
+        specialite: enseignantData.specialite || data.specialite
       } as any;
     }
 
