@@ -42,6 +42,11 @@ class AppError extends Error {
     return new AppError(message, 422, code);
   }
 
+  // Erreurs 429 - Too Many Requests
+  static tooManyRequests(message = 'Trop de requêtes.', code = 'TOO_MANY_REQUESTS') {
+    return new AppError(message, 429, code);
+  }
+
   // Erreurs 500 - Internal Server Error
   static internal(message = 'Erreur interne du serveur.', code = 'INTERNAL_ERROR') {
     return new AppError(message, 500, code);

@@ -1,296 +1,431 @@
-# EQuizz Admin Web - Clean Architecture
+# EQuizz Admin - Plateforme d'Évaluation des Enseignements
 
-Application Angular pour la gestion administrative de la plateforme EQuizz, construite selon les principes de la **Clean Architecture**.
+![Angular](https://img.shields.io/badge/Angular-20.2-red?logo=angular)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen)
 
-## 🏗️ Architecture
+Application web d'administration pour la gestion et l'évaluation des enseignements. Permet aux administrateurs de créer, gérer et analyser les évaluations des cours.
 
-Ce projet suit strictement les principes de la Clean Architecture avec une séparation en 4 couches :
+## 📋 Table des Matières
 
-```
-┌─────────────────────────────────────┐
-│       PRESENTATION LAYER            │  ← UI Components, Pages
-│  (Angular Components, Templates)    │
-└─────────────────────────────────────┘
-              ↓ dépend de
-┌─────────────────────────────────────┐
-│      APPLICATION LAYER              │  ← Use Cases, Business Logic
-│     (Use Cases, Ports, DTOs)        │
-└─────────────────────────────────────┘
-              ↓ dépend de
-┌─────────────────────────────────────┐
-│        DOMAIN LAYER                 │  ← Core Business (Entities)
-│  (Entities, Repository Interfaces)  │  ← Ne dépend de RIEN
-└─────────────────────────────────────┘
-              ↑ implémente
-┌─────────────────────────────────────┐
-│     INFRASTRUCTURE LAYER            │  ← Technical Details
-│  (HTTP, Repositories, Guards)       │
-└─────────────────────────────────────┘
-```
+- [Fonctionnalités](#-fonctionnalités)
+- [Technologies](#-technologies)
+- [Prérequis](#-prérequis)
+- [Installation](#-installation)
+- [Développement](#-développement)
+- [Tests](#-tests)
+- [Build](#-build)
+- [Déploiement](#-déploiement)
+- [Architecture](#-architecture)
+- [Documentation](#-documentation)
+- [Contribution](#-contribution)
 
-### 📚 Documentation
+## ✨ Fonctionnalités
 
-- **[CLEAN_ARCHITECTURE.md](./CLEAN_ARCHITECTURE.md)** - Principes et règles de l'architecture
-- **[ARCHITECTURE_STRUCTURE.md](./ARCHITECTURE_STRUCTURE.md)** - Structure détaillée du projet
-- **[MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)** - Guide de migration des imports
+### Gestion des Évaluations
+- ✅ Création et édition d'évaluations
+- ✅ Gestion des questions (choix multiples, texte libre, échelle)
+- ✅ Prévisualisation en temps réel
+- ✅ Publication et clôture d'évaluations
+- ✅ Export des résultats (Excel)
 
-## 🚀 Démarrage Rapide
+### Dashboard Analytique
+- ✅ Statistiques en temps réel
+- ✅ Graphiques interactifs (Chart.js)
+- ✅ Filtres par année et semestre
+- ✅ Alertes et notifications
+- ✅ Tendances et analyses
 
-### Prérequis
+### Gestion des Utilisateurs
+- ✅ Gestion des étudiants
+- ✅ Gestion des enseignants
+- ✅ Gestion des administrateurs
+- ✅ Gestion des classes
+- ✅ Associations cours-enseignants-classes
 
-- Node.js 18+ 
-- npm 9+
-- Angular CLI 20+
+### Rapports
+- ✅ Rapports détaillés par évaluation
+- ✅ Analyse des performances
+- ✅ Statistiques par cours et enseignant
+- ✅ Export et impression
 
-### Installation
+### Responsive Design
+- ✅ Interface adaptative (mobile, tablette, desktop)
+- ✅ Menu hamburger sur mobile
+- ✅ Animations fluides
+- ✅ Accessibilité WCAG AA
+
+## 🛠 Technologies
+
+### Frontend
+- **Angular 20.2** - Framework principal
+- **TypeScript 5.9** - Langage de programmation
+- **RxJS 7.8** - Programmation réactive
+- **Chart.js 4.5** - Graphiques interactifs
+- **ng2-charts 8.0** - Wrapper Angular pour Chart.js
+
+### Outils de Développement
+- **Angular CLI** - Outil de développement
+- **Jasmine & Karma** - Tests unitaires
+- **ESLint** - Linting
+- **Prettier** - Formatage de code
+
+### Optimisation
+- **Lazy Loading** - Chargement à la demande
+- **Service Worker** - Cache et PWA
+- **Image Optimization** - Compression et lazy loading
+- **HTTP Caching** - Mise en cache des requêtes
+
+## 📦 Prérequis
+
+- **Node.js** >= 18.x
+- **npm** >= 9.x
+- **Angular CLI** >= 20.x
 
 ```bash
-# Installer les dépendances
-npm install
-
-# Démarrer le serveur de développement
-npm start
-
-# L'application sera accessible sur http://localhost:4200
+# Vérifier les versions
+node --version
+npm --version
+ng version
 ```
+
+## 🚀 Installation
+
+### 1. Cloner le Projet
+
+```bash
+git clone https://github.com/votre-repo/equizz.git
+cd equizz/frontend-admin
+```
+
+### 2. Installer les Dépendances
+
+```bash
+npm install
+```
+
+### 3. Configuration
+
+Créer un fichier `src/environments/environment.ts` :
+
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:3000/api',
+  enableCache: false,
+  cacheTimeout: 60000
+};
+```
+
+### 4. Lancer l'Application
+
+```bash
+npm start
+```
+
+L'application sera accessible sur `http://localhost:4200`
+
+## 💻 Développement
 
 ### Commandes Disponibles
 
 ```bash
-# Développement
-npm start                    # Démarrer le serveur de dev
-npm run watch               # Build en mode watch
+# Démarrer le serveur de développement
+npm start
 
-# Build
-npm run build               # Build de production
-npm run build:dev           # Build de développement
+# Build de développement
+npm run build
 
-# Tests
-npm test                    # Lancer les tests unitaires
+# Build de production
+npm run build -- --configuration=production
 
-# Validation
-npm run validate:architecture  # Vérifier les règles d'architecture
-npm run validate:all          # Validation complète (architecture + build)
+# Lancer les tests
+npm test
+
+# Lancer les tests avec couverture
+npm test -- --code-coverage
+
+# Linter le code
+ng lint
+
+# Formater le code
+npm run format
 ```
 
-## 📁 Structure du Projet
+### Structure du Projet
 
 ```
-src/app/
-├── core/
-│   ├── domain/              # 🔵 Entités et interfaces métier
-│   │   ├── entities/        # Classes métier pures
-│   │   └── repositories/    # Interfaces des repositories
-│   └── application/         # 🟢 Cas d'usage et logique applicative
-│       ├── use-cases/       # Use cases (actions métier)
-│       ├── ports/           # Interfaces pour l'infrastructure
-│       └── dto/             # Data Transfer Objects
-├── infrastructure/          # 🟡 Implémentations techniques
-│   ├── repositories/        # Implémentations des repositories
-│   ├── http/               # Interceptors, services HTTP
-│   ├── guards/             # Guards Angular
-│   └── storage/            # Services de stockage
-├── presentation/            # 🔴 Interface utilisateur
-│   ├── features/           # Modules fonctionnels (lazy-loaded)
-│   ├── shared/             # Composants partagés
-│   ├── layouts/            # Layouts de l'app
-│   └── pages/              # Pages principales
-└── config/                  # ⚙️ Configuration
-    ├── app.config.ts       # Configuration Angular
-    ├── app.routes.ts       # Routes
-    └── providers.config.ts # Providers DI
+frontend-admin/
+├── src/
+│   ├── app/
+│   │   ├── core/                 # Services core, interceptors
+│   │   │   ├── domain/          # Entités et interfaces
+│   │   │   ├── usecases/        # Cas d'utilisation
+│   │   │   ├── interceptors/    # HTTP interceptors
+│   │   │   └── services/        # Services métier
+│   │   ├── infrastructure/       # Implémentation technique
+│   │   │   ├── http/            # Services HTTP
+│   │   │   └── repositories/    # Repositories
+│   │   ├── presentation/         # Composants UI
+│   │   │   ├── features/        # Pages principales
+│   │   │   ├── layouts/         # Layouts
+│   │   │   └── shared/          # Composants partagés
+│   │   └── shared/              # Utilitaires partagés
+│   ├── assets/                   # Images, fonts, etc.
+│   ├── environments/             # Configuration environnements
+│   └── styles.scss              # Styles globaux
+├── public/                       # Fichiers statiques
+├── angular.json                  # Configuration Angular
+├── package.json                  # Dépendances npm
+├── tsconfig.json                # Configuration TypeScript
+└── karma.conf.js                # Configuration tests
 ```
 
-## 🎯 Principes Clés
+### Architecture Clean
 
-### 1. Dependency Rule
+Le projet suit les principes de **Clean Architecture** :
 
-Les dépendances pointent toujours vers l'intérieur :
-- ✅ Presentation → Application → Domain
-- ✅ Infrastructure → Application/Domain
-- ❌ Domain ne dépend de RIEN
+1. **Domain Layer** - Entités et interfaces métier
+2. **Use Cases Layer** - Logique métier
+3. **Infrastructure Layer** - Implémentation technique
+4. **Presentation Layer** - Interface utilisateur
 
-### 2. Inversion de Dépendance
+### Conventions de Code
 
-```typescript
-// Domain définit l'interface
-export abstract class QuizRepository {
-  abstract findAll(): Observable<Quiz[]>;
-}
-
-// Infrastructure l'implémente
-@Injectable()
-export class QuizHttpRepository implements QuizRepository {
-  findAll() { return this.http.get<Quiz[]>('/api/quizzes'); }
-}
-
-// Application l'utilise
-@Injectable()
-export class GetAllQuizzesUseCase {
-  constructor(private repo: QuizRepository) {}
-  execute() { return this.repo.findAll(); }
-}
-```
-
-### 3. Imports avec Alias
-
-Le projet utilise des alias TypeScript pour faciliter les imports :
-
-```typescript
-import { Quiz } from '@domain/entities/quiz.entity';
-import { GetAllQuizzesUseCase } from '@application/use-cases/quiz/get-all-quizzes.use-case';
-import { QuizHttpRepository } from '@infrastructure/repositories/quiz.repository';
-import { QuizListComponent } from '@presentation/features/quiz-management/components/quiz-list';
-```
-
-## 🔧 Développement
-
-### Créer une nouvelle feature
-
-1. **Créer l'entité (Domain)**
-```typescript
-// src/app/core/domain/entities/student.entity.ts
-export class Student {
-  constructor(
-    public readonly id: string,
-    public name: string,
-    public email: string
-  ) {}
-}
-```
-
-2. **Créer l'interface du repository (Domain)**
-```typescript
-// src/app/core/domain/repositories/student.repository.interface.ts
-export abstract class StudentRepository {
-  abstract findAll(): Observable<Student[]>;
-  abstract findById(id: string): Observable<Student>;
-}
-```
-
-3. **Créer le use case (Application)**
-```typescript
-// src/app/core/application/use-cases/student/get-all-students.use-case.ts
-@Injectable({ providedIn: 'root' })
-export class GetAllStudentsUseCase {
-  constructor(private repo: StudentRepository) {}
-  execute() { return this.repo.findAll(); }
-}
-```
-
-4. **Implémenter le repository (Infrastructure)**
-```typescript
-// src/app/infrastructure/repositories/student.repository.ts
-@Injectable({ providedIn: 'root' })
-export class StudentHttpRepository implements StudentRepository {
-  constructor(private http: HttpClient) {}
-  findAll() { return this.http.get<Student[]>('/api/students'); }
-}
-```
-
-5. **Créer le composant (Presentation)**
-```typescript
-// src/app/presentation/features/students/students.component.ts
-@Component({ ... })
-export class StudentsComponent {
-  constructor(private getAllStudents: GetAllStudentsUseCase) {}
-  ngOnInit() {
-    this.getAllStudents.execute().subscribe(students => {
-      this.students = students;
-    });
-  }
-}
-```
-
-6. **Configurer le provider (Config)**
-```typescript
-// src/app/config/providers.config.ts
-export const repositoryProviders = [
-  { provide: StudentRepository, useClass: StudentHttpRepository }
-];
-```
-
-### Validation de l'architecture
-
-Avant de committer, vérifiez que l'architecture est respectée :
-
-```bash
-npm run validate:architecture
-```
-
-Ce script vérifie :
-- ✅ Le Domain ne dépend de rien
-- ✅ L'Application ne dépend que du Domain
-- ✅ L'Infrastructure n'est pas utilisée directement par la Presentation
-- ✅ Les imports utilisent les alias recommandés
+- **Composants** : PascalCase (ex: `DashboardComponent`)
+- **Services** : PascalCase + Service (ex: `AuthService`)
+- **Fichiers** : kebab-case (ex: `dashboard.component.ts`)
+- **Variables** : camelCase (ex: `currentUser`)
+- **Constantes** : UPPER_SNAKE_CASE (ex: `API_URL`)
 
 ## 🧪 Tests
 
+### Exécuter les Tests
+
 ```bash
-# Lancer tous les tests
+# Tests unitaires
 npm test
+
+# Tests avec couverture
+npm test -- --code-coverage
 
 # Tests en mode watch
 npm test -- --watch
 
-# Tests avec couverture
-npm test -- --code-coverage
+# Tests sur un fichier spécifique
+npm test -- --include='**/auth.service.spec.ts'
+```
+
+### Couverture de Code
+
+Les rapports de couverture sont générés dans `coverage/frontend-admin/`
+
+Objectifs de couverture :
+- Statements : > 80%
+- Branches : > 75%
+- Functions : > 80%
+- Lines : > 80%
+
+### Écrire des Tests
+
+```typescript
+describe('MyService', () => {
+  let service: MyService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [MyService]
+    });
+    service = TestBed.inject(MyService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
 ```
 
 ## 📦 Build
 
+### Build de Production
+
 ```bash
-# Build de production
-npm run build
-
-# Build de développement
-npm run build -- --configuration development
-
-# Analyser la taille du bundle
-npm run build -- --stats-json
+npm run build -- --configuration=production
 ```
 
-## 🎨 Style et Conventions
+Optimisations appliquées :
+- ✅ Minification JS/CSS
+- ✅ Tree shaking
+- ✅ AOT compilation
+- ✅ Lazy loading
+- ✅ Output hashing
+- ✅ Source maps désactivées
 
-### Naming Conventions
-
-- **Entities** : `PascalCase` (ex: `Quiz`, `Student`)
-- **Use Cases** : `VerbNounUseCase` (ex: `GetAllQuizzesUseCase`)
-- **Repositories** : `NounRepository` (ex: `QuizRepository`)
-- **Components** : `noun.component.ts` (ex: `quiz-list.component.ts`)
-
-### Structure des fichiers
+### Taille des Bundles
 
 ```
-feature-name/
-├── components/              # Composants de la feature
-│   └── sub-component/
-│       ├── sub-component.component.ts
-│       ├── sub-component.component.html
-│       ├── sub-component.component.scss
-│       └── sub-component.component.spec.ts
-├── feature-name.component.ts
-├── feature-name.component.html
-├── feature-name.component.scss
-└── feature-name.component.spec.ts
+Initial bundle: ~500 KB
+Lazy chunks: ~100 KB each
+Total: ~1 MB (gzipped: ~300 KB)
 ```
+
+## 🚀 Déploiement
+
+### Déploiement sur Render
+
+1. Créer un compte sur [Render](https://render.com)
+2. Connecter le repository GitHub
+3. Configurer le service :
+   - Build Command: `npm install && npm run build`
+   - Publish Directory: `dist/frontend-admin/browser`
+4. Déployer
+
+### Variables d'Environnement
+
+```bash
+API_URL=https://api.equizz.com
+NODE_ENV=production
+```
+
+### Déploiement sur Netlify
+
+```bash
+# Installer Netlify CLI
+npm install -g netlify-cli
+
+# Build
+npm run build -- --configuration=production
+
+# Déployer
+netlify deploy --prod --dir=dist/frontend-admin/browser
+```
+
+## 🏗 Architecture
+
+### Clean Architecture
+
+```
+┌─────────────────────────────────────┐
+│      Presentation Layer             │
+│  (Components, Pages, Layouts)       │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│       Use Cases Layer               │
+│  (Business Logic, Services)         │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│      Infrastructure Layer           │
+│  (HTTP, Repositories, APIs)         │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│         Domain Layer                │
+│  (Entities, Interfaces)             │
+└─────────────────────────────────────┘
+```
+
+### Flux de Données
+
+```
+User Action → Component → Service → UseCase → Repository → API
+                  ↓
+              Update UI ← Observable ← Response
+```
+
+### State Management
+
+- **Signals** - État local des composants
+- **Services** - État partagé entre composants
+- **LocalStorage** - Persistance (token, user)
+
+## 📚 Documentation
+
+### Documentation Technique
+
+- [Guide d'Installation](./docs/INSTALLATION.md)
+- [Guide de Développement](./docs/DEVELOPMENT.md)
+- [Architecture Détaillée](./docs/ARCHITECTURE.md)
+- [API Documentation](./docs/API.md)
+
+### Documentation Utilisateur
+
+- [Guide Utilisateur Admin](./docs/USER_GUIDE_ADMIN.md)
+- [FAQ](./docs/FAQ.md)
+- [Tutoriels](./docs/TUTORIALS.md)
+
+### Phases de Développement
+
+- [Phase 16 - Responsive & Animations](./PHASE_16_RESPONSIVE_ANIMATIONS_COMPLETE.md)
+- [Phase 17 - Tests](./PHASE_17_TESTS_COMPLETE.md)
+- [Phase 18 - Optimisation](./PHASE_18_OPTIMIZATION_COMPLETE.md)
 
 ## 🤝 Contribution
 
-1. Créer une branche depuis `main`
-2. Développer en respectant la Clean Architecture
-3. Valider l'architecture : `npm run validate:architecture`
-4. Tester : `npm test`
-5. Créer une Pull Request
+### Workflow Git
 
-## 📄 Licence
+```bash
+# Créer une branche
+git checkout -b feature/ma-fonctionnalite
 
-[Votre licence ici]
+# Faire des commits
+git add .
+git commit -m "feat: ajout de ma fonctionnalité"
+
+# Pousser la branche
+git push origin feature/ma-fonctionnalite
+
+# Créer une Pull Request
+```
+
+### Convention de Commits
+
+Suivre [Conventional Commits](https://www.conventionalcommits.org/) :
+
+- `feat:` - Nouvelle fonctionnalité
+- `fix:` - Correction de bug
+- `docs:` - Documentation
+- `style:` - Formatage
+- `refactor:` - Refactoring
+- `test:` - Tests
+- `chore:` - Maintenance
+
+### Code Review
+
+Toute Pull Request doit :
+- ✅ Passer les tests
+- ✅ Respecter les conventions de code
+- ✅ Être revue par au moins 1 personne
+- ✅ Avoir une couverture de tests > 80%
+
+## 📄 License
+
+MIT License - voir [LICENSE](../LICENSE)
 
 ## 👥 Équipe
 
-[Informations sur l'équipe]
+- **Développeurs** - Équipe EQuizz
 
----
+## 📞 Support
 
-**Note** : Ce projet suit strictement les principes de la Clean Architecture. Consultez [CLEAN_ARCHITECTURE.md](./CLEAN_ARCHITECTURE.md) pour plus de détails sur les règles et conventions.
+- **Email** : support@equizz.com
+- **Issues** : [GitHub Issues](https://github.com/victory-projet/EQuizz/issues)
+- **Documentation** : [Wiki](https://github.com/victory-projet/EQuizz/wiki)
+
+## 🎯 Roadmap
+
+### Version 1.0 (Actuelle)
+- ✅ Dashboard analytique
+- ✅ Gestion des évaluations
+- ✅ Rapports détaillés
+- ✅ Responsive design
+
+
+### Version 2.0 (Futur)
+- 📅 Intégration calendrier
+- 📅 Statistiques avancées (IA)
+- 📅 Multi-langue
+- 📅 API publique
+

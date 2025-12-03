@@ -7,13 +7,16 @@ class DashboardController {
   getAdminDashboard = asyncHandler(async (req, res) => {
     const { year, semester, classe, cours, enseignant } = req.query;
     
-    const filters = {
-      year: year || null,
-      semester: semester || 'all',
-      classeId: classe || 'all',
-      coursId: cours || 'all',
-      enseignantId: enseignant || 'all'
-    };
+    const filters = {};
+    
+    // N'ajouter les filtres que s'ils sont fournis
+    if (year) filters.year = year;
+    if (semester && semester !== 'all') filters.semester = semester;
+    if (classe && classe !== 'all') filters.classeId = classe;
+    if (cours && cours !== 'all') filters.coursId = cours;
+    if (enseignant && enseignant !== 'all') filters.enseignantId = enseignant;
+
+    console.log('📊 Dashboard filters received:', filters);
 
     const dashboard = await dashboardService.getAdminDashboard(filters);
     res.status(200).json(dashboard);

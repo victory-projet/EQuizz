@@ -1,8 +1,0 @@
-{
-  "/api": {
-    "target": "https://equizz-backend.onrender.com",
-    "secure": true,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  }
-}

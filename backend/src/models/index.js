@@ -20,6 +20,7 @@ const SessionToken = require('./SessionToken');
 const ReponseEtudiant = require('./ReponseEtudiant');
 const Notification = require('./Notification');
 const AnalyseReponse = require('./AnalyseReponse');
+const PasswordResetToken = require('./PasswordResetToken');
 const { DataTypes } = require('sequelize');
 
 // --- Centralisation dans un objet 'db' ---
@@ -43,6 +44,7 @@ db.SessionToken = SessionToken;
 db.ReponseEtudiant = ReponseEtudiant;
 db.Notification = Notification;
 db.AnalyseReponse = AnalyseReponse;
+db.PasswordResetToken = PasswordResetToken;
 
 // --- Définition de toutes les Relations (Associations) ---
 
@@ -135,5 +137,9 @@ Notification.belongsToMany(Etudiant, { through: NotificationEtudiant });
 const EvaluationClasse = sequelize.define('EvaluationClasse', {}, { freezeTableName: true, paranoid: false, underscored: true });
 Evaluation.belongsToMany(Classe, { through: EvaluationClasse });
 Classe.belongsToMany(Evaluation, { through: EvaluationClasse });
+
+// --- 6. Password Reset Tokens ---
+Utilisateur.hasMany(PasswordResetToken, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });
+PasswordResetToken.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
 
 module.exports = db;

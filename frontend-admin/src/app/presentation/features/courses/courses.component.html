@@ -1,402 +1,326 @@
-<div class="courses-page">
+<div class="courses-container">
+  <!-- Success Message -->
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      <span class="material-icons">check_circle</span>
+      {{ successMessage() }}
+    </div>
+  }
+
   <!-- Header -->
   <div class="page-header">
-    <div class="header-content">
-      <h1>
-        <app-svg-icon name="BookOpen" class="title-icon"></app-svg-icon>
-        Gestion des Cours
-      </h1>
-      <p class="subtitle">Gérez vos unités d'enseignement et cours</p>
+    <div class="header-left">
+      <h2>Gestion des Cours & UE</h2>
+      <p>Gérez vos unités d'enseignement et cours</p>
     </div>
-    <button class="btn-primary" (click)="addCourse()">
-      <app-svg-icon name="Plus"></app-svg-icon>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <span class="material-icons">add</span>
       Ajouter un Cours
     </button>
   </div>
 
-  <!-- Stats Cards -->
+  <!-- Statistics Cards -->
   <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon blue">
-        <app-svg-icon name="BookOpen"></app-svg-icon>
+    <div class="stat-card stat-total">
+      <div class="stat-icon">
+        <span class="material-icons">menu_book</span>
       </div>
       <div class="stat-content">
         <div class="stat-label">Total Cours</div>
-        <div class="stat-value">{{ totalCourses() }}</div>
+        <div class="stat-value">{{ totalCours() }}</div>
       </div>
     </div>
 
-    <div class="stat-card">
-      <div class="stat-icon green">
-        <app-svg-icon name="CheckCircle2"></app-svg-icon>
+    <div class="stat-card stat-active">
+      <div class="stat-icon">
+        <span class="material-icons">check_circle</span>
       </div>
       <div class="stat-content">
         <div class="stat-label">Cours Actifs</div>
-        <div class="stat-value">{{ activeCourses() }}</div>
+        <div class="stat-value">{{ coursActifs() }}</div>
       </div>
     </div>
 
-    <div class="stat-card">
-      <div class="stat-icon purple">
-        <app-svg-icon name="Users"></app-svg-icon>
+    <div class="stat-card stat-archived">
+      <div class="stat-icon">
+        <span class="material-icons">archive</span>
       </div>
       <div class="stat-content">
-        <div class="stat-label">Total Étudiants</div>
-        <div class="stat-value">{{ totalStudents() }}</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon orange">
-        <app-svg-icon name="Calendar"></app-svg-icon>
-      </div>
-      <div class="stat-content">
-        <div class="stat-label">Semestres</div>
-        <div class="stat-value">2</div>
+        <div class="stat-label">Cours Archivés</div>
+        <div class="stat-value">{{ coursArchives() }}</div>
       </div>
     </div>
   </div>
 
-  <!-- Search Bar -->
-  <div class="search-section">
-    <app-search-bar 
-      placeholder="Rechercher un cours par nom ou code..."
-      (search)="onSearchChange($event)">
-    </app-search-bar>
-  </div>
+  <!-- Search and Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input 
+        type="text" 
+        placeholder="Rechercher un cours par nom, code..."
+        (input)="onSearch($event)"
+        [value]="searchQuery()"
+      >
+    </div>
 
-  <!-- Filter Tabs -->
-  <div class="filter-tabs">
-    <button 
-      class="tab" 
-      [class.active]="activeFilter() === 'all'"
-      (click)="setFilter('all')">
-      <app-svg-icon name="List"></app-svg-icon>
-      Tous ({{ totalCourses() }})
-    </button>
-    <button 
-      class="tab" 
-      [class.active]="activeFilter() === 'active'"
-      (click)="setFilter('active')">
-      <app-svg-icon name="CheckCircle2"></app-svg-icon>
-      Actifs ({{ activeCourses() }})
-    </button>
-    <button 
-      class="tab" 
-      [class.active]="activeFilter() === 'semester1'"
-      (click)="setFilter('semester1')">
-      <app-svg-icon name="Calendar"></app-svg-icon>
-      Semestre 1
-    </button>
-    <button 
-      class="tab" 
-      [class.active]="activeFilter() === 'semester2'"
-      (click)="setFilter('semester2')">
-      <app-svg-icon name="Calendar"></app-svg-icon>
-      Semestre 2
-    </button>
+    <div class="filter-buttons">
+      <button 
+        class="filter-btn" 
+        [class.active]="filterStatus() === 'ALL'"
+        (click)="onFilterStatus('ALL')">
+        Tous ({{ totalCours() }})
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="filterStatus() === 'ACTIVE'"
+        (click)="onFilterStatus('ACTIVE')">
+        Actifs ({{ coursActifs() }})
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="filterStatus() === 'ARCHIVED'"
+        (click)="onFilterStatus('ARCHIVED')">
+        Archivés ({{ coursArchives() }})
+      </button>
+    </div>
   </div>
 
   <!-- Loading State -->
   @if (isLoading()) {
-    <div class="loading-state">
-      <app-loading-spinner size="lg"></app-loading-spinner>
-      <p>Chargement des cours...</p>
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Chargement...</p>
     </div>
   }
 
   <!-- Courses Grid -->
-  @if (!isLoading() && filteredCourses().length > 0) {
-    <div class="cards-grid">
-      @for (course of filteredCourses(); track course.id) {
-        <div class="course-card">
+  @if (!isLoading()) {
+    <div class="courses-grid">
+      @for (cours of filteredCours(); track cours.id) {
+        <div class="course-card" [class.archived]="cours.estArchive">
+          <!-- Card Header -->
           <div class="card-header">
-            <div class="course-code-badge">{{ course.code }}</div>
-            <span class="status-badge active">
-              <app-svg-icon name="CheckCircle2"></app-svg-icon>
-              Actif
-            </span>
-            <div class="card-menu">
-              <button class="menu-btn" (click)="toggleMenu(course.id)">
-                <app-svg-icon name="MoreVertical"></app-svg-icon>
-              </button>
-              @if (showMenu === course.id) {
-                <div class="menu-dropdown" (click)="$event.stopPropagation()">
-                  <button (click)="viewDetails(course); closeMenu()">
-                    <app-svg-icon name="Eye"></app-svg-icon>
-                    Détails
-                  </button>
-                  <button (click)="editCourse(course); closeMenu()">
-                    <app-svg-icon name="Edit2"></app-svg-icon>
-                    Modifier
-                  </button>
-                  <button (click)="deleteCourse(course); closeMenu()" class="danger">
-                    <app-svg-icon name="Trash2"></app-svg-icon>
-                    Supprimer
-                  </button>
-                </div>
-              }
-            </div>
+            <div class="course-code">{{ cours.code }}</div>
+            @if (cours.estArchive) {
+              <span class="archive-badge">
+                <span class="material-icons">archive</span>
+                Archivé
+              </span>
+            } @else {
+              <span class="active-badge">
+                <span class="material-icons">check_circle</span>
+                Actif
+              </span>
+            }
           </div>
 
+          <!-- Card Body -->
           <div class="card-body">
-            <h3>{{ course.name }}</h3>
-            <p class="course-description">{{ course.description || 'Aucune description disponible' }}</p>
+            <h3 class="course-title">{{ cours.nom }}</h3>
             
-            <div class="card-stats">
-              <div class="stat">
-                <app-svg-icon name="User"></app-svg-icon>
-                <span>{{ course.teacherId }}</span>
+            @if (cours.description) {
+              <p class="course-description">{{ cours.description }}</p>
+            }
+
+            <div class="course-meta">
+              <div class="meta-item">
+                <span class="material-icons">person</span>
+                @if (cours.Enseignant?.Utilisateur) {
+                  <span>{{ cours.Enseignant?.Utilisateur?.prenom }} {{ cours.Enseignant?.Utilisateur?.nom }}</span>
+                } @else {
+                  <span class="text-muted">Enseignant non assigné</span>
+                }
               </div>
-              <div class="stat">
-                <app-svg-icon name="Users"></app-svg-icon>
-                <span>40 étudiants</span>
-              </div>
-              <div class="stat">
-                <app-svg-icon name="Calendar"></app-svg-icon>
-                <span>{{ course.semesterId }}</span>
+              <div class="meta-item">
+                <span class="material-icons">groups</span>
+                <span>0 étudiants</span>
               </div>
             </div>
           </div>
 
-          <div class="card-footer">
-            <button class="btn-outline" (click)="viewDetails(course)">
-              <app-svg-icon name="Eye"></app-svg-icon>
-              Détails
-            </button>
-            <button class="btn-secondary" (click)="editCourse(course)">
-              <app-svg-icon name="Edit2"></app-svg-icon>
+          <!-- Card Actions -->
+          <div class="card-actions">
+            <button 
+              class="action-btn btn-edit" 
+              (click)="openEditModal(cours)"
+              title="Modifier">
+              <span class="material-icons">edit</span>
               Modifier
+            </button>
+
+            <button 
+              class="action-btn btn-archive" 
+              (click)="toggleArchiveStatus(cours)"
+              [title]="cours.estArchive ? 'Désarchiver' : 'Archiver'">
+              <span class="material-icons">{{ cours.estArchive ? 'unarchive' : 'archive' }}</span>
+              {{ cours.estArchive ? 'Désarchiver' : 'Archiver' }}
+            </button>
+
+            <button 
+              class="action-btn btn-delete" 
+              (click)="openDeleteModal(cours)"
+              title="Supprimer">
+              <span class="material-icons">delete</span>
             </button>
           </div>
         </div>
       }
     </div>
+
+    @if (filteredCours().length === 0) {
+      <div class="empty-state">
+        <span class="material-icons">school</span>
+        <p>Aucun cours trouvé</p>
+        @if (searchQuery() || filterStatus() !== 'ALL') {
+          <button class="btn btn-secondary" (click)="searchQuery.set(''); filterStatus.set('ALL'); applyFilters()">
+            Réinitialiser les filtres
+          </button>
+        } @else {
+          <button class="btn btn-primary" (click)="openCreateModal()">
+            Créer le premier cours
+          </button>
+        }
+      </div>
+    }
   }
 
-  <!-- Empty State -->
-  @if (!isLoading() && filteredCourses().length === 0) {
-    <div class="empty-state">
-      <div class="empty-icon">
-        <app-svg-icon name="BookOpen"></app-svg-icon>
+  <!-- Create/Edit Modal -->
+  @if (showModal()) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ selectedCours() ? 'Modifier' : 'Créer' }} un Cours</h3>
+          <button class="close-btn" (click)="closeModal()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        <form (ngSubmit)="onSubmit()">
+          <div class="modal-body">
+            @if (errorMessage()) {
+              <div class="alert alert-error">
+                {{ errorMessage() }}
+              </div>
+            }
+
+            <div class="form-group">
+              <label>Code du cours *</label>
+              <input 
+                type="text" 
+                [(ngModel)]="formData.code" 
+                name="code"
+                placeholder="Ex: INF305"
+                [disabled]="!!selectedCours()"
+                required
+              >
+              <small>Code unique du cours (non modifiable après création)</small>
+            </div>
+
+            <div class="form-group">
+              <label>Nom du cours *</label>
+              <input 
+                type="text" 
+                [(ngModel)]="formData.nom" 
+                name="nom"
+                placeholder="Ex: Base de Données"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label>Description</label>
+              <textarea 
+                [(ngModel)]="formData.description" 
+                name="description"
+                placeholder="Description du cours..."
+                rows="3"
+              ></textarea>
+            </div>
+
+            @if (!selectedCours()) {
+              <div class="form-group">
+                <label>Année Académique *</label>
+                <select 
+                  #anneeSelect
+                  (change)="onAnneeChange(anneeSelect.value)"
+                  required>
+                  <option value="">Sélectionner une année</option>
+                  @for (annee of anneesAcademiques(); track annee.id) {
+                    <option [value]="annee.id">{{ annee.libelle }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Semestre *</label>
+                <select 
+                  [(ngModel)]="formData.semestre_id" 
+                  name="semestre_id"
+                  required>
+                  <option value="">Sélectionner un semestre</option>
+                  @for (semestre of semestres(); track semestre.id) {
+                    <option [value]="semestre.id">{{ semestre.libelle }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Enseignant *</label>
+                <select 
+                  [(ngModel)]="formData.enseignant_id" 
+                  name="enseignant_id"
+                  required>
+                  <option value="">Sélectionner un enseignant</option>
+                  @for (enseignant of enseignants(); track enseignant.id) {
+                    <option [value]="enseignant.id">{{ enseignant.nom }}</option>
+                  }
+                </select>
+                @if (enseignants().length === 0) {
+                  <small class="warning-text">Aucun enseignant disponible. Créez d'abord des enseignants.</small>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">
+              Annuler
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
+              {{ selectedCours() ? 'Mettre à jour' : 'Créer' }}
+            </button>
+          </div>
+        </form>
       </div>
-      <h3>Aucun cours trouvé</h3>
-      <p>{{ searchTerm ? 'Essayez de modifier votre recherche' : 'Commencez par ajouter votre premier cours' }}</p>
-      @if (!searchTerm) {
-        <button class="btn-primary" (click)="addCourse()">
-          <app-svg-icon name="Plus"></app-svg-icon>
-          Ajouter un Cours
-        </button>
-      }
+    </div>
+  }
+
+  <!-- Delete Modal -->
+  @if (showDeleteModal()) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Confirmer la suppression</h3>
+          <button class="close-btn" (click)="closeModal()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <p>Êtes-vous sûr de vouloir supprimer le cours <strong>{{ selectedCours()?.code }} - {{ selectedCours()?.nom }}</strong> ?</p>
+          <p class="warning-text">Cette action est irréversible.</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="closeModal()">
+            Annuler
+          </button>
+          <button class="btn btn-danger" (click)="deleteCours()" [disabled]="isLoading()">
+            Supprimer
+          </button>
+        </div>
+      </div>
     </div>
   }
 </div>
-
-<!-- Modal Ajouter/Modifier un Cours -->
-<app-modal 
-  [isOpen]="showAddModal || showEditModal" 
-  [title]="showAddModal ? 'Ajouter un Cours' : 'Modifier le Cours'" 
-  (close)="closeModal()">
-  <form class="modal-form">
-    <div class="form-group">
-      <label>
-        <app-svg-icon name="Hash"></app-svg-icon>
-        Code du cours *
-      </label>
-      <input 
-        type="text" 
-        [(ngModel)]="formData.code" 
-        name="code" 
-        placeholder="Ex: INF101" 
-        [disabled]="showEditModal"
-        required>
-    </div>
-
-    <div class="form-group">
-      <label>
-        <app-svg-icon name="BookOpen"></app-svg-icon>
-        Nom du cours *
-      </label>
-      <input 
-        type="text" 
-        [(ngModel)]="formData.name" 
-        name="name" 
-        placeholder="Ex: Algorithmique et Programmation" 
-        required>
-    </div>
-
-    <div class="form-group">
-      <label>
-        <app-svg-icon name="FileText"></app-svg-icon>
-        Description
-      </label>
-      <textarea 
-        [(ngModel)]="formData.description" 
-        name="description" 
-        placeholder="Description du cours..."
-        rows="3"></textarea>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>
-          <app-svg-icon name="User"></app-svg-icon>
-          Enseignant *
-        </label>
-        <input 
-          type="text" 
-          [(ngModel)]="formData.teacherId" 
-          name="teacherId" 
-          placeholder="Ex: teacher-1" 
-          required>
-      </div>
-      <div class="form-group">
-        <label>
-          <app-svg-icon name="Calendar"></app-svg-icon>
-          Semestre *
-        </label>
-        <select 
-          [(ngModel)]="formData.semesterId" 
-          name="semesterId" 
-          required>
-          <option value="">Sélectionner un semestre</option>
-          <option value="semester-1">Semestre 1</option>
-          <option value="semester-2">Semestre 2</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>
-        <app-svg-icon name="CalendarDays"></app-svg-icon>
-        Année académique *
-      </label>
-      <select 
-        [(ngModel)]="formData.academicYearId" 
-        name="academicYearId" 
-        required>
-        <option value="">Sélectionner une année</option>
-        @for (year of academicYears(); track year.id) {
-          <option [value]="year.id">{{ year.name }}</option>
-        }
-      </select>
-    </div>
-
-    <div class="modal-actions">
-      <button type="button" class="btn-secondary" (click)="closeModal()">
-        <app-svg-icon name="X"></app-svg-icon>
-        Annuler
-      </button>
-      <button 
-        type="button" 
-        class="btn-primary" 
-        (click)="showAddModal ? saveNewCourse() : saveEditCourse()">
-        <app-svg-icon name="Check"></app-svg-icon>
-        Enregistrer
-      </button>
-    </div>
-  </form>
-</app-modal>
-
-<!-- Modal Voir Détails -->
-<app-modal 
-  [isOpen]="showViewModal" 
-  [title]="'Détails du Cours'" 
-  (close)="closeModal()">
-  @if (selectedCourse()) {
-    <div class="details-view">
-      <div class="detail-header">
-        <div class="course-code-large">{{ selectedCourse()!.code }}</div>
-        <span class="status-badge-large active">
-          <app-svg-icon name="CheckCircle2"></app-svg-icon>
-          Actif
-        </span>
-      </div>
-      
-      <h2 class="course-title">{{ selectedCourse()!.name }}</h2>
-
-      <div class="detail-grid">
-        <div class="detail-item">
-          <div class="detail-icon">
-            <app-svg-icon name="User"></app-svg-icon>
-          </div>
-          <div>
-            <div class="detail-label">Enseignant</div>
-            <div class="detail-value">{{ selectedCourse()!.teacherId }}</div>
-          </div>
-        </div>
-
-        <div class="detail-item">
-          <div class="detail-icon">
-            <app-svg-icon name="Calendar"></app-svg-icon>
-          </div>
-          <div>
-            <div class="detail-label">Semestre</div>
-            <div class="detail-value">{{ selectedCourse()!.semesterId }}</div>
-          </div>
-        </div>
-
-        <div class="detail-item">
-          <div class="detail-icon">
-            <app-svg-icon name="CalendarDays"></app-svg-icon>
-          </div>
-          <div>
-            <div class="detail-label">Année académique</div>
-            <div class="detail-value">{{ selectedCourse()!.academicYearId }}</div>
-          </div>
-        </div>
-
-        <div class="detail-item full-width">
-          <div class="detail-icon">
-            <app-svg-icon name="FileText"></app-svg-icon>
-          </div>
-          <div>
-            <div class="detail-label">Description</div>
-            <div class="detail-value">{{ selectedCourse()!.description || 'Aucune description' }}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="closeModal()">
-          <app-svg-icon name="X"></app-svg-icon>
-          Fermer
-        </button>
-        <button type="button" class="btn-primary" (click)="editCourse(selectedCourse()!); closeModal()">
-          <app-svg-icon name="Edit2"></app-svg-icon>
-          Modifier
-        </button>
-      </div>
-    </div>
-  }
-</app-modal>
-
-<!-- Modal Supprimer -->
-<app-modal 
-  [isOpen]="showDeleteModal" 
-  [title]="'Confirmer la suppression'" 
-  [size]="'small'" 
-  (close)="closeModal()">
-  @if (selectedCourse()) {
-    <div class="delete-confirmation">
-      <div class="warning-icon">
-        <app-svg-icon name="AlertTriangle"></app-svg-icon>
-      </div>
-      <p class="warning-text">
-        Êtes-vous sûr de vouloir supprimer le cours <strong>{{ selectedCourse()!.name }}</strong> ?
-      </p>
-      <p class="warning-subtext">Cette action est irréversible.</p>
-
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="closeModal()">
-          <app-svg-icon name="X"></app-svg-icon>
-          Annuler
-        </button>
-        <button type="button" class="btn-danger" (click)="confirmDelete()">
-          <app-svg-icon name="Trash2"></app-svg-icon>
-          Supprimer
-        </button>
-      </div>
-    </div>
-  }
-</app-modal>

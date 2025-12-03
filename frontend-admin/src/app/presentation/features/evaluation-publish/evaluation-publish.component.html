@@ -1,0 +1,147 @@
+<div class="modal-overlay" (click)="cancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-icon">
+        <span class="material-icons">send</span>
+      </div>
+      <div class="header-text">
+        <h2>Publier l'évaluation</h2>
+        <p>Vérifiez les informations avant de publier</p>
+      </div>
+      <button class="btn-close" (click)="cancel()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <!-- Evaluation Info -->
+      <div class="info-section">
+        <h3>
+          <span class="material-icons">info</span>
+          Informations de l'évaluation
+        </h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Titre</span>
+            <span class="value">{{ evaluation.titre }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Cours</span>
+            <span class="value">{{ evaluation.cours?.nom || 'Non défini' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Classe</span>
+            <span class="value">{{ evaluation.classe?.nom || 'Non définie' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Questions</span>
+            <span class="value">{{ questionCount }} question(s)</span>
+          </div>
+          <div class="info-item full-width">
+            <span class="label">Période</span>
+            <span class="value">
+              Du {{ formatDate(evaluation.dateDebut) }} au {{ formatDate(evaluation.dateFin) }}
+            </span>
+          </div>
+          @if (evaluation.description) {
+            <div class="info-item full-width">
+              <span class="label">Description</span>
+              <span class="value description">{{ evaluation.description }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Validation Checks -->
+      <div class="checks-section">
+        <h3>
+          <span class="material-icons">checklist</span>
+          Vérifications
+        </h3>
+        <div class="checks-list">
+          <div class="check-item" [class.valid]="checks().hasTitle" [class.invalid]="!checks().hasTitle">
+            <span class="material-icons">
+              {{ checks().hasTitle ? 'check_circle' : 'cancel' }}
+            </span>
+            <span>Titre défini</span>
+          </div>
+          <div class="check-item" [class.valid]="checks().hasCourse" [class.invalid]="!checks().hasCourse">
+            <span class="material-icons">
+              {{ checks().hasCourse ? 'check_circle' : 'cancel' }}
+            </span>
+            <span>Cours associé</span>
+          </div>
+          <div class="check-item" [class.valid]="checks().hasClass" [class.invalid]="!checks().hasClass">
+            <span class="material-icons">
+              {{ checks().hasClass ? 'check_circle' : 'cancel' }}
+            </span>
+            <span>Classe associée</span>
+          </div>
+          <div class="check-item" [class.valid]="checks().hasDates" [class.invalid]="!checks().hasDates">
+            <span class="material-icons">
+              {{ checks().hasDates ? 'check_circle' : 'cancel' }}
+            </span>
+            <span>Dates définies</span>
+          </div>
+          <div class="check-item" [class.valid]="checks().hasQuestions" [class.invalid]="!checks().hasQuestions">
+            <span class="material-icons">
+              {{ checks().hasQuestions ? 'check_circle' : 'cancel' }}
+            </span>
+            <span>Au moins une question ({{ questionCount }})</span>
+          </div>
+          <div class="check-item" [class.valid]="checks().hasDescription" [class.warning]="!checks().hasDescription">
+            <span class="material-icons">
+              {{ checks().hasDescription ? 'check_circle' : 'warning' }}
+            </span>
+            <span>Description (optionnel)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Warning if cannot publish -->
+      @if (!canPublish()) {
+        <div class="alert alert-error">
+          <span class="material-icons">error</span>
+          <div>
+            <strong>Impossible de publier</strong>
+            <p>Veuillez corriger les éléments marqués en rouge avant de publier.</p>
+          </div>
+        </div>
+      }
+
+      <!-- Info about publication -->
+      @if (canPublish()) {
+        <div class="alert alert-info">
+          <span class="material-icons">info</span>
+          <div>
+            <strong>Après publication</strong>
+            <ul>
+              <li>L'évaluation sera visible par les étudiants de la classe</li>
+              <li>Des notifications seront envoyées automatiquement</li>
+              <li>Vous ne pourrez plus modifier les questions</li>
+              <li>Le statut passera de BROUILLON à PUBLIEE</li>
+            </ul>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cancel()">
+        <span class="material-icons">close</span>
+        Annuler
+      </button>
+      <button 
+        class="btn-primary" 
+        (click)="confirm()" 
+        [disabled]="!canPublish()"
+        [class.disabled]="!canPublish()">
+        <span class="material-icons">send</span>
+        Publier l'évaluation
+      </button>
+    </div>
+  </div>
+</div>

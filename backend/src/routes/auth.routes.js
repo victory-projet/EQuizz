@@ -8,6 +8,9 @@ const { authenticate } = require('../middlewares/auth.middleware');
 router.post('/claim-account', claimAccountValidationRules(), validate, authController.claimAccount);
 router.post('/login', loginValidationRules(), validate, authController.login);
 router.post('/link-card', authController.linkCard);
+router.post('/forgot-password', authController.forgotPassword);
+router.get('/validate-reset-token/:token', authController.validateResetToken);
+router.post('/reset-password', authController.resetPassword);
 
 // Routes protégées (nécessitent authentification)
 router.get('/me', authenticate, authController.getCurrentUser);

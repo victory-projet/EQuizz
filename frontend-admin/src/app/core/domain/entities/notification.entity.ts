@@ -1,11 +1,10 @@
-// src/app/core/domain/entities/notification.entity.ts
-export class Notification {
-    constructor(
-        public readonly id: string,
-        public type: string,
-        public message: string,
-        public timestamp: Date,
-        public isRead: boolean,
-        public evaluationId?: string
-    ) { }
+// Domain Entity - Notification
+export interface Notification {
+  id: number;
+  titre: string;
+  message: string;
+  type: 'INFO' | 'SUCCES' | 'AVERTISSEMENT' | 'ERREUR';
+  estLue: boolean;
+  utilisateurId: number;
+  dateCreation: Date;
 }

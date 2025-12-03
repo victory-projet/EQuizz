@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { EvaluationPeriod } from '@/src/domain/entities';
 
 interface HeaderProps {
     searchQuery: string;
@@ -29,7 +30,7 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
 
 const styles = StyleSheet.create({
     header: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#3A5689',
         paddingHorizontal: 20,
         paddingTop: 50,
         paddingBottom: 12,
@@ -39,12 +40,12 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#111827',
+        color: 'white',
         marginBottom: 4,
     },
     headerSubtitle: {
         fontSize: 13,
-        color: '#6B7280',
+        color: '#F9FAFB',
         marginBottom: 12,
     },
     searchContainer: {

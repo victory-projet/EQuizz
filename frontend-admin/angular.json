@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "equizz-admin-web": {
+    "frontend-admin": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -38,20 +38,29 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "800kB",
-                  "maximumError": "1.5MB"
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "20kB",
-                  "maximumError": "35kB"
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
                 }
               ],
               "outputHashing": "all",
-              "allowedCommonJsDependencies": [
-                "canvg",
-                "core-js"
-              ],
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": true
+                },
+                "fonts": {
+                  "inline": true
+                }
+              },
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": true,
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
@@ -69,15 +78,12 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
-          "options": {
-            "proxyConfig": "proxy.conf.json"
-          },
           "configurations": {
             "production": {
-              "buildTarget": "equizz-admin-web:build:production"
+              "buildTarget": "frontend-admin:build:production"
             },
             "development": {
-              "buildTarget": "equizz-admin-web:build:development"
+              "buildTarget": "frontend-admin:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -88,6 +94,7 @@
         "test": {
           "builder": "@angular/build:karma",
           "options": {
+            "karmaConfig": "karma.conf.js",
             "polyfills": [
               "zone.js",
               "zone.js/testing"
@@ -107,8 +114,5 @@
         }
       }
     }
-  },
-  "cli": {
-    "analytics": false
   }
 }

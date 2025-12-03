@@ -1,99 +1,47 @@
-// src/app/core/domain/entities/user.entity.ts
-/**
- * Domain Entities - User & Authentication
- */
-
-export type UserRole = 'admin' | 'teacher' | 'student';
-
-export class User {
-  constructor(
-    public readonly id: string,
-    public email: string,
-    public firstName: string,
-    public lastName: string,
-    public role: UserRole,
-    public isActive: boolean,
-    public createdAt: Date,
-    public lastLoginAt?: Date
-  ) {}
-
-  /**
-   * Nom complet
-   */
-  getFullName(): string {
-    return `${this.firstName} ${this.lastName}`;
-  }
-
-  /**
-   * Vérifie si l'utilisateur est admin
-   */
-  isAdmin(): boolean {
-    return this.role === 'admin';
-  }
-
-  /**
-   * Vérifie si l'utilisateur est enseignant
-   */
-  isTeacher(): boolean {
-    return this.role === 'teacher';
-  }
-
-  /**
-   * Vérifie si l'utilisateur est étudiant
-   */
-  isStudent(): boolean {
-    return this.role === 'student';
-  }
-
-  /**
-   * Active l'utilisateur
-   */
-  activate(): void {
-    this.isActive = true;
-  }
-
-  /**
-   * Désactive l'utilisateur
-   */
-  deactivate(): void {
-    this.isActive = false;
-  }
-
-  /**
-   * Met à jour la dernière connexion
-   */
-  updateLastLogin(): void {
-    this.lastLoginAt = new Date();
-  }
+// Domain Entity - User
+export interface User {
+  id: number;
+  nom: string;
+  prenom: string;
+  email: string;
+  matricule?: string;
+  role: 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT';
+  estActif: boolean;
+  dateCreation: Date;
+  dateModification: Date;
 }
 
-export class AuthToken {
-  constructor(
-    public accessToken: string,
-    public refreshToken: string,
-    public expiresIn: number,
-    public tokenType: string = 'Bearer'
-  ) {}
-
-  /**
-   * Vérifie si le token est expiré
-   */
-  isExpired(): boolean {
-    // Logique à implémenter
-    return false;
-  }
+export interface Admin extends User {
+  role: 'ADMIN';
 }
 
-export class LoginCredentials {
-  constructor(
-    public email: string,
-    public password: string
-  ) {}
+export interface Enseignant extends User {
+  role: 'ENSEIGNANT';
+  specialite?: string;
+}
 
-  /**
-   * Valide les credentials
-   */
-  isValid(): boolean {
-    return this.email.length > 0 && this.password.length >= 6;
-  }
+export interface Etudiant extends User {
+  role: 'ETUDIANT';
+  classeId?: number;
+  classe?: Classe;
+  numeroCarteEtudiant?: string;
+}
+
+export interface Classe {
+  id: number;
+  nom: string;
+  anneeAcademiqueId: number;
+  anneeAcademique?: AnneeAcademique;
+  dateCreation: Date;
+  dateModification: Date;
+}
+
+export interface AnneeAcademique {
+  id: number;
+  libelle: string;
+  dateDebut: Date;
+  dateFin: Date;
+  estActive: boolean;
+  dateCreation: Date;
+  dateModification: Date;
 }

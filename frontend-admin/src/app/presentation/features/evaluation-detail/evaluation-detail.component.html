@@ -1,0 +1,183 @@
+<div class="page-container">
+  @if (isLoading()) {
+    <div class="loading">Chargement...</div>
+  }
+
+  @if (!isLoading() && evaluation()) {
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <button class="btn-back" (click)="backToList()">
+          <i class="icon-arrow-left"></i> Retour
+        </button>
+        <div class="header-content">
+          <h1 class="page-title">{{ evaluation()!.titre }}</h1>
+          <div class="header-meta">
+            <span class="badge" [ngClass]="'badge-' + evaluation()!.statut.toLowerCase()">
+              {{ evaluation()!.statut }}
+            </span>
+            <span class="meta-item">
+              <i class="icon-calendar"></i>
+              {{ formatDate(evaluation()!.dateDebut) }} - {{ formatDate(evaluation()!.dateFin) }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        @if (questions().length > 0) {
+          <button class="btn-secondary" (click)="previewEvaluation()">
+            <span class="material-icons">visibility</span> Prévisualiser
+          </button>
+        }
+        @if (evaluation()!.statut === 'BROUILLON') {
+          <button class="btn-secondary" (click)="addQuestion()">
+            <span class="material-icons">add</span> Ajouter une question
+          </button>
+          <button class="btn-secondary" (click)="openImport()">
+            <span class="material-icons">upload_file</span> Importer Excel
+          </button>
+          <button class="btn-primary" (click)="openPublishModal()">
+            <span class="material-icons">send</span> Publier
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Messages -->
+    @if (successMessage()) {
+      <div class="alert alert-success">{{ successMessage() }}</div>
+    }
+    @if (errorMessage()) {
+      <div class="alert alert-error">{{ errorMessage() }}</div>
+    }
+
+    <!-- Evaluation Info -->
+    <div class="info-card">
+      <div class="info-row">
+        <div class="info-item">
+          <label>Cours</label>
+          <span>{{ evaluation()!.cours?.nom || 'Non défini' }}</span>
+        </div>
+        <div class="info-item">
+          <label>Classe</label>
+          <span>{{ evaluation()!.classe?.nom || 'Non définie' }}</span>
+        </div>
+        <div class="info-item">
+          <label>Nombre de questions</label>
+          <span>{{ questions().length }}</span>
+        </div>
+      </div>
+      @if (evaluation()!.description) {
+        <div class="info-description">
+          <label>Description</label>
+          <p>{{ evaluation()!.description }}</p>
+        </div>
+      }
+    </div>
+
+    <!-- Questions List -->
+    <div class="questions-section">
+      <div class="section-header">
+        <h2>Questions ({{ questions().length }})</h2>
+        @if (evaluation()!.statut === 'BROUILLON') {
+          <button class="btn-add" (click)="addQuestion()">
+            <i class="icon-plus"></i> Ajouter
+          </button>
+        }
+      </div>
+
+      @if (questions().length === 0) {
+        <div class="empty-state">
+          <i class="icon-question-empty"></i>
+          <h3>Aucune question</h3>
+          <p>Commencez par ajouter des questions à votre évaluation</p>
+          <div class="empty-actions">
+            <button class="btn-primary" (click)="addQuestion()">
+              <i class="icon-plus"></i> Ajouter manuellement
+            </button>
+            <button class="btn-secondary" (click)="openImport()">
+              <i class="icon-upload"></i> Importer depuis Excel
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (questions().length > 0) {
+        <div class="questions-list">
+          @for (question of questions(); track question.id; let i = $index) {
+            <div class="question-card">
+              <div class="question-header">
+                <div class="question-number">Q{{ i + 1 }}</div>
+                <span class="question-type">{{ getQuestionTypeLabel(question.type) }}</span>
+                @if (evaluation()!.statut === 'BROUILLON') {
+                  <div class="question-actions">
+                    <button class="btn-icon" (click)="moveQuestionUp(i)" [disabled]="i === 0">
+                      <i class="icon-arrow-up"></i>
+                    </button>
+                    <button class="btn-icon" (click)="moveQuestionDown(i)" [disabled]="i === questions().length - 1">
+                      <i class="icon-arrow-down"></i>
+                    </button>
+                    <button class="btn-icon" (click)="editQuestion(question)">
+                      <i class="icon-edit"></i>
+                    </button>
+                    <button class="btn-icon btn-danger" (click)="deleteQuestion(question)">
+                      <i class="icon-trash"></i>
+                    </button>
+                  </div>
+                }
+              </div>
+
+              <div class="question-body">
+                <p class="question-text">{{ question.enonce }}</p>
+                
+                @if ((question.type === 'CHOIX_MULTIPLE' || question.type === 'QCM') && question.options && question.options.length > 0) {
+                  <div class="question-options">
+                    @for (option of question.options; track $index) {
+                      <div class="option-item">
+                        <span class="option-letter">{{ String.fromCharCode(65 + $index) }}</span>
+                        <span>{{ option }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Question Form Modal -->
+@if (showQuestionForm() && evaluation() && evaluation()!.quizz) {
+  <app-question-form
+    [evaluationId]="evaluation()!.id"
+    [quizzId]="evaluation()!.quizz!.id"
+    [question]="editingQuestion()"
+    [questionNumber]="questions().length + 1"
+    (saved)="onQuestionSaved($event)"
+    (cancelled)="onQuestionFormCancelled()"
+  ></app-question-form>
+}
+
+<!-- Import Modal -->
+@if (showImportForm() && evaluation() && evaluation()!.quizz) {
+  <app-question-import
+    [evaluationId]="evaluation()!.id"
+    [quizzId]="evaluation()!.quizz!.id"
+    (imported)="onQuestionsImported($event)"
+    (cancelled)="onImportCancelled()"
+  ></app-question-import>
+}
+
+
+<!-- Publish Modal -->
+@if (showPublishModal() && evaluation()) {
+  <app-evaluation-publish
+    [evaluation]="evaluation()!"
+    [questionCount]="questions().length"
+    (confirmed)="publishEvaluation()"
+    (cancelled)="cancelPublish()"
+  ></app-evaluation-publish>
+}

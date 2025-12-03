@@ -190,6 +190,40 @@ class AuthController {
       });
     }
   });
+
+  // Demande de réinitialisation de mot de passe
+  forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    const ipAddress = req.ip || req.connection.remoteAddress;
+
+    const result = await authService.requestPasswordReset(email, ipAddress);
+
+    res.status(200).json({
+      success: result.success,
+      message: result.message
+    });
+  });
+
+  // Validation du token de réinitialisation
+  validateResetToken = asyncHandler(async (req, res) => {
+    const { token } = req.params;
+
+    const result = await authService.validateResetToken(token);
+
+    res.status(200).json(result);
+  });
+
+  // Réinitialisation du mot de passe
+  resetPassword = asyncHandler(async (req, res) => {
+    const { token, newPassword, confirmPassword } = req.body;
+
+    const result = await authService.resetPassword(token, newPassword, confirmPassword);
+
+    res.status(200).json({
+      success: result.success,
+      message: result.message
+    });
+  });
 }
 
 module.exports = new AuthController();

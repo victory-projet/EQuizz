@@ -30,6 +30,12 @@ class UtilisateurRepository {
       }]
     });
   }
+
+  async findByEmail(email) {
+    return db.Utilisateur.findOne({
+      where: { email }
+    });
+  }
 }
 
 module.exports = new UtilisateurRepository();

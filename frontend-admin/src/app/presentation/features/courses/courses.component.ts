@@ -1,271 +1,286 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ModalComponent } from '../../shared/components/modal/modal.component';
-import { ToastService } from '../../../core/services/toast.service';
-import { SvgIconComponent } from '../../shared/components/svg-icon/svg-icon';
-import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
-import { SearchBarComponent } from '../../shared/components/search-bar/search-bar.component';
-
-// Clean Architecture - Use Cases
-import { GetAllCoursesUseCase } from '../../../core/application/use-cases/course/get-all-courses.use-case';
-import { CreateCourseUseCase, CreateCourseDto } from '../../../core/application/use-cases/course/create-course.use-case';
-import { UpdateCourseUseCase, UpdateCourseDto } from '../../../core/application/use-cases/course/update-course.use-case';
-import { DeleteCourseUseCase } from '../../../core/application/use-cases/course/delete-course.use-case';
-import { Course } from '../../../core/domain/entities/course.entity';
-import { AcademicService } from '../../../core/services/academic.service';
+import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
+import { Cours, AnneeAcademique, Semestre } from '../../../core/domain/entities/academic.entity';
 
 @Component({
   selector: 'app-courses',
   standalone: true,
-  imports: [
-    CommonModule, 
-    FormsModule, 
-    ModalComponent, 
-    SvgIconComponent, 
-    LoadingSpinnerComponent,
-    SearchBarComponent
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './courses.component.html',
-  styleUrl: './courses.component.scss'
+  styleUrls: ['./courses.component.scss']
 })
 export class CoursesComponent implements OnInit {
-  // Clean Architecture - Inject Use Cases
-  private getAllCoursesUseCase = inject(GetAllCoursesUseCase);
-  private createCourseUseCase = inject(CreateCourseUseCase);
-  private updateCourseUseCase = inject(UpdateCourseUseCase);
-  private deleteCourseUseCase = inject(DeleteCourseUseCase);
-  private toastService = inject(ToastService);
-  private academicService = inject(AcademicService);
-
-  courses = signal<Course[]>([]);
-  filteredCourses = signal<Course[]>([]);
-  searchTerm = '';
-  isLoading = signal(false);
+  cours = signal<Cours[]>([]);
+  filteredCours = signal<Cours[]>([]);
+  anneesAcademiques = signal<AnneeAcademique[]>([]);
+  semestres = signal<Semestre[]>([]);
+  enseignants = signal<any[]>([]);
   
-  totalCourses = signal(0);
-  activeCourses = signal(0);
-  totalStudents = signal(0);
+  isLoading = signal(false);
+  showModal = signal(false);
+  showDeleteModal = signal(false);
+  selectedCours = signal<Cours | null>(null);
+  
+  searchQuery = signal('');
+  filterStatus = signal<'ALL' | 'ACTIVE' | 'ARCHIVED'>('ALL');
+  filterSemestre = signal<string>('ALL');
 
-  showAddModal = false;
-  showEditModal = false;
-  showViewModal = false;
-  showDeleteModal = false;
-  selectedCourse = signal<Course | null>(null);
+  formData = {
+    code: '',
+    nom: '',
+    description: '',
+    semestre_id: '',
+    enseignant_id: ''
+  };
 
-  formData: Partial<CreateCourseDto> = {};
+  errorMessage = signal('');
+  successMessage = signal('');
 
-  // Filter state
-  activeFilter = signal<'all' | 'active' | 'semester1' | 'semester2'>('all');
+  // Computed statistics
+  totalCours = computed(() => this.cours().length);
+  coursActifs = computed(() => this.cours().filter(c => !c.estArchive).length);
+  coursArchives = computed(() => this.cours().filter(c => c.estArchive).length);
 
-  // Academic data
-  academicYears = signal<any[]>([]);
-  currentAcademicYearId = signal<string | null>(null);
+  constructor(private academicUseCase: AcademicUseCase) {}
 
   ngOnInit(): void {
-    this.loadCourses();
-    this.loadAcademicYears();
+    this.loadCours();
+    this.loadAnneesAcademiques();
+    this.loadEnseignants();
   }
 
-  loadCourses(): void {
+  loadEnseignants(): void {
+    // TODO: Implémenter quand le use case enseignants sera disponible
+    // Pour l'instant, on laisse vide
+    this.enseignants.set([]);
+  }
+
+  onAnneeChange(anneeId: string): void {
+    if (anneeId) {
+      this.loadSemestres(Number(anneeId));
+    } else {
+      this.semestres.set([]);
+    }
+  }
+
+  loadCours(): void {
     this.isLoading.set(true);
-    this.getAllCoursesUseCase.execute().subscribe({
-      next: (courses) => {
-        this.courses.set(courses);
+    this.academicUseCase.getCours().subscribe({
+      next: (cours) => {
+        console.log('📚 Cours chargés:', cours);
+        cours.forEach(c => {
+          console.log(`Cours ${c.nom}:`, {
+            id: c.id,
+            code: c.code,
+            enseignantId: c.enseignantId,
+            enseignant: c.enseignant,
+            objetComplet: c
+          });
+        });
+        this.cours.set(cours);
         this.applyFilters();
-        this.updateStats();
         this.isLoading.set(false);
       },
       error: (error) => {
-        this.toastService.error('Erreur lors du chargement des cours');
-        console.error('Error loading courses:', error);
+        console.error('Erreur lors du chargement des cours:', error);
+        this.errorMessage.set('Erreur lors du chargement des cours');
         this.isLoading.set(false);
       }
     });
   }
 
-  updateStats(): void {
-    const courses = this.courses();
-    this.totalCourses.set(courses.length);
-    this.activeCourses.set(courses.length); // All courses are active in mock
-    this.totalStudents.set(courses.length * 40); // Mock calculation
+  loadAnneesAcademiques(): void {
+    this.academicUseCase.getAnneesAcademiques().subscribe({
+      next: (annees) => {
+        this.anneesAcademiques.set(annees);
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des années académiques:', error);
+      }
+    });
   }
 
-  onSearchChange(term: string): void {
-    this.searchTerm = term;
-    this.applyFilters();
-  }
-
-  setFilter(filter: 'all' | 'active' | 'semester1' | 'semester2'): void {
-    this.activeFilter.set(filter);
-    this.applyFilters();
+  loadSemestres(anneeId: number): void {
+    this.academicUseCase.getSemestresByAnnee(anneeId).subscribe({
+      next: (semestres) => {
+        this.semestres.set(semestres);
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des semestres:', error);
+      }
+    });
   }
 
   applyFilters(): void {
-    let filtered = [...this.courses()];
+    let filtered = this.cours();
 
-    // Apply search filter
-    if (this.searchTerm && this.searchTerm.trim() !== '') {
-      const search = this.searchTerm.toLowerCase().trim();
+    // Filter by status
+    if (this.filterStatus() === 'ACTIVE') {
+      filtered = filtered.filter(c => !c.estArchive);
+    } else if (this.filterStatus() === 'ARCHIVED') {
+      filtered = filtered.filter(c => c.estArchive);
+    }
+
+    // Filter by search query
+    if (this.searchQuery()) {
+      const query = this.searchQuery().toLowerCase();
       filtered = filtered.filter(c =>
-        c.name.toLowerCase().includes(search) ||
-        c.code.toLowerCase().includes(search) ||
-        (c.description && c.description.toLowerCase().includes(search))
+        c.code.toLowerCase().includes(query) ||
+        c.nom.toLowerCase().includes(query)
       );
     }
 
-    // Apply status/semester filter
-    const filter = this.activeFilter();
-    if (filter === 'semester1') {
-      filtered = filtered.filter(c => 
-        c.semesterId.toLowerCase().includes('1') || 
-        c.semesterId.toLowerCase().includes('s1') ||
-        c.semesterId.toLowerCase().includes('semester-1')
-      );
-    } else if (filter === 'semester2') {
-      filtered = filtered.filter(c => 
-        c.semesterId.toLowerCase().includes('2') || 
-        c.semesterId.toLowerCase().includes('s2') ||
-        c.semesterId.toLowerCase().includes('semester-2')
-      );
-    }
-    // 'all' et 'active' ne filtrent pas (tous les cours sont actifs dans le mock)
-
-    this.filteredCourses.set(filtered);
+    this.filteredCours.set(filtered);
   }
 
-  loadAcademicYears(): void {
-    this.academicService.getAcademicYears().subscribe({
-      next: (years) => {
-        this.academicYears.set(years);
-        // Trouver l'année active
-        const activeYear = years.find(y => y.isCurrent);
-        if (activeYear) {
-          this.currentAcademicYearId.set(activeYear.id);
-        }
-      },
-      error: (err) => console.error('Error loading academic years:', err)
-    });
+  onSearch(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchQuery.set(input.value);
+    this.applyFilters();
   }
 
-  addCourse(): void {
+  onFilterStatus(status: 'ALL' | 'ACTIVE' | 'ARCHIVED'): void {
+    this.filterStatus.set(status);
+    this.applyFilters();
+  }
+
+  openCreateModal(): void {
+    this.selectedCours.set(null);
+    this.resetForm();
+    this.showModal.set(true);
+  }
+
+  openEditModal(cours: Cours): void {
+    this.selectedCours.set(cours);
+    this.formData = {
+      code: cours.code,
+      nom: cours.nom,
+      description: cours.description || '',
+      semestre_id: '',
+      enseignant_id: ''
+    };
+    this.showModal.set(true);
+  }
+
+  openDeleteModal(cours: Cours): void {
+    this.selectedCours.set(cours);
+    this.showDeleteModal.set(true);
+  }
+
+  closeModal(): void {
+    this.showModal.set(false);
+    this.showDeleteModal.set(false);
+    this.errorMessage.set('');
+  }
+
+  resetForm(): void {
     this.formData = {
       code: '',
-      name: '',
+      nom: '',
       description: '',
-      teacherId: 'teacher-1',
-      academicYearId: this.currentAcademicYearId() || '',
-      semesterId: 'semester-1'
+      semestre_id: '',
+      enseignant_id: ''
     };
-    this.selectedCourse.set(null);
-    this.showAddModal = true;
   }
 
-  saveNewCourse(): void {
-    const dto: CreateCourseDto = {
-      code: this.formData.code!,
-      name: this.formData.name!,
-      description: this.formData.description || '',
-      teacherId: this.formData.teacherId!,
-      academicYearId: this.formData.academicYearId!,
-      semesterId: this.formData.semesterId!
+  onSubmit(): void {
+    this.errorMessage.set('');
+    
+    if (this.selectedCours()) {
+      this.updateCours();
+    } else {
+      this.createCours();
+    }
+  }
+
+  createCours(): void {
+    if (!this.formData.semestre_id || !this.formData.enseignant_id) {
+      this.errorMessage.set('Le semestre et l\'enseignant sont requis');
+      return;
+    }
+
+    this.isLoading.set(true);
+    const data = {
+      code: this.formData.code,
+      nom: this.formData.nom,
+      description: this.formData.description,
+      semestre_id: this.formData.semestre_id,
+      enseignant_id: this.formData.enseignant_id,
+      estArchive: false
     };
 
-    this.createCourseUseCase.execute(dto).subscribe({
+    this.academicUseCase.createCours(data).subscribe({
       next: () => {
-        this.toastService.success('Cours créé avec succès');
-        this.showAddModal = false;
-        this.loadCourses();
-        // Rester sur la page des cours (pas de navigation)
+        this.successMessage.set('Cours créé avec succès');
+        this.closeModal();
+        this.loadCours();
+        setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
-        this.toastService.error(error.message || 'Erreur lors de la création');
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la création');
+        this.isLoading.set(false);
       }
     });
   }
 
-  editCourse(course: Course): void {
-    this.selectedCourse.set(course);
-    this.formData = {
-      code: course.code,
-      name: course.name,
-      description: course.description,
-      teacherId: course.teacherId,
-      academicYearId: course.academicYearId,
-      semesterId: course.semesterId
+  updateCours(): void {
+    const cours = this.selectedCours();
+    if (!cours) return;
+
+    this.isLoading.set(true);
+    const data = {
+      code: this.formData.code,
+      nom: this.formData.nom,
+      description: this.formData.description
     };
-    this.showEditModal = true;
+
+    this.academicUseCase.updateCours(cours.id, data).subscribe({
+      next: () => {
+        this.successMessage.set('Cours mis à jour avec succès');
+        this.closeModal();
+        this.loadCours();
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error) => {
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la mise à jour');
+        this.isLoading.set(false);
+      }
+    });
   }
 
-  saveEditCourse(): void {
-    const selected = this.selectedCourse();
-    if (selected) {
-      const dto: UpdateCourseDto = {
-        name: this.formData.name!,
-        description: this.formData.description,
-        teacherId: this.formData.teacherId!,
-        academicYearId: this.formData.academicYearId!,
-        semesterId: this.formData.semesterId!
-      };
+  deleteCours(): void {
+    const cours = this.selectedCours();
+    if (!cours) return;
 
-      this.updateCourseUseCase.execute(selected.id, dto).subscribe({
-        next: () => {
-          this.toastService.success('Cours modifié avec succès');
-          this.showEditModal = false;
-          this.selectedCourse.set(null);
-          this.loadCourses();
-          // Rester sur la page des cours (pas de navigation)
-        },
-        error: (error) => {
-          this.toastService.error(error.message || 'Erreur lors de la modification');
-        }
-      });
-    }
+    this.isLoading.set(true);
+    this.academicUseCase.deleteCours(cours.id).subscribe({
+      next: () => {
+        this.successMessage.set('Cours supprimé avec succès');
+        this.closeModal();
+        this.loadCours();
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error) => {
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
+        this.isLoading.set(false);
+      }
+    });
   }
 
-  deleteCourse(course: Course): void {
-    this.selectedCourse.set(course);
-    this.showDeleteModal = true;
-  }
-
-  confirmDelete(): void {
-    const selected = this.selectedCourse();
-    if (selected) {
-      this.deleteCourseUseCase.execute(selected.id).subscribe({
-        next: () => {
-          this.toastService.success('Cours supprimé avec succès');
-          this.closeModal();
-          this.loadCourses();
-          // Rester sur la page des cours (pas de navigation)
-        },
-        error: (error) => {
-          this.toastService.error(error.message || 'Erreur lors de la suppression');
-        }
-      });
-    }
-  }
-
-  viewDetails(course: Course): void {
-    this.selectedCourse.set(course);
-    this.showViewModal = true;
-  }
-
-  closeModal(): void {
-    this.showAddModal = false;
-    this.showEditModal = false;
-    this.showViewModal = false;
-    this.showDeleteModal = false;
-    this.selectedCourse.set(null);
-  }
-
-  // Menu management
-  showMenu: string | null = null;
-
-  toggleMenu(courseId: string): void {
-    this.showMenu = this.showMenu === courseId ? null : courseId;
-  }
-
-  closeMenu(): void {
-    this.showMenu = null;
+  toggleArchiveStatus(cours: Cours): void {
+    this.academicUseCase.updateCours(cours.id, {
+      estArchive: !cours.estArchive
+    }).subscribe({
+      next: () => {
+        this.successMessage.set(`Cours ${cours.estArchive ? 'désarchivé' : 'archivé'} avec succès`);
+        this.loadCours();
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error) => {
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la modification');
+      }
+    });
   }
 }

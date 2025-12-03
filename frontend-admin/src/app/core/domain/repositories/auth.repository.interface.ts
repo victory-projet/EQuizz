@@ -1,30 +1,23 @@
-// src/app/core/domain/repositories/auth.repository.interface.ts
+// Repository Interface - Auth
 import { Observable } from 'rxjs';
-import { User, AuthToken, LoginCredentials } from '../entities/user.entity';
+import { User } from '../entities/user.entity';
 
-/**
- * Repository Interface - Authentication
- */
-export abstract class IAuthRepository {
-  abstract login(credentials: LoginCredentials): Observable<AuthToken>;
-  abstract logout(): Observable<void>;
-  abstract refreshToken(refreshToken: string): Observable<AuthToken>;
-  abstract getCurrentUser(): Observable<User>;
-  abstract register(user: Partial<User>, password: string): Observable<User>;
-  abstract resetPassword(email: string): Observable<void>;
-  abstract changePassword(oldPassword: string, newPassword: string): Observable<void>;
+export interface LoginCredentials {
+  email?: string;
+  matricule?: string;
+  motDePasse: string;
 }
 
-/**
- * Repository Interface - User
- */
-export abstract class IUserRepository {
-  abstract getAll(): Observable<User[]>;
-  abstract getById(id: string): Observable<User>;
-  abstract getByRole(role: string): Observable<User[]>;
-  abstract create(user: User): Observable<User>;
-  abstract update(id: string, user: Partial<User>): Observable<User>;
-  abstract delete(id: string): Observable<void>;
-  abstract activate(id: string): Observable<User>;
-  abstract deactivate(id: string): Observable<User>;
+export interface LoginResponse {
+  token: string;
+  user: User;
+}
+
+export abstract class AuthRepositoryInterface {
+  abstract login(credentials: LoginCredentials): Observable<LoginResponse>;
+  abstract logout(): Observable<void>;
+  abstract getCurrentUser(): Observable<User>;
+  abstract refreshToken(): Observable<{ token: string }>;
+  abstract updateProfile(data: Partial<User>): Observable<User>;
+  abstract changePassword(oldPassword: string, newPassword: string): Observable<void>;
 }

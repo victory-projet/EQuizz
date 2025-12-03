@@ -1,0 +1,383 @@
+<div class="associations-container">
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      <span class="material-icons">check_circle</span>
+      {{ successMessage() }}
+    </div>
+  }
+
+  <div class="page-header">
+    <div class="header-left">
+      <h2>Associations Cours-Enseignants-Classes</h2>
+      <p>Associez les cours aux enseignants et aux classes pour un semestre donné</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <span class="material-icons">add_link</span>
+      Nouvelle Association
+    </button>
+  </div>
+
+  <div class="info-card">
+    <div class="info-icon">
+      <span class="material-icons">info</span>
+    </div>
+    <div class="info-content">
+      <h3>Comment créer une association ?</h3>
+      <ol>
+        <li>Sélectionnez l'année académique et le semestre</li>
+        <li>Choisissez le cours à enseigner</li>
+        <li>Sélectionnez l'enseignant responsable</li>
+        <li>Choisissez les classes concernées</li>
+        <li>Validez pour créer les associations</li>
+      </ol>
+    </div>
+  </div>
+
+  @if (isLoading() && !showModal()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Chargement des données...</p>
+    </div>
+  }
+
+  <!-- Liste des associations existantes -->
+  @if (!isLoading() && associations().length > 0) {
+    <div class="associations-list">
+      <h3>Associations existantes ({{ associations().length }})</h3>
+      
+      <div class="associations-grid">
+        @for (association of associations(); track association.cours.id) {
+          <div class="association-card">
+            <div class="association-header">
+              <div class="course-badge">
+                <span class="material-icons">menu_book</span>
+                <div>
+                  <strong>{{ association.cours.nom }}</strong>
+                  <span class="code">{{ association.cours.code }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="association-body">
+              <div class="association-item">
+                <span class="material-icons">person</span>
+                <div>
+                  <small>Enseignant</small>
+                  <strong>{{ getCoursEnseignant(association.cours) }}</strong>
+                </div>
+              </div>
+
+              @if (getCoursSemestre(association.cours)) {
+                <div class="association-item">
+                  <span class="material-icons">calendar_today</span>
+                  <div>
+                    <small>Semestre</small>
+                    <strong>{{ getSemestreLibelle(getCoursSemestre(association.cours)) }}</strong>
+                  </div>
+                </div>
+              }
+
+              @if (getCoursAnneeAcademique(association.cours)) {
+                <div class="association-item">
+                  <span class="material-icons">event</span>
+                  <div>
+                    <small>Année académique</small>
+                    <strong>{{ getCoursAnneeAcademique(association.cours)?.libelle }}</strong>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (!isLoading() && associations().length === 0) {
+    <div class="empty-state">
+      <span class="material-icons">link_off</span>
+      <p>Aucune association créée pour le moment</p>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        Créer la première association
+      </button>
+    </div>
+  }
+
+  <!-- Modal Wizard -->
+  @if (showModal()) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Créer une Association</h3>
+          <button class="close-btn" (click)="closeModal()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="wizard-steps">
+          <div class="step" [class.active]="currentStep() >= 1" [class.completed]="currentStep() > 1">
+            <div class="step-number">1</div>
+            <div class="step-label">Période</div>
+          </div>
+          <div class="step-line" [class.completed]="currentStep() > 1"></div>
+          <div class="step" [class.active]="currentStep() >= 2" [class.completed]="currentStep() > 2">
+            <div class="step-number">2</div>
+            <div class="step-label">Cours</div>
+          </div>
+          <div class="step-line" [class.completed]="currentStep() > 2"></div>
+          <div class="step" [class.active]="currentStep() >= 3" [class.completed]="currentStep() > 3">
+            <div class="step-number">3</div>
+            <div class="step-label">Enseignant</div>
+          </div>
+          <div class="step-line" [class.completed]="currentStep() > 3"></div>
+          <div class="step" [class.active]="currentStep() >= 4" [class.completed]="currentStep() > 4">
+            <div class="step-number">4</div>
+            <div class="step-label">Classes</div>
+          </div>
+          <div class="step-line" [class.completed]="currentStep() > 4"></div>
+          <div class="step" [class.active]="currentStep() >= 5">
+            <div class="step-number">5</div>
+            <div class="step-label">Confirmation</div>
+          </div>
+        </div>
+
+        <form (ngSubmit)="onSubmit()">
+          <div class="modal-body">
+            @if (errorMessage()) {
+              <div class="alert alert-error">
+                {{ errorMessage() }}
+              </div>
+            }
+
+            <!-- Step 1: Période -->
+            @if (currentStep() === 1) {
+              <div class="step-content">
+                <h4>Sélectionnez la période</h4>
+                
+                <div class="form-group">
+                  <label>Année Académique *</label>
+                  <select [(ngModel)]="formData.anneeAcademiqueId" name="anneeAcademique" required>
+                    <option value="">-- Sélectionnez une année --</option>
+                    @for (annee of anneesAcademiques(); track annee.id) {
+                      <option [value]="annee.id">{{ annee.libelle }}</option>
+                    }
+                  </select>
+                </div>
+
+                @if (formData.anneeAcademiqueId) {
+                  <div class="form-group">
+                    <label>Semestre *</label>
+                    <select [(ngModel)]="formData.semestreId" name="semestre" required>
+                      <option value="">-- Sélectionnez un semestre --</option>
+                      @for (semestre of filteredSemestres(); track semestre.id) {
+                        <option [value]="semestre.id">{{ getSemestreLibelle(semestre) }}</option>
+                      }
+                    </select>
+                    @if (filteredSemestres().length === 0) {
+                      <small class="text-warning">
+                        <span class="material-icons">warning</span>
+                        Aucun semestre n'est défini pour cette année académique. Veuillez d'abord créer des semestres dans la section "Année académique".
+                      </small>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Step 2: Cours -->
+            @if (currentStep() === 2) {
+              <div class="step-content">
+                <h4>Sélectionnez le cours</h4>
+                
+                <div class="selection-grid">
+                  @for (c of cours(); track c.id) {
+                    <div 
+                      class="selection-card" 
+                      [class.selected]="formData.coursId === c.id.toString()"
+                      (click)="formData.coursId = c.id.toString()">
+                      <div class="card-icon">
+                        <span class="material-icons">menu_book</span>
+                      </div>
+                      <div class="card-content">
+                        <h5>{{ c.nom }}</h5>
+                        <p class="code">{{ c.code }}</p>
+                        @if (c.description) {
+                          <p class="description">{{ c.description }}</p>
+                        }
+                      </div>
+                      @if (formData.coursId === c.id.toString()) {
+                        <div class="check-icon">
+                          <span class="material-icons">check_circle</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                @if (cours().length === 0) {
+                  <div class="empty-state">
+                    <span class="material-icons">menu_book</span>
+                    <p>Aucun cours disponible</p>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Step 3: Enseignant -->
+            @if (currentStep() === 3) {
+              <div class="step-content">
+                <h4>Sélectionnez l'enseignant</h4>
+                
+                <div class="selection-grid">
+                  @for (enseignant of enseignants(); track enseignant.id) {
+                    <div 
+                      class="selection-card" 
+                      [class.selected]="formData.enseignantId === enseignant.id.toString()"
+                      (click)="formData.enseignantId = enseignant.id.toString()">
+                      <div class="card-icon">
+                        <span class="material-icons">person</span>
+                      </div>
+                      <div class="card-content">
+                        <h5>{{ enseignant.prenom }} {{ enseignant.nom }}</h5>
+                        <p class="email">{{ enseignant.email }}</p>
+                        @if (enseignant.specialite) {
+                          <p class="specialite">
+                            <span class="material-icons">school</span>
+                            {{ enseignant.specialite }}
+                          </p>
+                        }
+                      </div>
+                      @if (formData.enseignantId === enseignant.id.toString()) {
+                        <div class="check-icon">
+                          <span class="material-icons">check_circle</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                @if (enseignants().length === 0) {
+                  <div class="empty-state">
+                    <span class="material-icons">person</span>
+                    <p>Aucun enseignant disponible</p>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Step 4: Classes -->
+            @if (currentStep() === 4) {
+              <div class="step-content">
+                <h4>Sélectionnez les classes (multi-sélection)</h4>
+                
+                <div class="selection-grid">
+                  @for (classe of classes(); track classe.id) {
+                    <div 
+                      class="selection-card" 
+                      [class.selected]="isClassSelected(classe.id.toString())"
+                      (click)="toggleClassSelection(classe.id.toString())">
+                      <div class="card-icon">
+                        <span class="material-icons">groups</span>
+                      </div>
+                      <div class="card-content">
+                        <h5>{{ classe.nom }}</h5>
+                        @if (classe.niveau) {
+                          <p class="niveau">Niveau: {{ classe.niveau }}</p>
+                        }
+                        @if (classe.anneeAcademique) {
+                          <p class="annee">{{ classe.anneeAcademique.libelle }}</p>
+                        }
+                      </div>
+                      @if (isClassSelected(classe.id.toString())) {
+                        <div class="check-icon">
+                          <span class="material-icons">check_circle</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                @if (classes().length === 0) {
+                  <div class="empty-state">
+                    <span class="material-icons">groups</span>
+                    <p>Aucune classe disponible</p>
+                  </div>
+                }
+
+                @if (formData.selectedClasses.length > 0) {
+                  <div class="selection-summary">
+                    <strong>{{ formData.selectedClasses.length }}</strong> classe(s) sélectionnée(s)
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Step 5: Confirmation -->
+            @if (currentStep() === 5) {
+              <div class="step-content">
+                <h4>Confirmation</h4>
+                
+                <div class="confirmation-card">
+                  <div class="confirmation-section">
+                    <h5><span class="material-icons">calendar_today</span> Période</h5>
+                    <p><strong>Année:</strong> {{ getAnneeNom(formData.anneeAcademiqueId) }}</p>
+                    <p><strong>Semestre:</strong> {{ selectedSemestre() ? getSemestreLibelle(selectedSemestre()!) : '' }}</p>
+                  </div>
+
+                  <div class="confirmation-section">
+                    <h5><span class="material-icons">menu_book</span> Cours</h5>
+                    <p><strong>{{ selectedCours()?.nom }}</strong></p>
+                    <p class="code">Code: {{ selectedCours()?.code }}</p>
+                  </div>
+
+                  <div class="confirmation-section">
+                    <h5><span class="material-icons">person</span> Enseignant</h5>
+                    <p><strong>{{ selectedEnseignant()?.prenom }} {{ selectedEnseignant()?.nom }}</strong></p>
+                    <p>{{ selectedEnseignant()?.email }}</p>
+                  </div>
+
+                  <div class="confirmation-section">
+                    <h5><span class="material-icons">groups</span> Classes ({{ formData.selectedClasses.length }})</h5>
+                    <div class="classes-list">
+                      @for (classeId of formData.selectedClasses; track classeId) {
+                        <span class="badge">{{ getClasseNom(classeId) }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="modal-footer">
+            @if (currentStep() > 1) {
+              <button type="button" class="btn btn-secondary" (click)="previousStep()">
+                <span class="material-icons">arrow_back</span>
+                Précédent
+              </button>
+            }
+
+            <div class="spacer"></div>
+
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">
+              Annuler
+            </button>
+
+            @if (currentStep() < 5) {
+              <button type="button" class="btn btn-primary" (click)="nextStep()">
+                Suivant
+                <span class="material-icons">arrow_forward</span>
+              </button>
+            } @else {
+              <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
+                <span class="material-icons">check</span>
+                Créer les Associations
+              </button>
+            }
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

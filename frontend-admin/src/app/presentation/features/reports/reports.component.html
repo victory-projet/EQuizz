@@ -1,0 +1,112 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <span class="material-icons">assessment</span>
+        Rapports et Analyses
+      </h1>
+      <p class="page-subtitle">Vue d'ensemble des performances et analyses</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input
+        type="text"
+        placeholder="Rechercher une évaluation..."
+        [value]="searchTerm()"
+        (input)="onSearchChange($event)"
+      />
+    </div>
+
+    <div class="status-filters">
+      <button
+        class="filter-btn"
+        [class.active]="selectedStatus() === 'all'"
+        (click)="onStatusChange('all')">
+        Toutes
+      </button>
+      <button
+        class="filter-btn"
+        [class.active]="selectedStatus() === 'PUBLIEE'"
+        (click)="onStatusChange('PUBLIEE')">
+        Publiées
+      </button>
+      <button
+        class="filter-btn"
+        [class.active]="selectedStatus() === 'CLOTUREE'"
+        (click)="onStatusChange('CLOTUREE')">
+        Clôturées
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Chargement des rapports...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading() && filteredEvaluations().length === 0) {
+    <div class="empty-state">
+      <span class="material-icons">folder_open</span>
+      <h3>Aucun rapport disponible</h3>
+      <p>Les rapports seront disponibles une fois les évaluations publiées</p>
+    </div>
+  }
+
+  <!-- Evaluations List -->
+  @if (!isLoading() && filteredEvaluations().length > 0) {
+    <div class="evaluations-grid">
+      @for (evaluation of filteredEvaluations(); track evaluation.id) {
+        <div class="evaluation-card" (click)="viewReport(evaluation)">
+          <div class="card-header">
+            <div class="card-icon">
+              <span class="material-icons">quiz</span>
+            </div>
+            <span class="badge" [ngClass]="getStatusBadgeClass(evaluation.statut)">
+              {{ evaluation.statut }}
+            </span>
+          </div>
+
+          <div class="card-body">
+            <h3 class="card-title">{{ evaluation.titre }}</h3>
+            
+            <div class="card-meta">
+              <div class="meta-item">
+                <span class="material-icons">school</span>
+                <span>{{ evaluation.cours?.nom || 'Non défini' }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="material-icons">group</span>
+                <span>{{ evaluation.classe?.nom || 'Non définie' }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="material-icons">quiz</span>
+                <span>{{ getQuestionCount(evaluation) }} questions</span>
+              </div>
+            </div>
+
+            <div class="card-dates">
+              <span class="material-icons">event</span>
+              <span>{{ formatDate(evaluation.dateDebut) }} - {{ formatDate(evaluation.dateFin) }}</span>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button class="btn-view">
+              <span class="material-icons">visibility</span>
+              Voir le rapport
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

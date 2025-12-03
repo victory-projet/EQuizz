@@ -1,0 +1,75 @@
+<div class="onboarding-container">
+  <!-- Background -->
+  <div class="background-gradient"></div>
+
+  <!-- Skip Button -->
+  @if (currentSlide() < slides.length - 1) {
+    <button class="skip-button" (click)="skip()">
+      Passer
+      <span class="material-icons">arrow_forward</span>
+    </button>
+  }
+
+  <!-- Slides Container -->
+  <div class="slides-container">
+    @for (slide of slides; track $index) {
+      <div 
+        class="slide"
+        [class.active]="currentSlide() === $index"
+        [class.prev]="currentSlide() > $index"
+        [class.next]="currentSlide() < $index"
+      >
+        <!-- Icon -->
+        <div class="slide-icon" [style.background]="slide.color">
+          <span class="material-icons">{{ slide.icon }}</span>
+        </div>
+
+        <!-- Content -->
+        <div class="slide-content">
+          <h1 class="slide-title">{{ slide.title }}</h1>
+          <p class="slide-description">{{ slide.description }}</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Dots Indicator -->
+  <div class="dots-container">
+    @for (slide of slides; track $index) {
+      <button
+        class="dot"
+        [class.active]="currentSlide() === $index"
+        (click)="goToSlide($index)"
+        [attr.aria-label]="'Aller à la slide ' + ($index + 1)"
+      ></button>
+    }
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="navigation-buttons">
+    @if (currentSlide() > 0) {
+      <button class="nav-button secondary" (click)="previousSlide()">
+        <span class="material-icons">arrow_back</span>
+        <span>Précédent</span>
+      </button>
+    }
+
+    <button class="nav-button primary" (click)="nextSlide()">
+      @if (currentSlide() < slides.length - 1) {
+        <span>Suivant</span>
+        <span class="material-icons">arrow_forward</span>
+      } @else {
+        <span>Commencer</span>
+        <span class="material-icons">check</span>
+      }
+    </button>
+  </div>
+
+  <!-- Logo -->
+  <div class="logo-footer">
+    <div class="logo-icon">
+      <span class="material-icons">school</span>
+    </div>
+    <span class="logo-text">EQuizz</span>
+  </div>
+</div>

@@ -9,7 +9,9 @@ class DashboardService {
    * @param {Object} filters - Filtres optionnels (year, semester, classeId, coursId, enseignantId)
    */
   async getAdminDashboard(filters = {}) {
+    console.log('📊 Dashboard service filters:', filters);
     const whereClause = this.buildWhereClause(filters);
+    console.log('📊 Where clause:', JSON.stringify(whereClause, null, 2));
 
     const [
       totalEtudiants,
