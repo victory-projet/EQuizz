@@ -35,6 +35,8 @@ const Classe = sequelize.define('Classe', {
     allowNull: false,
   }
 
+}, {
+  tableName: 'classes'
 });
 
 module.exports = Classe;

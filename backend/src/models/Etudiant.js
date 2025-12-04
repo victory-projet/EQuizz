@@ -22,11 +22,13 @@ const Etudiant = sequelize.define('Etudiant', {
     type: DataTypes.UUID,
     allowNull: true,
     references: {
-      model: 'Classes',
+      model: 'classes',
       key: 'id'
     }
   },
 
+}, {
+  tableName: 'etudiants'
 });
 
 module.exports = Etudiant;

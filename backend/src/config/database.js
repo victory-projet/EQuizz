@@ -24,7 +24,7 @@ const sequelize = new Sequelize(
     port: process.env.DB_PORT || 3306,
     dialect: process.env.DB_DIALECT,
     logging: false,
-    
+
     // Options de connexion pour éviter les timeouts
     pool: {
       max: 5,
@@ -43,12 +43,13 @@ const sequelize = new Sequelize(
     define: {
       // Pour avoir created_at et updated_at au lieu de createdAt et updatedAt
       underscored: true,
-      
+
       // Empêche Sequelize de renommer la table au pluriel
-      freezeTableName: true,
+      // DÉSACTIVÉ: Les tables existantes utilisent déjà la pluralisation automatique de Sequelize
+      // freezeTableName: true,
 
       // Active la suppression logique (soft delete)
-      paranoid: true, 
+      paranoid: true,
     }
   }
 );
