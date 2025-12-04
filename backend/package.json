@@ -14,6 +14,7 @@
     "db:sync": "node sync-db.js",
     "db:setup": "node setup-db.js",
     "db:test": "node test-aiven-connection.js",
+    "db:clean": "node clean-aiven-db.js",
     "verify": "node verify-setup.js",
     "start:dev": "nodemon app.js",
     "lint": "eslint . --ext .js --fix",
