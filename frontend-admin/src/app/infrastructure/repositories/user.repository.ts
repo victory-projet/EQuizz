@@ -55,11 +55,11 @@ export class UserRepository implements UserRepositoryInterface {
     };
 
     // Ajouter les propriétés spécifiques selon le rôle
-    if (data.role === 'ETUDIANT' && data.Etudiant) {
+    if (data.role === 'ETUDIANT') {
       return {
         ...baseUser,
-        matricule: data.Etudiant.matricule,
-        classeId: data.Etudiant.classe_id,
+        matricule: data.matricule || data.Etudiant?.matricule,
+        classeId: data.classeId || data.Etudiant?.classe_id,
         numeroCarteEtudiant: data.Etudiant.idCarte
       } as any;
     } else if (data.role === 'ENSEIGNANT' && data.Enseignant) {
@@ -72,3 +72,4 @@ export class UserRepository implements UserRepositoryInterface {
     return baseUser;
   }
 }
+

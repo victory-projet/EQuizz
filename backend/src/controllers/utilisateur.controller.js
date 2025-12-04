@@ -24,6 +24,7 @@ exports.getAllUtilisateurs = async (req, res) => {
       } else if (userData.Etudiant) {
         userData.role = 'ETUDIANT';
         userData.matricule = userData.Etudiant.matricule;
+        userData.classeId = userData.Etudiant.classe_id;
       }
       return userData;
     });
@@ -59,6 +60,7 @@ exports.getUtilisateurById = async (req, res) => {
     } else if (userData.Etudiant) {
       userData.role = 'ETUDIANT';
       userData.matricule = userData.Etudiant.matricule;
+      userData.classeId = userData.Etudiant.classe_id;
     }
 
     res.json(userData);
