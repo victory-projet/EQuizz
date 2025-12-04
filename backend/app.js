@@ -69,7 +69,7 @@ const PORT = process.env.PORT || 3000;
 
 // Démarrer le serveur seulement si ce n'est pas un test
 if (process.env.NODE_ENV !== 'test') {
-  db.sequelize.authenticate()
+  db.sequelize.drop()     
     .then(() => {
       console.log('✅ Connexion à la base de données établie avec succès.');
       return db.sequelize.sync({ force: true }); // Vérifier la connexion
