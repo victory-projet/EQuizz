@@ -1,0 +1,8 @@
+# robots.txt for EQuizz Admin
+# This is an admin panel - block all search engines
+
+User-agent: *
+Disallow: /
+
+# Sitemap (if needed in the future)
+# Sitemap: https://yourdomain.com/sitemap.xml

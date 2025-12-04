@@ -1,0 +1,268 @@
+<div class="page-container">
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Chargement du rapport...</p>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="error-state">
+      <span class="material-icons">error</span>
+      <h3>{{ errorMessage() }}</h3>
+      <button class="btn-primary" (click)="backToList()">Retour à la liste</button>
+    </div>
+  }
+
+  @if (!isLoading() && !errorMessage() && report()) {
+    <!-- Header -->
+    <div class="page-header">
+      <button class="btn-back" (click)="backToList()">
+        <span class="material-icons">arrow_back</span>
+        Retour
+      </button>
+      <div class="header-content">
+        <h1 class="page-title">{{ report()!.evaluation.titre }}</h1>
+        <div class="header-meta">
+          <span class="meta-item">
+            <span class="material-icons">school</span>
+            {{ report()!.evaluation.cours }}
+          </span>
+          <span class="meta-item">
+            <span class="material-icons">event</span>
+            {{ formatDate(report()!.evaluation.dateDebut) }} - {{ formatDate(report()!.evaluation.dateFin) }}
+          </span>
+        </div>
+      </div>
+      <button class="btn-export" (click)="exportPDF()">
+        <span class="material-icons">picture_as_pdf</span>
+        Exporter PDF
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-section">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'overview'"
+        (click)="setActiveTab('overview')">
+        <span class="material-icons">bar_chart</span>
+        Vue d'ensemble
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'sentiment'"
+        (click)="setActiveTab('sentiment')">
+        <span class="material-icons">sentiment_satisfied</span>
+        Analyse des sentiments
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'performance'"
+        (click)="setActiveTab('performance')">
+        <span class="material-icons">emoji_events</span>
+        Performances
+      </button>
+    </div>
+
+    <!-- Overview Tab -->
+    @if (activeTab() === 'overview') {
+      <div class="tab-content">
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+              <span class="material-icons">group</span>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">Étudiants ciblés</div>
+              <div class="stat-value">{{ report()!.statistics.totalEtudiants }}</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+              <span class="material-icons">check_circle</span>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">Répondants</div>
+              <div class="stat-value">{{ report()!.statistics.nombreRepondants }}</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" [style.background]="'linear-gradient(135deg, ' + (report()!.statistics.tauxParticipation >= 80 ? '#10b981, #059669' : report()!.statistics.tauxParticipation >= 50 ? '#f59e0b, #d97706' : '#ef4444, #dc2626') + ')'">
+              <span class="material-icons">trending_up</span>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">Taux de participation</div>
+              <div class="stat-value">{{ report()!.statistics.tauxParticipation }}%</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+              <span class="material-icons">quiz</span>
+            </div>
+            <div class="stat-content">
+              <div class="stat-label">Questions</div>
+              <div class="stat-value">{{ report()!.questions.length }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Participation Progress -->
+        <div class="section-card">
+          <h3>
+            <span class="material-icons">analytics</span>
+            Progression de la participation
+          </h3>
+          <div class="progress-bar-container">
+            <div class="progress-bar">
+              <div
+                class="progress-fill"
+                [class.success]="report()!.statistics.tauxParticipation >= 80"
+                [class.warning]="report()!.statistics.tauxParticipation >= 50 && report()!.statistics.tauxParticipation < 80"
+                [class.danger]="report()!.statistics.tauxParticipation < 50"
+                [style.width.%]="report()!.statistics.tauxParticipation">
+              </div>
+            </div>
+            <div class="progress-label">
+              {{ report()!.statistics.nombreRepondants }} / {{ report()!.statistics.totalEtudiants }} étudiants ont répondu
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Sentiment Tab -->
+    @if (activeTab() === 'sentiment') {
+      <div class="tab-content">
+        @if (!report()!.sentimentAnalysis || report()!.sentimentAnalysis!.total === 0) {
+          <div class="empty-state">
+            <span class="material-icons">sentiment_neutral</span>
+            <h3>Aucune analyse de sentiment disponible</h3>
+            <p>Cette évaluation ne contient pas de questions à réponse ouverte ou aucune réponse n'a encore été soumise.</p>
+          </div>
+        } @else {
+          <div class="sentiment-grid">
+            <div class="sentiment-card positive">
+              <div class="sentiment-emoji">😊</div>
+              <div class="sentiment-label">Positif</div>
+              <div class="sentiment-value">{{ report()!.sentimentAnalysis!.sentiments.positifPct }}%</div>
+              <div class="sentiment-count">{{ report()!.sentimentAnalysis!.sentiments.positif }} réponses</div>
+            </div>
+
+            <div class="sentiment-card neutral">
+              <div class="sentiment-emoji">😐</div>
+              <div class="sentiment-label">Neutre</div>
+              <div class="sentiment-value">{{ report()!.sentimentAnalysis!.sentiments.neutrePct }}%</div>
+              <div class="sentiment-count">{{ report()!.sentimentAnalysis!.sentiments.neutre }} réponses</div>
+            </div>
+
+            <div class="sentiment-card negative">
+              <div class="sentiment-emoji">😞</div>
+              <div class="sentiment-label">Négatif</div>
+              <div class="sentiment-value">{{ report()!.sentimentAnalysis!.sentiments.negatifPct }}%</div>
+              <div class="sentiment-count">{{ report()!.sentimentAnalysis!.sentiments.negatif }} réponses</div>
+            </div>
+          </div>
+
+          @if (report()!.sentimentAnalysis!.keywords && report()!.sentimentAnalysis!.keywords!.length > 0) {
+            <div class="section-card">
+              <h3>
+                <span class="material-icons">label</span>
+                Mots-clés principaux
+              </h3>
+              <div class="keywords-cloud">
+                @for (keyword of report()!.sentimentAnalysis!.keywords; track keyword.word) {
+                  <span class="keyword-tag" [style.font-size.px]="12 + (keyword.count * 2)">
+                    {{ keyword.word }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+
+          @if (report()!.sentimentAnalysis!.summary) {
+            <div class="section-card">
+              <h3>
+                <span class="material-icons">summarize</span>
+                Résumé généré par IA
+              </h3>
+              <p class="summary-text">{{ report()!.sentimentAnalysis!.summary }}</p>
+            </div>
+          }
+        }
+      </div>
+    }
+
+    <!-- Performance Tab -->
+    @if (activeTab() === 'performance') {
+      <div class="tab-content">
+        <!-- Taux de réponses par classe -->
+        <div class="section-card">
+          <h3>
+            <span class="material-icons">analytics</span>
+            Taux de réponses par classe
+          </h3>
+          <div class="participation-summary">
+            <div class="participation-card">
+              <div class="participation-header">
+                <span class="material-icons">school</span>
+                <div class="header-info">
+                  <h4>{{ getClassesNames() }}</h4>
+                  <p class="course-name">{{ report()!.evaluation.cours }}</p>
+                </div>
+              </div>
+              <div class="participation-stats">
+                <div class="stat-row">
+                  <span class="stat-label">Étudiants ciblés</span>
+                  <span class="stat-value">{{ report()!.statistics.totalEtudiants }}</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">Répondants</span>
+                  <span class="stat-value highlight">{{ report()!.statistics.nombreRepondants }}</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">Taux de participation</span>
+                  <span class="stat-value" 
+                        [class.success]="report()!.statistics.tauxParticipation >= 80"
+                        [class.warning]="report()!.statistics.tauxParticipation >= 50 && report()!.statistics.tauxParticipation < 80"
+                        [class.danger]="report()!.statistics.tauxParticipation < 50">
+                    {{ report()!.statistics.tauxParticipation }}%
+                  </span>
+                </div>
+              </div>
+              <div class="participation-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill"
+                       [class.success]="report()!.statistics.tauxParticipation >= 80"
+                       [class.warning]="report()!.statistics.tauxParticipation >= 50 && report()!.statistics.tauxParticipation < 80"
+                       [class.danger]="report()!.statistics.tauxParticipation < 50"
+                       [style.width.%]="report()!.statistics.tauxParticipation">
+                  </div>
+                </div>
+              </div>
+              <div class="participation-interpretation">
+                @if (report()!.statistics.tauxParticipation >= 80) {
+                  <span class="material-icons success">check_circle</span>
+                  <p>Excellent taux de participation ! Les résultats sont représentatifs de l'ensemble de la classe.</p>
+                } @else if (report()!.statistics.tauxParticipation >= 60) {
+                  <span class="material-icons warning">info</span>
+                  <p>Bon taux de participation. Les résultats sont globalement représentatifs.</p>
+                } @else if (report()!.statistics.tauxParticipation >= 40) {
+                  <span class="material-icons warning">warning</span>
+                  <p>Taux de participation moyen. Encouragez davantage d'étudiants à participer.</p>
+                } @else {
+                  <span class="material-icons danger">error</span>
+                  <p>Faible taux de participation. Les résultats peuvent ne pas être représentatifs.</p>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

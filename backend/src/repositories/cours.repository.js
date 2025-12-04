@@ -8,13 +8,14 @@ class CoursRepository {
   }
 
   /**
-   * Trouve tous les cours, en incluant l'enseignant et le semestre associés.
+   * Trouve tous les cours, en incluant l'enseignant, le semestre et l'année académique associés.
    */
   async findAll() {
     return db.Cours.findAll({
       include: [
         { model: db.Enseignant, include: [db.Utilisateur] },
-        { model: db.Semestre }
+        { model: db.Semestre },
+        { model: db.AnneeAcademique }
       ],
       order: [['nom', 'ASC']]
     });
@@ -27,7 +28,8 @@ class CoursRepository {
     return db.Cours.findByPk(id, {
       include: [
         { model: db.Enseignant, include: [db.Utilisateur] },
-        { model: db.Semestre }
+        { model: db.Semestre },
+        { model: db.AnneeAcademique }
       ]
     });
   }

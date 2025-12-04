@@ -1,47 +1,36 @@
 // backend/src/controllers/quizz.controller.js
 
 const quizzService = require('../services/quizz.service');
+const asyncHandler = require('../utils/asyncHandler');
+const ErrorHandler = require('../middlewares/errorHandler.middleware');
 
 class QuizzController {
   
-  async getAvailableQuizzes(req, res) {
-    try {
-      // req.user.id est fourni par le middleware d'authentification
-      const userId = req.user.id;
-      const quizzes = await quizzService.getAvailableQuizzesForStudent(userId);
-      res.status(200).json(quizzes);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
+  getAvailableQuizzes = asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    const quizzes = await quizzService.getAvailableQuizzesForStudent(userId);
+    res.status(200).json(quizzes);
+  });
+
+  getQuizzDetails = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const etudiantId = req.user.id;
+    const quizzDetails = await quizzService.getQuizzDetails(id, etudiantId);
+    res.status(200).json(quizzDetails);
+  });
+
+  submitReponses = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { reponses, estFinal } = req.body;
+    const etudiantId = req.user.id;
+
+    if (!reponses || !Array.isArray(reponses) || reponses.length === 0) {
+      throw ErrorHandler.createError('Le tableau de réponses est invalide ou vide.', 400, 'VALIDATION_ERROR');
     }
-  }
 
-  async getQuizzDetails(req, res) {
-    try {
-      const { id } = req.params;
-      const etudiantId = req.user.id;
-      const quizzDetails = await quizzService.getQuizzDetails(id, etudiantId);
-      res.status(200).json(quizzDetails);
-    } catch (error) {
-      res.status(404).json({ message: error.message });
-    }
-  }
-
-  async submitReponses(req, res) {
-    try {
-      const { id } = req.params; // ID du quizz
-      const { reponses, estFinal } = req.body; // Tableau de réponses et flag final
-      const etudiantId = req.user.id;
-
-      if (!reponses || !Array.isArray(reponses) || reponses.length === 0) {
-        return res.status(400).json({ message: 'Le tableau de réponses est invalide ou vide.' });
-      }
-
-      const result = await quizzService.submitReponses(id, etudiantId, reponses, estFinal !== false);
-      res.status(201).json(result);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  }
+    const result = await quizzService.submitReponses(id, etudiantId, reponses, estFinal !== false);
+    res.status(201).json(result);
+  });
 }
 
 module.exports = new QuizzController();

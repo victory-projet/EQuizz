@@ -1,0 +1,186 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Créer une Évaluation</h1>
+      <p class="page-subtitle">Configurez les paramètres de base de votre quiz</p>
+    </div>
+    <button class="btn-cancel" (click)="cancel()">
+      <span class="material-icons">close</span> Annuler
+    </button>
+  </div>
+
+  <!-- Messages -->
+  @if (successMessage()) {
+    <div class="alert alert-success">{{ successMessage() }}</div>
+  }
+  @if (errorMessage()) {
+    <div class="alert alert-error">{{ errorMessage() }}</div>
+  }
+
+  <!-- Progress Steps -->
+  <div class="steps-container">
+    <div class="step" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1">
+      <div class="step-number">1</div>
+      <div class="step-label">Informations de base</div>
+    </div>
+    <div class="step-line" [class.completed]="currentStep() > 1"></div>
+    <div class="step" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2">
+      <div class="step-number">2</div>
+      <div class="step-label">Ajout de questions</div>
+    </div>
+    <div class="step-line" [class.completed]="currentStep() > 2"></div>
+    <div class="step" [class.active]="currentStep() === 3">
+      <div class="step-number">3</div>
+      <div class="step-label">Révision et publication</div>
+    </div>
+  </div>
+
+  <!-- Step 1: Basic Information -->
+  @if (currentStep() === 1) {
+    <div class="form-container">
+      <div class="form-card">
+        <h2 class="form-title">Informations de base</h2>
+        
+        <div class="form-group">
+          <label class="form-label">Titre de l'évaluation *</label>
+          <input 
+            type="text" 
+            class="form-input" 
+            placeholder="Ex: Évaluation Mi-parcours - Algorithmique"
+            [(ngModel)]="formData.titre"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea 
+            class="form-textarea" 
+            rows="4"
+            placeholder="Décrivez brièvement le contenu et les objectifs de cette évaluation..."
+            [(ngModel)]="formData.description"
+          ></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date de début *</label>
+            <input 
+              type="datetime-local" 
+              class="form-input"
+              [(ngModel)]="formData.dateDebut"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date de fin *</label>
+            <input 
+              type="datetime-local" 
+              class="form-input"
+              [(ngModel)]="formData.dateFin"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Cours / Unité d'Enseignement *</label>
+            <select class="form-select" [(ngModel)]="formData.coursId">
+              <option [value]="0">Sélectionnez un cours</option>
+              @for (c of cours(); track c.id) {
+                <option [value]="c.id">{{ c.nom }}</option>
+              }
+            </select>
+          </div>
+
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Classes * (sélection multiple)</label>
+          <div class="classes-grid">
+            @for (classe of classes(); track classe.id) {
+              <div 
+                class="class-card" 
+                [class.selected]="isClasseSelected(classe.id)"
+                (click)="toggleClasse(classe.id)"
+              >
+                <span class="material-icons check-icon">
+                  {{ isClasseSelected(classe.id) ? 'check_circle' : 'radio_button_unchecked' }}
+                </span>
+                <span class="class-name">{{ classe.nom }}</span>
+              </div>
+            }
+          </div>
+          @if (formData.classeIds.length > 0) {
+            <div class="selected-info">
+              {{ formData.classeIds.length }} classe(s) sélectionnée(s)
+            </div>
+          }
+        </div>
+
+        <div class="info-box">
+          <span class="material-icons">info</span>
+          <div>
+            <strong>Note :</strong> L'évaluation sera créée en mode brouillon. 
+            Vous pourrez ajouter des questions avant de la publier.
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="cancel()">
+          Annuler
+        </button>
+        <button class="btn-primary" (click)="nextStep()" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span>Création...</span>
+          } @else {
+            <span>Suivant</span>
+            <span class="material-icons">arrow_forward</span>
+          }
+        </button>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Method Selection Modal -->
+@if (showMethodModal()) {
+  <div class="modal-overlay" (click)="closeMethodModal()">
+    <div class="modal-content method-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Choisissez votre méthode de création</h2>
+        <button class="btn-close" (click)="closeMethodModal()">×</button>
+      </div>
+
+      <div class="method-options">
+        <div class="method-card" (click)="selectManualCreation()">
+          <div class="method-icon method-icon-manual">
+            <span class="material-icons">edit</span>
+          </div>
+          <h3>Création Manuelle</h3>
+          <p>Créez votre quiz en configurant manuellement tous les paramètres et questions</p>
+          <button class="btn-method">
+            <span class="material-icons">create</span> Créer manuellement
+          </button>
+        </div>
+
+        <div class="method-divider">
+          <span>ou</span>
+        </div>
+
+        <div class="method-card" (click)="selectExcelImport()">
+          <div class="method-icon method-icon-import">
+            <span class="material-icons">description</span>
+          </div>
+          <h3>Import depuis Excel</h3>
+          <p>Importez vos questions depuis un fichier Excel pré-formaté</p>
+          <button class="btn-method">
+            <span class="material-icons">upload_file</span> Importer depuis Excel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

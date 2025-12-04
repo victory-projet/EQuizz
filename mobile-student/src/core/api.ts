@@ -7,7 +7,7 @@ import { STORAGE_KEYS } from './constants';
  * Configure automatiquement l'URL de base et les headers d'authentification
  */
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://equizz-production.up.railway.app/api';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://equizz-backend.onrender.com/api';
 
 console.log('🌐 API URL configurée:', API_URL);
 
@@ -31,15 +31,12 @@ apiClient.interceptors.request.use(
         const token = await SecureStore.getItemAsync(STORAGE_KEYS.AUTH_TOKEN);
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log(`🔐 Request to ${config.url} with token: ${token.substring(0, 20)}...`);
-        } else {
-          console.log(`⚠️ Request to ${config.url} WITHOUT token`);
         }
-      } else {
-        console.log(`🔓 Auth request to ${config.url} (no token needed)`);
       }
     } catch (error) {
-      console.error('Erreur lors de la récupération du token:', error);
+      if (__DEV__) {
+        console.error('Erreur lors de la récupération du token:', error);
+      }
     }
     return config;
   },
@@ -51,29 +48,27 @@ apiClient.interceptors.request.use(
 // Intercepteur pour gérer les erreurs globalement
 apiClient.interceptors.response.use(
   (response) => {
-    console.log(`✅ Response from ${response.config.url}:`, {
-      status: response.status,
-      dataLength: Array.isArray(response.data) ? response.data.length : 'not array',
-      data: response.data
-    });
+    // Log minimal en développement uniquement
+    if (__DEV__) {
+      console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    }
     return response;
   },
   async (error) => {
-    console.error(`❌ Error response:`, {
-      url: error.config?.url,
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message
-    });
+    // Log minimal en développement uniquement
+    if (__DEV__) {
+      console.error(`❌ ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response?.status || 'Network Error'}`);
+    }
     
     if (error.response?.status === 401) {
       // Token expiré ou invalide - nettoyer le stockage
-      console.log('🔓 Token invalide, déconnexion...');
       try {
         await SecureStore.deleteItemAsync(STORAGE_KEYS.AUTH_TOKEN);
         await SecureStore.deleteItemAsync(STORAGE_KEYS.USER_DATA);
       } catch (e) {
-        console.error('Erreur lors du nettoyage du token:', e);
+        if (__DEV__) {
+          console.error('Erreur lors du nettoyage du token:', e);
+        }
       }
     }
     return Promise.reject(error);

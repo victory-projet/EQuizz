@@ -24,6 +24,12 @@ const Question = sequelize.define('Question', {
     defaultValue: [],
   },
 
+  ordre: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: 1,
+  },
+
 });
 
 module.exports = Question;

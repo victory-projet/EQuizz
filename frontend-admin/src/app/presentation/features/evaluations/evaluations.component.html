@@ -1,0 +1,210 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Gestion des Quiz</h1>
+      <p class="page-subtitle">Vue d'ensemble de tous vos questionnaires d'évaluation</p>
+    </div>
+    <button class="btn-primary" (click)="createEvaluation()">
+      <span class="material-icons">add</span> Créer un Quiz
+    </button>
+  </div>
+
+  <!-- Messages -->
+  @if (successMessage()) {
+    <div class="alert alert-success">{{ successMessage() }}</div>
+  }
+  @if (errorMessage()) {
+    <div class="alert alert-error">{{ errorMessage() }}</div>
+  }
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon stat-icon-purple">
+        <span class="material-icons">assignment</span>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ totalQuiz() }}</div>
+        <div class="stat-label">Total Quiz</div>
+        <div class="stat-sublabel">+3 ce mois</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon-green">
+        <span class="material-icons">trending_up</span>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ activeQuiz() }}</div>
+        <div class="stat-label">Quiz actifs</div>
+        <div class="stat-sublabel">En cours</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon-blue">
+        <span class="material-icons">groups</span>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">76%</div>
+        <div class="stat-label">Taux de participation</div>
+        <div class="stat-sublabel">+12% vs mois dernier</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon-orange">
+        <span class="material-icons">edit_note</span>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ draftQuiz() }}</div>
+        <div class="stat-label">Brouillons</div>
+        <div class="stat-sublabel">À finaliser</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input 
+        type="text" 
+        placeholder="Rechercher un quiz par titre, UE ou classe..."
+        (input)="onSearch($event)"
+        [value]="searchQuery()"
+      />
+    </div>
+    <div class="filter-buttons">
+      <button class="btn-filter" (click)="onFilterStatus('ALL')">
+        <span class="material-icons">filter_list</span> Filtres
+      </button>
+      <button class="btn-filter">
+        <span class="material-icons">sort</span> Trier par
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button 
+      class="tab" 
+      [class.active]="filterStatus() === 'ALL'"
+      (click)="onFilterStatus('ALL')"
+    >
+      Tous ({{ totalQuiz() }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="filterStatus() === 'PUBLIEE'"
+      (click)="onFilterStatus('PUBLIEE')"
+    >
+      En cours ({{ activeQuiz() }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="filterStatus() === 'BROUILLON'"
+      (click)="onFilterStatus('BROUILLON')"
+    >
+      Brouillons ({{ draftQuiz() }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="filterStatus() === 'CLOTUREE'"
+      (click)="onFilterStatus('CLOTUREE')"
+    >
+      Clôturés ({{ closedQuiz() }})
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading">Chargement...</div>
+  }
+
+  <!-- Evaluations List -->
+  @if (!isLoading()) {
+    <div class="evaluations-grid">
+      @for (evaluation of filteredEvaluations(); track evaluation.id) {
+        <div class="evaluation-card">
+          <div class="card-header">
+            <span class="badge" [ngClass]="getStatusBadgeClass(evaluation.statut)">
+              {{ getStatusLabel(evaluation.statut) }}
+            </span>
+            <button class="btn-menu">⋮</button>
+          </div>
+
+          <div class="card-body" (click)="viewEvaluation(evaluation.id)">
+            <h3 class="card-title">{{ evaluation.titre }}</h3>
+            <p class="card-description">{{ evaluation.description || 'Aucune description' }}</p>
+            
+            <div class="card-meta">
+              <div class="meta-item">
+                <span class="material-icons">book</span>
+                <span>{{ getCoursName(evaluation) }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="material-icons">calendar_today</span>
+                <span>{{ formatDate(evaluation.dateDebut) }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="material-icons">schedule</span>
+                <span>Fin: {{ formatDate(evaluation.dateFin) }}</span>
+              </div>
+            </div>
+
+            <div class="card-stats">
+              <div class="stat-item">
+                <span class="material-icons">help_outline</span>
+                <span>{{ getQuestionCount(evaluation) }} questions</span>
+              </div>
+              <div class="stat-item">
+                <span class="material-icons">people</span>
+                <span>{{ getClassesCount(evaluation) }} classe(s)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            @if (evaluation.statut === 'BROUILLON') {
+              <button class="btn-outline" (click)="editEvaluation(evaluation); $event.stopPropagation()">
+                <span class="material-icons">edit</span> Modifier
+              </button>
+              <button class="btn-primary" (click)="publishEvaluation(evaluation); $event.stopPropagation()">
+                <span class="material-icons">send</span> Publier
+              </button>
+            }
+            @if (evaluation.statut === 'PUBLIEE') {
+              <button class="btn-outline" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
+                <span class="material-icons">visibility</span> Voir
+              </button>
+              <button class="btn-primary" (click)="closeEvaluation(evaluation); $event.stopPropagation()">
+                <span class="material-icons">lock</span> Fermer
+              </button>
+            }
+            @if (evaluation.statut === 'CLOTUREE') {
+              <button class="btn-outline" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
+                <span class="material-icons">visibility</span> Voir
+              </button>
+              <button class="btn-primary" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
+                <span class="material-icons">bar_chart</span> Rapport
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (filteredEvaluations().length === 0) {
+      <div class="empty-state">
+        <span class="material-icons empty-icon">assignment</span>
+        <h3>Aucune évaluation trouvée</h3>
+        <p>Commencez par créer votre première évaluation</p>
+        <button class="btn-primary" (click)="createEvaluation()">
+          <span class="material-icons">add</span> Créer un Quiz
+        </button>
+      </div>
+    }
+  }
+</div>

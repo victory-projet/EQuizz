@@ -38,6 +38,7 @@ const Evaluation = sequelize.define('Evaluation', {
   typeEvaluation: {
     type: DataTypes.ENUM('MI_PARCOURS', 'FIN_SEMESTRE'),
     allowNull: false,
+    defaultValue: 'MI_PARCOURS',
   },
   
   statut: {

@@ -1,0 +1,36 @@
+{
+  "enseignants": [
+    {
+      "id": "ens-001",
+      "nom": "Dupont",
+      "prenom": "Jean",
+      "email": "jean.dupont@ecole.fr",
+      "motDePasse": "$2b$10$abcdefghijklmnopqrstuv"
+    },
+    {
+      "id": "ens-002",
+      "nom": "Martin",
+      "prenom": "Marie",
+      "email": "marie.martin@ecole.fr",
+      "motDePasse": "$2b$10$abcdefghijklmnopqrstuv"
+    }
+  ],
+  "etudiants": [
+    {
+      "id": "etu-001",
+      "nom": "Durand",
+      "prenom": "Pierre",
+      "email": "pierre.durand@student.fr",
+      "motDePasse": "$2b$10$abcdefghijklmnopqrstuv",
+      "classe_id": "classe-001"
+    },
+    {
+      "id": "etu-002",
+      "nom": "Lefebvre",
+      "prenom": "Sophie",
+      "email": "sophie.lefebvre@student.fr",
+      "motDePasse": "$2b$10$abcdefghijklmnopqrstuv",
+      "classe_id": "classe-001"
+    }
+  ]
+}

@@ -19,6 +19,11 @@ import { SubmitQuizzAnswersUseCase } from '../../domain/usecases/SubmitQuizzAnsw
 import { StudentDataSourceImpl } from '../../data/datasources/StudentDataSource';
 import { StudentRepositoryImpl } from '../../data/repositories/StudentRepositoryImpl';
 import { GetStudentInfoUseCase } from '../../domain/usecases/GetStudentInfoUseCase';
+import { CourseDataSourceImpl } from '../../data/datasources/Course.datasource';
+import { QuestionDataSourceImpl } from '../../data/datasources/QuestionDataSource';
+import { ClasseDataSourceImpl } from '../../data/datasources/ClasseDataSource';
+import { ClasseRepositoryImpl } from '../../data/repositories/Classe.repository.impl';
+import { GetClassesUseCase } from '../../domain/usecases/GetClasses.usecase';
 
 /**
  * Conteneur d'injection de dépendances
@@ -27,9 +32,15 @@ import { GetStudentInfoUseCase } from '../../domain/usecases/GetStudentInfoUseCa
 class DIContainer {
     private static instance: DIContainer;
     
+    // DataSources - Course/Question
+    private _courseDataSource: CourseDataSourceImpl | null = null;
+    private _questionDataSource: QuestionDataSourceImpl | null = null;
+    private _classeDataSource: ClasseDataSourceImpl | null = null;
+    
     // Repositories - Quiz
-    private courseRepository: ICourseRepository;
-    private questionRepository: IQuestionRepository;
+    private _courseRepository: CourseRepositoryImpl | null = null;
+    private _questionRepository: QuestionRepositoryImpl | null = null;
+    private _classeRepository: ClasseRepositoryImpl | null = null;
     
     // Repositories - Auth
     private _authRepository: AuthRepositoryImpl | null = null;
@@ -48,23 +59,9 @@ class DIContainer {
     
     // DataSources - Student
     private _studentDataSource: StudentDataSourceImpl | null = null;
-    
-    // Use Cases - Quiz
-    private getCoursesUseCase: GetCoursesUseCase;
-    private getEvaluationPeriodUseCase: GetEvaluationPeriodUseCase;
-    private getQuestionsUseCase: GetQuestionsUseCase;
-    private submitQuizUseCase: SubmitQuizUseCase;
 
     private constructor() {
-        // Initialize quiz repositories
-        this.courseRepository = new CourseRepositoryImpl();
-        this.questionRepository = new QuestionRepositoryImpl();
-        
-        // Initialize quiz use cases
-        this.getCoursesUseCase = new GetCoursesUseCase(this.courseRepository);
-        this.getEvaluationPeriodUseCase = new GetEvaluationPeriodUseCase(this.courseRepository);
-        this.getQuestionsUseCase = new GetQuestionsUseCase(this.questionRepository);
-        this.submitQuizUseCase = new SubmitQuizUseCase(this.questionRepository);
+        // Initialization is lazy - instances are created on first access
     }
 
     static getInstance(): DIContainer {
@@ -74,21 +71,53 @@ class DIContainer {
         return DIContainer.instance;
     }
 
+    // Getters for course datasources
+    get courseDataSource(): CourseDataSourceImpl {
+        if (!this._courseDataSource) {
+            this._courseDataSource = new CourseDataSourceImpl();
+        }
+        return this._courseDataSource;
+    }
+
+    // Getters for question datasources
+    get questionDataSource(): QuestionDataSourceImpl {
+        if (!this._questionDataSource) {
+            this._questionDataSource = new QuestionDataSourceImpl();
+        }
+        return this._questionDataSource;
+    }
+
+    // Getters for course repositories
+    get courseRepository(): CourseRepositoryImpl {
+        if (!this._courseRepository) {
+            this._courseRepository = new CourseRepositoryImpl(this.courseDataSource);
+        }
+        return this._courseRepository;
+    }
+
+    // Getters for question repositories
+    get questionRepository(): QuestionRepositoryImpl {
+        if (!this._questionRepository) {
+            this._questionRepository = new QuestionRepositoryImpl(this.questionDataSource);
+        }
+        return this._questionRepository;
+    }
+
     // Getters for quiz use cases
     getGetCoursesUseCase(): GetCoursesUseCase {
-        return this.getCoursesUseCase;
+        return new GetCoursesUseCase(this.courseRepository);
     }
 
     getGetEvaluationPeriodUseCase(): GetEvaluationPeriodUseCase {
-        return this.getEvaluationPeriodUseCase;
+        return new GetEvaluationPeriodUseCase(this.courseRepository);
     }
 
     getGetQuestionsUseCase(): GetQuestionsUseCase {
-        return this.getQuestionsUseCase;
+        return new GetQuestionsUseCase(this.questionRepository);
     }
 
     getSubmitQuizUseCase(): SubmitQuizUseCase {
-        return this.submitQuizUseCase;
+        return new SubmitQuizUseCase(this.questionRepository);
     }
 
     // Getters for auth datasources
@@ -164,6 +193,27 @@ class DIContainer {
     // Getters for student use cases
     get getStudentInfoUseCase(): GetStudentInfoUseCase {
         return new GetStudentInfoUseCase(this.studentRepository);
+    }
+
+    // Getters for classe datasources
+    get classeDataSource(): ClasseDataSourceImpl {
+        if (!this._classeDataSource) {
+            this._classeDataSource = new ClasseDataSourceImpl();
+        }
+        return this._classeDataSource;
+    }
+
+    // Getters for classe repositories
+    get classeRepository(): ClasseRepositoryImpl {
+        if (!this._classeRepository) {
+            this._classeRepository = new ClasseRepositoryImpl(this.classeDataSource);
+        }
+        return this._classeRepository;
+    }
+
+    // Getters for classe use cases
+    getGetClassesUseCase(): GetClassesUseCase {
+        return new GetClassesUseCase(this.classeRepository);
     }
 }
 

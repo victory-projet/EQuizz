@@ -11,7 +11,8 @@ class EvaluationRepository {
     return db.Evaluation.findAll({
       include: [
         { model: db.Cours },
-        { model: db.Quizz }
+        { model: db.Quizz },
+        { model: db.Classe } // Inclure les classes associées
       ],
       order: [['dateDebut', 'DESC']]
     });
@@ -21,7 +22,8 @@ class EvaluationRepository {
     return db.Evaluation.findByPk(id, {
       include: [
         { model: db.Cours },
-        { model: db.Quizz, include: [db.Question] } // Inclure les questions du quizz
+        { model: db.Quizz, include: [db.Question] }, // Inclure les questions du quizz
+        { model: db.Classe } // Inclure les classes associées
       ]
     });
   }

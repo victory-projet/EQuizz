@@ -11,6 +11,10 @@ API RESTful pour la plateforme EQuizz, un système d'évaluation anonyme pour é
 - **JWT** - Authentification
 - **SendGrid** - Envoi d'emails
 - **Bcrypt** - Hachage des mots de passe
+- **Sentiment** - Analyse de sentiments (fallback)
+- **Google Generative AI** - Analyse avancée avec Gemini (optionnel)
+- **PDFKit** - Génération de PDF
+- **ExcelJS** - Import/Export Excel
 
 ## 📋 Prérequis
 
@@ -51,6 +55,9 @@ JWT_EXPIRES_IN=8h
 SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 SENDGRID_VERIFIED_SENDER=votre.email@verifie.com
 
+# Google AI Studio (Gemini) - Optionnel pour analyse de sentiments avancée
+GOOGLE_AI_API_KEY=AIzaSy...votre-cle-ici
+
 # Serveur
 PORT=8080
 NODE_ENV=development
@@ -85,26 +92,91 @@ npm start
 - `POST /api/auth/login` - Connexion (email/matricule + mot de passe)
 - `POST /api/auth/claim-account` - Activation de compte étudiant
 
+### Dashboard
+- `GET /api/dashboard/admin` - Dashboard administrateur (statistiques globales)
+- `GET /api/dashboard/student` - Dashboard étudiant (quizz, notifications)
+- `GET /api/dashboard/evaluation/:id` - Statistiques d'une évaluation
+
 ### Étudiant
 - `GET /api/student/me` - Informations de l'étudiant connecté
 - `GET /api/student/quizzes` - Liste des quizz disponibles avec statut
 - `GET /api/student/quizzes/:id` - Détails d'un quizz
 - `POST /api/student/quizzes/:id/submit` - Soumettre des réponses
+- `GET /api/student/notifications` - Liste des notifications
+- `PUT /api/student/notifications/:id/read` - Marquer comme lue
+- `PUT /api/student/notifications/read-all` - Tout marquer comme lu
 
 ### Administration Académique
 - `GET /api/academic/classes` - Liste des classes
 - `POST /api/academic/classes` - Créer une classe
-- `GET /api/academic/courses` - Liste des cours
-- `POST /api/academic/students/import` - Importer des étudiants (CSV/Excel)
+- `GET /api/academic/cours` - Liste des cours
+- `POST /api/academic/cours` - Créer un cours
+- `POST /api/academic/etudiants/import` - Importer des étudiants (CSV/Excel)
+- `GET /api/academic/annees-academiques` - Années académiques
+- `GET /api/academic/semestres` - Semestres
 
 ### Évaluations
 - `GET /api/evaluations` - Liste des évaluations
-- `POST /api/evaluations` - Créer une évaluation
-- `GET /api/evaluations/:id/results` - Résultats d'une évaluation
+- `POST /api/evaluations` - Créer une évaluation (statut BROUILLON)
+- `GET /api/evaluations/:id` - Détails d'une évaluation
+- `PUT /api/evaluations/:id` - Modifier une évaluation
+- `DELETE /api/evaluations/:id` - Supprimer une évaluation
+- `POST /api/evaluations/:id/publish` - **Publier une évaluation** (envoie notifications)
+- `POST /api/evaluations/quizz/:quizzId/questions` - Ajouter une question
+- `POST /api/evaluations/quizz/:quizzId/import` - Importer questions (Excel)
+- `PUT /api/evaluations/questions/:questionId` - Modifier une question
+- `DELETE /api/evaluations/questions/:questionId` - Supprimer une question
+
+### Rapports et Statistiques
+- `GET /api/reports/:id` - Rapport complet d'une évaluation
+- `GET /api/reports/:id?classeId=xxx` - Rapport filtré par classe
+- `GET /api/reports/:id/pdf` - **Export PDF du rapport**
+
+### Notifications
+- `GET /api/notifications` - Liste des notifications
+- `PUT /api/notifications/:id/read` - Marquer comme lue
+- `PUT /api/notifications/read-all` - Tout marquer comme lu
 
 ### Initialisation (Développement uniquement)
 - `POST /api/init/seed` - Peupler la base avec des données de test
 - `POST /api/init/reset` - Réinitialiser la base de données
+
+📖 **Documentation complète**: Voir [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
+
+## ✨ Fonctionnalités Principales
+
+### 🎯 Dashboard Intelligent
+- **Admin**: Vue d'ensemble complète (statistiques, évaluations récentes, taux de participation)
+- **Étudiant**: Quizz disponibles, complétés, notifications non lues
+
+### 📊 Rapports Avancés
+- Statistiques détaillées par évaluation
+- Répartition des réponses QCM (graphiques)
+- **Analyse de sentiments** automatique des réponses ouvertes
+- Extraction de mots-clés
+- Filtrage par classe
+- **Export PDF** professionnel
+
+### 🔔 Système de Notifications
+- Notifications automatiques lors de la publication d'évaluations
+- Envoi d'emails via SendGrid
+- Marquage lu/non lu
+- Historique complet
+
+### 📝 Gestion des Évaluations
+- Workflow complet: Brouillon → Publication → Clôture
+- Import de questions depuis Excel
+- Ajout manuel de questions
+- Publication avec notifications automatiques
+
+### 🤖 Analyse de Sentiments
+- **Analyse avancée avec Google Gemini AI** (optionnel)
+- Analyse automatique des réponses textuelles
+- Classification: Positif / Neutre / Négatif
+- Score de sentiment (-1 à 1)
+- Extraction intelligente de mots-clés
+- **Résumés automatiques** des commentaires
+- Fallback sur analyse basique si Gemini non configuré
 
 ## 🔐 Système d'Anonymat
 
@@ -131,6 +203,27 @@ npm run start:dev      # Démarrer en développement (nodemon)
 npm run db:sync        # Synchroniser la base de données
 npm run lint           # Vérifier le code (ESLint)
 npm run lint:fix       # Corriger automatiquement les erreurs
+
+# Tests
+npm test               # Lancer tous les tests
+npm run test:unit      # Tests unitaires
+npm run test:integration # Tests d'intégration
+npm run test:e2e       # Tests end-to-end
+npm run test:watch     # Mode watch (développement)
+npm run test:coverage  # Couverture de code
+```
+
+### Scripts Interactifs
+
+**Linux/Mac**:
+```bash
+chmod +x run-tests.sh
+./run-tests.sh
+```
+
+**Windows**:
+```bash
+run-tests.bat
 ```
 
 ## 📁 Structure du Projet
@@ -140,14 +233,32 @@ backend/
 ├── src/
 │   ├── config/          # Configuration (DB, JWT, etc.)
 │   ├── controllers/     # Contrôleurs (logique des routes)
+│   │   ├── dashboard.controller.js
+│   │   ├── notification.controller.js
+│   │   ├── report.controller.js
+│   │   └── ...
 │   ├── middlewares/     # Middlewares (auth, validation)
 │   ├── models/          # Modèles Sequelize
+│   │   ├── Notification.js
+│   │   ├── AnalyseReponse.js
+│   │   └── ...
 │   ├── repositories/    # Couche d'accès aux données
 │   ├── routes/          # Définition des routes
+│   │   ├── dashboard.routes.js
+│   │   ├── notification.routes.js
+│   │   ├── report.routes.js
+│   │   └── ...
 │   └── services/        # Logique métier
-├── app.js              # Point d'entrée de l'application
+│       ├── dashboard.service.js
+│       ├── notification.service.js
+│       ├── report.service.js
+│       ├── sentiment.service.js
+│       └── ...
+├── app.js                      # Point d'entrée
 ├── package.json
-└── .env                # Variables d'environnement (à créer)
+├── .env                        # Variables d'environnement
+├── API_DOCUMENTATION.md        # Documentation API complète
+└── FEATURES_IMPLEMENTATION.md  # État des fonctionnalités
 ```
 
 ## 🚢 Déploiement

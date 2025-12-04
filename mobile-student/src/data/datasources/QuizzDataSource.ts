@@ -1,7 +1,7 @@
 import apiClient from '../../core/api';
 import { Evaluation } from '../../domain/entities/Evaluation';
 import { Quizz, QuizzSubmission } from '../../domain/entities/Quizz';
-import axios from 'axios';
+import { ErrorHandlerService } from '../../core/services/errorHandler.service';
 
 /**
  * Interface de la source de données pour les quizz
@@ -24,20 +24,9 @@ export class QuizzDataSourceImpl implements QuizzDataSource {
       console.log('✅ Quizzes fetched:', response.data.length, 'quiz(zes)');
       return response.data;
     } catch (error) {
-      console.error('❌ Error fetching quizzes:', error);
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          throw new Error('Non authentifié. Veuillez vous reconnecter.');
-        } else if (error.response) {
-          console.error('Response error:', error.response.status, error.response.data);
-          const message = error.response.data?.message || 'Erreur lors de la récupération des quizz';
-          throw new Error(message);
-        } else if (error.request) {
-          console.error('Request error - no response received');
-          throw new Error('Impossible de contacter le serveur. Vérifiez votre connexion.');
-        }
-      }
-      throw new Error('Une erreur inattendue est survenue');
+      ErrorHandlerService.logError(error, 'QuizzDataSource.getAvailableQuizzes');
+      const userError = ErrorHandlerService.handleError(error);
+      throw new Error(userError.message);
     }
   }
 
@@ -48,22 +37,9 @@ export class QuizzDataSourceImpl implements QuizzDataSource {
       console.log('✅ Quiz details fetched:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Error fetching quiz details:', error);
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          throw new Error('Non authentifié. Veuillez vous reconnecter.');
-        } else if (error.response?.status === 404) {
-          console.error('404 Error details:', error.response.data);
-          throw new Error('Quizz non trouvé');
-        } else if (error.response) {
-          console.error('Response error:', error.response.status, error.response.data);
-          const message = error.response.data?.message || 'Erreur lors de la récupération du quizz';
-          throw new Error(message);
-        } else if (error.request) {
-          throw new Error('Impossible de contacter le serveur. Vérifiez votre connexion.');
-        }
-      }
-      throw new Error('Une erreur inattendue est survenue');
+      ErrorHandlerService.logError(error, 'QuizzDataSource.getQuizzDetails');
+      const userError = ErrorHandlerService.handleError(error);
+      throw new Error(userError.message);
     }
   }
 
@@ -71,19 +47,9 @@ export class QuizzDataSourceImpl implements QuizzDataSource {
     try {
       await apiClient.post(`/student/quizzes/${quizzId}/submit`, submission);
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          throw new Error('Non authentifié. Veuillez vous reconnecter.');
-        } else if (error.response?.status === 404) {
-          throw new Error('Quizz non trouvé');
-        } else if (error.response) {
-          const message = error.response.data?.message || 'Erreur lors de la soumission des réponses';
-          throw new Error(message);
-        } else if (error.request) {
-          throw new Error('Impossible de contacter le serveur. Vérifiez votre connexion.');
-        }
-      }
-      throw new Error('Une erreur inattendue est survenue');
+      ErrorHandlerService.logError(error, 'QuizzDataSource.submitAnswers');
+      const userError = ErrorHandlerService.handleError(error);
+      throw new Error(userError.message);
     }
   }
 }

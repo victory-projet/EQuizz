@@ -20,6 +20,7 @@ const SessionToken = require('./SessionToken');
 const ReponseEtudiant = require('./ReponseEtudiant');
 const Notification = require('./Notification');
 const AnalyseReponse = require('./AnalyseReponse');
+const PasswordResetToken = require('./PasswordResetToken');
 const { DataTypes } = require('sequelize');
 
 // --- Centralisation dans un objet 'db' ---
@@ -43,6 +44,7 @@ db.SessionToken = SessionToken;
 db.ReponseEtudiant = ReponseEtudiant;
 db.Notification = Notification;
 db.AnalyseReponse = AnalyseReponse;
+db.PasswordResetToken = PasswordResetToken;
 
 // --- Définition de toutes les Relations (Associations) ---
 
@@ -60,8 +62,14 @@ Etudiant.belongsTo(Utilisateur, { foreignKey: 'id' });
 Ecole.hasMany(Classe, { foreignKey: { name: 'ecole_id', allowNull: false } });
 Classe.belongsTo(Ecole, { foreignKey: 'ecole_id' });
 
+AnneeAcademique.hasMany(Classe, { foreignKey: 'anneeAcademiqueId' });
+Classe.belongsTo(AnneeAcademique, { foreignKey: 'anneeAcademiqueId' });
+
 AnneeAcademique.hasMany(Semestre, { foreignKey: { name: 'annee_academique_id', allowNull: false }, onDelete: 'CASCADE' });
 Semestre.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id' });
+
+AnneeAcademique.hasMany(Cours, { foreignKey: { name: 'annee_academique_id', allowNull: true } });
+Cours.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id' });
 
 Semestre.hasMany(Cours, { foreignKey: { name: 'semestre_id', allowNull: false } });
 Cours.belongsTo(Semestre, { foreignKey: 'semestre_id' });
@@ -93,14 +101,21 @@ Question.belongsTo(Quizz, { foreignKey: 'quizz_id' });
 
 
 // --- 4. Processus de Réponse (Anonyme) ---
-Evaluation.hasMany(SessionReponse, { foreignKey: { name: 'evaluation_id', allowNull: false } });
-SessionReponse.belongsTo(Evaluation, { foreignKey: 'evaluation_id' });
+Quizz.hasMany(SessionReponse, { foreignKey: { name: 'quizz_id', allowNull: false } });
+SessionReponse.belongsTo(Quizz, { foreignKey: 'quizz_id' });
+
+Etudiant.hasMany(SessionReponse, { foreignKey: { name: 'etudiant_id', allowNull: false } });
+SessionReponse.belongsTo(Etudiant, { foreignKey: 'etudiant_id' });
 
 SessionReponse.hasMany(ReponseEtudiant, { foreignKey: { name: 'session_reponse_id', allowNull: false }, onDelete: 'CASCADE' });
 ReponseEtudiant.belongsTo(SessionReponse, { foreignKey: 'session_reponse_id' });
 
 Question.hasMany(ReponseEtudiant, { foreignKey: { name: 'question_id', allowNull: false } });
 ReponseEtudiant.belongsTo(Question, { foreignKey: 'question_id' });
+
+// Relation SessionToken pour l'anonymat
+Etudiant.hasMany(SessionToken, { foreignKey: { name: 'etudiant_id', allowNull: false } });
+SessionToken.belongsTo(Etudiant, { foreignKey: 'etudiant_id' });
 
 
 // --- 5. Modules Annexes (Notification, Analyse) ---
@@ -122,5 +137,9 @@ Notification.belongsToMany(Etudiant, { through: NotificationEtudiant });
 const EvaluationClasse = sequelize.define('EvaluationClasse', {}, { freezeTableName: true, paranoid: false, underscored: true });
 Evaluation.belongsToMany(Classe, { through: EvaluationClasse });
 Classe.belongsToMany(Evaluation, { through: EvaluationClasse });
+
+// --- 6. Password Reset Tokens ---
+Utilisateur.hasMany(PasswordResetToken, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });
+PasswordResetToken.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
 
 module.exports = db;

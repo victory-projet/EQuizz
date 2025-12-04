@@ -124,7 +124,7 @@ export default function QuizDetailScreen() {
                 [
                   {
                     text: 'OK',
-                    onPress: () => router.replace('/(tabs)/quizzes' as any),
+                    onPress: () => router.replace('/(tabs)/accueil'),
                   },
                 ]
               );

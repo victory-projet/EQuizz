@@ -1,1 +1,747 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #2C3E50;
+  background: #F5F7FA;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+a {
+  color: #5B7396;
+  text-decoration: none;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #4A5F7F;
+  }
+}
+
+button {
+  font-family: inherit;
+}
+
+input, textarea, select {
+  font-family: inherit;
+}
+
+// Material Icons
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+// Utility Classes
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mt-4 { margin-top: 32px; }
+
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }
+.mb-4 { margin-bottom: 32px; }
+
+.p-1 { padding: 8px; }
+.p-2 { padding: 16px; }
+.p-3 { padding: 24px; }
+.p-4 { padding: 32px; }
+
+// Card Styles
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2C3E50;
+    margin: 0;
+  }
+}
+
+// Button Styles
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &.btn-primary {
+    background: #5B7396;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: #4A5F7F;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(91, 115, 150, 0.3);
+    }
+  }
+
+  &.btn-secondary {
+    background: #E0E6ED;
+    color: #2C3E50;
+
+    &:hover:not(:disabled) {
+      background: #D0D6DD;
+    }
+  }
+
+  &.btn-success {
+    background: #27AE60;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: #229954;
+    }
+  }
+
+  &.btn-danger {
+    background: #E74C3C;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: #C0392B;
+    }
+  }
+
+  &.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  &.btn-lg {
+    padding: 14px 28px;
+    font-size: 16px;
+  }
+}
+
+// Table Styles
+.table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+
+  thead {
+    background: #F5F7FA;
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 600;
+      color: #7F8C8D;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #E0E6ED;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #E0E6ED;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #F5F7FA;
+      }
+
+      td {
+        padding: 16px;
+        font-size: 14px;
+        color: #2C3E50;
+      }
+    }
+  }
+}
+
+// Badge Styles
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.badge-success {
+    background: #D5F5E3;
+    color: #27AE60;
+  }
+
+  &.badge-warning {
+    background: #FCF3CF;
+    color: #F39C12;
+  }
+
+  &.badge-danger {
+    background: #FADBD8;
+    color: #E74C3C;
+  }
+
+  &.badge-info {
+    background: #D6EAF8;
+    color: #3498DB;
+  }
+
+  &.badge-secondary {
+    background: #E0E6ED;
+    color: #7F8C8D;
+  }
+}
+
+// Form Styles
+.form-group {
+  margin-bottom: 20px;
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2C3E50;
+  }
+
+  input, textarea, select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #E0E6ED;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: #5B7396;
+      box-shadow: 0 0 0 3px rgba(91, 115, 150, 0.1);
+    }
+
+    &::placeholder {
+      color: #BDC3C7;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+}
+
+// Scrollbar Styles
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F5F7FA;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #BDC3C7;
+  border-radius: 4px;
+
+  &:hover {
+    background: #95A5A6;
+  }
+}
+
+// ============================================
+// PHASE 16: ANIMATIONS & TRANSITIONS
+// ============================================
+
+// Loading Animations
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Loading Spinner
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #5B7396;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinner-sm {
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
+}
+
+.spinner-lg {
+  width: 60px;
+  height: 60px;
+  border-width: 4px;
+}
+
+// Skeleton Loading
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+
+  &.skeleton-text {
+    height: 16px;
+    margin-bottom: 8px;
+  }
+
+  &.skeleton-title {
+    height: 24px;
+    width: 60%;
+    margin-bottom: 12px;
+  }
+
+  &.skeleton-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+
+  &.skeleton-card {
+    height: 200px;
+    border-radius: 12px;
+  }
+}
+
+// Transition Classes
+.fade-enter {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-down-enter {
+  animation: slideDown 0.3s ease-out;
+}
+
+.slide-up-enter {
+  animation: slideUp 0.3s ease-out;
+}
+
+.zoom-enter {
+  animation: zoomIn 0.3s ease-out;
+}
+
+// Smooth Transitions
+.smooth-transition {
+  transition: all 0.3s ease;
+}
+
+.smooth-transition-fast {
+  transition: all 0.15s ease;
+}
+
+.smooth-transition-slow {
+  transition: all 0.5s ease;
+}
+
+// Hover Effects
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.hover-scale {
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.hover-glow {
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 0 20px rgba(91, 115, 150, 0.3);
+  }
+}
+
+// ============================================
+// RESPONSIVE UTILITIES
+// ============================================
+
+// Display Utilities
+.hide-mobile {
+  @media (max-width: 767px) {
+    display: none !important;
+  }
+}
+
+.hide-tablet {
+  @media (min-width: 768px) and (max-width: 1024px) {
+    display: none !important;
+  }
+}
+
+.hide-desktop {
+  @media (min-width: 1025px) {
+    display: none !important;
+  }
+}
+
+.show-mobile {
+  display: none !important;
+  @media (max-width: 767px) {
+    display: block !important;
+  }
+}
+
+.show-tablet {
+  display: none !important;
+  @media (min-width: 768px) and (max-width: 1024px) {
+    display: block !important;
+  }
+}
+
+.show-desktop {
+  display: none !important;
+  @media (min-width: 1025px) {
+    display: block !important;
+  }
+}
+
+// Responsive Text
+@media (max-width: 767px) {
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 20px !important; }
+  h3 { font-size: 18px !important; }
+  h4 { font-size: 16px !important; }
+  h5 { font-size: 14px !important; }
+  h6 { font-size: 12px !important; }
+
+  .text-mobile-center {
+    text-align: center !important;
+  }
+}
+
+// Responsive Spacing
+@media (max-width: 767px) {
+  .mt-mobile-1 { margin-top: 4px !important; }
+  .mt-mobile-2 { margin-top: 8px !important; }
+  .mt-mobile-3 { margin-top: 12px !important; }
+  .mt-mobile-4 { margin-top: 16px !important; }
+
+  .mb-mobile-1 { margin-bottom: 4px !important; }
+  .mb-mobile-2 { margin-bottom: 8px !important; }
+  .mb-mobile-3 { margin-bottom: 12px !important; }
+  .mb-mobile-4 { margin-bottom: 16px !important; }
+
+  .p-mobile-1 { padding: 4px !important; }
+  .p-mobile-2 { padding: 8px !important; }
+  .p-mobile-3 { padding: 12px !important; }
+  .p-mobile-4 { padding: 16px !important; }
+}
+
+// Responsive Card
+@media (max-width: 767px) {
+  .card {
+    padding: 16px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+
+    h2 {
+      font-size: 18px;
+    }
+  }
+}
+
+// Responsive Table
+@media (max-width: 767px) {
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 600px;
+
+    thead th {
+      padding: 8px 12px;
+      font-size: 11px;
+    }
+
+    tbody td {
+      padding: 12px;
+      font-size: 13px;
+    }
+  }
+}
+
+// Responsive Buttons
+@media (max-width: 767px) {
+  .btn {
+    padding: 8px 16px;
+    font-size: 13px;
+
+    &.btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    &.btn-lg {
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+
+    &.btn-block-mobile {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+// Responsive Form
+@media (max-width: 767px) {
+  .form-group {
+    margin-bottom: 16px;
+
+    label {
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    input, textarea, select {
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+  }
+}
+
+// Touch-friendly
+@media (hover: none) and (pointer: coarse) {
+  button, a, .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+// Accessibility
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// Focus Visible
+*:focus-visible {
+  outline: 2px solid #5B7396;
+  outline-offset: 2px;
+}
+
+// Reduced Motion
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// ============================================
+// PHASE 18: IMAGE OPTIMIZATION
+// ============================================
+
+// Lazy Loading Images
+img.lazy-loading {
+  filter: blur(5px);
+  transition: filter 0.3s ease;
+}
+
+img.lazy-loaded {
+  filter: blur(0);
+  animation: fadeIn 0.3s ease-out;
+}
+
+img.lazy-error {
+  background: #f3f4f6;
+  border: 1px dashed #d1d5db;
+}
+
+// Responsive Images
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+// Image Aspect Ratios
+.aspect-ratio-16-9 {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.aspect-ratio-4-3 {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.aspect-ratio-1-1 {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}

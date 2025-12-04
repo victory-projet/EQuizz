@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "equizz-admin-web": {
+    "frontend-admin": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -47,7 +47,26 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": true
+                },
+                "fonts": {
+                  "inline": true
+                }
+              },
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
@@ -61,10 +80,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "equizz-admin-web:build:production"
+              "buildTarget": "frontend-admin:build:production"
             },
             "development": {
-              "buildTarget": "equizz-admin-web:build:development"
+              "buildTarget": "frontend-admin:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -75,6 +94,7 @@
         "test": {
           "builder": "@angular/build:karma",
           "options": {
+            "karmaConfig": "karma.conf.js",
             "polyfills": [
               "zone.js",
               "zone.js/testing"

@@ -6,6 +6,8 @@ const anneeAcademiqueController = require('../controllers/anneeAcademique.contro
 const semestreController = require('../controllers/semestre.controller');
 const coursController = require('../controllers/cours.controller');
 const classeController = require('../controllers/classe.controller');
+const etudiantController = require('../controllers/etudiant.controller');
+const enseignantController = require('../controllers/enseignant.controller');
 
 // Route publique pour obtenir les classes (utile pour le formulaire d'activation)
 router.get('/classes/public', classeController.findAll);
@@ -76,6 +78,26 @@ router.delete('/classes/:id', classeController.delete);
 router.post('/classes/:classeId/cours/:coursId', classeController.addCoursToClasse);
 // DELETE /api/academic/classes/:classeId/cours/:coursId - Dissocier un cours d'une classe
 router.delete('/classes/:classeId/cours/:coursId', classeController.removeCoursFromClasse);
+
+// --- Routes pour la relation Classe <-> Étudiant ---
+// POST /api/academic/classes/:classeId/etudiants/:etudiantId - Assigner un étudiant à une classe
+router.post('/classes/:classeId/etudiants/:etudiantId', classeController.addEtudiantToClasse);
+// DELETE /api/academic/classes/:classeId/etudiants/:etudiantId - Retirer un étudiant d'une classe
+router.delete('/classes/:classeId/etudiants/:etudiantId', classeController.removeEtudiantFromClasse);
+
+// --- Routes pour la gestion des Étudiants (CRUD) ---
+router.post('/etudiants', etudiantController.create);
+router.get('/etudiants', etudiantController.findAll);
+router.get('/etudiants/:id', etudiantController.findOne);
+router.put('/etudiants/:id', etudiantController.update);
+router.delete('/etudiants/:id', etudiantController.delete);
+
+// --- Routes pour la gestion des Enseignants (CRUD) ---
+router.post('/enseignants', enseignantController.create);
+router.get('/enseignants', enseignantController.findAll);
+router.get('/enseignants/:id', enseignantController.findOne);
+router.put('/enseignants/:id', enseignantController.update);
+router.delete('/enseignants/:id', enseignantController.delete);
 
 
 module.exports = router;

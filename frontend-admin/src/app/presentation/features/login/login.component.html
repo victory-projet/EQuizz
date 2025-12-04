@@ -1,0 +1,187 @@
+<div class="login-container">
+  <!-- Background Image -->
+  <div class="background-image"></div>
+  
+  <!-- Overlay -->
+  <div class="overlay"></div>
+
+  <!-- Login Card -->
+  <div class="login-card">
+    <!-- Logo -->
+    <div class="logo-container">
+      <div class="logo">
+        <span class="material-icons">school</span>
+      </div>
+      <h1 class="app-name">EQuizz</h1>
+      <p class="app-tagline">Plateforme d'évaluation des enseignements</p>
+    </div>
+
+    <!-- Login Form -->
+    @if (!isForgotPasswordMode()) {
+      <form class="login-form" (ngSubmit)="onSubmit()">
+        <h2 class="form-title">Connexion</h2>
+        <p class="form-subtitle">Accédez à votre espace administrateur</p>
+
+        <!-- Error Message -->
+        @if (errorMessage()) {
+          <div class="alert alert-error">
+            <span class="material-icons">error</span>
+            <span>{{ errorMessage() }}</span>
+          </div>
+        }
+
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email">Adresse email</label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">email</span>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              [(ngModel)]="credentials.email"
+              placeholder="votre.email@example.com"
+              required
+              autocomplete="email"
+            />
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">lock</span>
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              id="password"
+              name="password"
+              [(ngModel)]="credentials.motDePasse"
+              placeholder="••••••••"
+              required
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              (click)="togglePassword()"
+              tabindex="-1"
+            >
+              <span class="material-icons">
+                {{ showPassword() ? 'visibility_off' : 'visibility' }}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember Me & Forgot Password -->
+        <div class="form-options">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="rememberMe()"
+              (change)="toggleRememberMe()"
+            />
+            <span class="checkbox-custom"></span>
+            <span class="checkbox-text">Se souvenir de moi</span>
+          </label>
+
+          <button
+            type="button"
+            class="link-button"
+            (click)="switchToForgotPassword()"
+          >
+            Mot de passe oublié ?
+          </button>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          class="submit-button"
+          [disabled]="isLoading() || !credentials.email || !credentials.motDePasse"
+        >
+          @if (isLoading()) {
+            <span class="spinner"></span>
+            <span>Connexion en cours...</span>
+          } @else {
+            <span>Se connecter</span>
+            <span class="material-icons">arrow_forward</span>
+          }
+        </button>
+
+        <!-- Footer -->
+        <div class="form-footer">
+          <p>© 2025 EQuizz. Tous droits réservés.</p>
+        </div>
+      </form>
+    }
+
+    <!-- Forgot Password Form -->
+    @if (isForgotPasswordMode()) {
+      <form class="login-form" (ngSubmit)="onForgotPasswordSubmit()">
+        <button
+          type="button"
+          class="back-button"
+          (click)="switchToLogin()"
+        >
+          <span class="material-icons">arrow_back</span>
+          <span>Retour</span>
+        </button>
+
+        <h2 class="form-title">Mot de passe oublié ?</h2>
+        <p class="form-subtitle">
+          Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+        </p>
+
+        <!-- Success Message -->
+        @if (successMessage()) {
+          <div class="alert alert-success">
+            <span class="material-icons">check_circle</span>
+            <span>{{ successMessage() }}</span>
+          </div>
+        }
+
+        <!-- Error Message -->
+        @if (errorMessage()) {
+          <div class="alert alert-error">
+            <span class="material-icons">error</span>
+            <span>{{ errorMessage() }}</span>
+          </div>
+        }
+
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="forgot-email">Adresse email</label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">email</span>
+            <input
+              type="email"
+              id="forgot-email"
+              name="forgot-email"
+              [(ngModel)]="forgotPasswordEmail"
+              placeholder="votre.email@example.com"
+              required
+              autocomplete="email"
+            />
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          class="submit-button"
+          [disabled]="isLoading() || !forgotPasswordEmail"
+        >
+          @if (isLoading()) {
+            <span class="spinner"></span>
+            <span>Envoi en cours...</span>
+          } @else {
+            <span>Envoyer le lien</span>
+            <span class="material-icons">send</span>
+          }
+        </button>
+      </form>
+    }
+  </div>
+</div>

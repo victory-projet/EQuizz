@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../presentation/hooks/useAuth';
-import { PrimaryButton } from '../../presentation/components/PrimaryButton';
 
 export default function Profil() {
     const { utilisateur, logout } = useAuth();
@@ -18,14 +17,17 @@ export default function Profil() {
             'Êtes-vous sûr de vouloir vous déconnecter ?',
             [
                 { text: 'Annuler', style: 'cancel' },
-                { text: 'Se déconnecter', onPress: async () => await logout(), style: 'destructive' }
+                { 
+                    text: 'Se déconnecter', 
+                    onPress: async () => await logout(), 
+                    style: 'destructive' 
+                }
             ]
         );
     };
 
     const handleChangeAvatar = async () => {
         try {
-            // Demander la permission d'accéder à la galerie
             const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
             
             if (!permissionResult.granted) {
@@ -36,7 +38,6 @@ export default function Profil() {
                 return;
             }
 
-            // Ouvrir le sélecteur d'images
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ['images'],
                 allowsEditing: true,
@@ -48,13 +49,17 @@ export default function Profil() {
                 const imageUri = result.assets[0].uri;
                 setAvatarUri(imageUri);
                 console.log('📸 Image sélectionnée:', imageUri);
-                // TODO: Uploader l'image vers le backend quand l'endpoint sera prêt
                 Alert.alert('Succès', 'Photo de profil mise à jour localement');
             }
         } catch (error) {
             console.error('Erreur lors de la sélection de l\'image:', error);
             Alert.alert('Erreur', 'Impossible de sélectionner l\'image');
         }
+    };
+
+    const getInitials = () => {
+        if (!utilisateur?.nom || !utilisateur?.prenom) return 'U';
+        return `${utilisateur.prenom[0]}${utilisateur.nom[0]}`.toUpperCase();
     };
 
     if (!utilisateur) {
@@ -76,9 +81,110 @@ export default function Profil() {
                     <MaterialIcons name="logout" size={24} color="#DC2626" />
                 </TouchableOpacity>
             </View>
-            <View >
-                <Text>Mon Profil</Text>                
+
+            {/* Avatar positionné au-dessus du header */}
+            <View style={styles.avatarSection}>
+                <TouchableOpacity 
+                    style={styles.avatarContainer} 
+                    onPress={handleChangeAvatar}
+                    activeOpacity={0.8}
+                >
+                    {avatarUri ? (
+                        <Image source={{ uri: avatarUri }} style={styles.avatar} />
+                    ) : (
+                        <View style={styles.avatarPlaceholder}>
+                            <Text style={styles.avatarInitials}>{getInitials()}</Text>
+                        </View>
+                    )}
+                    <View style={styles.cameraIconContainer}>
+                        <MaterialIcons name="camera-alt" size={20} color="#FFFFFF" />
+                    </View>
+                </TouchableOpacity>
             </View>
+
+            {/* Carte d'information principale */}
+            <View style={styles.infoCard}>
+                <Text style={styles.fullName}>
+                    {utilisateur.prenom} {utilisateur.nom}
+                </Text>
+                <Text style={styles.classInfo}>
+                    {utilisateur.Classe?.nom || 'Inge 4 - ISI FR'}
+                </Text>
+                <Text style={styles.schoolInfo}>
+                    {utilisateur.Ecole?.nom || 'Saint Jean Ingénieur'}
+                </Text>
+            </View>
+
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+
+                
+
+                {/* Section des champs de formulaire */}
+                <View style={styles.formSection}>
+                    {/* Nom & Prénom */}
+                    <View style={styles.formField}>
+                        <Text style={styles.fieldLabel}>Nom & Prénom</Text>
+                        <View style={styles.fieldValue}>
+                            <Text style={styles.fieldText}>
+                                {utilisateur.nom} {utilisateur.prenom}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Mot de passe (masqué) */}
+                    <View style={styles.formField}>
+                        <Text style={styles.fieldLabel}>Mot de passe</Text>
+                        <View style={styles.fieldValue}>
+                            <View style={styles.passwordRow}>
+                                <Text style={styles.passwordDots}>••••••••••••••••</Text>
+                                <MaterialIcons name="visibility-off" size={20} color="#9CA3AF" />
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Matricule */}
+                    <View style={styles.formField}>
+                        <Text style={styles.fieldLabel}>Matricule</Text>
+                        <View style={styles.fieldValue}>
+                            <Text style={styles.fieldText}>
+                                {utilisateur.matricule || '20210335'}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Année Académique */}
+                    <View style={styles.formField}>
+                        <Text style={styles.fieldLabel}>Année Académique</Text>
+                        <View style={styles.fieldValue}>
+                            <Text style={styles.fieldText}>
+                                {utilisateur.anneeScolaire || '2025-2026'}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Niveau */}
+                    <View style={styles.formField}>
+                        <Text style={styles.fieldLabel}>Niveau</Text>
+                        <View style={styles.fieldValue}>
+                            <Text style={styles.fieldText}>
+                                {utilisateur.Classe?.Niveau?.nom || '4'}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Classe */}
+                    <View style={styles.formField}>
+                        <Text style={styles.fieldLabel}>Classe</Text>
+                        <View style={styles.fieldValue}>
+                            <Text style={styles.fieldText}>
+                                {utilisateur.Classe?.nom || 'Inge ISI FR'}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+
+                <View style={styles.bottomSpacing} />
+            </ScrollView>
         </SafeAreaView>
     );
 }
@@ -89,50 +195,53 @@ const styles = StyleSheet.create({
         backgroundColor: '#F9FAFB',
     },
     header: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#3A5689',
         paddingHorizontal: 20,
         paddingTop: 50,
-        paddingBottom: 16,
+        paddingBottom: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#E5E7EB',
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        height: 120,
     },
     headerTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#111827',
+        color: 'white',
     },
     logoutIconButton: {
         padding: 8,
     },
     content: {
         flex: 1,
+        top:-40
     },
     avatarSection: {
         alignItems: 'center',
-        paddingVertical: 32,
-        backgroundColor: '#FFFFFF',
+        marginTop: -60,
+        zIndex: 10,
+        //marginBottom: 20,
     },
     avatarContainer: {
         position: 'relative',
     },
     avatar: {
-        width: 120,
-        height: 120,
+        width: 100,
+        height: 100,
         borderRadius: 60,
-        borderWidth: 4,
-        borderColor: '#3A5689',
+        borderWidth: 2,
+        borderColor: '#FFFFFF',
     },
     avatarPlaceholder: {
-        width: 120,
-        height: 120,
+        width: 100,
+        height: 100,
         borderRadius: 60,
         backgroundColor: '#3A5689',
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 4,
+        borderWidth: 2,
         borderColor: '#FFFFFF',
     },
     avatarInitials: {
@@ -154,36 +263,43 @@ const styles = StyleSheet.create({
         borderColor: '#FFFFFF',
     },
     infoCard: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'rgba(58, 86, 137, 0.5)',
         marginHorizontal: 20,
-        marginTop: 16,
+        //marginTop: 16,
         padding: 20,
-        borderRadius: 12,
+        borderRadius: 8,
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
         elevation: 3,
+        color: 'white',
+        borderColor: '#fff',
+        top: -60,
+        position: 'relative',
+        borderWidth:2,
+        height: 150,
+        paddingTop:65
     },
     fullName: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#111827',
+        //color: '#111827',
         marginBottom: 8,
+        color: 'white'
     },
     classInfo: {
         fontSize: 16,
-        color: '#6B7280',
+        //color: '#6B7280',
         marginBottom: 4,
+        color: 'white'
     },
     schoolInfo: {
         fontSize: 14,
-        color: '#9CA3AF',
+        //color: '#9CA3AF',
+        color: 'white'
     },
     formSection: {
         marginHorizontal: 20,
-        marginTop: 24,
+        //marginTop: 24,
+        
     },
     formField: {
         marginBottom: 16,
@@ -205,13 +321,18 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#1F2937',
     },
-    logoutButton: {
-        marginHorizontal: 20,
-        marginTop: 32,
-        backgroundColor: '#DC2626',
+    passwordRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    passwordDots: {
+        fontSize: 16,
+        color: '#1F2937',
+        letterSpacing: 2,
     },
     bottomSpacing: {
-        height: 40,
+        height: 10,
     },
     errorContainer: {
         flex: 1,

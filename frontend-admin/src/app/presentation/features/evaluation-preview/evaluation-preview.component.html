@@ -1,0 +1,132 @@
+<div class="preview-container">
+  @if (isLoading()) {
+    <div class="loading">Chargement...</div>
+  }
+
+  @if (!isLoading() && evaluation()) {
+    <!-- Header -->
+    <div class="preview-header">
+      <button class="btn-close" (click)="close()">
+        <span class="material-icons">close</span>
+      </button>
+      <div class="header-content">
+        <span class="preview-badge">MODE PRÉVISUALISATION</span>
+        <h1>{{ evaluation()!.titre }}</h1>
+        <div class="meta">
+          <span class="material-icons">event</span>
+          <span>{{ formatDate(evaluation()!.dateDebut) }} - {{ formatDate(evaluation()!.dateFin) }}</span>
+        </div>
+      </div>
+    </div>
+
+    @if (questions().length === 0) {
+      <div class="empty-state">
+        <span class="material-icons">quiz</span>
+        <h3>Aucune question</h3>
+        <p>Cette évaluation ne contient pas encore de questions</p>
+        <button class="btn-primary" (click)="close()">Retour</button>
+      </div>
+    }
+
+    @if (questions().length > 0 && currentQuestion()) {
+      <!-- Progress Bar -->
+      <div class="progress-section">
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="progress()"></div>
+        </div>
+        <div class="progress-text">
+          Question {{ currentQuestionIndex() + 1 }} sur {{ questions().length }}
+        </div>
+      </div>
+
+      <!-- Question Card -->
+      <div class="question-card">
+        <div class="question-header">
+          <span class="question-number">Q{{ currentQuestionIndex() + 1 }}</span>
+          <span class="question-type-badge">{{ getQuestionTypeLabel(currentQuestion()!.type) }}</span>
+        </div>
+
+        <div class="question-body">
+          <h2 class="question-text">{{ currentQuestion()!.enonce }}</h2>
+
+          @if ((currentQuestion()!.type === 'CHOIX_MULTIPLE' || currentQuestion()!.type === 'QCM') && currentQuestion()!.options && currentQuestion()!.options!.length > 0) {
+            <div class="options-list">
+              @for (option of currentQuestion()!.options; track $index) {
+                <div class="option-card">
+                  <div class="option-letter">{{ String.fromCharCode(65 + $index) }}</div>
+                  <div class="option-text">{{ option }}</div>
+                </div>
+              }
+            </div>
+          }
+
+          @if (currentQuestion()!.type === 'REPONSE_OUVERTE' || currentQuestion()!.type === 'TEXTE_LIBRE') {
+            <div class="text-response-placeholder">
+              <span class="material-icons">edit_note</span>
+              <p>Zone de réponse libre</p>
+            </div>
+          }
+
+          @if (currentQuestion()!.type === 'OUI_NON') {
+            <div class="yes-no-options">
+              <div class="option-card">
+                <span class="material-icons">check_circle</span>
+                <span>Oui</span>
+              </div>
+              <div class="option-card">
+                <span class="material-icons">cancel</span>
+                <span>Non</span>
+              </div>
+            </div>
+          }
+
+          @if (currentQuestion()!.type === 'ECHELLE') {
+            <div class="scale-options">
+              @for (num of [1, 2, 3, 4, 5]; track num) {
+                <div class="scale-item">{{ num }}</div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="navigation-section">
+        <button 
+          class="btn-nav" 
+          (click)="previousQuestion()" 
+          [disabled]="currentQuestionIndex() === 0">
+          <span class="material-icons">arrow_back</span>
+          Précédent
+        </button>
+
+        <div class="question-dots">
+          @for (q of questions(); track q.id; let i = $index) {
+            <button 
+              class="dot" 
+              [class.active]="i === currentQuestionIndex()"
+              (click)="goToQuestion(i)"
+              [attr.aria-label]="'Question ' + (i + 1)">
+            </button>
+          }
+        </div>
+
+        <button 
+          class="btn-nav" 
+          (click)="nextQuestion()" 
+          [disabled]="currentQuestionIndex() === questions().length - 1">
+          Suivant
+          <span class="material-icons">arrow_forward</span>
+        </button>
+      </div>
+    }
+  }
+
+  @if (errorMessage()) {
+    <div class="error-state">
+      <span class="material-icons">error</span>
+      <p>{{ errorMessage() }}</p>
+      <button class="btn-primary" (click)="close()">Retour</button>
+    </div>
+  }
+</div>
