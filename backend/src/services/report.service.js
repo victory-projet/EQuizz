@@ -292,7 +292,7 @@ class ReportService {
 
       questions.push(questionData);
     }
-    ```
+
     return questions;
   }
 
@@ -301,7 +301,7 @@ class ReportService {
    */
   async generatePDF(evaluationId, classeId = null) {
     const report = await this.generateReport(evaluationId, classeId);
-    
+
     return new Promise((resolve, reject) => {
       const doc = new PDFDocument({ margin: 50, size: 'A4', bufferPages: true });
       const chunks = [];
@@ -327,10 +327,10 @@ class ReportService {
       // Logo (simulé par un carré coloré si pas d'image) ou Nom de l'app
       doc.rect(50, 40, 40, 40).fill(colors.primary);
       doc.fontSize(20).fillColor('white').text('EQ', 57, 50); // EQuizz Initials
-      
+
       doc.fillColor(colors.primary);
       doc.fontSize(24).font('Helvetica-Bold').text('RAPPORT D\'ÉVALUATION', 110, 45);
-      doc.fontSize(10).font('Helvetica').fillColor(colors.secondaryText).text(`Généré le ${ new Date().toLocaleDateString('fr-FR') } `, 110, 75);
+      doc.fontSize(10).font('Helvetica').fillColor(colors.secondaryText).text('Généré le ' + new Date().toLocaleDateString('fr-FR'), 110, 75);
 
       // Ligne de séparation
       doc.moveTo(50, 95).lineTo(545, 95).strokeColor(colors.border).stroke();
@@ -341,14 +341,14 @@ class ReportService {
       const infoY = 110;
       this.drawInfoBlock(doc, 'ÉVALUATION', report.evaluation.titre, 50, infoY, 240, colors);
       this.drawInfoBlock(doc, 'COURS', report.evaluation.cours, 300, infoY, 240, colors);
-      
+
       doc.moveDown(4);
 
       // --- Statistiques Clés (Style KPI) ---
       this.drawSectionTitle(doc, 'PERFORMANCES', colors);
-      
+
       const statsY = doc.y + 15;
-      this.drawKpiBox(doc, 'Participation', `${ report.statistics.tauxParticipation }% `, 50, statsY, colors.accent);
+      this.drawKpiBox(doc, 'Participation', report.statistics.tauxParticipation + '%', 50, statsY, colors.accent);
       this.drawKpiBox(doc, 'Répondants', report.statistics.nombreRepondants.toString(), 215, statsY, colors.primary);
       this.drawKpiBox(doc, 'Cible', report.statistics.totalEtudiants.toString(), 380, statsY, colors.secondaryText);
 
@@ -389,8 +389,8 @@ class ReportService {
         }
 
         // En-tête question
-        doc.font('Helvetica-Bold').fontSize(11).fillColor(colors.primary).text(`Q${ index + 1 }. ${ q.enonce } `);
-        doc.font('Helvetica').fontSize(9).fillColor(colors.secondaryText).text(`${ q.typeQuestion } • ${ q.totalReponses } réponses`);
+        doc.font('Helvetica-Bold').fontSize(11).fillColor(colors.primary).text(`Q${index + 1}. ${q.enonce}`);
+        doc.font('Helvetica').fontSize(9).fillColor(colors.secondaryText).text(`${q.typeQuestion} • ${q.totalReponses} réponses`);
         doc.moveDown(0.5);
 
         // Tableau de réponses (si QCM)
@@ -399,7 +399,7 @@ class ReportService {
           const col1 = 50;
           const col2 = 350;
           const col3 = 450;
-          
+
           // Header tableau
           doc.rect(col1, tableTop, 495, 20).fill(colors.lightBg);
           doc.fillColor(colors.primary).font('Helvetica-Bold').fontSize(9);
@@ -412,15 +412,15 @@ class ReportService {
 
           Object.entries(q.distribution).forEach(([option, count]) => {
             const pct = q.distributionPct[option];
-            
+
             // Ligne
             doc.text(option, col1 + 10, rowY);
             doc.text(count.toString(), col2, rowY, { width: 80, align: 'right' });
-            doc.text(`${ pct }% `, col3, rowY, { width: 80, align: 'right' });
-            
+            doc.text(`${pct}%`, col3, rowY, { width: 80, align: 'right' });
+
             // Ligne de séparation fine
             doc.moveTo(col1, rowY + 12).lineTo(545, rowY + 12).strokeColor(colors.border).lineWidth(0.5).stroke();
-            
+
             rowY += 18;
           });
           doc.y = rowY + 10;
@@ -437,7 +437,7 @@ class ReportService {
         // Ligne pied de page
         doc.moveTo(50, 780).lineTo(545, 780).strokeColor(colors.border).lineWidth(1).stroke();
         doc.fontSize(8).fillColor(colors.secondaryText).text(
-          `EQuizz - Rapport généré automatiquement | Page ${ i + 1 } sur ${ range.count } `,
+          `EQuizz - Rapport généré automatiquement | Page ${i + 1} sur ${range.count}`,
           50,
           790,
           { align: 'center', width: 495 }
@@ -468,9 +468,9 @@ class ReportService {
   }
 
   drawSentimentBar(doc, label, pct, color, x, y) {
-    doc.font('Helvetica-Bold').fontSize(16).fillColor(color).text(`${ pct }% `, x, y);
+    doc.font('Helvetica-Bold').fontSize(16).fillColor(color).text(`${pct}%`, x, y);
     doc.font('Helvetica').fontSize(9).fillColor('#7F8C8D').text(label, x, y + 20);
-    
+
     // Petite barre visuelle
     const barWidth = 100;
     doc.rect(x, y + 35, barWidth, 4).fill('#E5E7EB');
@@ -479,4 +479,3 @@ class ReportService {
 }
 
 module.exports = new ReportService();
-```
