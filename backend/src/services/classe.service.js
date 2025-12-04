@@ -7,7 +7,7 @@ const coursRepository = require('../repositories/cours.repository');
 class ClasseService {
   async create(data) {
     let ecoleId = data.ecole_id;
-    
+
     // Si ecole_id n'est pas fourni, récupérer l'école depuis une classe existante ou la première école
     if (!ecoleId) {
       // Essayer de récupérer l'école depuis une classe existante
@@ -22,16 +22,16 @@ class ClasseService {
         }
       }
     }
-    
+
     if (!ecoleId) {
       throw new Error('École non trouvée. Impossible de créer la classe.');
     }
-    
+
     const ecole = await ecoleRepository.findById(ecoleId);
     if (!ecole) {
       throw new Error('École non trouvée. Impossible de créer la classe.');
     }
-    
+
     // Ajouter l'ecole_id aux données
     const dataWithEcole = { ...data, ecole_id: ecoleId };
     return classeRepository.create(dataWithEcole);
@@ -58,11 +58,11 @@ class ClasseService {
   }
 
   async delete(id) {
-    const result = await classeRepository.delete(id);
-    if (result === 0) {
+    const result = await classeRepository.update(id, { estArchive: true });
+    if (!result) {
       throw new Error('Classe non trouvée.');
     }
-    return { message: 'Classe supprimée avec succès.' };
+    return { message: 'Classe archivée avec succès.' };
   }
 
   // --- Logique pour la relation Plusieurs-à-Plusieurs ---

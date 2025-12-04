@@ -18,7 +18,7 @@ export class EvaluationsComponent implements OnInit {
   isLoading = signal(false);
   searchQuery = signal('');
   filterStatus = signal<string>('ALL');
-  
+
   // Stats
   totalQuiz = signal(0);
   activeQuiz = signal(0);
@@ -31,7 +31,7 @@ export class EvaluationsComponent implements OnInit {
   constructor(
     private evaluationUseCase: EvaluationUseCase,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadEvaluations();
@@ -70,19 +70,19 @@ export class EvaluationsComponent implements OnInit {
 
   applyFilters(): void {
     let filtered = this.evaluations();
-    
+
     if (this.filterStatus() !== 'ALL') {
       filtered = filtered.filter(e => e.statut === this.filterStatus());
     }
-    
+
     if (this.searchQuery()) {
       const query = this.searchQuery().toLowerCase();
-      filtered = filtered.filter(e => 
+      filtered = filtered.filter(e =>
         e.titre.toLowerCase().includes(query) ||
         (e.description && e.description.toLowerCase().includes(query))
       );
     }
-    
+
     this.filteredEvaluations.set(filtered);
   }
 
@@ -140,15 +140,15 @@ export class EvaluationsComponent implements OnInit {
   }
 
   deleteEvaluation(evaluation: Evaluation): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer l'évaluation "${evaluation.titre}" ?`)) {
+    if (confirm(`Êtes-vous sûr de vouloir archiver l'évaluation "${evaluation.titre}" ?`)) {
       this.evaluationUseCase.deleteEvaluation(evaluation.id as any).subscribe({
         next: () => {
-          this.successMessage.set('Évaluation supprimée avec succès');
+          this.successMessage.set('Évaluation archivée avec succès');
           this.loadEvaluations();
           setTimeout(() => this.successMessage.set(''), 3000);
         },
         error: (error) => {
-          this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
+          this.errorMessage.set(error.error?.message || 'Erreur lors de l\'archivage');
         }
       });
     }

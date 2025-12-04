@@ -47,11 +47,11 @@ class AnneeAcademiqueService {
   }
 
   async delete(id) {
-    const result = await anneeAcademiqueRepository.delete(id);
-    if (result === 0) {
+    const result = await anneeAcademiqueRepository.update(id, { estArchive: true });
+    if (!result) {
       throw new Error('Année académique non trouvée.');
     }
-    return { message: 'Année académique supprimée avec succès.' };
+    return { message: 'Année académique archivée avec succès.' };
   }
 }
 

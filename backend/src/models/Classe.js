@@ -8,8 +8,8 @@ const Classe = sequelize.define('Classe', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
-  
- 
+
+
   nom: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -27,6 +27,12 @@ const Classe = sequelize.define('Classe', {
     type: DataTypes.UUID,
     allowNull: true,
     field: 'annee_academique_id'
+  },
+
+  estArchive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
   }
 
 });

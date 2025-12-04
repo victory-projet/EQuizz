@@ -9,6 +9,7 @@ class ClasseRepository {
 
   async findAll() {
     return db.Classe.findAll({
+      where: { estArchive: false },
       include: [
         { model: db.Ecole }, // Inclure l'école à laquelle la classe appartient
         { model: db.AnneeAcademique }, // Inclure l'année académique

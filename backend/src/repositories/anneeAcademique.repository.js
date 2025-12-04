@@ -8,7 +8,10 @@ class AnneeAcademiqueRepository {
   }
 
   async findAll() {
-    return db.AnneeAcademique.findAll({ order: [['libelle', 'DESC']] });
+    return db.AnneeAcademique.findAll({
+      where: { estArchive: false },
+      order: [['libelle', 'DESC']]
+    });
   }
 
   async findById(id) {

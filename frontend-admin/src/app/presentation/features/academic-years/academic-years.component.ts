@@ -35,17 +35,17 @@ export class AcademicYearsComponent implements OnInit {
     dateFin: string;
     anneeAcademiqueId: string | number;
   } = {
-    libelle: '',
-    numero: 1,
-    dateDebut: '',
-    dateFin: '',
-    anneeAcademiqueId: ''
-  };
+      libelle: '',
+      numero: 1,
+      dateDebut: '',
+      dateFin: '',
+      anneeAcademiqueId: ''
+    };
 
   errorMessage = signal('');
   successMessage = signal('');
 
-  constructor(private academicUseCase: AcademicUseCase) {}
+  constructor(private academicUseCase: AcademicUseCase) { }
 
   ngOnInit(): void {
     this.loadAnneesAcademiques();
@@ -156,7 +156,7 @@ export class AcademicYearsComponent implements OnInit {
 
   onSubmitYear(): void {
     this.errorMessage.set('');
-    
+
     if (this.selectedAnnee()) {
       this.updateYear();
     } else {
@@ -216,7 +216,7 @@ export class AcademicYearsComponent implements OnInit {
     this.isLoading.set(true);
     this.academicUseCase.deleteAnneeAcademique(annee.id).subscribe({
       next: () => {
-        this.successMessage.set('Année académique supprimée avec succès');
+        this.successMessage.set('Année académique archivée avec succès');
         this.closeModal();
         this.loadAnneesAcademiques();
         setTimeout(() => this.successMessage.set(''), 3000);
@@ -230,7 +230,7 @@ export class AcademicYearsComponent implements OnInit {
 
   onSubmitSemestre(): void {
     this.errorMessage.set('');
-    
+
     if (this.selectedSemestre()) {
       this.updateSemestre();
     } else {
@@ -290,13 +290,13 @@ export class AcademicYearsComponent implements OnInit {
   }
 
   deleteSemestre(semestre: Semestre): void {
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer le ${semestre.libelle} ?`)) {
+    if (!confirm(`Êtes-vous sûr de vouloir archiver le ${semestre.libelle} ?`)) {
       return;
     }
 
     this.academicUseCase.deleteSemestre(semestre.id).subscribe({
       next: () => {
-        this.successMessage.set('Semestre supprimé avec succès');
+        this.successMessage.set('Semestre archivé avec succès');
         const annee = this.selectedAnnee();
         if (annee) {
           this.loadSemestres(annee.id);

@@ -37,11 +37,11 @@ class SemestreService {
   }
 
   async delete(id) {
-    const result = await semestreRepository.delete(id);
-    if (result === 0) {
+    const result = await semestreRepository.update(id, { estArchive: true });
+    if (!result) {
       throw new Error('Semestre non trouvé.');
     }
-    return { message: 'Semestre supprimé avec succès.' };
+    return { message: 'Semestre archivé avec succès.' };
   }
 }
 

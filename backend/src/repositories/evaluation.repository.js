@@ -9,6 +9,7 @@ class EvaluationRepository {
 
   async findAll() {
     return db.Evaluation.findAll({
+      where: { estArchive: false },
       include: [
         { model: db.Cours },
         { model: db.Quizz },
@@ -22,7 +23,14 @@ class EvaluationRepository {
     return db.Evaluation.findByPk(id, {
       include: [
         { model: db.Cours },
-        { model: db.Quizz, include: [db.Question] }, // Inclure les questions du quizz
+        {
+          model: db.Quizz,
+          include: [{
+            model: db.Question,
+            where: { estArchive: false },
+            required: false
+          }]
+        },
         { model: db.Classe } // Inclure les classes associées
       ]
     });

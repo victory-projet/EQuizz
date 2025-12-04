@@ -1,10 +1,10 @@
 <div class="classes-container">
   <!-- Success Message -->
   @if (successMessage()) {
-    <div class="alert alert-success">
-      <span class="material-icons">check_circle</span>
-      {{ successMessage() }}
-    </div>
+  <div class="alert alert-success">
+    <span class="material-icons">check_circle</span>
+    {{ successMessage() }}
+  </div>
   }
 
   <!-- Header -->
@@ -32,17 +32,17 @@
     </div>
 
     @for (annee of anneesAcademiques(); track annee.id) {
-      @if (annee.estCourante) {
-        <div class="stat-card stat-active">
-          <div class="stat-icon">
-            <span class="material-icons">school</span>
-          </div>
-          <div class="stat-content">
-            <div class="stat-label">{{ annee.libelle }}</div>
-            <div class="stat-value">{{ getClassesByAnnee(annee.id) }}</div>
-          </div>
-        </div>
-      }
+    @if (annee.estCourante) {
+    <div class="stat-card stat-active">
+      <div class="stat-icon">
+        <span class="material-icons">school</span>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">{{ annee.libelle }}</div>
+        <div class="stat-value">{{ getClassesByAnnee(annee.id) }}</div>
+      </div>
+    </div>
+    }
     }
   </div>
 
@@ -50,207 +50,177 @@
   <div class="filters-section">
     <div class="search-box">
       <span class="material-icons">search</span>
-      <input 
-        type="text" 
-        placeholder="Rechercher une classe..."
-        (input)="onSearch($event)"
-        [value]="searchQuery()"
-      >
+      <input type="text" placeholder="Rechercher une classe..." (input)="onSearch($event)" [value]="searchQuery()">
     </div>
 
     <div class="filter-buttons">
-      <button 
-        class="filter-btn" 
-        [class.active]="filterAnnee() === 'ALL'"
-        (click)="onFilterAnnee('ALL')">
+      <button class="filter-btn" [class.active]="filterAnnee() === 'ALL'" (click)="onFilterAnnee('ALL')">
         Toutes
       </button>
       @for (annee of anneesAcademiques(); track annee.id) {
-        <button 
-          class="filter-btn" 
-          [class.active]="filterAnnee() === annee.id.toString()"
-          (click)="onFilterAnnee(annee.id.toString())">
-          {{ annee.libelle }}
-        </button>
+      <button class="filter-btn" [class.active]="filterAnnee() === annee.id.toString()"
+        (click)="onFilterAnnee(annee.id.toString())">
+        {{ annee.libelle }}
+      </button>
       }
     </div>
   </div>
 
   <!-- Loading State -->
   @if (isLoading()) {
-    <div class="loading">
-      <div class="spinner"></div>
-      <p>Chargement...</p>
-    </div>
+  <div class="loading">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
   }
 
   <!-- Classes Grid -->
   @if (!isLoading()) {
-    <div class="classes-grid">
-      @for (classe of filteredClasses(); track classe.id) {
-        <div class="class-card">
-          <!-- Card Header -->
-          <div class="card-header">
-            <div class="class-icon">
-              <span class="material-icons">groups</span>
-            </div>
-            <div class="class-info">
-              <h3 class="class-name">{{ classe.nom }}</h3>
-              @if (classe.niveau) {
-                <span class="class-niveau">{{ classe.niveau }}</span>
-              }
-            </div>
-          </div>
-
-          <!-- Card Body -->
-          <div class="card-body">
-            <div class="info-row">
-              <span class="material-icons">calendar_today</span>
-              <span>{{ classe.anneeAcademique?.libelle || getAnneeLibelle(classe.anneeAcademiqueId) }}</span>
-            </div>
-
-            <div class="info-row">
-              <span class="material-icons">people</span>
-              <span>{{ classe.etudiants?.length || 0 }} étudiants</span>
-            </div>
-
-            <div class="info-row">
-              <span class="material-icons">menu_book</span>
-              <span>{{ classe.cours?.length || 0 }} cours</span>
-            </div>
-          </div>
-
-          <!-- Card Actions -->
-          <div class="card-actions">
-            <button 
-              class="action-btn btn-edit" 
-              (click)="openEditModal(classe)"
-              title="Modifier">
-              <span class="material-icons">edit</span>
-              Modifier
-            </button>
-
-            <button 
-              class="action-btn btn-delete" 
-              (click)="openDeleteModal(classe)"
-              title="Supprimer">
-              <span class="material-icons">delete</span>
-              Supprimer
-            </button>
-          </div>
+  <div class="classes-grid">
+    @for (classe of filteredClasses(); track classe.id) {
+    <div class="class-card">
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="class-icon">
+          <span class="material-icons">groups</span>
         </div>
-      }
-    </div>
-
-    @if (filteredClasses().length === 0) {
-      <div class="empty-state">
-        <span class="material-icons">school</span>
-        <p>Aucune classe trouvée</p>
-        @if (searchQuery() || filterAnnee() !== 'ALL') {
-          <button class="btn btn-secondary" (click)="searchQuery.set(''); filterAnnee.set('ALL'); applyFilters()">
-            Réinitialiser les filtres
-          </button>
-        } @else {
-          <button class="btn btn-primary" (click)="openCreateModal()">
-            Créer la première classe
-          </button>
-        }
+        <div class="class-info">
+          <h3 class="class-name">{{ classe.nom }}</h3>
+          @if (classe.niveau) {
+          <span class="class-niveau">{{ classe.niveau }}</span>
+          }
+        </div>
       </div>
+
+      <!-- Card Body -->
+      <div class="card-body">
+        <div class="info-row">
+          <span class="material-icons">calendar_today</span>
+          <span>{{ classe.anneeAcademique?.libelle || getAnneeLibelle(classe.anneeAcademiqueId) }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="material-icons">people</span>
+          <span>{{ classe.etudiants?.length || 0 }} étudiants</span>
+        </div>
+
+        <div class="info-row">
+          <span class="material-icons">menu_book</span>
+          <span>{{ classe.cours?.length || 0 }} cours</span>
+        </div>
+      </div>
+
+      <!-- Card Actions -->
+      <div class="card-actions">
+        <button class="action-btn btn-edit" (click)="openEditModal(classe)" title="Modifier">
+          <span class="material-icons">edit</span>
+          Modifier
+        </button>
+
+        <button class="action-btn btn-archive" (click)="openDeleteModal(classe)" title="Archiver">
+          <span class="material-icons">archive</span>
+          Archiver
+        </button>
+      </div>
+    </div>
     }
+  </div>
+
+  @if (filteredClasses().length === 0) {
+  <div class="empty-state">
+    <span class="material-icons">school</span>
+    <p>Aucune classe trouvée</p>
+    @if (searchQuery() || filterAnnee() !== 'ALL') {
+    <button class="btn btn-secondary" (click)="searchQuery.set(''); filterAnnee.set('ALL'); applyFilters()">
+      Réinitialiser les filtres
+    </button>
+    } @else {
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      Créer la première classe
+    </button>
+    }
+  </div>
+  }
   }
 
   <!-- Create/Edit Modal -->
   @if (showModal()) {
-    <div class="modal-overlay" (click)="closeModal()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>{{ selectedClasse() ? 'Modifier' : 'Créer' }} une Classe</h3>
-          <button class="close-btn" (click)="closeModal()">
-            <span class="material-icons">close</span>
-          </button>
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ selectedClasse() ? 'Modifier' : 'Créer' }} une Classe</h3>
+        <button class="close-btn" (click)="closeModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <form (ngSubmit)="onSubmit()">
+        <div class="modal-body">
+          @if (errorMessage()) {
+          <div class="alert alert-error">
+            {{ errorMessage() }}
+          </div>
+          }
+
+          <div class="form-group">
+            <label>Nom de la classe *</label>
+            <input type="text" [(ngModel)]="formData.nom" name="nom" placeholder="Ex: ING4 ISI FR" required>
+          </div>
+
+          <div class="form-group">
+            <label>Niveau *</label>
+            <input type="text" [(ngModel)]="formData.niveau" name="niveau" placeholder="Ex: ING4" required>
+          </div>
+
+          <div class="form-group">
+            <label>Année Académique</label>
+            <select [(ngModel)]="formData.anneeAcademiqueId" name="anneeAcademiqueId">
+              <option value="">Aucune</option>
+              @for (annee of anneesAcademiques(); track annee.id) {
+              <option [value]="annee.id">{{ annee.libelle }}</option>
+              }
+            </select>
+          </div>
         </div>
 
-        <form (ngSubmit)="onSubmit()">
-          <div class="modal-body">
-            @if (errorMessage()) {
-              <div class="alert alert-error">
-                {{ errorMessage() }}
-              </div>
-            }
-
-            <div class="form-group">
-              <label>Nom de la classe *</label>
-              <input 
-                type="text" 
-                [(ngModel)]="formData.nom" 
-                name="nom"
-                placeholder="Ex: ING4 ISI FR"
-                required
-              >
-            </div>
-
-            <div class="form-group">
-              <label>Niveau *</label>
-              <input 
-                type="text" 
-                [(ngModel)]="formData.niveau" 
-                name="niveau"
-                placeholder="Ex: ING4"
-                required
-              >
-            </div>
-
-            <div class="form-group">
-              <label>Année Académique</label>
-              <select 
-                [(ngModel)]="formData.anneeAcademiqueId" 
-                name="anneeAcademiqueId">
-                <option value="">Aucune</option>
-                @for (annee of anneesAcademiques(); track annee.id) {
-                  <option [value]="annee.id">{{ annee.libelle }}</option>
-                }
-              </select>
-            </div>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">
-              Annuler
-            </button>
-            <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
-              {{ selectedClasse() ? 'Mettre à jour' : 'Créer' }}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
+            {{ selectedClasse() ? 'Mettre à jour' : 'Créer' }}
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
   }
 
   <!-- Delete Modal -->
   @if (showDeleteModal()) {
-    <div class="modal-overlay" (click)="closeModal()">
-      <div class="modal-content modal-small" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>Confirmer la suppression</h3>
-          <button class="close-btn" (click)="closeModal()">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Confirmer l'archivage</h3>
+        <button class="close-btn" (click)="closeModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
 
-        <div class="modal-body">
-          <p>Êtes-vous sûr de vouloir supprimer la classe <strong>{{ selectedClasse()?.nom }}</strong> ?</p>
-          <p class="warning-text">Cette action supprimera également toutes les associations avec les étudiants.</p>
-        </div>
+      <div class="modal-body">
+        <p>Êtes-vous sûr de vouloir archiver la classe <strong>{{ selectedClasse()?.nom }}</strong> ?</p>
+        <p class="warning-text">La classe ne sera plus visible dans la liste active.</p>
+      </div>
 
-        <div class="modal-footer">
-          <button class="btn btn-secondary" (click)="closeModal()">
-            Annuler
-          </button>
-          <button class="btn btn-danger" (click)="deleteClasse()" [disabled]="isLoading()">
-            Supprimer
-          </button>
-        </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">
+          Annuler
+        </button>
+        <button class="btn btn-warning" (click)="deleteClasse()" [disabled]="isLoading()">
+          Archiver
+        </button>
       </div>
     </div>
+  </div>
   }
 </div>

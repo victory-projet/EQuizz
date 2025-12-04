@@ -12,6 +12,7 @@ class CoursRepository {
    */
   async findAll() {
     return db.Cours.findAll({
+      where: { estArchive: false },
       include: [
         { model: db.Enseignant, include: [db.Utilisateur] },
         { model: db.Semestre },

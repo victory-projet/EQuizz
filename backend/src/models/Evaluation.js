@@ -8,7 +8,7 @@ const Evaluation = sequelize.define('Evaluation', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
-  
+
   titre: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -16,12 +16,12 @@ const Evaluation = sequelize.define('Evaluation', {
   },
 
   description: {
-    type: DataTypes.TEXT, 
+    type: DataTypes.TEXT,
     allowNull: true,
   },
 
   dateDebut: {
-    type: DataTypes.DATE, 
+    type: DataTypes.DATE,
     allowNull: false,
   },
 
@@ -40,11 +40,17 @@ const Evaluation = sequelize.define('Evaluation', {
     allowNull: false,
     defaultValue: 'MI_PARCOURS',
   },
-  
+
   statut: {
     type: DataTypes.ENUM('BROUILLON', 'PUBLIEE', 'EN_COURS', 'CLOTUREE'),
     allowNull: false,
     defaultValue: 'BROUILLON',
+  },
+
+  estArchive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
   },
 
 });

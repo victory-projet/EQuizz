@@ -7,7 +7,7 @@ const AnneeAcademique = sequelize.define('AnneeAcademique', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
-  
+
   libelle: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -33,6 +33,12 @@ const AnneeAcademique = sequelize.define('AnneeAcademique', {
     defaultValue: false,
     allowNull: false,
   },
+
+  estArchive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+  }
 
 });
 

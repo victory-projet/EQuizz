@@ -1,10 +1,10 @@
 <div class="academic-years-container">
   <!-- Success Message -->
   @if (successMessage()) {
-    <div class="alert alert-success">
-      <span class="material-icons">check_circle</span>
-      {{ successMessage() }}
-    </div>
+  <div class="alert alert-success">
+    <span class="material-icons">check_circle</span>
+    {{ successMessage() }}
+  </div>
   }
 
   <!-- Header -->
@@ -21,303 +21,253 @@
 
   <!-- Loading State -->
   @if (isLoading()) {
-    <div class="loading">
-      <div class="spinner"></div>
-      <p>Chargement...</p>
-    </div>
+  <div class="loading">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
   }
 
   <!-- Academic Years Cards -->
   @if (!isLoading()) {
-    <div class="years-grid">
-      @for (annee of anneesAcademiques(); track annee.id) {
-        <div class="year-card">
-          <!-- Card Header -->
-          <div class="card-header">
-            <h3 class="year-title">{{ annee.libelle }}</h3>
-            <span class="status-badge" [class.active]="annee.estCourante">
-              @if (annee.estCourante) {
-                <span class="material-icons">check</span>
-                Active
-              } @else {
-                Inactive
-              }
-            </span>
-          </div>
+  <div class="years-grid">
+    @for (annee of anneesAcademiques(); track annee.id) {
+    <div class="year-card">
+      <!-- Card Header -->
+      <div class="card-header">
+        <h3 class="year-title">{{ annee.libelle }}</h3>
+        <span class="status-badge" [class.active]="annee.estCourante">
+          @if (annee.estCourante) {
+          <span class="material-icons">check</span>
+          Active
+          } @else {
+          Inactive
+          }
+        </span>
+      </div>
 
-          <!-- Card Body -->
-          <div class="card-body">
-            <!-- Dates -->
-            <div class="info-row">
-              <span class="material-icons">calendar_today</span>
-              <span>{{ formatDate(annee.dateDebut) }} - {{ formatDate(annee.dateFin) }}</span>
-            </div>
-
-            <!-- Semestres Count -->
-            <div class="info-row">
-              <span class="material-icons">book</span>
-              <span>{{ getSemestresForAnnee(annee.id).length }} semestre(s)</span>
-            </div>
-
-            <!-- Semestres List -->
-            @if (getSemestresForAnnee(annee.id).length > 0) {
-              <div class="semestres-list">
-                @for (semestre of getSemestresForAnnee(annee.id); track semestre.id) {
-                  <div class="semestre-item">
-                    <div class="semestre-info">
-                      <strong>{{ semestre.libelle }}</strong>
-                      <small>{{ formatDate(semestre.dateDebut) }} - {{ formatDate(semestre.dateFin) }}</small>
-                    </div>
-                    <div class="semestre-actions">
-                      <button 
-                        class="btn-icon-small" 
-                        (click)="openEditSemestreModal(annee, semestre)"
-                        title="Modifier">
-                        <span class="material-icons">edit</span>
-                      </button>
-                      <button 
-                        class="btn-icon-small btn-danger" 
-                        (click)="deleteSemestre(semestre)"
-                        title="Supprimer">
-                        <span class="material-icons">delete</span>
-                      </button>
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-          </div>
-
-          <!-- Card Actions -->
-          <div class="card-actions">
-            <button 
-              class="action-btn btn-add-semestre" 
-              (click)="openCreateSemestreModal(annee)">
-              <span class="material-icons">add</span>
-              Ajouter Semestre
-            </button>
-
-            <button 
-              class="action-btn btn-edit" 
-              (click)="openEditYearModal(annee)">
-              <span class="material-icons">edit</span>
-              Modifier
-            </button>
-
-            <button 
-              class="action-btn btn-delete" 
-              (click)="openDeleteModal(annee)">
-              <span class="material-icons">delete</span>
-              Supprimer
-            </button>
-          </div>
-
-          <!-- Toggle Status -->
-          <div class="card-footer">
-            <label class="toggle-switch">
-              <input 
-                type="checkbox" 
-                [checked]="annee.estCourante"
-                (change)="toggleYearStatus(annee)">
-              <span class="toggle-slider"></span>
-            </label>
-            <span class="toggle-label">
-              {{ annee.estCourante ? 'Désactiver' : 'Activer' }}
-            </span>
-          </div>
+      <!-- Card Body -->
+      <div class="card-body">
+        <!-- Dates -->
+        <div class="info-row">
+          <span class="material-icons">calendar_today</span>
+          <span>{{ formatDate(annee.dateDebut) }} - {{ formatDate(annee.dateFin) }}</span>
         </div>
-      }
-    </div>
 
-    @if (anneesAcademiques().length === 0) {
-      <div class="empty-state">
-        <span class="material-icons">event_note</span>
-        <p>Aucune année académique</p>
-        <button class="btn btn-primary" (click)="openCreateYearModal()">
-          Créer la première année
+        <!-- Semestres Count -->
+        <div class="info-row">
+          <span class="material-icons">book</span>
+          <span>{{ getSemestresForAnnee(annee.id).length }} semestre(s)</span>
+        </div>
+
+        <!-- Semestres List -->
+        @if (getSemestresForAnnee(annee.id).length > 0) {
+        <div class="semestres-list">
+          @for (semestre of getSemestresForAnnee(annee.id); track semestre.id) {
+          <div class="semestre-item">
+            <div class="semestre-info">
+              <strong>{{ semestre.libelle }}</strong>
+              <small>{{ formatDate(semestre.dateDebut) }} - {{ formatDate(semestre.dateFin) }}</small>
+            </div>
+            <div class="semestre-actions">
+              <button class="btn-icon-small" (click)="openEditSemestreModal(annee, semestre)" title="Modifier">
+                <span class="material-icons">edit</span>
+              </button>
+              <button class="btn-icon-small btn-warning" (click)="deleteSemestre(semestre)" title="Archiver">
+                <span class="material-icons">archive</span>
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+
+      <!-- Card Actions -->
+      <div class="card-actions">
+        <button class="action-btn btn-add-semestre" (click)="openCreateSemestreModal(annee)">
+          <span class="material-icons">add</span>
+          Ajouter Semestre
+        </button>
+
+        <button class="action-btn btn-edit" (click)="openEditYearModal(annee)">
+          <span class="material-icons">edit</span>
+          Modifier
+        </button>
+
+        <button class="action-btn btn-archive" (click)="openDeleteModal(annee)">
+          <span class="material-icons">archive</span>
+          Archiver
         </button>
       </div>
+
+      <!-- Toggle Status -->
+      <div class="card-footer">
+        <label class="toggle-switch">
+          <input type="checkbox" [checked]="annee.estCourante" (change)="toggleYearStatus(annee)">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">
+          {{ annee.estCourante ? 'Désactiver' : 'Activer' }}
+        </span>
+      </div>
+    </div>
     }
+  </div>
+
+  @if (anneesAcademiques().length === 0) {
+  <div class="empty-state">
+    <span class="material-icons">event_note</span>
+    <p>Aucune année académique</p>
+    <button class="btn btn-primary" (click)="openCreateYearModal()">
+      Créer la première année
+    </button>
+  </div>
+  }
   }
 
   <!-- Year Modal -->
   @if (showYearModal()) {
-    <div class="modal-overlay" (click)="closeModal()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>{{ selectedAnnee() ? 'Modifier' : 'Créer' }} une Année Académique</h3>
-          <button class="close-btn" (click)="closeModal()">
-            <span class="material-icons">close</span>
-          </button>
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ selectedAnnee() ? 'Modifier' : 'Créer' }} une Année Académique</h3>
+        <button class="close-btn" (click)="closeModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <form (ngSubmit)="onSubmitYear()">
+        <div class="modal-body">
+          @if (errorMessage()) {
+          <div class="alert alert-error">
+            {{ errorMessage() }}
+          </div>
+          }
+
+          <div class="form-group">
+            <label>Libellé *</label>
+            <input type="text" [(ngModel)]="yearFormData.libelle" name="libelle" placeholder="Ex: 2024-2025"
+              pattern="^\d{4}-\d{4}$" required>
+            <small>Format: AAAA-AAAA</small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date de début *</label>
+              <input type="date" [(ngModel)]="yearFormData.dateDebut" name="dateDebut" required>
+            </div>
+
+            <div class="form-group">
+              <label>Date de fin *</label>
+              <input type="date" [(ngModel)]="yearFormData.dateFin" name="dateFin" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="yearFormData.estCourante" name="estCourante">
+              <span>Année courante</span>
+            </label>
+          </div>
         </div>
 
-        <form (ngSubmit)="onSubmitYear()">
-          <div class="modal-body">
-            @if (errorMessage()) {
-              <div class="alert alert-error">
-                {{ errorMessage() }}
-              </div>
-            }
-
-            <div class="form-group">
-              <label>Libellé *</label>
-              <input 
-                type="text" 
-                [(ngModel)]="yearFormData.libelle" 
-                name="libelle"
-                placeholder="Ex: 2024-2025"
-                pattern="^\d{4}-\d{4}$"
-                required
-              >
-              <small>Format: AAAA-AAAA</small>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>Date de début *</label>
-                <input 
-                  type="date" 
-                  [(ngModel)]="yearFormData.dateDebut" 
-                  name="dateDebut"
-                  required
-                >
-              </div>
-
-              <div class="form-group">
-                <label>Date de fin *</label>
-                <input 
-                  type="date" 
-                  [(ngModel)]="yearFormData.dateFin" 
-                  name="dateFin"
-                  required
-                >
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="checkbox-label">
-                <input 
-                  type="checkbox" 
-                  [(ngModel)]="yearFormData.estCourante" 
-                  name="estCourante"
-                >
-                <span>Année courante</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">
-              Annuler
-            </button>
-            <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
-              {{ selectedAnnee() ? 'Mettre à jour' : 'Créer' }}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
+            {{ selectedAnnee() ? 'Mettre à jour' : 'Créer' }}
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
   }
 
   <!-- Semestre Modal -->
   @if (showSemestreModal()) {
-    <div class="modal-overlay" (click)="closeModal()">
-      <div class="modal-content modal-small" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>{{ selectedSemestre() ? 'Modifier' : 'Créer' }} un Semestre</h3>
-          <button class="close-btn" (click)="closeModal()">
-            <span class="material-icons">close</span>
-          </button>
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ selectedSemestre() ? 'Modifier' : 'Créer' }} un Semestre</h3>
+        <button class="close-btn" (click)="closeModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <form (ngSubmit)="onSubmitSemestre()">
+        <div class="modal-body">
+          @if (errorMessage()) {
+          <div class="alert alert-error">
+            {{ errorMessage() }}
+          </div>
+          }
+
+          <div class="form-group">
+            <label>Libellé *</label>
+            <input type="text" [(ngModel)]="semestreFormData.libelle" name="libelle" placeholder="Ex: Semestre 1"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label>Numéro *</label>
+            <select [(ngModel)]="semestreFormData.numero" name="numero" required>
+              <option [value]="1">Semestre 1</option>
+              <option [value]="2">Semestre 2</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date de début *</label>
+              <input type="date" [(ngModel)]="semestreFormData.dateDebut" name="dateDebut" required>
+            </div>
+
+            <div class="form-group">
+              <label>Date de fin *</label>
+              <input type="date" [(ngModel)]="semestreFormData.dateFin" name="dateFin" required>
+            </div>
+          </div>
         </div>
 
-        <form (ngSubmit)="onSubmitSemestre()">
-          <div class="modal-body">
-            @if (errorMessage()) {
-              <div class="alert alert-error">
-                {{ errorMessage() }}
-              </div>
-            }
-
-            <div class="form-group">
-              <label>Libellé *</label>
-              <input 
-                type="text" 
-                [(ngModel)]="semestreFormData.libelle" 
-                name="libelle"
-                placeholder="Ex: Semestre 1"
-                required
-              >
-            </div>
-
-            <div class="form-group">
-              <label>Numéro *</label>
-              <select [(ngModel)]="semestreFormData.numero" name="numero" required>
-                <option [value]="1">Semestre 1</option>
-                <option [value]="2">Semestre 2</option>
-              </select>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>Date de début *</label>
-                <input 
-                  type="date" 
-                  [(ngModel)]="semestreFormData.dateDebut" 
-                  name="dateDebut"
-                  required
-                >
-              </div>
-
-              <div class="form-group">
-                <label>Date de fin *</label>
-                <input 
-                  type="date" 
-                  [(ngModel)]="semestreFormData.dateFin" 
-                  name="dateFin"
-                  required
-                >
-              </div>
-            </div>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">
-              Annuler
-            </button>
-            <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
-              {{ selectedSemestre() ? 'Mettre à jour' : 'Créer' }}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
+            {{ selectedSemestre() ? 'Mettre à jour' : 'Créer' }}
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
   }
 
   <!-- Delete Modal -->
   @if (showDeleteModal()) {
-    <div class="modal-overlay" (click)="closeModal()">
-      <div class="modal-content modal-small" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>Confirmer la suppression</h3>
-          <button class="close-btn" (click)="closeModal()">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Confirmer l'archivage</h3>
+        <button class="close-btn" (click)="closeModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
 
-        <div class="modal-body">
-          <p>Êtes-vous sûr de vouloir supprimer l'année académique <strong>{{ selectedAnnee()?.libelle }}</strong> ?</p>
-          <p class="warning-text">Cette action supprimera également tous les semestres associés.</p>
-        </div>
+      <div class="modal-body">
+        <p>Êtes-vous sûr de vouloir archiver l'année académique <strong>{{ selectedAnnee()?.libelle }}</strong> ?</p>
+        <p class="warning-text">Cette action archivera également tous les semestres associés.</p>
+      </div>
 
-        <div class="modal-footer">
-          <button class="btn btn-secondary" (click)="closeModal()">
-            Annuler
-          </button>
-          <button class="btn btn-danger" (click)="deleteYear()" [disabled]="isLoading()">
-            Supprimer
-          </button>
-        </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">
+          Annuler
+        </button>
+        <button class="btn btn-warning" (click)="deleteYear()" [disabled]="isLoading()">
+          Archiver
+        </button>
       </div>
     </div>
+  </div>
   }
 </div>

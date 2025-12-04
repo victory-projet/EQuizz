@@ -9,7 +9,7 @@ const Semestre = sequelize.define('Semestre', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
-  
+
   nom: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -31,6 +31,12 @@ const Semestre = sequelize.define('Semestre', {
 
   dateFin: {
     type: DataTypes.DATEONLY,
+    allowNull: false,
+  },
+
+  estArchive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
     allowNull: false,
   },
 

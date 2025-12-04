@@ -232,10 +232,11 @@ exports.deleteUtilisateur = async (req, res) => {
       return res.status(404).json({ message: 'Utilisateur non trouvé' });
     }
 
-    await utilisateur.destroy();
-    res.json({ message: 'Utilisateur supprimé avec succès' });
+    // Désactiver l'utilisateur au lieu de le supprimer
+    await utilisateur.update({ estActif: false });
+    res.json({ message: 'Utilisateur désactivé avec succès' });
   } catch (error) {
-    console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+    console.error('Erreur lors de la désactivation de l\'utilisateur:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };

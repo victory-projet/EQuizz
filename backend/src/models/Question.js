@@ -7,7 +7,7 @@ const Question = sequelize.define('Question', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
-  
+
   enonce: {
     type: DataTypes.TEXT,
     allowNull: false,
@@ -28,6 +28,12 @@ const Question = sequelize.define('Question', {
     type: DataTypes.INTEGER,
     allowNull: true,
     defaultValue: 1,
+  },
+
+  estArchive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
   },
 
 });

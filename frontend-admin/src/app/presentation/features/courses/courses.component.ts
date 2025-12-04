@@ -17,12 +17,12 @@ export class CoursesComponent implements OnInit {
   anneesAcademiques = signal<AnneeAcademique[]>([]);
   semestres = signal<Semestre[]>([]);
   enseignants = signal<any[]>([]);
-  
+
   isLoading = signal(false);
   showModal = signal(false);
-  showDeleteModal = signal(false);
+
   selectedCours = signal<Cours | null>(null);
-  
+
   searchQuery = signal('');
   filterStatus = signal<'ALL' | 'ACTIVE' | 'ARCHIVED'>('ALL');
   filterSemestre = signal<string>('ALL');
@@ -43,7 +43,7 @@ export class CoursesComponent implements OnInit {
   coursActifs = computed(() => this.cours().filter(c => !c.estArchive).length);
   coursArchives = computed(() => this.cours().filter(c => c.estArchive).length);
 
-  constructor(private academicUseCase: AcademicUseCase) {}
+  constructor(private academicUseCase: AcademicUseCase) { }
 
   ngOnInit(): void {
     this.loadCours();
@@ -164,14 +164,10 @@ export class CoursesComponent implements OnInit {
     this.showModal.set(true);
   }
 
-  openDeleteModal(cours: Cours): void {
-    this.selectedCours.set(cours);
-    this.showDeleteModal.set(true);
-  }
+
 
   closeModal(): void {
     this.showModal.set(false);
-    this.showDeleteModal.set(false);
     this.errorMessage.set('');
   }
 
@@ -187,7 +183,7 @@ export class CoursesComponent implements OnInit {
 
   onSubmit(): void {
     this.errorMessage.set('');
-    
+
     if (this.selectedCours()) {
       this.updateCours();
     } else {
@@ -250,24 +246,7 @@ export class CoursesComponent implements OnInit {
     });
   }
 
-  deleteCours(): void {
-    const cours = this.selectedCours();
-    if (!cours) return;
 
-    this.isLoading.set(true);
-    this.academicUseCase.deleteCours(cours.id).subscribe({
-      next: () => {
-        this.successMessage.set('Cours supprimé avec succès');
-        this.closeModal();
-        this.loadCours();
-        setTimeout(() => this.successMessage.set(''), 3000);
-      },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
-        this.isLoading.set(false);
-      }
-    });
-  }
 
   toggleArchiveStatus(cours: Cours): void {
     this.academicUseCase.updateCours(cours.id, {

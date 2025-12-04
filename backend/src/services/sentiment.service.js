@@ -19,10 +19,10 @@ class SentimentService {
     }
 
     const result = this.sentiment.analyze(text);
-    
+
     // Normaliser le score entre -1 et 1
     const normalizedScore = Math.max(-1, Math.min(1, result.comparative));
-    
+
     // Déterminer le sentiment
     let sentimentLabel;
     if (normalizedScore > 0.1) {
@@ -47,7 +47,7 @@ class SentimentService {
    */
   async analyzeAndSaveReponse(reponseEtudiantId, texte) {
     const analysis = this.analyzeText(texte);
-    
+
     // Vérifier si une analyse existe déjà
     const existingAnalysis = await db.AnalyseReponse.findOne({
       where: { reponse_etudiant_id: reponseEtudiantId }
@@ -128,7 +128,7 @@ class SentimentService {
 
     texts.forEach(text => {
       if (!text) return;
-      
+
       const words = text
         .toLowerCase()
         .replace(/[^\w\s]/g, ' ')
@@ -144,6 +144,38 @@ class SentimentService {
       .sort((a, b) => b[1] - a[1])
       .slice(0, limit)
       .map(([word, count]) => ({ word, count }));
+  }
+  /**
+   * Génère un résumé basique des sentiments (fallback si pas d'IA générative)
+   * @param {Array<string>} texts - Tableau de textes
+   */
+  async generateSummary(texts) {
+    if (!texts || texts.length === 0) {
+      return "Aucune réponse textuelle disponible pour l'analyse.";
+    }
+
+    let totalScore = 0;
+    let positiveCount = 0;
+    let negativeCount = 0;
+    let neutralCount = 0;
+
+    texts.forEach(text => {
+      const analysis = this.analyzeText(text);
+      totalScore += analysis.score;
+      if (analysis.sentiment === 'POSITIF') positiveCount++;
+      else if (analysis.sentiment === 'NEGATIF') negativeCount++;
+      else neutralCount++;
+    });
+
+    const averageScore = totalScore / texts.length;
+    let trend = 'NEUTRE';
+    if (averageScore > 0.1) trend = 'POSITIVE';
+    if (averageScore < -0.1) trend = 'NÉGATIVE';
+
+    return `L'analyse automatique des sentiments a été effectuée sur ${texts.length} commentaires. ` +
+      `La tendance générale est ${trend} (Score moyen: ${averageScore.toFixed(2)}). ` +
+      `Répartition: ${positiveCount} positif(s), ${neutralCount} neutre(s), ${negativeCount} négatif(s). ` +
+      `Ce résumé est généré statistiquement en l'absence de service d'IA générative configuré.`;
   }
 }
 

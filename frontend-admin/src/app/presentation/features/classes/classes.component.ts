@@ -15,12 +15,12 @@ export class ClassesComponent implements OnInit {
   classes = signal<Classe[]>([]);
   filteredClasses = signal<Classe[]>([]);
   anneesAcademiques = signal<AnneeAcademique[]>([]);
-  
+
   isLoading = signal(false);
   showModal = signal(false);
   showDeleteModal = signal(false);
   selectedClasse = signal<Classe | null>(null);
-  
+
   searchQuery = signal('');
   filterAnnee = signal<string>('ALL');
 
@@ -36,7 +36,7 @@ export class ClassesComponent implements OnInit {
   // Computed statistics
   totalClasses = computed(() => this.classes().length);
 
-  constructor(private academicUseCase: AcademicUseCase) {}
+  constructor(private academicUseCase: AcademicUseCase) { }
 
   ngOnInit(): void {
     this.loadClasses();
@@ -138,7 +138,7 @@ export class ClassesComponent implements OnInit {
 
   onSubmit(): void {
     this.errorMessage.set('');
-    
+
     if (this.selectedClasse()) {
       this.updateClasse();
     } else {
@@ -200,7 +200,7 @@ export class ClassesComponent implements OnInit {
     this.isLoading.set(true);
     this.academicUseCase.deleteClasse(classe.id).subscribe({
       next: () => {
-        this.successMessage.set('Classe supprimée avec succès');
+        this.successMessage.set('Classe archivée avec succès');
         this.closeModal();
         this.loadClasses();
         setTimeout(() => this.successMessage.set(''), 3000);

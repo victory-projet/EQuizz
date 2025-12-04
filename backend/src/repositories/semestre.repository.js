@@ -13,7 +13,10 @@ class SemestreRepository {
    */
   async findAllByAnnee(anneeAcademiqueId) {
     return db.Semestre.findAll({
-      where: { annee_academique_id: anneeAcademiqueId },
+      where: {
+        annee_academique_id: anneeAcademiqueId,
+        estArchive: false
+      },
       order: [['numero', 'ASC']]
     });
   }

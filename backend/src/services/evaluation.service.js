@@ -5,7 +5,7 @@ const evaluationRepository = require('../repositories/evaluation.repository');
 const coursRepository = require('../repositories/cours.repository');
 const questionRepository = require('../repositories/question.repository');
 const ExcelJS = require('exceljs');
-const AppError = require('../utils/AppError'); 
+const AppError = require('../utils/AppError');
 
 class EvaluationService {
   /**
@@ -100,11 +100,11 @@ class EvaluationService {
   }
 
   async delete(id) {
-    const result = await evaluationRepository.delete(id);
-    if (result === 0) {
+    const result = await evaluationRepository.update(id, { estArchive: true });
+    if (!result) {
       throw AppError.notFound('Évaluation non trouvée.', 'EVALUATION_NOT_FOUND');
     }
-    return { message: 'Évaluation supprimée avec succès.' };
+    return { message: 'Évaluation archivée avec succès.' };
   }
 
   /**
@@ -150,7 +150,7 @@ class EvaluationService {
     }
 
     const questionsToCreate = [];
-    
+
     worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
       if (rowNumber === 1) return;
 
@@ -169,7 +169,7 @@ class EvaluationService {
         }
         options = optionsRaw.split(';').map(opt => opt.trim());
       }
-      
+
       questionsToCreate.push({
         enonce,
         typeQuestion,
@@ -264,7 +264,7 @@ class EvaluationService {
       }))
     }));
   }
-  
+
 }
 
 module.exports = new EvaluationService();

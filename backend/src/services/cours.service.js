@@ -19,7 +19,7 @@ class CoursService {
     if (!enseignant) {
       throw new Error('Enseignant non trouvé. Impossible de créer le cours.');
     }
-    
+
     return coursRepository.create(data);
   }
 
@@ -46,11 +46,11 @@ class CoursService {
   }
 
   async delete(id) {
-    const result = await coursRepository.delete(id);
-    if (result === 0) {
+    const result = await coursRepository.update(id, { estArchive: true });
+    if (!result) {
       throw new Error('Cours non trouvé.');
     }
-    return { message: 'Cours supprimé avec succès.' };
+    return { message: 'Cours archivé avec succès.' };
   }
 }
 

@@ -1,10 +1,10 @@
 <div class="courses-container">
   <!-- Success Message -->
   @if (successMessage()) {
-    <div class="alert alert-success">
-      <span class="material-icons">check_circle</span>
-      {{ successMessage() }}
-    </div>
+  <div class="alert alert-success">
+    <span class="material-icons">check_circle</span>
+    {{ successMessage() }}
+  </div>
   }
 
   <!-- Header -->
@@ -56,31 +56,18 @@
   <div class="filters-section">
     <div class="search-box">
       <span class="material-icons">search</span>
-      <input 
-        type="text" 
-        placeholder="Rechercher un cours par nom, code..."
-        (input)="onSearch($event)"
-        [value]="searchQuery()"
-      >
+      <input type="text" placeholder="Rechercher un cours par nom, code..." (input)="onSearch($event)"
+        [value]="searchQuery()">
     </div>
 
     <div class="filter-buttons">
-      <button 
-        class="filter-btn" 
-        [class.active]="filterStatus() === 'ALL'"
-        (click)="onFilterStatus('ALL')">
+      <button class="filter-btn" [class.active]="filterStatus() === 'ALL'" (click)="onFilterStatus('ALL')">
         Tous ({{ totalCours() }})
       </button>
-      <button 
-        class="filter-btn" 
-        [class.active]="filterStatus() === 'ACTIVE'"
-        (click)="onFilterStatus('ACTIVE')">
+      <button class="filter-btn" [class.active]="filterStatus() === 'ACTIVE'" (click)="onFilterStatus('ACTIVE')">
         Actifs ({{ coursActifs() }})
       </button>
-      <button 
-        class="filter-btn" 
-        [class.active]="filterStatus() === 'ARCHIVED'"
-        (click)="onFilterStatus('ARCHIVED')">
+      <button class="filter-btn" [class.active]="filterStatus() === 'ARCHIVED'" (click)="onFilterStatus('ARCHIVED')">
         Archivés ({{ coursArchives() }})
       </button>
     </div>
@@ -88,239 +75,178 @@
 
   <!-- Loading State -->
   @if (isLoading()) {
-    <div class="loading">
-      <div class="spinner"></div>
-      <p>Chargement...</p>
-    </div>
+  <div class="loading">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
   }
 
   <!-- Courses Grid -->
   @if (!isLoading()) {
-    <div class="courses-grid">
-      @for (cours of filteredCours(); track cours.id) {
-        <div class="course-card" [class.archived]="cours.estArchive">
-          <!-- Card Header -->
-          <div class="card-header">
-            <div class="course-code">{{ cours.code }}</div>
-            @if (cours.estArchive) {
-              <span class="archive-badge">
-                <span class="material-icons">archive</span>
-                Archivé
-              </span>
-            } @else {
-              <span class="active-badge">
-                <span class="material-icons">check_circle</span>
-                Actif
-              </span>
-            }
-          </div>
-
-          <!-- Card Body -->
-          <div class="card-body">
-            <h3 class="course-title">{{ cours.nom }}</h3>
-            
-            @if (cours.description) {
-              <p class="course-description">{{ cours.description }}</p>
-            }
-
-            <div class="course-meta">
-              <div class="meta-item">
-                <span class="material-icons">person</span>
-                @if (cours.Enseignant?.Utilisateur) {
-                  <span>{{ cours.Enseignant?.Utilisateur?.prenom }} {{ cours.Enseignant?.Utilisateur?.nom }}</span>
-                } @else {
-                  <span class="text-muted">Enseignant non assigné</span>
-                }
-              </div>
-              <div class="meta-item">
-                <span class="material-icons">groups</span>
-                <span>0 étudiants</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Card Actions -->
-          <div class="card-actions">
-            <button 
-              class="action-btn btn-edit" 
-              (click)="openEditModal(cours)"
-              title="Modifier">
-              <span class="material-icons">edit</span>
-              Modifier
-            </button>
-
-            <button 
-              class="action-btn btn-archive" 
-              (click)="toggleArchiveStatus(cours)"
-              [title]="cours.estArchive ? 'Désarchiver' : 'Archiver'">
-              <span class="material-icons">{{ cours.estArchive ? 'unarchive' : 'archive' }}</span>
-              {{ cours.estArchive ? 'Désarchiver' : 'Archiver' }}
-            </button>
-
-            <button 
-              class="action-btn btn-delete" 
-              (click)="openDeleteModal(cours)"
-              title="Supprimer">
-              <span class="material-icons">delete</span>
-            </button>
-          </div>
-        </div>
-      }
-    </div>
-
-    @if (filteredCours().length === 0) {
-      <div class="empty-state">
-        <span class="material-icons">school</span>
-        <p>Aucun cours trouvé</p>
-        @if (searchQuery() || filterStatus() !== 'ALL') {
-          <button class="btn btn-secondary" (click)="searchQuery.set(''); filterStatus.set('ALL'); applyFilters()">
-            Réinitialiser les filtres
-          </button>
+  <div class="courses-grid">
+    @for (cours of filteredCours(); track cours.id) {
+    <div class="course-card" [class.archived]="cours.estArchive">
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="course-code">{{ cours.code }}</div>
+        @if (cours.estArchive) {
+        <span class="archive-badge">
+          <span class="material-icons">archive</span>
+          Archivé
+        </span>
         } @else {
-          <button class="btn btn-primary" (click)="openCreateModal()">
-            Créer le premier cours
-          </button>
+        <span class="active-badge">
+          <span class="material-icons">check_circle</span>
+          Actif
+        </span>
         }
       </div>
+
+      <!-- Card Body -->
+      <div class="card-body">
+        <h3 class="course-title">{{ cours.nom }}</h3>
+
+        @if (cours.description) {
+        <p class="course-description">{{ cours.description }}</p>
+        }
+
+        <div class="course-meta">
+          <div class="meta-item">
+            <span class="material-icons">person</span>
+            @if (cours.Enseignant?.Utilisateur) {
+            <span>{{ cours.Enseignant?.Utilisateur?.prenom }} {{ cours.Enseignant?.Utilisateur?.nom }}</span>
+            } @else {
+            <span class="text-muted">Enseignant non assigné</span>
+            }
+          </div>
+          <div class="meta-item">
+            <span class="material-icons">groups</span>
+            <span>0 étudiants</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Actions -->
+      <div class="card-actions">
+        <button class="action-btn btn-edit" (click)="openEditModal(cours)" title="Modifier">
+          <span class="material-icons">edit</span>
+          Modifier
+        </button>
+
+        <button class="action-btn btn-archive" (click)="toggleArchiveStatus(cours)"
+          [title]="cours.estArchive ? 'Désarchiver' : 'Archiver'">
+          <span class="material-icons">{{ cours.estArchive ? 'unarchive' : 'archive' }}</span>
+          {{ cours.estArchive ? 'Désarchiver' : 'Archiver' }}
+        </button>
+
+
+      </div>
+    </div>
     }
+  </div>
+
+  @if (filteredCours().length === 0) {
+  <div class="empty-state">
+    <span class="material-icons">school</span>
+    <p>Aucun cours trouvé</p>
+    @if (searchQuery() || filterStatus() !== 'ALL') {
+    <button class="btn btn-secondary" (click)="searchQuery.set(''); filterStatus.set('ALL'); applyFilters()">
+      Réinitialiser les filtres
+    </button>
+    } @else {
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      Créer le premier cours
+    </button>
+    }
+  </div>
+  }
   }
 
   <!-- Create/Edit Modal -->
   @if (showModal()) {
-    <div class="modal-overlay" (click)="closeModal()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>{{ selectedCours() ? 'Modifier' : 'Créer' }} un Cours</h3>
-          <button class="close-btn" (click)="closeModal()">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-
-        <form (ngSubmit)="onSubmit()">
-          <div class="modal-body">
-            @if (errorMessage()) {
-              <div class="alert alert-error">
-                {{ errorMessage() }}
-              </div>
-            }
-
-            <div class="form-group">
-              <label>Code du cours *</label>
-              <input 
-                type="text" 
-                [(ngModel)]="formData.code" 
-                name="code"
-                placeholder="Ex: INF305"
-                [disabled]="!!selectedCours()"
-                required
-              >
-              <small>Code unique du cours (non modifiable après création)</small>
-            </div>
-
-            <div class="form-group">
-              <label>Nom du cours *</label>
-              <input 
-                type="text" 
-                [(ngModel)]="formData.nom" 
-                name="nom"
-                placeholder="Ex: Base de Données"
-                required
-              >
-            </div>
-
-            <div class="form-group">
-              <label>Description</label>
-              <textarea 
-                [(ngModel)]="formData.description" 
-                name="description"
-                placeholder="Description du cours..."
-                rows="3"
-              ></textarea>
-            </div>
-
-            @if (!selectedCours()) {
-              <div class="form-group">
-                <label>Année Académique *</label>
-                <select 
-                  #anneeSelect
-                  (change)="onAnneeChange(anneeSelect.value)"
-                  required>
-                  <option value="">Sélectionner une année</option>
-                  @for (annee of anneesAcademiques(); track annee.id) {
-                    <option [value]="annee.id">{{ annee.libelle }}</option>
-                  }
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Semestre *</label>
-                <select 
-                  [(ngModel)]="formData.semestre_id" 
-                  name="semestre_id"
-                  required>
-                  <option value="">Sélectionner un semestre</option>
-                  @for (semestre of semestres(); track semestre.id) {
-                    <option [value]="semestre.id">{{ semestre.libelle }}</option>
-                  }
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Enseignant *</label>
-                <select 
-                  [(ngModel)]="formData.enseignant_id" 
-                  name="enseignant_id"
-                  required>
-                  <option value="">Sélectionner un enseignant</option>
-                  @for (enseignant of enseignants(); track enseignant.id) {
-                    <option [value]="enseignant.id">{{ enseignant.nom }}</option>
-                  }
-                </select>
-                @if (enseignants().length === 0) {
-                  <small class="warning-text">Aucun enseignant disponible. Créez d'abord des enseignants.</small>
-                }
-              </div>
-            }
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeModal()">
-              Annuler
-            </button>
-            <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
-              {{ selectedCours() ? 'Mettre à jour' : 'Créer' }}
-            </button>
-          </div>
-        </form>
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ selectedCours() ? 'Modifier' : 'Créer' }} un Cours</h3>
+        <button class="close-btn" (click)="closeModal()">
+          <span class="material-icons">close</span>
+        </button>
       </div>
-    </div>
-  }
 
-  <!-- Delete Modal -->
-  @if (showDeleteModal()) {
-    <div class="modal-overlay" (click)="closeModal()">
-      <div class="modal-content modal-small" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>Confirmer la suppression</h3>
-          <button class="close-btn" (click)="closeModal()">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-
+      <form (ngSubmit)="onSubmit()">
         <div class="modal-body">
-          <p>Êtes-vous sûr de vouloir supprimer le cours <strong>{{ selectedCours()?.code }} - {{ selectedCours()?.nom }}</strong> ?</p>
-          <p class="warning-text">Cette action est irréversible.</p>
+          @if (errorMessage()) {
+          <div class="alert alert-error">
+            {{ errorMessage() }}
+          </div>
+          }
+
+          <div class="form-group">
+            <label>Code du cours *</label>
+            <input type="text" [(ngModel)]="formData.code" name="code" placeholder="Ex: INF305"
+              [disabled]="!!selectedCours()" required>
+            <small>Code unique du cours (non modifiable après création)</small>
+          </div>
+
+          <div class="form-group">
+            <label>Nom du cours *</label>
+            <input type="text" [(ngModel)]="formData.nom" name="nom" placeholder="Ex: Base de Données" required>
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            <textarea [(ngModel)]="formData.description" name="description" placeholder="Description du cours..."
+              rows="3"></textarea>
+          </div>
+
+          @if (!selectedCours()) {
+          <div class="form-group">
+            <label>Année Académique *</label>
+            <select #anneeSelect (change)="onAnneeChange(anneeSelect.value)" required>
+              <option value="">Sélectionner une année</option>
+              @for (annee of anneesAcademiques(); track annee.id) {
+              <option [value]="annee.id">{{ annee.libelle }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Semestre *</label>
+            <select [(ngModel)]="formData.semestre_id" name="semestre_id" required>
+              <option value="">Sélectionner un semestre</option>
+              @for (semestre of semestres(); track semestre.id) {
+              <option [value]="semestre.id">{{ semestre.libelle }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Enseignant *</label>
+            <select [(ngModel)]="formData.enseignant_id" name="enseignant_id" required>
+              <option value="">Sélectionner un enseignant</option>
+              @for (enseignant of enseignants(); track enseignant.id) {
+              <option [value]="enseignant.id">{{ enseignant.nom }}</option>
+              }
+            </select>
+            @if (enseignants().length === 0) {
+            <small class="warning-text">Aucun enseignant disponible. Créez d'abord des enseignants.</small>
+            }
+          </div>
+          }
         </div>
 
         <div class="modal-footer">
-          <button class="btn btn-secondary" (click)="closeModal()">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">
             Annuler
           </button>
-          <button class="btn btn-danger" (click)="deleteCours()" [disabled]="isLoading()">
-            Supprimer
+          <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
+            {{ selectedCours() ? 'Mettre à jour' : 'Créer' }}
           </button>
         </div>
-      </div>
+      </form>
     </div>
+  </div>
   }
+
+
 </div>
