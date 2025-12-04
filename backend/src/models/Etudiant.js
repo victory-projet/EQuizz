@@ -6,7 +6,7 @@ const Etudiant = sequelize.define('Etudiant', {
     type: DataTypes.UUID,
     primaryKey: true,
   },
-  
+
   matricule: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -14,8 +14,17 @@ const Etudiant = sequelize.define('Etudiant', {
   },
   idCarte: {
     type: DataTypes.STRING,
-    allowNull: true, 
+    allowNull: true,
     unique: true,
+  },
+
+  classe_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'Classes',
+      key: 'id'
+    }
   },
 
 });
