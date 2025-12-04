@@ -20,7 +20,6 @@ export class StudentsComponent implements OnInit {
 
   isLoading = signal(false);
   showModal = signal(false);
-  showDeleteModal = signal(false);
   selectedStudent = signal<Etudiant | null>(null);
 
   searchQuery = signal('');
@@ -142,14 +141,8 @@ export class StudentsComponent implements OnInit {
     this.showModal.set(true);
   }
 
-  openDeleteModal(student: Etudiant): void {
-    this.selectedStudent.set(student);
-    this.showDeleteModal.set(true);
-  }
-
   closeModal(): void {
     this.showModal.set(false);
-    this.showDeleteModal.set(false);
     this.errorMessage.set('');
   }
 
@@ -225,24 +218,7 @@ export class StudentsComponent implements OnInit {
     });
   }
 
-  deleteStudent(): void {
-    const student = this.selectedStudent();
-    if (!student) return;
 
-    this.isLoading.set(true);
-    this.userUseCase.deleteUser(student.id.toString()).subscribe({
-      next: () => {
-        this.successMessage.set('Étudiant supprimé avec succès');
-        this.closeModal();
-        this.loadStudents();
-        setTimeout(() => this.successMessage.set(''), 3000);
-      },
-      error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
-        this.isLoading.set(false);
-      }
-    });
-  }
 
   toggleStatus(student: Etudiant): void {
     this.userUseCase.updateUser(student.id.toString(), { estActif: !student.estActif }).subscribe({

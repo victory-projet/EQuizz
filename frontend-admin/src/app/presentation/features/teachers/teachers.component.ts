@@ -14,12 +14,11 @@ import { Enseignant } from '../../../core/domain/entities/user.entity';
 export class TeachersComponent implements OnInit {
   teachers = signal<Enseignant[]>([]);
   filteredTeachers = signal<Enseignant[]>([]);
-  
+
   isLoading = signal(false);
   showModal = signal(false);
-  showDeleteModal = signal(false);
   selectedTeacher = signal<Enseignant | null>(null);
-  
+
   searchQuery = signal('');
   filterStatus = signal<string>('ALL');
 
@@ -37,7 +36,7 @@ export class TeachersComponent implements OnInit {
   activeTeachers = computed(() => this.teachers().filter(t => t.estActif).length);
   inactiveTeachers = computed(() => this.teachers().filter(t => !t.estActif).length);
 
-  constructor(private userUseCase: UserUseCase) {}
+  constructor(private userUseCase: UserUseCase) { }
 
   ngOnInit(): void {
     this.loadTeachers();
@@ -110,14 +109,9 @@ export class TeachersComponent implements OnInit {
     this.showModal.set(true);
   }
 
-  openDeleteModal(teacher: Enseignant): void {
-    this.selectedTeacher.set(teacher);
-    this.showDeleteModal.set(true);
-  }
 
   closeModal(): void {
     this.showModal.set(false);
-    this.showDeleteModal.set(false);
     this.errorMessage.set('');
   }
 
@@ -132,7 +126,7 @@ export class TeachersComponent implements OnInit {
 
   onSubmit(): void {
     this.errorMessage.set('');
-    
+
     if (this.selectedTeacher()) {
       this.updateTeacher();
     } else {
@@ -190,24 +184,6 @@ export class TeachersComponent implements OnInit {
     });
   }
 
-  deleteTeacher(): void {
-    const teacher = this.selectedTeacher();
-    if (!teacher) return;
-
-    this.isLoading.set(true);
-    this.userUseCase.deleteUser(teacher.id.toString()).subscribe({
-      next: () => {
-        this.successMessage.set('Enseignant supprimé avec succès');
-        this.closeModal();
-        this.loadTeachers();
-        setTimeout(() => this.successMessage.set(''), 3000);
-      },
-      error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
-        this.isLoading.set(false);
-      }
-    });
-  }
 
   toggleStatus(teacher: Enseignant): void {
     this.userUseCase.updateUser(teacher.id.toString(), { estActif: !teacher.estActif }).subscribe({

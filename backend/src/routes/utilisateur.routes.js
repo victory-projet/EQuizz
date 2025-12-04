@@ -12,7 +12,8 @@ router.get('/', utilisateurController.getAllUtilisateurs);
 router.get('/:id', utilisateurController.getUtilisateurById);
 router.post('/', utilisateurController.createUtilisateur);
 router.put('/:id', utilisateurController.updateUtilisateur);
-router.delete('/:id', utilisateurController.deleteUtilisateur);
+// Route de suppression désactivée - Utiliser la désactivation (PUT avec estActif = false) pour préserver l'historique
+// router.delete('/:id', utilisateurController.deleteUtilisateur);
 router.post('/:id/reset-password', utilisateurController.resetPassword);
 
 module.exports = router;

@@ -18,12 +18,11 @@ export class UsersComponent implements OnInit {
   paginatedUsers = signal<User[]>([]);
   isLoading = signal(false);
   showModal = signal(false);
-  showDeleteModal = signal(false);
   showPasswordModal = signal(false);
   selectedUser = signal<User | null>(null);
   searchQuery = signal('');
   filterRole = signal<string>('ALL');
-  
+
   // Pagination
   currentPage = signal(1);
   itemsPerPage = signal(10);
@@ -48,7 +47,7 @@ export class UsersComponent implements OnInit {
   errorMessage = signal('');
   successMessage = signal('');
 
-  constructor(private userUseCase: UserUseCase) {}
+  constructor(private userUseCase: UserUseCase) { }
 
   ngOnInit(): void {
     this.loadUsers();
@@ -74,21 +73,21 @@ export class UsersComponent implements OnInit {
 
   applyFilters(): void {
     let filtered = this.users();
-    
+
     if (this.filterRole() !== 'ALL') {
       filtered = filtered.filter(u => u.role === this.filterRole());
     }
-    
+
     if (this.searchQuery()) {
       const query = this.searchQuery().toLowerCase();
-      filtered = filtered.filter(u => 
+      filtered = filtered.filter(u =>
         u.nom.toLowerCase().includes(query) ||
         u.prenom.toLowerCase().includes(query) ||
         u.email.toLowerCase().includes(query) ||
         (u.matricule && u.matricule.toLowerCase().includes(query))
       );
     }
-    
+
     this.filteredUsers.set(filtered);
     this.currentPage.set(1);
     this.updatePagination();
@@ -98,7 +97,7 @@ export class UsersComponent implements OnInit {
     const filtered = this.filteredUsers();
     const total = Math.ceil(filtered.length / this.itemsPerPage());
     this.totalPages.set(total);
-    
+
     const start = (this.currentPage() - 1) * this.itemsPerPage();
     const end = start + this.itemsPerPage();
     this.paginatedUsers.set(filtered.slice(start, end));
@@ -149,10 +148,6 @@ export class UsersComponent implements OnInit {
     this.showModal.set(true);
   }
 
-  openDeleteModal(user: User): void {
-    this.selectedUser.set(user);
-    this.showDeleteModal.set(true);
-  }
 
   openPasswordModal(user: User): void {
     this.selectedUser.set(user);
@@ -165,7 +160,6 @@ export class UsersComponent implements OnInit {
 
   closeModal(): void {
     this.showModal.set(false);
-    this.showDeleteModal.set(false);
     this.showPasswordModal.set(false);
     this.resetForm();
     this.errorMessage.set('');
@@ -201,7 +195,7 @@ export class UsersComponent implements OnInit {
 
   onSubmit(): void {
     this.errorMessage.set('');
-    
+
     if (this.selectedUser()) {
       this.updateUser();
     } else {
@@ -269,24 +263,6 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  deleteUser(): void {
-    const user = this.selectedUser();
-    if (!user) return;
-
-    this.isLoading.set(true);
-    this.userUseCase.deleteUser(user.id.toString()).subscribe({
-      next: () => {
-        this.successMessage.set('Utilisateur supprimé avec succès');
-        this.closeModal();
-        this.loadUsers();
-        setTimeout(() => this.successMessage.set(''), 3000);
-      },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
-        this.isLoading.set(false);
-      }
-    });
-  }
 
   resetPassword(): void {
     const user = this.selectedUser();
