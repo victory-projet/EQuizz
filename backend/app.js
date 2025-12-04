@@ -69,10 +69,12 @@ const PORT = process.env.PORT || 3000;
 
 // Démarrer le serveur seulement si ce n'est pas un test
 if (process.env.NODE_ENV !== 'test') {
-  db.sequelize.drop()     
+  console.log('🔄 Tentative de connexion à la base de données...');
+  
+  db.sequelize.authenticate()
     .then(() => {
       console.log('✅ Connexion à la base de données établie avec succès.');
-      return db.sequelize.sync({ force: true }); // Vérifier la connexion
+      return db.sequelize.sync({ alter: true }); // Utiliser alter au lieu de force en production
     })
     .then(() => {
       console.log('✅ Base de données synchronisée avec succès.');
@@ -81,7 +83,14 @@ if (process.env.NODE_ENV !== 'test') {
       });
     })
     .catch(err => {
-      console.error('❌ Erreur lors de l\'initialisation:', err);
+      console.error('❌ Erreur lors de l\'initialisation:');
+      console.error('Type:', err.name);
+      console.error('Message:', err.message);
+      console.error('Code:', err.code);
+      if (err.parent) {
+        console.error('Parent Error:', err.parent.message);
+      }
+      process.exit(1); // Arrêter le processus en cas d'erreur
     });
 }
 

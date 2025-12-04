@@ -29,13 +29,14 @@ const sequelize = new Sequelize(
     pool: {
       max: 5,
       min: 0,
-      acquire: 30000,
+      acquire: 60000,  // Augmenté à 60s
       idle: 10000
     },
     dialectOptions: {
-      connectTimeout: 60000,
+      connectTimeout: 120000,  // Augmenté à 120s
       ssl: process.env.NODE_ENV === 'production' ? {
-        rejectUnauthorized: false  // Accepter les certificats auto-signés d'Aiven
+        rejectUnauthorized: true,  // Plus sécurisé pour Aiven
+        require: true
       } : false
     },
 
