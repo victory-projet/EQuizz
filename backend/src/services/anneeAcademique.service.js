@@ -23,8 +23,8 @@ class AnneeAcademiqueService {
     return annee;
   }
 
-  async findAll() {
-    return anneeAcademiqueRepository.findAll();
+  async findAll(includeArchived = false) {
+    return anneeAcademiqueRepository.findAll(includeArchived);
   }
 
   async findOne(id) {

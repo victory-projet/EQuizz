@@ -10,7 +10,8 @@ class AnneeAcademiqueController {
   });
 
   findAll = asyncHandler(async (req, res) => {
-    const annees = await anneeAcademiqueService.findAll();
+    const includeArchived = req.query.includeArchived === 'true';
+    const annees = await anneeAcademiqueService.findAll(includeArchived);
     res.status(200).json(annees);
   });
 

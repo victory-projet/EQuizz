@@ -7,9 +7,10 @@ class AnneeAcademiqueRepository {
     return db.AnneeAcademique.create(data);
   }
 
-  async findAll() {
+  async findAll(includeArchived = false) {
+    const where = includeArchived ? {} : { estArchive: false };
     return db.AnneeAcademique.findAll({
-      where: { estArchive: false },
+      where,
       order: [['libelle', 'DESC']]
     });
   }

@@ -20,7 +20,7 @@ class UtilisateurRepository {
           attributes: ['id', 'nom', 'niveau'],
           include: [
             { model: db.Ecole, attributes: ['id', 'nom'] },
-            { model: db.AnneeAcademique, attributes: ['id', 'nom'] }
+            { model: db.AnneeAcademique, attributes: ['id', 'libelle'] }
           ]
         }],
         required: false, // On met 'false' car un admin n'a pas de profil étudiant
@@ -51,7 +51,7 @@ class UtilisateurRepository {
           attributes: ['id', 'nom', 'niveau'],
           include: [
             { model: db.Ecole, attributes: ['id', 'nom'] },
-            { model: db.AnneeAcademique, attributes: ['id', 'nom'] }
+            { model: db.AnneeAcademique, attributes: ['id', 'libelle'] }
           ]
         }],
         required: false,

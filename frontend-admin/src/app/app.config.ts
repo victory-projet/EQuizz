@@ -19,6 +19,8 @@ import { DashboardRepositoryInterface } from './core/domain/repositories/dashboa
 import { DashboardRepository } from './infrastructure/repositories/dashboard.repository';
 import { NotificationRepositoryInterface } from './core/domain/repositories/notification.repository.interface';
 import { NotificationRepository } from './infrastructure/repositories/notification.repository';
+import { TeacherRepositoryInterface } from './core/domain/repositories/teacher.repository.interface';
+import { TeacherRepository } from './infrastructure/repositories/teacher.repository';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 export const appConfig: ApplicationConfig = {
@@ -36,6 +38,7 @@ export const appConfig: ApplicationConfig = {
     { provide: AcademicRepositoryInterface, useClass: AcademicRepository },
     { provide: EvaluationRepositoryInterface, useClass: EvaluationRepository },
     { provide: DashboardRepositoryInterface, useClass: DashboardRepository },
-    { provide: NotificationRepositoryInterface, useClass: NotificationRepository }
+    { provide: NotificationRepositoryInterface, useClass: NotificationRepository },
+    { provide: TeacherRepositoryInterface, useClass: TeacherRepository }
   ]
 };

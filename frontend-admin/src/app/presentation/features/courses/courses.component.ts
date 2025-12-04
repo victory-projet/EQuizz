@@ -2,7 +2,9 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
+import { TeacherUseCase } from '../../../core/usecases/teacher.usecase';
 import { Cours, AnneeAcademique, Semestre } from '../../../core/domain/entities/academic.entity';
+import { Teacher } from '../../../core/domain/entities/teacher.entity';
 
 @Component({
   selector: 'app-courses',
@@ -43,7 +45,10 @@ export class CoursesComponent implements OnInit {
   coursActifs = computed(() => this.cours().filter(c => !c.estArchive).length);
   coursArchives = computed(() => this.cours().filter(c => c.estArchive).length);
 
-  constructor(private academicUseCase: AcademicUseCase) { }
+  constructor(
+    private academicUseCase: AcademicUseCase,
+    private teacherUseCase: TeacherUseCase
+  ) { }
 
   ngOnInit(): void {
     this.loadCours();
@@ -52,9 +57,15 @@ export class CoursesComponent implements OnInit {
   }
 
   loadEnseignants(): void {
-    // TODO: Implémenter quand le use case enseignants sera disponible
-    // Pour l'instant, on laisse vide
-    this.enseignants.set([]);
+    this.teacherUseCase.getTeachers().subscribe({
+      next: (enseignants) => {
+        this.enseignants.set(enseignants);
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des enseignants:', error);
+        this.errorMessage.set('Erreur lors du chargement des enseignants');
+      }
+    });
   }
 
   onAnneeChange(anneeId: string): void {
