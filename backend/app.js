@@ -69,19 +69,30 @@ const PORT = process.env.PORT || 3000;
 
 // Démarrer le serveur seulement si ce n'est pas un test
 if (process.env.NODE_ENV !== 'test') {
-  // Synchroniser la base de données avec force: true pour recréer les tables
-  db.sequelize.sync({ force: true })
+  db.sequelize.authenticate()
     .then(() => {
-      console.log('✅ Base de données synchronisée avec succès (tables recréées).');
-      console.log('ℹ️  Appelez POST /api/init/seed pour peupler la base de données.');
+      console.log('✅ Connexion à la base de données établie avec succès.');
       
+      // Ne pas synchroniser automatiquement en production pour éviter les conflits
+      // Les tables doivent être créées manuellement via /api/init/reset puis /api/init/seed
+      if (process.env.NODE_ENV !== 'production') {
+        return db.sequelize.sync({ alter: true });
+      }
+      
+      console.log('ℹ️  Mode production: Synchronisation automatique désactivée.');
+      console.log('ℹ️  Utilisez POST /api/init/reset puis POST /api/init/seed pour initialiser la base.');
+      return Promise.resolve();
+    })
+    .then(() => {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('✅ Base de données synchronisée avec succès.');
+      }
       app.listen(PORT, () => {
         console.log(`🚀 Serveur démarré sur le port ${PORT}`);
       });
     })
     .catch(err => {
       console.error('❌ Erreur lors de l\'initialisation:', err);
-      console.error('Détails:', err.message);
       process.exit(1);
     });
 }
