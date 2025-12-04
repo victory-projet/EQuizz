@@ -17,12 +17,12 @@ export class StudentsComponent implements OnInit {
   students = signal<Etudiant[]>([]);
   filteredStudents = signal<Etudiant[]>([]);
   classes = signal<Classe[]>([]);
-  
+
   isLoading = signal(false);
   showModal = signal(false);
   showDeleteModal = signal(false);
   selectedStudent = signal<Etudiant | null>(null);
-  
+
   searchQuery = signal('');
   filterClasse = signal<string>('ALL');
   filterStatus = signal<string>('ALL');
@@ -46,7 +46,7 @@ export class StudentsComponent implements OnInit {
   constructor(
     private userUseCase: UserUseCase,
     private academicUseCase: AcademicUseCase
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadStudents();
@@ -166,7 +166,7 @@ export class StudentsComponent implements OnInit {
 
   onSubmit(): void {
     this.errorMessage.set('');
-    
+
     if (this.selectedStudent()) {
       this.updateStudent();
     } else {
@@ -181,7 +181,8 @@ export class StudentsComponent implements OnInit {
       prenom: this.formData.prenom,
       email: this.formData.email,
       role: 'ETUDIANT' as const,
-      matricule: this.formData.matricule || undefined
+      matricule: this.formData.matricule || undefined,
+      classeId: this.formData.classeId ? Number(this.formData.classeId) : undefined
     };
 
     this.userUseCase.createUser(data).subscribe({
@@ -206,7 +207,9 @@ export class StudentsComponent implements OnInit {
     const data = {
       nom: this.formData.nom,
       prenom: this.formData.prenom,
-      email: this.formData.email
+      prenom: this.formData.prenom,
+      email: this.formData.email,
+      classeId: this.formData.classeId ? Number(this.formData.classeId) : undefined
     };
 
     this.userUseCase.updateUser(student.id.toString(), data).subscribe({

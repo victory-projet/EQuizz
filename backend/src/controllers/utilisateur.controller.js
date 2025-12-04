@@ -71,7 +71,7 @@ exports.getUtilisateurById = async (req, res) => {
 // Créer un nouvel utilisateur
 exports.createUtilisateur = async (req, res) => {
   try {
-    const { nom, prenom, email, motDePasse, role, specialite, matricule } = req.body;
+    const { nom, prenom, email, motDePasse, role, specialite, matricule, classeId } = req.body;
 
     // Vérifier si l'email existe déjà
     const existingUser = await Utilisateur.findOne({ where: { email } });
@@ -106,7 +106,7 @@ exports.createUtilisateur = async (req, res) => {
     if (role === 'ADMIN') {
       await Administrateur.create({ id: utilisateur.id });
     } else if (role === 'ENSEIGNANT') {
-      await Enseignant.create({ 
+      await Enseignant.create({
         id: utilisateur.id,
         specialite: specialite || null
       });
@@ -114,17 +114,18 @@ exports.createUtilisateur = async (req, res) => {
       if (!matricule) {
         return res.status(400).json({ message: 'Le matricule est requis pour un étudiant' });
       }
-      
+
       // Vérifier si le matricule existe déjà
       const existingMatricule = await Etudiant.findOne({ where: { matricule } });
       if (existingMatricule) {
         await utilisateur.destroy();
         return res.status(400).json({ message: 'Ce matricule est déjà utilisé' });
       }
-      
-      await Etudiant.create({ 
+
+      await Etudiant.create({
         id: utilisateur.id,
-        matricule
+        matricule,
+        classe_id: classeId || null
       });
     }
 
@@ -141,6 +142,7 @@ exports.createUtilisateur = async (req, res) => {
     userData.role = role;
     if (role === 'ETUDIANT' && userData.Etudiant) {
       userData.matricule = userData.Etudiant.matricule;
+      userData.classeId = userData.Etudiant.classe_id;
     }
 
     // Envoyer un email de bienvenue si c'est un admin ou enseignant avec mot de passe
@@ -159,7 +161,7 @@ exports.createUtilisateur = async (req, res) => {
 exports.updateUtilisateur = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nom, prenom, email, estActif, specialite } = req.body;
+    const { nom, prenom, email, estActif, specialite, classeId } = req.body;
 
     const utilisateur = await Utilisateur.findByPk(id, {
       include: [
@@ -186,6 +188,11 @@ exports.updateUtilisateur = async (req, res) => {
       await utilisateur.Enseignant.update({ specialite });
     }
 
+    // Mettre à jour la classe si c'est un étudiant
+    if (utilisateur.Etudiant && classeId !== undefined) {
+      await utilisateur.Etudiant.update({ classe_id: classeId || null });
+    }
+
     // Récupérer l'utilisateur mis à jour
     const utilisateurMisAJour = await Utilisateur.findByPk(id, {
       include: [
@@ -203,6 +210,7 @@ exports.updateUtilisateur = async (req, res) => {
     } else if (userData.Etudiant) {
       userData.role = 'ETUDIANT';
       userData.matricule = userData.Etudiant.matricule;
+      userData.classeId = userData.Etudiant.classe_id;
     }
 
     res.json(userData);
@@ -246,11 +254,11 @@ exports.resetPassword = async (req, res) => {
     }
 
     await utilisateur.update({ motDePasseHash: nouveauMotDePasse });
-    
+
     // Envoyer un email avec le nouveau mot de passe
     const userData = utilisateur.toJSON();
     await emailService.sendPasswordResetEmail(userData, nouveauMotDePasse);
-    
+
     res.json({ message: 'Mot de passe réinitialisé avec succès' });
   } catch (error) {
     console.error('Erreur lors de la réinitialisation du mot de passe:', error);

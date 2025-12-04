@@ -9,6 +9,7 @@ export interface CreateUserDto {
   role: 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT';
   specialite?: string;
   matricule?: string;
+  classeId?: number | string;
 }
 
 export interface UpdateUserDto {
@@ -17,6 +18,7 @@ export interface UpdateUserDto {
   email?: string;
   estActif?: boolean;
   specialite?: string;
+  classeId?: number | string;
 }
 
 export abstract class UserRepositoryInterface {
