@@ -182,7 +182,7 @@ export class StudentsComponent implements OnInit {
       email: this.formData.email,
       role: 'ETUDIANT' as const,
       matricule: this.formData.matricule || undefined,
-      classeId: this.formData.classeId ? Number(this.formData.classeId) : undefined
+      classeId: this.formData.classeId || undefined
     };
 
     this.userUseCase.createUser(data).subscribe({
@@ -207,9 +207,8 @@ export class StudentsComponent implements OnInit {
     const data = {
       nom: this.formData.nom,
       prenom: this.formData.prenom,
-      prenom: this.formData.prenom,
       email: this.formData.email,
-      classeId: this.formData.classeId ? Number(this.formData.classeId) : undefined
+      classeId: this.formData.classeId || undefined
     };
 
     this.userUseCase.updateUser(student.id.toString(), data).subscribe({
