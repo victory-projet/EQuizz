@@ -8,14 +8,16 @@ const Ecole = sequelize.define('Ecole', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
-  
+
   nom: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true, 
+    unique: true,
     // ex: "Saint Jean Ingenieur"
   },
 
+}, {
+  tableName: 'ecole'
 });
 
 module.exports = Ecole;

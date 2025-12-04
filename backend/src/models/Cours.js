@@ -7,7 +7,7 @@ const Cours = sequelize.define('Cours', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
-  
+
   // Le code unique du cours, ex: "INF305"
   code: {
     type: DataTypes.STRING,
@@ -35,6 +35,8 @@ const Cours = sequelize.define('Cours', {
     field: 'annee_academique_id'
   }
 
+}, {
+  tableName: 'cours'
 });
 
 module.exports = Cours;

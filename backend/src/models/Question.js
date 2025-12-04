@@ -36,6 +36,8 @@ const Question = sequelize.define('Question', {
     allowNull: false,
   },
 
+}, {
+  tableName: 'question'
 });
 
 module.exports = Question;

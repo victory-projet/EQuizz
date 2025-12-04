@@ -6,12 +6,14 @@ const Enseignant = sequelize.define('Enseignant', {
     type: DataTypes.UUID,
     primaryKey: true,
   },
-  
+
   specialite: {
     type: DataTypes.STRING,
     allowNull: true,
   },
 
+}, {
+  tableName: 'enseignant'
 });
 
 module.exports = Enseignant;

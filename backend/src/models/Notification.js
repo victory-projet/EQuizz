@@ -8,7 +8,7 @@ const Notification = sequelize.define('Notification', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
-  
+
   titre: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -25,7 +25,9 @@ const Notification = sequelize.define('Notification', {
     type: DataTypes.ENUM('NOUVELLE_EVALUATION', 'RAPPEL_EVALUATION', 'EVALUATION_BIENTOT_FERMEE'),
     allowNull: false,
   },
-  
+
+}, {
+  tableName: 'notification'
 });
 
 module.exports = Notification;

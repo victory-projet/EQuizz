@@ -8,15 +8,17 @@ const Administrateur = sequelize.define('Administrateur', {
     type: DataTypes.UUID,
     primaryKey: true,
   },
-  
+
   profil: {
     type: DataTypes.STRING,
-    allowNull: true, 
+    allowNull: true,
     validate: {
-      isUrl: true, 
+      isUrl: true,
     }
   },
 
+}, {
+  tableName: 'administrateur'
 });
 
 module.exports = Administrateur;

@@ -51,8 +51,9 @@ const Evaluation = sequelize.define('Evaluation', {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
     allowNull: false,
-  },
-
+  }
+}, {
+  tableName: 'evaluation'
 });
 
 module.exports = Evaluation;

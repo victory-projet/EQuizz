@@ -3,16 +3,16 @@ const sequelize = require('../config/database');
 
 const PasswordResetToken = sequelize.define('PasswordResetToken', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-    autoIncrement: true
   },
   utilisateurId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: false,
     field: 'utilisateur_id',
     references: {
-      model: 'utilisateurs',
+      model: 'utilisateur',
       key: 'id'
     },
     onDelete: 'CASCADE'
@@ -38,7 +38,7 @@ const PasswordResetToken = sequelize.define('PasswordResetToken', {
     field: 'ip_address'
   }
 }, {
-  tableName: 'password_reset_tokens',
+  tableName: 'passwordresettoken',
   timestamps: true,
   underscored: true,
   createdAt: 'created_at',

@@ -39,7 +39,8 @@ const AnneeAcademique = sequelize.define('AnneeAcademique', {
     defaultValue: false,
     allowNull: false,
   }
-
+}, {
+  tableName: 'anneeacademique'
 });
 
 module.exports = AnneeAcademique;

@@ -15,6 +15,8 @@ const ReponseEtudiant = sequelize.define('ReponseEtudiant', {
     allowNull: false,
   },
 
+}, {
+  tableName: 'reponseetudiant'
 });
 
 module.exports = ReponseEtudiant;

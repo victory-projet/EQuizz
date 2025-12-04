@@ -37,6 +37,7 @@ const SessionToken = sequelize.define('SessionToken', {
     allowNull: false,
   },
 }, {
+  tableName: 'sessiontoken',
   underscored: true,
   indexes: [
     {

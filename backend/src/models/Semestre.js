@@ -38,8 +38,9 @@ const Semestre = sequelize.define('Semestre', {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
     allowNull: false,
-  },
-
+  }
+}, {
+  tableName: 'semestre'
 });
 
 module.exports = Semestre;

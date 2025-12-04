@@ -81,7 +81,7 @@ Classe.hasMany(Etudiant, { foreignKey: 'classe_id' });
 Etudiant.belongsTo(Classe, { foreignKey: 'classe_id' });
 
 // Relation Plusieurs-à-Plusieurs entre Cours et Classe
-const CoursClasse = sequelize.define('CoursClasse', {}, { freezeTableName: true, paranoid: false, underscored: true }); // Table de jonction simple
+const CoursClasse = sequelize.define('CoursClasse', {}, { tableName: 'coursclasse', paranoid: false, underscored: true }); // Table de jonction simple
 Cours.belongsToMany(Classe, { through: CoursClasse });
 Classe.belongsToMany(Cours, { through: CoursClasse });
 
@@ -128,13 +128,13 @@ Notification.belongsTo(Evaluation, { foreignKey: 'evaluation_id' });
 // Relation Plusieurs-à-Plusieurs entre Notification et Etudiant (avec statut de lecture)
 const NotificationEtudiant = sequelize.define('NotificationEtudiant', {
   estLue: { type: DataTypes.BOOLEAN, defaultValue: false }
-}, { freezeTableName: true, paranoid: false, underscored: true });
+}, { tableName: 'notificationetudiant', paranoid: false, underscored: true });
 Etudiant.belongsToMany(Notification, { through: NotificationEtudiant });
 Notification.belongsToMany(Etudiant, { through: NotificationEtudiant });
 
 //  Nouvelle Relation Plusieurs-à-Plusieurs entre Evaluation et Classe 
 
-const EvaluationClasse = sequelize.define('EvaluationClasse', {}, { freezeTableName: true, paranoid: false, underscored: true });
+const EvaluationClasse = sequelize.define('EvaluationClasse', {}, { tableName: 'evaluationclasse', paranoid: false, underscored: true });
 Evaluation.belongsToMany(Classe, { through: EvaluationClasse });
 Classe.belongsToMany(Evaluation, { through: EvaluationClasse });
 

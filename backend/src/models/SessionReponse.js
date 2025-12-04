@@ -33,6 +33,8 @@ const SessionReponse = sequelize.define('SessionReponse', {
     type: DataTypes.DATE,
     allowNull: true,
   },
+}, {
+  tableName: 'sessionreponse'
 });
 
 module.exports = SessionReponse;

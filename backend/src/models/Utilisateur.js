@@ -15,7 +15,7 @@ const Utilisateur = sequelize.define('Utilisateur', {
     allowNull: false,
     // Permet de désactiver un compte sans le supprimer
   },
-  
+
   nom: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -55,7 +55,8 @@ const Utilisateur = sequelize.define('Utilisateur', {
     allowNull: true,
   },
 }, {
-// Ajout des Hooks
+  tableName: 'utilisateur',
+  // Ajout des Hooks
   hooks: {
     beforeSave: async (utilisateur) => {
       if (utilisateur.changed('motDePasseHash') && utilisateur.motDePasseHash) {
