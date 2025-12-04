@@ -22,19 +22,21 @@ const sequelize = new Sequelize(
   {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 3306,
-    dialect: process.env.DB_DIALECT,
-    logging: false,
+    dialect: process.env.DB_DIALECT || 'mysql',
+    logging: process.env.NODE_ENV === 'development' ? console.log : false,
 
     // Options de connexion pour éviter les timeouts
     pool: {
       max: 5,
       min: 0,
-      acquire: 30000,
+      acquire: 60000,
       idle: 10000
     },
     dialectOptions: {
       connectTimeout: 60000,
+      // SSL requis pour Aiven en production
       ssl: process.env.NODE_ENV === 'production' ? {
+        require: true,
         rejectUnauthorized: false  // Accepter les certificats auto-signés d'Aiven
       } : false
     },

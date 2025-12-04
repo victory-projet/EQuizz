@@ -12,8 +12,12 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "db:sync": "node sync-db.js",
+    "db:setup": "node setup-db.js",
+    "db:test": "node test-aiven-connection.js",
+    "verify": "node verify-setup.js",
     "start:dev": "nodemon app.js",
-    "lint": "eslint . --ext .js --fix"
+    "lint": "eslint . --ext .js --fix",
+    "build": "echo 'No build step required for Node.js'"
   },
   "keywords": [],
   "author": "",

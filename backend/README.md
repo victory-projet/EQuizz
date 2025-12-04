@@ -198,11 +198,17 @@ Chaque quizz peut avoir 3 statuts pour un étudiant :
 ## 🛠️ Scripts Disponibles
 
 ```bash
+# Démarrage
 npm start              # Démarrer en production
 npm run start:dev      # Démarrer en développement (nodemon)
+
+# Base de données
 npm run db:sync        # Synchroniser la base de données
+npm run db:setup       # Créer les tables (production)
+npm run db:test        # Tester la connexion Aiven
+
+# Code Quality
 npm run lint           # Vérifier le code (ESLint)
-npm run lint:fix       # Corriger automatiquement les erreurs
 
 # Tests
 npm test               # Lancer tous les tests
@@ -263,19 +269,44 @@ backend/
 
 ## 🚢 Déploiement
 
-### Railway (Recommandé)
+### Render + Aiven MySQL (Recommandé)
 
-1. Connecter le dépôt GitHub à Railway
-2. Configurer les variables d'environnement
-3. Railway détecte automatiquement Node.js et déploie
+**Guide complet**: Voir [DEPLOYMENT.md](./DEPLOYMENT.md)
 
-### Commandes Railway CLI
+**Résolution rapide des problèmes**: Voir [QUICK_FIX.md](./QUICK_FIX.md)
+
+#### Configuration Rapide
+
+1. **Créer un service MySQL sur Aiven** (console.aiven.io)
+2. **Créer un Web Service sur Render** (render.com)
+3. **Configurer les variables d'environnement** dans Render:
+   ```
+   NODE_ENV=production
+   DB_HOST=mysql-xxxxx.aivencloud.com
+   DB_PORT=12345
+   DB_USER=avnadmin
+   DB_PASSWORD=votre_mot_de_passe
+   DB_NAME=defaultdb
+   DB_DIALECT=mysql
+   JWT_SECRET=votre_secret_jwt
+   SENDGRID_API_KEY=votre_cle_sendgrid
+   SENDGRID_VERIFIED_SENDER=votre.email@verifie.com
+   GOOGLE_AI_API_KEY=votre_cle_google_ai
+   ```
+
+4. **Déployer** - Les tables seront créées automatiquement
+
+5. **Peupler la base**:
+   ```bash
+   curl -X POST https://votre-app.onrender.com/api/init/seed
+   ```
+
+#### Scripts de Déploiement
+
 ```bash
-railway login
-railway link
-railway up              # Déployer depuis le dossier local
-railway status          # Vérifier le statut
-railway logs            # Voir les logs
+npm run db:setup        # Créer les tables manuellement
+npm run db:test         # Tester la connexion Aiven
+npm run build           # Pas de build nécessaire (Node.js)
 ```
 
 ## 🔧 Dépannage

@@ -72,7 +72,12 @@ if (process.env.NODE_ENV !== 'test') {
   db.sequelize.authenticate()
     .then(() => {
       console.log('✅ Connexion à la base de données établie avec succès.');
-      return db.sequelize.authenticate(); // Vérifier la connexion
+      // Synchroniser les modèles avec la base de données
+      // En production, utilise alter: true pour mettre à jour sans perdre les données
+      return db.sequelize.sync({ 
+        alter: process.env.NODE_ENV === 'production',
+        force: false 
+      });
     })
     .then(() => {
       console.log('✅ Base de données synchronisée avec succès.');
@@ -82,6 +87,7 @@ if (process.env.NODE_ENV !== 'test') {
     })
     .catch(err => {
       console.error('❌ Erreur lors de l\'initialisation:', err);
+      process.exit(1);
     });
 }
 
