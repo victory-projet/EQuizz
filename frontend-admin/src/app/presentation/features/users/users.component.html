@@ -102,7 +102,7 @@
                   <button 
                     class="btn-icon btn-danger" 
                     title="Supprimer"
-                    (click)="openDeleteModal(user)">
+                    (click)="deleteUser(user)">
                     <span class="material-icons">delete</span>
                   </button>
                 </div>
@@ -254,34 +254,6 @@
     </div>
   }
 
-  <!-- Delete Modal -->
-  @if (showDeleteModal()) {
-    <div class="modal-overlay" (click)="closeModal()">
-      <div class="modal-content modal-small" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>Confirmer la suppression</h3>
-          <button class="close-btn" (click)="closeModal()">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-
-        <div class="modal-body">
-          <p>Êtes-vous sûr de vouloir supprimer l'utilisateur <strong>{{ selectedUser()?.prenom }} {{ selectedUser()?.nom }}</strong> ?</p>
-          <p class="warning-text">Cette action est irréversible.</p>
-        </div>
-
-        <div class="modal-footer">
-          <button class="btn btn-secondary" (click)="closeModal()">
-            Annuler
-          </button>
-          <button class="btn btn-danger" (click)="deleteUser()" [disabled]="isLoading()">
-            Supprimer
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-
   <!-- Password Reset Modal -->
   @if (showPasswordModal()) {
     <div class="modal-overlay" (click)="closeModal()">
@@ -293,7 +265,7 @@
           </button>
         </div>
 
-        <form (ngSubmit)="resetPassword()">
+        <form (ngSubmit)="resetPassword(selectedUser()!)">>
           <div class="modal-body">
             @if (errorMessage()) {
               <div class="alert alert-error">

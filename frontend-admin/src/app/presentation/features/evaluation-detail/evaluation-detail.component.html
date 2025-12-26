@@ -181,3 +181,53 @@
     (cancelled)="cancelPublish()"
   ></app-evaluation-publish>
 }
+<!-- Delete Question Modal -->
+@if (showDeleteQuestionModal()) {
+  <div class="modal-overlay" (click)="closeDeleteQuestionModal()">
+    <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-with-icon">
+          <span class="material-icons modal-icon delete-icon">help_outline</span>
+          <h3>Supprimer la question</h3>
+        </div>
+        <button class="close-btn" (click)="closeDeleteQuestionModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p>Êtes-vous sûr de vouloir supprimer cette question ?</p>
+        @if (selectedQuestion()) {
+          <div class="question-preview">
+            <strong>{{ selectedQuestion()!.enonce }}</strong>
+          </div>
+        }
+        <div class="warning-box">
+          <span class="material-icons">warning</span>
+          <div>
+            <p><strong>Attention :</strong></p>
+            <p>Cette action est irréversible. La question sera définitivement supprimée.</p>
+          </div>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="alert alert-error">
+            {{ errorMessage() }}
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDeleteQuestionModal()">
+          Annuler
+        </button>
+        <button class="btn btn-danger" (click)="confirmDeleteQuestion()" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="spinner"></span>
+          }
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+}

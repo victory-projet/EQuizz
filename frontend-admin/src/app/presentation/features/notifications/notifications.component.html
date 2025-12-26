@@ -1,0 +1,184 @@
+<div class="notifications-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Notifications</h1>
+      <p class="subtitle">Gérez vos alertes et activités</p>
+    </div>
+    <div class="header-actions">
+      @if (unreadCount() > 0) {
+        <button class="btn-secondary" (click)="markAllAsRead()">
+          <span class="material-icons">done_all</span>
+          Tout marquer comme lu
+        </button>
+      }
+      <button class="btn-primary" (click)="refreshNotifications()">
+        <span class="material-icons">refresh</span>
+        Actualiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters-section">
+    <div class="filter-tabs">
+      <button class="filter-tab" 
+              [class.active]="selectedFilter() === 'all'"
+              (click)="setFilter('all')">
+        Toutes
+        @if (totalCount() > 0) {
+          <span class="count">{{ totalCount() }}</span>
+        }
+      </button>
+      <button class="filter-tab" 
+              [class.active]="selectedFilter() === 'unread'"
+              (click)="setFilter('unread')">
+        Non lues
+        @if (unreadCount() > 0) {
+          <span class="count">{{ unreadCount() }}</span>
+        }
+      </button>
+      <button class="filter-tab" 
+              [class.active]="selectedFilter() === 'alerts'"
+              (click)="setFilter('alerts')">
+        Alertes
+      </button>
+      <button class="filter-tab" 
+              [class.active]="selectedFilter() === 'activities'"
+              (click)="setFilter('activities')">
+        Activités
+      </button>
+    </div>
+
+    <div class="filter-actions">
+      <div class="search-box">
+        <span class="material-icons">search</span>
+        <input type="text" 
+               placeholder="Rechercher dans les notifications..."
+               [(ngModel)]="searchTerm"
+               (input)="onSearch()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des notifications...</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (errorMessage()) {
+    <div class="error-state">
+      <span class="material-icons">error</span>
+      <h3>{{ errorMessage() }}</h3>
+      <button class="btn-primary" (click)="loadNotifications()">Réessayer</button>
+    </div>
+  }
+
+  <!-- Notifications List -->
+  @if (!isLoading() && !errorMessage()) {
+    <div class="notifications-content">
+      @if (getFilteredNotifications().length > 0) {
+        <div class="notifications-list">
+          @for (notification of getFilteredNotifications(); track notification.id) {
+            <div class="notification-item" 
+                 [class]="getNotificationClass(notification)"
+                 [class.unread]="!notification.isRead">
+              
+              <!-- Notification Icon -->
+              <div class="notification-icon" [style.background-color]="getNotificationColor(notification)">
+                <span class="material-icons">{{ getNotificationIcon(notification) }}</span>
+              </div>
+
+              <!-- Notification Content -->
+              <div class="notification-content" (click)="markAsRead(notification.id)">
+                <div class="notification-header">
+                  <h4>{{ notification.title }}</h4>
+                  <div class="notification-meta">
+                    <span class="notification-time">{{ getTimeAgo(notification.date) }}</span>
+                    @if (notification.priority === 'high') {
+                      <span class="priority-badge high">Urgent</span>
+                    }
+                    @if (notification.priority === 'medium') {
+                      <span class="priority-badge medium">Important</span>
+                    }
+                  </div>
+                </div>
+                
+                <p class="notification-message">{{ notification.message || notification.description }}</p>
+                
+                @if (notification.actionUrl && notification.actionLabel) {
+                  <a [href]="notification.actionUrl" class="notification-action-link">
+                    {{ notification.actionLabel }}
+                    <span class="material-icons">arrow_forward</span>
+                  </a>
+                }
+
+                @if (notification.user) {
+                  <div class="notification-user">
+                    <span class="material-icons">person</span>
+                    {{ notification.user }}
+                  </div>
+                }
+              </div>
+
+              <!-- Notification Actions -->
+              <div class="notification-actions">
+                @if (!notification.isRead) {
+                  <button class="btn-icon" (click)="markAsRead(notification.id)" title="Marquer comme lu">
+                    <span class="material-icons">check</span>
+                  </button>
+                }
+                <button class="btn-icon" (click)="deleteNotification(notification.id)" title="Supprimer">
+                  <span class="material-icons">delete</span>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages() > 1) {
+          <div class="pagination">
+            <button class="btn-pagination" 
+                    [disabled]="currentPage() === 1"
+                    (click)="goToPage(currentPage() - 1)">
+              <span class="material-icons">chevron_left</span>
+              Précédent
+            </button>
+            
+            <div class="page-info">
+              Page {{ currentPage() }} sur {{ totalPages() }}
+            </div>
+            
+            <button class="btn-pagination" 
+                    [disabled]="currentPage() === totalPages()"
+                    (click)="goToPage(currentPage() + 1)">
+              Suivant
+              <span class="material-icons">chevron_right</span>
+            </button>
+          </div>
+        }
+      } @else {
+        <div class="empty-state">
+          <span class="material-icons">notifications_none</span>
+          <h3>Aucune notification</h3>
+          <p>
+            @if (selectedFilter() === 'unread') {
+              Toutes vos notifications ont été lues
+            } @else if (selectedFilter() === 'alerts') {
+              Aucune alerte pour le moment
+            } @else if (selectedFilter() === 'activities') {
+              Aucune activité récente
+            } @else {
+              Vous n'avez aucune notification pour le moment
+            }
+          </p>
+        </div>
+      }
+    </div>
+  }
+</div>

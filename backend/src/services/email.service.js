@@ -467,6 +467,7 @@ class EmailService {
       }
       // Ne pas bloquer la création de l'utilisateur si l'email échoue
       console.warn('⚠️ L\'utilisateur a été créé mais l\'email n\'a pas pu être envoyé');
+      throw new Error('Email service not configured properly');
     }
   }
 

@@ -145,7 +145,12 @@ exports.createUtilisateur = async (req, res) => {
 
     // Envoyer un email de bienvenue si c'est un admin ou enseignant avec mot de passe
     if ((role === 'ADMIN' || role === 'ENSEIGNANT') && motDePasse) {
-      await emailService.sendWelcomeEmail(userData, motDePasse);
+      try {
+        await emailService.sendWelcomeEmail(userData, motDePasse);
+      } catch (emailError) {
+        console.warn('⚠️ L\'utilisateur a été créé mais l\'email n\'a pas pu être envoyé:', emailError.message);
+        // Ne pas faire échouer la création de l'utilisateur si l'email échoue
+      }
     }
 
     res.status(201).json(userData);
