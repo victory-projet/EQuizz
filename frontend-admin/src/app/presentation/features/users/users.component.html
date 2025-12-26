@@ -30,6 +30,70 @@
         [value]="searchQuery()"
       >
     </div>
+
+    <!-- Cache Controls -->
+    <div class="cache-controls">
+      <div class="cache-status">
+        <span class="material-icons">storage</span>
+        <span class="cache-label">Cache:</span>
+        <span class="cache-status-badge" [ngClass]="getCacheStatusClass()">
+          {{ getCacheStatus() }}
+        </span>
+        @if (lastRefresh()) {
+          <small class="last-refresh">
+            Dernière MAJ: {{ lastRefresh()!.toLocaleTimeString() }}
+          </small>
+        }
+      </div>
+
+      <div class="cache-actions">
+        <button 
+          class="btn-cache" 
+          [class.active]="cacheEnabled()"
+          (click)="toggleCache()"
+          title="Activer/Désactiver le cache">
+          <span class="material-icons">
+            {{ cacheEnabled() ? 'cached' : 'sync_disabled' }}
+          </span>
+        </button>
+
+        <button 
+          class="btn-cache" 
+          (click)="refreshData()"
+          title="Actualiser les données">
+          <span class="material-icons">refresh</span>
+        </button>
+
+        <button 
+          class="btn-cache" 
+          (click)="clearCache()"
+          title="Vider le cache">
+          <span class="material-icons">clear_all</span>
+        </button>
+
+        @if (cacheStats()) {
+          <div class="cache-stats-dropdown">
+            <button class="btn-cache" title="Statistiques du cache">
+              <span class="material-icons">analytics</span>
+            </button>
+            <div class="cache-stats-content">
+              <div class="stat-item">
+                <span>Utilisateurs en cache:</span>
+                <span>{{ cacheStats()!.totalUsers }}</span>
+              </div>
+              <div class="stat-item">
+                <span>Taux de succès:</span>
+                <span>{{ formatHitRate(cacheStats()!.cacheHitRate) }}</span>
+              </div>
+              <div class="stat-item">
+                <span>Mémoire utilisée:</span>
+                <span>{{ formatMemorySize(cacheStats()!.memoryUsage) }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
   </div>
 
   <!-- Users Table -->
