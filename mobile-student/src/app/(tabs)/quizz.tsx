@@ -20,6 +20,8 @@ import { TypeQuestion, QuizzAnswer } from '../../domain/entities/Quizz';
 import LoadingSpinner from '../../presentation/components/LoadingSpinner.component';
 import { PrimaryButton } from '../../presentation/components/PrimaryButton';
 import { useAuth } from '../../presentation/hooks/useAuth';
+import { QuizCardSkeletonList } from '../../presentation/components/QuizCardSkeleton.component';
+import { QuizDetailSkeleton } from '../../presentation/components/QuizDetailSkeleton.component';
 
 // Composant pour afficher la liste des quiz
 function QuizListView() {
@@ -125,7 +127,7 @@ function QuizListView() {
                 }
             >
                 {loading && quizzes.length === 0 ? (
-                    <LoadingSpinner />
+                    <QuizCardSkeletonList count={3} />
                 ) : error ? (
                     <View style={styles.errorContainer}>
                         <MaterialIcons name="error-outline" size={64} color="#DC2626" />
@@ -196,7 +198,7 @@ function QuizDetailView({ id }: { id: string }) {
     if (loading) {
         return (
             <SafeAreaView style={styles.container}>
-                <LoadingSpinner />
+                <QuizDetailSkeleton />;
             </SafeAreaView>
         );
     }
@@ -488,7 +490,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         flexDirection: 'row',
-        gap: 170,
+        //gap: 170,
         alignItems: 'center',
         height: 120,
         paddingTop: 75
