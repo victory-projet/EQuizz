@@ -268,7 +268,7 @@
           <button class="btn btn-secondary" (click)="closeModal()">
             Annuler
           </button>
-          <button class="btn btn-danger" (click)="deleteStudent()" [disabled]="isLoading()">
+          <button class="btn btn-danger" (click)="deleteStudent(selectedStudent()!)" [disabled]="isLoading()">
             Supprimer
           </button>
         </div>

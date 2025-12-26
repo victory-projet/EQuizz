@@ -28,6 +28,8 @@ export class EvaluationDetailComponent implements OnInit {
   showQuestionForm = signal(false);
   showImportForm = signal(false);
   showPublishModal = signal(false);
+  showDeleteQuestionModal = signal(false);
+  selectedQuestion = signal<Question | null>(null);
 
   errorMessage = signal('');
   successMessage = signal('');
@@ -91,21 +93,36 @@ export class EvaluationDetailComponent implements OnInit {
   }
 
   deleteQuestion(question: Question): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer cette question ?`)) {
-      this.evaluationUseCase.deleteQuestion(question.id as any).subscribe({
-        next: () => {
-          this.successMessage.set('Question supprimée avec succès');
-          const evalId = this.evaluation()?.id;
-          if (evalId) {
-            this.loadEvaluation(evalId);
-          }
-          setTimeout(() => this.successMessage.set(''), 3000);
-        },
-        error: (error) => {
-          this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
+    this.selectedQuestion.set(question);
+    this.showDeleteQuestionModal.set(true);
+  }
+
+  confirmDeleteQuestion(): void {
+    const question = this.selectedQuestion();
+    if (!question) return;
+
+    this.isLoading.set(true);
+    this.evaluationUseCase.deleteQuestion(question.id as any).subscribe({
+      next: () => {
+        this.successMessage.set('Question supprimée avec succès');
+        this.closeDeleteQuestionModal();
+        const evalId = this.evaluation()?.id;
+        if (evalId) {
+          this.loadEvaluation(evalId);
         }
-      });
-    }
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error) => {
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  closeDeleteQuestionModal(): void {
+    this.showDeleteQuestionModal.set(false);
+    this.selectedQuestion.set(null);
+    this.errorMessage.set('');
   }
 
   onQuestionSaved(question: Question): void {

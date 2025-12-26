@@ -1,9 +1,10 @@
-﻿import { Component, OnInit, signal } from '@angular/core';
+﻿import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserUseCase } from '../../../core/usecases/user.usecase';
 import { User } from '../../../core/domain/entities/user.entity';
 import { CreateUserDto, UpdateUserDto } from '../../../core/domain/repositories/user.repository.interface';
+import { ConfirmationService } from '../../shared/services/confirmation.service';
 
 @Component({
   selector: 'app-users',
@@ -18,7 +19,6 @@ export class UsersComponent implements OnInit {
   paginatedUsers = signal<User[]>([]);
   isLoading = signal(false);
   showModal = signal(false);
-  showDeleteModal = signal(false);
   showPasswordModal = signal(false);
   selectedUser = signal<User | null>(null);
   searchQuery = signal('');
@@ -47,6 +47,8 @@ export class UsersComponent implements OnInit {
 
   errorMessage = signal('');
   successMessage = signal('');
+
+  private confirmationService = inject(ConfirmationService);
 
   constructor(private userUseCase: UserUseCase) {}
 
@@ -149,11 +151,6 @@ export class UsersComponent implements OnInit {
     this.showModal.set(true);
   }
 
-  openDeleteModal(user: User): void {
-    this.selectedUser.set(user);
-    this.showDeleteModal.set(true);
-  }
-
   openPasswordModal(user: User): void {
     this.selectedUser.set(user);
     this.passwordData = {
@@ -165,7 +162,6 @@ export class UsersComponent implements OnInit {
 
   closeModal(): void {
     this.showModal.set(false);
-    this.showDeleteModal.set(false);
     this.showPasswordModal.set(false);
     this.resetForm();
     this.errorMessage.set('');
@@ -269,15 +265,14 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  deleteUser(): void {
-    const user = this.selectedUser();
-    if (!user) return;
+  async deleteUser(user: User): Promise<void> {
+    const confirmed = await this.confirmationService.confirmDelete(`${user.prenom} ${user.nom}`);
+    if (!confirmed) return;
 
     this.isLoading.set(true);
     this.userUseCase.deleteUser(user.id.toString()).subscribe({
       next: () => {
         this.successMessage.set('Utilisateur supprimé avec succès');
-        this.closeModal();
         this.loadUsers();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
@@ -288,9 +283,46 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  resetPassword(): void {
-    const user = this.selectedUser();
-    if (!user) return;
+  async toggleUserStatus(user: User): Promise<void> {
+    const action = user.estActif ? 'désactiver' : 'activer';
+    const confirmed = await this.confirmationService.confirm({
+      title: `Confirmer ${action === 'désactiver' ? 'la désactivation' : 'l\'activation'}`,
+      message: `Êtes-vous sûr de vouloir ${action} l'utilisateur "${user.prenom} ${user.nom}" ?`,
+      confirmText: action === 'désactiver' ? 'Désactiver' : 'Activer',
+      cancelText: 'Annuler',
+      type: action === 'désactiver' ? 'warning' : 'success',
+      icon: action === 'désactiver' ? 'person_off' : 'person'
+    });
+    
+    if (!confirmed) return;
+
+    const data: UpdateUserDto = {
+      estActif: !user.estActif
+    };
+
+    this.userUseCase.updateUser(user.id.toString(), data).subscribe({
+      next: () => {
+        this.successMessage.set(`Utilisateur ${data.estActif ? 'activé' : 'désactivé'} avec succès`);
+        this.loadUsers();
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error) => {
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la modification du statut');
+      }
+    });
+  }
+
+  async resetPassword(user: User): Promise<void> {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Confirmer la réinitialisation',
+      message: `Êtes-vous sûr de vouloir réinitialiser le mot de passe de "${user.prenom} ${user.nom}" ?`,
+      confirmText: 'Réinitialiser',
+      cancelText: 'Annuler',
+      type: 'warning',
+      icon: 'lock_reset'
+    });
+    
+    if (!confirmed) return;
 
     if (this.passwordData.nouveauMotDePasse !== this.passwordData.confirmMotDePasse) {
       this.errorMessage.set('Les mots de passe ne correspondent pas');
@@ -312,23 +344,6 @@ export class UsersComponent implements OnInit {
       error: (error) => {
         this.errorMessage.set(error.error?.message || 'Erreur lors de la réinitialisation');
         this.isLoading.set(false);
-      }
-    });
-  }
-
-  toggleUserStatus(user: User): void {
-    const data: UpdateUserDto = {
-      estActif: !user.estActif
-    };
-
-    this.userUseCase.updateUser(user.id.toString(), data).subscribe({
-      next: () => {
-        this.successMessage.set(`Utilisateur ${data.estActif ? 'activé' : 'désactivé'} avec succès`);
-        this.loadUsers();
-        setTimeout(() => this.successMessage.set(''), 3000);
-      },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la modification du statut');
       }
     });
   }

@@ -1,9 +1,10 @@
-﻿import { Component, OnInit, signal } from '@angular/core';
+﻿import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
 import { Evaluation } from '../../../core/domain/entities/evaluation.entity';
+import { ConfirmationService } from '../../shared/services/confirmation.service';
 
 @Component({
   selector: 'app-evaluations',
@@ -27,6 +28,8 @@ export class EvaluationsComponent implements OnInit {
 
   errorMessage = signal('');
   successMessage = signal('');
+
+  private confirmationService = inject(ConfirmationService);
 
   constructor(
     private evaluationUseCase: EvaluationUseCase,
@@ -109,49 +112,59 @@ export class EvaluationsComponent implements OnInit {
     this.router.navigate(['/evaluations', evaluation.id]);
   }
 
-  publishEvaluation(evaluation: Evaluation): void {
-    if (confirm(`Êtes-vous sûr de vouloir publier l'évaluation "${evaluation.titre}" ?`)) {
-      this.evaluationUseCase.publishEvaluation(evaluation.id as any).subscribe({
-        next: () => {
-          this.successMessage.set('Évaluation publiée avec succès');
-          this.loadEvaluations();
-          setTimeout(() => this.successMessage.set(''), 3000);
-        },
-        error: (error) => {
-          this.errorMessage.set(error.error?.message || 'Erreur lors de la publication');
-        }
-      });
-    }
+  // Actions avec confirmation
+  async publishEvaluation(evaluation: Evaluation): Promise<void> {
+    const confirmed = await this.confirmationService.confirmPublish(evaluation.titre);
+    if (!confirmed) return;
+
+    this.isLoading.set(true);
+    this.evaluationUseCase.publishEvaluation(evaluation.id as any).subscribe({
+      next: () => {
+        this.successMessage.set('Évaluation publiée avec succès');
+        this.loadEvaluations();
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error) => {
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la publication');
+        this.isLoading.set(false);
+      }
+    });
   }
 
-  closeEvaluation(evaluation: Evaluation): void {
-    if (confirm(`Êtes-vous sûr de vouloir clôturer l'évaluation "${evaluation.titre}" ?`)) {
-      this.evaluationUseCase.closeEvaluation(evaluation.id as any).subscribe({
-        next: () => {
-          this.successMessage.set('Évaluation clôturée avec succès');
-          this.loadEvaluations();
-          setTimeout(() => this.successMessage.set(''), 3000);
-        },
-        error: (error) => {
-          this.errorMessage.set(error.error?.message || 'Erreur lors de la clôture');
-        }
-      });
-    }
+  async closeEvaluation(evaluation: Evaluation): Promise<void> {
+    const confirmed = await this.confirmationService.confirmClose(evaluation.titre);
+    if (!confirmed) return;
+
+    this.isLoading.set(true);
+    this.evaluationUseCase.closeEvaluation(evaluation.id as any).subscribe({
+      next: () => {
+        this.successMessage.set('Évaluation clôturée avec succès');
+        this.loadEvaluations();
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error) => {
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la clôture');
+        this.isLoading.set(false);
+      }
+    });
   }
 
-  deleteEvaluation(evaluation: Evaluation): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer l'évaluation "${evaluation.titre}" ?`)) {
-      this.evaluationUseCase.deleteEvaluation(evaluation.id as any).subscribe({
-        next: () => {
-          this.successMessage.set('Évaluation supprimée avec succès');
-          this.loadEvaluations();
-          setTimeout(() => this.successMessage.set(''), 3000);
-        },
-        error: (error) => {
-          this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
-        }
-      });
-    }
+  async deleteEvaluation(evaluation: Evaluation): Promise<void> {
+    const confirmed = await this.confirmationService.confirmDelete(evaluation.titre);
+    if (!confirmed) return;
+
+    this.isLoading.set(true);
+    this.evaluationUseCase.deleteEvaluation(evaluation.id as any).subscribe({
+      next: () => {
+        this.successMessage.set('Évaluation supprimée avec succès');
+        this.loadEvaluations();
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error) => {
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
+        this.isLoading.set(false);
+      }
+    });
   }
 
   getStatusBadgeClass(status: string): string {

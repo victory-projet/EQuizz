@@ -22,10 +22,15 @@ interface DashboardData {
     evaluations: number;
   };
   alerts: Array<{
-    type: string;
+    id: string;
+    type: 'info' | 'warning' | 'error' | 'success';
     title: string;
     message: string;
     date: string;
+    isRead: boolean;
+    priority: 'low' | 'medium' | 'high';
+    actionUrl?: string;
+    actionLabel?: string;
   }>;
   evaluationsRecentes: Array<{
     id: string;
@@ -35,6 +40,16 @@ interface DashboardData {
     dateDebut: string;
     dateFin: string;
     nombreClasses: number;
+  }>;
+  activitesRecentes: Array<{
+    id: string;
+    type: 'evaluation_created' | 'evaluation_published' | 'evaluation_closed' | 'user_created' | 'course_created' | 'class_created';
+    title: string;
+    description: string;
+    date: string;
+    user: string;
+    icon: string;
+    color: string;
   }>;
   statsParCours: Array<{
     id: string;
@@ -69,6 +84,12 @@ export class DashboardComponent implements OnInit {
   // Valeurs par défaut pour éviter les erreurs
   defaultTrends = { etudiants: 0, cours: 0, evaluations: 0 };
   defaultAlerts: any[] = [];
+  defaultActivites: any[] = [];
+
+  // État des notifications
+  unreadAlertsCount = signal(0);
+  showAllAlerts = signal(false);
+  showAllActivities = signal(false);
 
   // Filtres
   selectedYear = signal<string>('2025-2026');
@@ -268,10 +289,12 @@ export class DashboardComponent implements OnInit {
           ...data,
           trends: data.trends || this.defaultTrends,
           alerts: data.alerts || this.defaultAlerts,
+          activitesRecentes: data.activitesRecentes || this.defaultActivites,
           participationTimeline: data.participationTimeline || [],
           topKeywords: data.topKeywords || []
         };
         this.dashboardData.set(completeData);
+        this.updateUnreadCount();
         this.updateCharts();
         this.isLoading.set(false);
       },
@@ -465,5 +488,175 @@ export class DashboardComponent implements OnInit {
         ]
       });
     }
+  }
+
+  // Gestion des alertes et notifications
+  updateUnreadCount(): void {
+    const data = this.dashboardData();
+    if (!data || !data.alerts) {
+      this.unreadAlertsCount.set(0);
+      return;
+    }
+    
+    const unreadCount = data.alerts.filter(alert => !alert.isRead).length;
+    this.unreadAlertsCount.set(unreadCount);
+  }
+
+  markAlertAsRead(alertId: string): void {
+    const data = this.dashboardData();
+    if (!data || !data.alerts) return;
+
+    const updatedAlerts = data.alerts.map(alert => 
+      alert.id === alertId ? { ...alert, isRead: true } : alert
+    );
+
+    this.dashboardData.set({
+      ...data,
+      alerts: updatedAlerts
+    });
+
+    this.updateUnreadCount();
+
+    // Appel API pour marquer comme lu
+    this.http.patch(`${environment.apiUrl}/notifications/${alertId}/read`, {}).subscribe({
+      next: () => console.log('✅ Alert marked as read'),
+      error: (error) => console.error('❌ Error marking alert as read:', error)
+    });
+  }
+
+  markAllAlertsAsRead(): void {
+    const data = this.dashboardData();
+    if (!data || !data.alerts) return;
+
+    const updatedAlerts = data.alerts.map(alert => ({ ...alert, isRead: true }));
+
+    this.dashboardData.set({
+      ...data,
+      alerts: updatedAlerts
+    });
+
+    this.updateUnreadCount();
+
+    // Appel API pour marquer toutes comme lues
+    this.http.patch(`${environment.apiUrl}/notifications/mark-all-read`, {}).subscribe({
+      next: () => console.log('✅ All alerts marked as read'),
+      error: (error) => console.error('❌ Error marking all alerts as read:', error)
+    });
+  }
+
+  dismissAlert(alertId: string): void {
+    const data = this.dashboardData();
+    if (!data || !data.alerts) return;
+
+    const updatedAlerts = data.alerts.filter(alert => alert.id !== alertId);
+
+    this.dashboardData.set({
+      ...data,
+      alerts: updatedAlerts
+    });
+
+    this.updateUnreadCount();
+
+    // Appel API pour supprimer l'alerte
+    this.http.delete(`${environment.apiUrl}/notifications/${alertId}`).subscribe({
+      next: () => console.log('✅ Alert dismissed'),
+      error: (error) => console.error('❌ Error dismissing alert:', error)
+    });
+  }
+
+  getAlertIcon(type: string): string {
+    const icons: { [key: string]: string } = {
+      'info': 'info',
+      'warning': 'warning',
+      'error': 'error',
+      'success': 'check_circle'
+    };
+    return icons[type] || 'notifications';
+  }
+
+  getAlertClass(type: string): string {
+    const classes: { [key: string]: string } = {
+      'info': 'alert-info',
+      'warning': 'alert-warning',
+      'error': 'alert-error',
+      'success': 'alert-success'
+    };
+    return classes[type] || 'alert-info';
+  }
+
+  getPriorityClass(priority: string): string {
+    const classes: { [key: string]: string } = {
+      'low': 'priority-low',
+      'medium': 'priority-medium',
+      'high': 'priority-high'
+    };
+    return classes[priority] || 'priority-medium';
+  }
+
+  toggleShowAllAlerts(): void {
+    this.showAllAlerts.set(!this.showAllAlerts());
+  }
+
+  toggleShowAllActivities(): void {
+    this.showAllActivities.set(!this.showAllActivities());
+  }
+
+  getDisplayedAlerts() {
+    const data = this.dashboardData();
+    if (!data || !data.alerts) return [];
+    
+    const alerts = [...data.alerts].sort((a, b) => {
+      // Trier par priorité puis par date
+      const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+      const priorityDiff = (priorityOrder[b.priority] || 2) - (priorityOrder[a.priority] || 2);
+      if (priorityDiff !== 0) return priorityDiff;
+      
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
+    return this.showAllAlerts() ? alerts : alerts.slice(0, 3);
+  }
+
+  getDisplayedActivities() {
+    const data = this.dashboardData();
+    if (!data || !data.activitesRecentes) return [];
+    
+    const activities = [...data.activitesRecentes].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    return this.showAllActivities() ? activities : activities.slice(0, 4);
+  }
+
+  getActivityIcon(type: string): string {
+    const icons: { [key: string]: string } = {
+      'evaluation_created': 'quiz',
+      'evaluation_published': 'publish',
+      'evaluation_closed': 'lock',
+      'user_created': 'person_add',
+      'course_created': 'menu_book',
+      'class_created': 'group_add'
+    };
+    return icons[type] || 'notifications';
+  }
+
+  getTimeAgo(date: string): string {
+    const now = new Date();
+    const activityDate = new Date(date);
+    const diffInMinutes = Math.floor((now.getTime() - activityDate.getTime()) / (1000 * 60));
+
+    if (diffInMinutes < 1) return 'À l\'instant';
+    if (diffInMinutes < 60) return `Il y a ${diffInMinutes} min`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `Il y a ${diffInHours}h`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `Il y a ${diffInDays}j`;
+    
+    return activityDate.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'short'
+    });
   }
 }

@@ -406,3 +406,273 @@
     margin: 0 0 24px 0;
   }
 }
+// Modal styles
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  &.modal-small {
+    max-width: 450px;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+
+  .modal-title-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .modal-icon {
+      font-size: 24px;
+      padding: 8px;
+      border-radius: 50%;
+
+      &.publish-icon {
+        background: #eff6ff;
+        color: #2563eb;
+      }
+
+      &.close-icon {
+        background: #fef3c7;
+        color: #d97706;
+      }
+
+      &.delete-icon {
+        background: #fef2f2;
+        color: #dc2626;
+      }
+    }
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: #9ca3af;
+    border-radius: 4px;
+
+    &:hover {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    .material-icons {
+      font-size: 20px;
+    }
+  }
+}
+
+.modal-body {
+  padding: 24px;
+
+  p {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #374151;
+  }
+
+  ul {
+    margin: 8px 0 0 0;
+    padding-left: 20px;
+
+    li {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+  }
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 20px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+
+  .btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &.btn-secondary {
+      background: white;
+      color: #6b7280;
+      border: 1px solid #d1d5db;
+
+      &:hover:not(:disabled) {
+        background: #f9fafb;
+      }
+    }
+
+    &.btn-primary {
+      background: #3A5689;
+      color: white;
+
+      &:hover:not(:disabled) {
+        background: #2d4468;
+      }
+    }
+
+    &.btn-warning {
+      background: #f59e0b;
+      color: white;
+
+      &:hover:not(:disabled) {
+        background: #d97706;
+      }
+    }
+
+    &.btn-danger {
+      background: #dc2626;
+      color: white;
+
+      &:hover:not(:disabled) {
+        background: #b91c1c;
+      }
+    }
+  }
+}
+
+// Information boxes
+.info-box, .warning-box, .danger-box {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  margin: 16px 0;
+
+  .material-icons {
+    font-size: 20px;
+    margin-top: 2px;
+  }
+
+  p {
+    margin: 0 0 8px 0;
+    font-weight: 500;
+  }
+}
+
+.info-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+
+  .material-icons {
+    color: #2563eb;
+  }
+
+  p {
+    color: #1e40af;
+  }
+}
+
+.warning-box {
+  background: #fffbeb;
+  border: 1px solid #fed7aa;
+
+  .material-icons {
+    color: #d97706;
+  }
+
+  p {
+    color: #92400e;
+  }
+}
+
+.danger-box {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+
+  .material-icons {
+    color: #dc2626;
+  }
+
+  p {
+    color: #991b1b;
+  }
+}
+
+// Spinner
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Button danger for card footer
+.card-footer .btn-danger {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+
+  .material-icons {
+    font-size: 18px;
+  }
+
+  &:hover {
+    background: #b91c1c;
+  }
+}

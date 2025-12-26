@@ -1,10 +1,11 @@
-﻿import { Component, OnInit, signal, computed } from '@angular/core';
+﻿import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserUseCase } from '../../../core/usecases/user.usecase';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
 import { User, Etudiant } from '../../../core/domain/entities/user.entity';
 import { Classe } from '../../../core/domain/entities/academic.entity';
+import { ConfirmationService } from '../../shared/services/confirmation.service';
 
 @Component({
   selector: 'app-students',
@@ -22,6 +23,8 @@ export class StudentsComponent implements OnInit {
   showModal = signal(false);
   showDeleteModal = signal(false);
   selectedStudent = signal<Etudiant | null>(null);
+  
+  private confirmationService = inject(ConfirmationService);
   
   searchQuery = signal('');
   filterClasse = signal<string>('ALL');
@@ -223,15 +226,14 @@ export class StudentsComponent implements OnInit {
     });
   }
 
-  deleteStudent(): void {
-    const student = this.selectedStudent();
-    if (!student) return;
+  async deleteStudent(student: Etudiant): Promise<void> {
+    const confirmed = await this.confirmationService.confirmDelete(`${student.prenom} ${student.nom}`);
+    if (!confirmed) return;
 
     this.isLoading.set(true);
     this.userUseCase.deleteUser(student.id.toString()).subscribe({
       next: () => {
         this.successMessage.set('Étudiant supprimé avec succès');
-        this.closeModal();
         this.loadStudents();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
@@ -242,7 +244,19 @@ export class StudentsComponent implements OnInit {
     });
   }
 
-  toggleStatus(student: Etudiant): void {
+  async toggleStatus(student: Etudiant): Promise<void> {
+    const action = student.estActif ? 'désactiver' : 'activer';
+    const confirmed = await this.confirmationService.confirm({
+      title: `Confirmer ${action === 'désactiver' ? 'la désactivation' : 'l\'activation'}`,
+      message: `Êtes-vous sûr de vouloir ${action} l'étudiant "${student.prenom} ${student.nom}" ?`,
+      confirmText: action === 'désactiver' ? 'Désactiver' : 'Activer',
+      cancelText: 'Annuler',
+      type: action === 'désactiver' ? 'warning' : 'success',
+      icon: action === 'désactiver' ? 'person_off' : 'person'
+    });
+    
+    if (!confirmed) return;
+
     this.userUseCase.updateUser(student.id.toString(), { estActif: !student.estActif }).subscribe({
       next: () => {
         this.successMessage.set(`Étudiant ${student.estActif ? 'désactivé' : 'activé'} avec succès`);

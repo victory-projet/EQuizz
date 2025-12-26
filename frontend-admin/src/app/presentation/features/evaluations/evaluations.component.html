@@ -174,6 +174,9 @@
               <button class="btn-primary" (click)="publishEvaluation(evaluation); $event.stopPropagation()">
                 <span class="material-icons">send</span> Publier
               </button>
+              <button class="btn-danger" (click)="deleteEvaluation(evaluation); $event.stopPropagation()">
+                <span class="material-icons">delete</span> Supprimer
+              </button>
             }
             @if (evaluation.statut === 'PUBLIEE') {
               <button class="btn-outline" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
