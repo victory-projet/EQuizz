@@ -1,10 +1,13 @@
-﻿import { Component, OnInit, signal, inject } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 import { UserUseCase } from '../../../core/usecases/user.usecase';
 import { User } from '../../../core/domain/entities/user.entity';
 import { CreateUserDto, UpdateUserDto } from '../../../core/domain/repositories/user.repository.interface';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
+import { UserCacheService } from '../../../core/services/user-cache.service';
+import { CacheService } from '../../../core/services/cache.service';
 
 @Component({
   selector: 'app-users',
@@ -13,7 +16,7 @@ import { ConfirmationService } from '../../shared/services/confirmation.service'
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss']
 })
-export class UsersComponent implements OnInit {
+export class UsersComponent implements OnInit, OnDestroy {
   users = signal<User[]>([]);
   filteredUsers = signal<User[]>([]);
   paginatedUsers = signal<User[]>([]);
@@ -24,10 +27,18 @@ export class UsersComponent implements OnInit {
   searchQuery = signal('');
   filterRole = signal<string>('ALL');
   
+  // Cache management
+  cacheEnabled = signal(true);
+  cacheStats = signal<any>(null);
+  lastRefresh = signal<Date | null>(null);
+  
   // Pagination
   currentPage = signal(1);
   itemsPerPage = signal(10);
   totalPages = signal(1);
+
+  // Destruction subject for cleanup
+  private destroy$ = new Subject<void>();
 
   formData = {
     nom: '',
@@ -49,15 +60,64 @@ export class UsersComponent implements OnInit {
   successMessage = signal('');
 
   private confirmationService = inject(ConfirmationService);
+  private userCacheService = inject(UserCacheService);
+  private cacheService = inject(CacheService);
 
   constructor(private userUseCase: UserUseCase) {}
 
   ngOnInit(): void {
     this.loadUsers();
+    this.setupCacheObservation();
+    this.updateCacheStats();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  setupCacheObservation(): void {
+    // Observer les changements des administrateurs en temps réel
+    this.userCacheService.observeAdmins()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(admins => {
+        this.users.set(admins);
+        this.applyFilters();
+        this.lastRefresh.set(new Date());
+      });
   }
 
   loadUsers(): void {
     this.isLoading.set(true);
+    
+    if (this.cacheEnabled()) {
+      // Utiliser le cache service
+      this.userCacheService.getAdmins({
+        ttl: 5 * 60 * 1000, // 5 minutes
+        persistToStorage: true
+      }).pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (admins) => {
+          this.users.set(admins);
+          this.applyFilters();
+          this.isLoading.set(false);
+          this.lastRefresh.set(new Date());
+          this.updateCacheStats();
+        },
+        error: (error) => {
+          console.error('Erreur lors du chargement des utilisateurs:', error);
+          this.errorMessage.set('Erreur lors du chargement des utilisateurs');
+          this.isLoading.set(false);
+          // Fallback vers l'API directe
+          this.loadUsersDirectly();
+        }
+      });
+    } else {
+      this.loadUsersDirectly();
+    }
+  }
+
+  loadUsersDirectly(): void {
     this.userUseCase.getAllUsers().subscribe({
       next: (users) => {
         // Filtrer pour ne garder que les administrateurs
@@ -65,6 +125,7 @@ export class UsersComponent implements OnInit {
         this.users.set(admins);
         this.applyFilters();
         this.isLoading.set(false);
+        this.lastRefresh.set(new Date());
       },
       error: (error) => {
         console.error('Erreur lors du chargement des utilisateurs:', error);
@@ -222,10 +283,17 @@ export class UsersComponent implements OnInit {
 
     this.isLoading.set(true);
     this.userUseCase.createUser(data).subscribe({
-      next: () => {
+      next: (newUser) => {
         this.successMessage.set('Administrateur créé avec succès');
         this.closeModal();
-        this.loadUsers();
+        
+        // Mettre à jour le cache
+        if (this.cacheEnabled()) {
+          this.userCacheService.updateCacheAfterOperation('create', newUser);
+        } else {
+          this.loadUsers();
+        }
+        
         setTimeout(() => this.successMessage.set(''), 5000);
       },
       error: (error) => {
@@ -252,10 +320,17 @@ export class UsersComponent implements OnInit {
 
     this.isLoading.set(true);
     this.userUseCase.updateUser(user.id.toString(), data).subscribe({
-      next: () => {
+      next: (updatedUser) => {
         this.successMessage.set('Utilisateur mis à jour avec succès');
         this.closeModal();
-        this.loadUsers();
+        
+        // Mettre à jour le cache
+        if (this.cacheEnabled()) {
+          this.userCacheService.updateCacheAfterOperation('update', updatedUser);
+        } else {
+          this.loadUsers();
+        }
+        
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
@@ -273,7 +348,14 @@ export class UsersComponent implements OnInit {
     this.userUseCase.deleteUser(user.id.toString()).subscribe({
       next: () => {
         this.successMessage.set('Utilisateur supprimé avec succès');
-        this.loadUsers();
+        
+        // Mettre à jour le cache
+        if (this.cacheEnabled()) {
+          this.userCacheService.updateCacheAfterOperation('delete', user);
+        } else {
+          this.loadUsers();
+        }
+        
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
@@ -301,9 +383,16 @@ export class UsersComponent implements OnInit {
     };
 
     this.userUseCase.updateUser(user.id.toString(), data).subscribe({
-      next: () => {
+      next: (updatedUser) => {
         this.successMessage.set(`Utilisateur ${data.estActif ? 'activé' : 'désactivé'} avec succès`);
-        this.loadUsers();
+        
+        // Mettre à jour le cache
+        if (this.cacheEnabled()) {
+          this.userCacheService.updateCacheAfterOperation('update', updatedUser);
+        } else {
+          this.loadUsers();
+        }
+        
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
@@ -364,6 +453,110 @@ export class UsersComponent implements OnInit {
       case 'ETUDIANT': return 'Étudiant';
       default: return role;
     }
+  }
+
+  // === MÉTHODES DE GESTION DU CACHE ===
+
+  /**
+   * Active ou désactive le cache
+   */
+  toggleCache(): void {
+    this.cacheEnabled.set(!this.cacheEnabled());
+    if (this.cacheEnabled()) {
+      this.loadUsers();
+    } else {
+      this.clearCache();
+      this.loadUsersDirectly();
+    }
+  }
+
+  /**
+   * Actualise manuellement les données
+   */
+  refreshData(): void {
+    if (this.cacheEnabled()) {
+      this.userCacheService.refreshByRole('ADMIN');
+    } else {
+      this.loadUsersDirectly();
+    }
+  }
+
+  /**
+   * Vide le cache
+   */
+  clearCache(): void {
+    this.userCacheService.invalidateAllUsers();
+    this.cacheStats.set(null);
+    this.lastRefresh.set(null);
+    this.successMessage.set('Cache vidé avec succès');
+    setTimeout(() => this.successMessage.set(''), 3000);
+  }
+
+  /**
+   * Met à jour les statistiques du cache
+   */
+  updateCacheStats(): void {
+    if (this.cacheEnabled()) {
+      const stats = this.userCacheService.getCacheStats();
+      this.cacheStats.set(stats);
+    }
+  }
+
+  /**
+   * Précharge les données essentielles
+   */
+  preloadData(): void {
+    this.userCacheService.preloadEssentialData();
+    this.successMessage.set('Données préchargées');
+    setTimeout(() => this.successMessage.set(''), 3000);
+  }
+
+  /**
+   * Formate la taille mémoire pour l'affichage
+   */
+  formatMemorySize(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  /**
+   * Formate le taux de succès du cache
+   */
+  formatHitRate(rate: number): string {
+    return (rate * 100).toFixed(1) + '%';
+  }
+
+  /**
+   * Vérifie si les données sont récentes
+   */
+  isDataFresh(): boolean {
+    const lastRefresh = this.lastRefresh();
+    if (!lastRefresh) return false;
+    
+    const now = new Date();
+    const diffMinutes = (now.getTime() - lastRefresh.getTime()) / (1000 * 60);
+    return diffMinutes < 5; // Considéré comme frais si moins de 5 minutes
+  }
+
+  /**
+   * Obtient le statut du cache pour l'affichage
+   */
+  getCacheStatus(): string {
+    if (!this.cacheEnabled()) return 'Désactivé';
+    if (this.isDataFresh()) return 'Actuel';
+    return 'Expiré';
+  }
+
+  /**
+   * Obtient la classe CSS pour le statut du cache
+   */
+  getCacheStatusClass(): string {
+    if (!this.cacheEnabled()) return 'cache-disabled';
+    if (this.isDataFresh()) return 'cache-fresh';
+    return 'cache-expired';
   }
 
   // Expose Math for template
