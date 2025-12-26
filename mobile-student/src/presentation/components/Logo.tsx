@@ -7,7 +7,7 @@ export default function Logo() {
       <View style={styles.logoContainer}>
       {/* Remplacez ' votre_logo.png' par le chemin réel de votre image de logo */}
       <Image
-        source={require('@/assets/images/logo1.png')} // Assurez-vous d'avoir votre logo dans le dossier assets
+        source={require('@/assets/images/logo2.png')} // Assurez-vous d'avoir votre logo dans le dossier assets
         style={styles.logo}
         resizeMode="contain"
       />
