@@ -239,24 +239,78 @@ export class AcademicYearsComponent implements OnInit {
   }
 
   createSemestre(): void {
+    // Validate form data
+    if (!this.semestreFormData.libelle.trim()) {
+      this.errorMessage.set('Le libellé du semestre est requis');
+      return;
+    }
+    
+    if (!this.semestreFormData.dateDebut || !this.semestreFormData.dateFin) {
+      this.errorMessage.set('Les dates de début et de fin sont requises');
+      return;
+    }
+    
+    if (!this.semestreFormData.anneeAcademiqueId) {
+      this.errorMessage.set('Une année académique doit être sélectionnée');
+      return;
+    }
+    
+    const startDate = new Date(this.semestreFormData.dateDebut);
+    const endDate = new Date(this.semestreFormData.dateFin);
+    
+    if (startDate >= endDate) {
+      this.errorMessage.set('La date de début doit être antérieure à la date de fin');
+      return;
+    }
+    
     this.isLoading.set(true);
+    this.errorMessage.set('');
+    
+    // Prepare data for backend (using backend field names)
     const data = {
-      ...this.semestreFormData,
+      nom: this.semestreFormData.libelle.trim(),
+      numero: this.semestreFormData.numero,
       dateDebut: new Date(this.semestreFormData.dateDebut),
-      dateFin: new Date(this.semestreFormData.dateFin)
-    };
+      dateFin: new Date(this.semestreFormData.dateFin),
+      annee_academique_id: this.semestreFormData.anneeAcademiqueId
+    } as any; // Use 'as any' to bypass TypeScript strict checking for backend compatibility
+    
+    console.log('📝 Creating semester with data:', data);
+    
     this.academicUseCase.createSemestre(data).subscribe({
-      next: () => {
+      next: (response) => {
+        console.log('✅ Semester created successfully:', response);
         this.successMessage.set('Semestre créé avec succès');
         this.closeModal();
         const annee = this.selectedAnnee();
         if (annee) {
           this.loadSemestres(annee.id);
         }
+        this.isLoading.set(false);
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la création');
+        console.error('❌ Error creating semester:', error);
+        
+        let errorMsg = 'Erreur lors de la création du semestre';
+        
+        if (error.error) {
+          if (error.error.error) {
+            errorMsg = error.error.error;
+          } else if (error.error.message) {
+            errorMsg = error.error.message;
+          } else if (error.error.details) {
+            if (Array.isArray(error.error.details)) {
+              errorMsg = error.error.details.map((d: any) => d.message).join(', ');
+            } else {
+              errorMsg = error.error.details;
+            }
+          }
+        } else if (error.message) {
+          errorMsg = error.message;
+        }
+        
+        this.errorMessage.set(errorMsg);
         this.isLoading.set(false);
       }
     });
