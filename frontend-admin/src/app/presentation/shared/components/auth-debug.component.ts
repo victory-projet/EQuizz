@@ -19,7 +19,7 @@ import { AuthService } from '../services/auth.service';
         <button (click)="toggleDebug()" class="btn-debug">❌ Hide Debug</button>
       </div>
     </div>
-    <button *ngIf="!showDebug()" (click)="toggleDebug()" class="debug-toggle">🔍 Show Auth Debug</button>
+
   `,
   styles: [`
     .auth-debug {
@@ -46,24 +46,22 @@ import { AuthService } from '../services/auth.service';
       cursor: pointer;
       border-radius: 4px;
     }
-    .debug-toggle {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      z-index: 9999;
-      padding: 8px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
   `]
 })
 export class AuthDebugComponent {
   showDebug = signal(false);
 
-  constructor(public authService: AuthService) {}
+  constructor(public authService: AuthService) {
+    // Auto-show debug only if there are auth issues
+    this.checkIfShouldShowDebug();
+  }
+
+  private checkIfShouldShowDebug(): void {
+    // Show debug automatically if user is not authenticated
+    if (!this.authService.isAuthenticated()) {
+      this.showDebug.set(true);
+    }
+  }
 
   hasToken(): boolean {
     const token = localStorage.getItem('token');
