@@ -2,6 +2,7 @@ import { Component, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../shared/services/auth.service';
+import { MessagesService } from '../../shared/services/messages.service';
 import { filter } from 'rxjs/operators';
 
 @Component({
@@ -37,7 +38,8 @@ export class MainLayoutComponent {
 
   constructor(
     public authService: AuthService,
-    private router: Router
+    private router: Router,
+    public messagesService: MessagesService
   ) {
     this.checkScreenSize();
     
