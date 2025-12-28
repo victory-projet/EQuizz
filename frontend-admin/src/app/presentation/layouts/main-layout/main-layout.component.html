@@ -134,9 +134,9 @@
               <span class="material-icons">notifications</span>
               <div class="item-content">
                 <span class="item-title">Messages</span>
-                <span class="item-subtitle">2 nouveaux messages</span>
+                <span class="item-subtitle">{{ messagesService.getUnreadCount() }} nouveaux messages</span>
               </div>
-              <span class="notification-badge">2</span>
+              <span class="notification-badge" *ngIf="messagesService.getUnreadCount() > 0">{{ messagesService.getUnreadCount() }}</span>
             </a>
             
             <div class="dropdown-divider"></div>
