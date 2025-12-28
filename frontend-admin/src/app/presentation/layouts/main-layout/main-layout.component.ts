@@ -36,6 +36,22 @@ export class MainLayoutComponent {
     '/messages': 'Messages'
   };
 
+  private pageSubtitles: { [key: string]: string } = {
+    '/dashboard': 'Vue d\'ensemble du système d\'évaluation des enseignements',
+    '/evaluations': 'Gestion des évaluations et questionnaires',
+    '/courses': 'Gestion des cours et unités d\'enseignement',
+    '/classes': 'Gestion des classes et groupes d\'étudiants',
+    '/associations': 'Gestion des associations cours-classes',
+    '/academic-years': 'Gestion des années académiques et semestres',
+    '/reports': 'Rapports et statistiques d\'évaluation',
+    '/users': 'Gestion des comptes administrateurs',
+    '/students': 'Gestion des comptes étudiants',
+    '/teachers': 'Gestion des comptes enseignants',
+    '/notifications': 'Centre de notifications système',
+    '/profile': 'Espace compte administrateur',
+    '/messages': 'Centre de messages et notifications'
+  };
+
   constructor(
     public authService: AuthService,
     private router: Router,
@@ -94,6 +110,11 @@ export class MainLayoutComponent {
   getPageTitle(): string {
     const url = this.router.url.split('?')[0];
     return this.pageTitles[url] || 'EQuizz Admin';
+  }
+
+  getPageSubtitle(): string {
+    const url = this.router.url.split('?')[0];
+    return this.pageSubtitles[url] || 'Vue d\'ensemble du système d\'évaluation des enseignements';
   }
 
   logout(): void {
