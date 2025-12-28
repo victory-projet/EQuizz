@@ -14,6 +14,8 @@ import { filter } from 'rxjs/operators';
 export class MainLayoutComponent {
   isSidebarCollapsed = signal(false);
   isMobileMenuOpen = signal(false);
+  isUserMenuOpen = signal(false);
+  isMessagesOpen = signal(false);
   searchQuery = signal('');
   isMobile = signal(false);
 
@@ -28,7 +30,8 @@ export class MainLayoutComponent {
     '/users': 'Utilisateurs',
     '/students': 'Étudiants',
     '/teachers': 'Enseignants',
-    '/notifications': 'Notifications'
+    '/notifications': 'Notifications',
+    '/profile': 'Mon Profil'
   };
 
   constructor(
@@ -91,6 +94,33 @@ export class MainLayoutComponent {
   }
 
   logout(): void {
+    this.closeUserMenu();
     this.authService.logout();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    const userProfile = target.closest('.user-profile');
+    
+    if (!userProfile && this.isUserMenuOpen()) {
+      this.closeUserMenu();
+    }
+  }
+
+  toggleUserMenu(): void {
+    this.isUserMenuOpen.update(value => !value);
+    if (!this.isUserMenuOpen()) {
+      this.isMessagesOpen.set(false);
+    }
+  }
+
+  closeUserMenu(): void {
+    this.isUserMenuOpen.set(false);
+    this.isMessagesOpen.set(false);
+  }
+
+  toggleMessages(): void {
+    this.isMessagesOpen.update(value => !value);
   }
 }

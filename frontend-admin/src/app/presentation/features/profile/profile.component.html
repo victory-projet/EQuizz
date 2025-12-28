@@ -1,0 +1,156 @@
+<div class="profile-container">
+  <!-- Header Section -->
+  <div class="profile-header">
+    <div class="profile-avatar">
+      <div class="avatar-circle">
+        {{ getInitials() }}
+      </div>
+    </div>
+    
+    <div class="profile-info">
+      <h1 class="profile-name">{{ user()?.prenom }} {{ user()?.nom }}</h1>
+      <p class="profile-role">{{ getRoleDisplayName() }}</p>
+      <p class="profile-email">{{ user()?.email }}</p>
+    </div>
+
+    <div class="profile-actions">
+      <button 
+        class="btn btn-primary" 
+        (click)="toggleEditProfile()"
+        [disabled]="isLoading()">
+        <i class="fas fa-edit"></i>
+        {{ isEditingProfile() ? 'Annuler' : 'Modifier le profil' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="messages" *ngIf="successMessage() || errorMessage()">
+    <div class="alert alert-success" *ngIf="successMessage()">
+      <i class="fas fa-check-circle"></i>
+      {{ successMessage() }}
+    </div>
+    <div class="alert alert-error" *ngIf="errorMessage()">
+      <i class="fas fa-exclamation-circle"></i>
+      {{ errorMessage() }}
+    </div>
+  </div>
+
+  <!-- Profile Edit Form -->
+  <div class="profile-section" *ngIf="isEditingProfile()">
+    <div class="section-header">
+      <h2>Modifier les informations personnelles</h2>
+    </div>
+    
+    <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="profile-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="prenom">Prénom *</label>
+          <input 
+            type="text" 
+            id="prenom" 
+            formControlName="prenom"
+            class="form-control"
+            [class.error]="profileForm.get('prenom')?.invalid && profileForm.get('prenom')?.touched">
+          <div class="error-message" *ngIf="profileForm.get('prenom')?.invalid && profileForm.get('prenom')?.touched">
+            Le prénom est requis (minimum 2 caractères)
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="nom">Nom *</label>
+          <input 
+            type="text" 
+            id="nom" 
+            formControlName="nom"
+            class="form-control"
+            [class.error]="profileForm.get('nom')?.invalid && profileForm.get('nom')?.touched">
+          <div class="error-message" *ngIf="profileForm.get('nom')?.invalid && profileForm.get('nom')?.touched">
+            Le nom est requis (minimum 2 caractères)
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email *</label>
+        <input 
+          type="email" 
+          id="email" 
+          formControlName="email"
+          class="form-control"
+          [class.error]="profileForm.get('email')?.invalid && profileForm.get('email')?.touched">
+        <div class="error-message" *ngIf="profileForm.get('email')?.invalid && profileForm.get('email')?.touched">
+          Veuillez saisir un email valide
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          (click)="toggleEditProfile()"
+          [disabled]="isLoading()">
+          Annuler
+        </button>
+        <button 
+          type="submit" 
+          class="btn btn-primary" 
+          [disabled]="profileForm.invalid || isLoading()">
+          <i class="fas fa-spinner fa-spin" *ngIf="isLoading()"></i>
+          {{ isLoading() ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Account Info Section -->
+  <div class="profile-section">
+    <div class="section-header">
+      <h2>Informations du compte</h2>
+    </div>
+    
+    <div class="account-info">
+      <div class="info-item">
+        <label>ID Utilisateur</label>
+        <span>{{ user()?.id }}</span>
+      </div>
+      
+      <div class="info-item">
+        <label>Prénom</label>
+        <span>{{ user()?.prenom }}</span>
+      </div>
+      
+      <div class="info-item">
+        <label>Nom</label>
+        <span>{{ user()?.nom }}</span>
+      </div>
+      
+      <div class="info-item">
+        <label>Email</label>
+        <span>{{ user()?.email }}</span>
+      </div>
+      
+      <div class="info-item">
+        <label>Rôle</label>
+        <span class="role-badge">{{ getRoleDisplayName() }}</span>
+      </div>
+      
+      <div class="info-item">
+        <label>Statut</label>
+        <span class="status-badge" [class.active]="user()?.estActif">
+          {{ user()?.estActif ? 'Actif' : 'Inactif' }}
+        </span>
+      </div>
+      
+      <div class="info-item">
+        <label>Date de création</label>
+        <span>{{ formatDate(user()?.dateCreation) }}</span>
+      </div>
+      
+      <div class="info-item">
+        <label>Dernière mise à jour</label>
+        <span>{{ formatDate(user()?.dateModification) }}</span>
+      </div>
+    </div>
+  </div>
+</div>

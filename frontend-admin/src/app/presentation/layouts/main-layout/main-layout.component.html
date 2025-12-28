@@ -75,6 +75,11 @@
         <span class="material-icons">admin_panel_settings</span>
         <span class="nav-text" *ngIf="!isSidebarCollapsed()">Administrateurs</span>
       </a>
+
+      <a routerLink="/profile" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">person</span>
+        <span class="nav-text" *ngIf="!isSidebarCollapsed()">Mon Profil</span>
+      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -106,13 +111,71 @@
           >
         </div>
 
-        <div class="user-profile">
+        <div class="user-profile" (click)="toggleUserMenu()">
           <div class="user-info">
             <span class="user-name">{{ authService.currentUser()?.prenom }} {{ authService.currentUser()?.nom }}</span>
             <span class="user-role">Admin</span>
           </div>
           <div class="user-avatar">
             <span class="material-icons">account_circle</span>
+          </div>
+          
+          <!-- User Dropdown Menu -->
+          <div class="user-dropdown" [class.active]="isUserMenuOpen()">
+            <a routerLink="/profile" class="dropdown-item" (click)="closeUserMenu()">
+              <span class="material-icons">person</span>
+              <div class="item-content">
+                <span class="item-title">Mon Profil</span>
+                <span class="item-subtitle">Gérer mes informations</span>
+              </div>
+            </a>
+            
+            <div class="dropdown-item messages-item" (click)="toggleMessages()">
+              <span class="material-icons">notifications</span>
+              <div class="item-content">
+                <span class="item-title">Messages</span>
+                <span class="item-subtitle">2 nouveaux messages</span>
+              </div>
+              <span class="notification-badge">2</span>
+            </div>
+            
+            <!-- Messages Submenu -->
+            <div class="messages-submenu" [class.active]="isMessagesOpen()">
+              <div class="message-item">
+                <div class="message-avatar">
+                  <span class="material-icons">school</span>
+                </div>
+                <div class="message-content">
+                  <h4>Nouvelle évaluation disponible</h4>
+                  <p>L'évaluation "Programmation Web" est maintenant ouverte aux étudiants.</p>
+                  <span class="message-time">Il y a 2 heures</span>
+                </div>
+              </div>
+              
+              <div class="message-item">
+                <div class="message-avatar">
+                  <span class="material-icons">warning</span>
+                </div>
+                <div class="message-content">
+                  <h4>Maintenance programmée</h4>
+                  <p>Le système sera indisponible demain de 2h à 4h du matin pour maintenance.</p>
+                  <span class="message-time">Il y a 1 jour</span>
+                </div>
+              </div>
+              
+              <div class="messages-footer">
+                <a routerLink="/notifications" (click)="closeUserMenu()">Voir tous les messages</a>
+              </div>
+            </div>
+            
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item logout-item" (click)="logout()">
+              <span class="material-icons">logout</span>
+              <div class="item-content">
+                <span class="item-title">Déconnexion</span>
+                <span class="item-subtitle">Se déconnecter du système</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
