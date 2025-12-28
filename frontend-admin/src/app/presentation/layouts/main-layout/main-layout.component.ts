@@ -15,7 +15,7 @@ export class MainLayoutComponent {
   isSidebarCollapsed = signal(false);
   isMobileMenuOpen = signal(false);
   isUserMenuOpen = signal(false);
-  isMessagesOpen = signal(false);
+
   searchQuery = signal('');
   isMobile = signal(false);
 
@@ -31,7 +31,8 @@ export class MainLayoutComponent {
     '/students': 'Étudiants',
     '/teachers': 'Enseignants',
     '/notifications': 'Notifications',
-    '/profile': 'Mon Profil'
+    '/profile': 'Mon Profil',
+    '/messages': 'Messages'
   };
 
   constructor(
@@ -110,17 +111,9 @@ export class MainLayoutComponent {
 
   toggleUserMenu(): void {
     this.isUserMenuOpen.update(value => !value);
-    if (!this.isUserMenuOpen()) {
-      this.isMessagesOpen.set(false);
-    }
   }
 
   closeUserMenu(): void {
     this.isUserMenuOpen.set(false);
-    this.isMessagesOpen.set(false);
-  }
-
-  toggleMessages(): void {
-    this.isMessagesOpen.update(value => !value);
   }
 }

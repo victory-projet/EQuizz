@@ -1,0 +1,145 @@
+<div class="messages-container">
+  <!-- Header -->
+  <div class="messages-header">
+    <div class="header-info">
+      <h1>Messages</h1>
+      <p>{{ getUnreadCount() }} message{{ getUnreadCount() > 1 ? 's' : '' }} non lu{{ getUnreadCount() > 1 ? 's' : '' }}</p>
+    </div>
+    
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="markAllAsRead()" [disabled]="getUnreadCount() === 0">
+        <span class="material-icons">done_all</span>
+        Tout marquer comme lu
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label>Statut :</label>
+      <div class="filter-buttons">
+        <button 
+          class="filter-btn" 
+          [class.active]="selectedFilter() === 'all'"
+          (click)="setFilter('all')">
+          Tous ({{ messages().length }})
+        </button>
+        <button 
+          class="filter-btn" 
+          [class.active]="selectedFilter() === 'unread'"
+          (click)="setFilter('unread')">
+          Non lus ({{ getUnreadCount() }})
+        </button>
+        <button 
+          class="filter-btn" 
+          [class.active]="selectedFilter() === 'read'"
+          (click)="setFilter('read')">
+          Lus ({{ messages().length - getUnreadCount() }})
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label>Type :</label>
+      <div class="filter-buttons">
+        <button 
+          class="filter-btn" 
+          [class.active]="selectedType() === 'all'"
+          (click)="setTypeFilter('all')">
+          <span class="material-icons">all_inbox</span>
+          Tous
+        </button>
+        <button 
+          class="filter-btn info" 
+          [class.active]="selectedType() === 'info'"
+          (click)="setTypeFilter('info')">
+          <span class="material-icons">info</span>
+          Info
+        </button>
+        <button 
+          class="filter-btn warning" 
+          [class.active]="selectedType() === 'warning'"
+          (click)="setTypeFilter('warning')">
+          <span class="material-icons">warning</span>
+          Alerte
+        </button>
+        <button 
+          class="filter-btn success" 
+          [class.active]="selectedType() === 'success'"
+          (click)="setTypeFilter('success')">
+          <span class="material-icons">check_circle</span>
+          Succès
+        </button>
+        <button 
+          class="filter-btn error" 
+          [class.active]="selectedType() === 'error'"
+          (click)="setTypeFilter('error')">
+          <span class="material-icons">error</span>
+          Erreur
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages List -->
+  <div class="messages-list">
+    <div 
+      *ngFor="let message of filteredMessages()" 
+      class="message-card"
+      [class.unread]="!message.isRead"
+      [class]="getPriorityClass(message.priority)"
+      (click)="markAsRead(message.id)">
+      
+      <div class="message-icon" [class]="message.type">
+        <span class="material-icons">{{ getTypeIcon(message.type) }}</span>
+      </div>
+
+      <div class="message-content">
+        <div class="message-header">
+          <h3 class="message-title">{{ message.title }}</h3>
+          <div class="message-meta">
+            <span class="message-time">{{ formatDate(message.date) }}</span>
+            <span class="message-priority" [class]="getPriorityClass(message.priority)">
+              {{ message.priority === 'high' ? 'Haute' : message.priority === 'medium' ? 'Moyenne' : 'Basse' }}
+            </span>
+          </div>
+        </div>
+        
+        <p class="message-text">{{ message.content }}</p>
+        
+        <div class="message-footer">
+          <span class="message-sender" *ngIf="message.sender">
+            <span class="material-icons">person</span>
+            {{ message.sender }}
+          </span>
+          
+          <div class="message-actions">
+            <button 
+              class="action-btn" 
+              *ngIf="!message.isRead"
+              (click)="markAsRead(message.id); $event.stopPropagation()"
+              title="Marquer comme lu">
+              <span class="material-icons">done</span>
+            </button>
+            <button 
+              class="action-btn delete" 
+              (click)="deleteMessage(message.id); $event.stopPropagation()"
+              title="Supprimer">
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredMessages().length === 0">
+      <span class="material-icons">inbox</span>
+      <h3>Aucun message</h3>
+      <p>{{ selectedFilter() === 'all' ? 'Vous n\'avez aucun message.' : 
+           selectedFilter() === 'unread' ? 'Tous vos messages ont été lus.' : 
+           'Aucun message lu pour le moment.' }}</p>
+    </div>
+  </div>
+</div>
