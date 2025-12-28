@@ -78,6 +78,10 @@ export const routes: Routes = [
         loadComponent: () => import('./presentation/features/notifications/notifications.component').then(m => m.NotificationsComponent)
       },
       {
+        path: 'profile',
+        loadComponent: () => import('./presentation/features/profile/profile.component').then(m => m.ProfileComponent)
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
