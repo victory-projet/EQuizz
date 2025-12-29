@@ -61,4 +61,7 @@ router.post('/:id/close', evaluationController.close);
 // GET /api/evaluations/:id/submissions - Récupérer les soumissions d'une évaluation
 router.get('/:id/submissions', evaluationController.getSubmissions);
 
+// POST /api/evaluations/:id/duplicate - Dupliquer une évaluation en brouillon
+router.post('/:id/duplicate', evaluationController.duplicate);
+
 module.exports = router;

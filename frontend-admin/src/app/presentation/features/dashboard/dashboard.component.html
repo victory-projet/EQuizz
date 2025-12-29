@@ -15,6 +15,36 @@
   }
 
   @if (!isLoading() && !errorMessage() && dashboardData()) {
+    <!-- Section supérieure : Indicateur de santé système -->
+    <div class="system-health-bar" [class]="getSystemHealthClass()">
+      <div class="health-indicator">
+        <span class="material-icons">{{ getSystemStatus() === 'healthy' ? 'check_circle' : getSystemStatus() === 'warning' ? 'warning' : 'error' }}</span>
+        <span class="health-text">
+          @switch (getSystemStatus()) {
+            @case ('healthy') { Système opérationnel }
+            @case ('warning') { Attention requise }
+            @case ('critical') { Problème critique }
+          }
+        </span>
+      </div>
+      <div class="health-stats">
+        @if (getActiveAlertsCount() > 0) {
+          <span class="stat-item">
+            <span class="material-icons">warning</span>
+            {{ getActiveAlertsCount() }} alerte(s)
+          </span>
+        }
+        @if (getUnreadNotificationsCount() > 0) {
+          <span class="stat-item">
+            <span class="material-icons">notifications</span>
+            {{ getUnreadNotificationsCount() }} notification(s)
+          </span>
+        }
+        <button class="btn-refresh" (click)="refreshAllData()" title="Actualiser">
+          <span class="material-icons">refresh</span>
+        </button>
+      </div>
+    </div>
 
 
     <!-- Cards de statistiques -->
@@ -180,8 +210,52 @@
 
     </div>
 
-    <!-- Section inférieure : Alertes & Activités -->
-    <div class="bottom-section">
+    <!-- Section inférieure : Nouveaux composants intégrés -->
+    <div class="integrated-components">
+      <!-- Ligne 1: Alertes système et Résumé des notifications -->
+      <div class="components-row">
+        <div class="component-col-large">
+          <app-dashboard-alerts 
+            [compact]="false"
+            [maxDisplayed]="5"
+            [showSettings]="true"
+            [showSummary]="true"
+            (alertClick)="onSystemAlertClick($event)"
+            (settingsClick)="onAlertsSettings()">
+          </app-dashboard-alerts>
+        </div>
+        
+        <div class="component-col-small">
+          <app-notification-summary 
+            [compact]="true"
+            [maxRecent]="3"
+            [showCriticalOnly]="false"
+            (notificationClick)="onNotificationClick($event)"
+            (viewAllClick)="onViewAllNotifications()"
+            (filterClick)="onNotificationFilter($event)">
+          </app-notification-summary>
+        </div>
+      </div>
+
+      <!-- Ligne 2: Activités récentes -->
+      <div class="components-row">
+        <div class="component-col-full">
+          <app-recent-activities 
+            [compact]="false"
+            [maxDisplayed]="8"
+            [showFilters]="true"
+            [showSummary]="true"
+            [showActions]="true"
+            (activityClick)="onRecentActivityClick($event)"
+            (viewAllClick)="onViewAllActivities()"
+            (activityDetailsClick)="onActivityDetails($event)">
+          </app-recent-activities>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section inférieure : Alertes & Activités (ancienne version - à supprimer après migration) -->
+    <div class="bottom-section legacy-section" style="display: none;">
       <!-- Alertes & Notifications -->
       <div class="alerts-section">
         <div class="section-header">

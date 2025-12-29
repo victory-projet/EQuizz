@@ -400,6 +400,9 @@
               <button class="btn-outline" (click)="editEvaluation(evaluation); $event.stopPropagation()">
                 <span class="material-icons">edit</span> Modifier
               </button>
+              <button class="btn-secondary" (click)="duplicateEvaluation(evaluation); $event.stopPropagation()">
+                <span class="material-icons">content_copy</span> Dupliquer
+              </button>
               <button class="btn-primary" (click)="publishEvaluation(evaluation); $event.stopPropagation()">
                 <span class="material-icons">send</span> Publier
               </button>

@@ -8,6 +8,9 @@ router.post('/seed', async (req, res) => {
   const transaction = await db.sequelize.transaction();
 
   try {
+    // Synchroniser la base de données d'abord pour s'assurer que les tables existent
+    await db.sequelize.sync();
+    
     // Vérifier si des données existent déjà
     const userCount = await db.Utilisateur.count();
     if (userCount > 0) {
@@ -288,13 +291,50 @@ router.post('/seed', async (req, res) => {
   }
 });
 
+// Route de test pour vérifier que les modèles fonctionnent
+router.get('/test', async (req, res) => {
+  try {
+    // Synchroniser la base de données d'abord
+    await db.sequelize.sync();
+    
+    // Tester l'accès aux modèles
+    const models = {
+      Utilisateur: await db.Utilisateur.count(),
+      Ecole: await db.Ecole.count(),
+      AnneeAcademique: await db.AnneeAcademique.count(),
+      Classe: await db.Classe.count(),
+      Cours: await db.Cours.count(),
+      Evaluation: await db.Evaluation.count()
+    };
+
+    res.json({
+      success: true,
+      message: '✅ Modèles accessibles et base de données synchronisée',
+      models,
+      database: {
+        dialect: db.sequelize.getDialect(),
+        version: db.sequelize.getDatabaseVersion ? 'Available' : 'Not Available'
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erreur lors du test des modèles:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors du test des modèles',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
 // Route pour réinitialiser complètement la base de données
 router.post('/reset', async (req, res) => {
   try {
+    // Force la recréation de toutes les tables avec les nouveaux noms
     await db.sequelize.sync({ force: true });
     res.json({
       success: true,
-      message: '✅ Base de données réinitialisée. Utilisez /seed pour la peupler.'
+      message: '✅ Base de données réinitialisée avec les nouveaux noms de tables. Utilisez /seed pour la peupler.'
     });
   } catch (error) {
     console.error('❌ Erreur lors de la réinitialisation:', error);

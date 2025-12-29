@@ -24,6 +24,8 @@ const AnalyseReponse = sequelize.define('AnalyseReponse', {
     allowNull: false,
   },
 
+}, {
+  freezeTableName: true // Empêche la pluralisation automatique
 });
 
 module.exports = AnalyseReponse;

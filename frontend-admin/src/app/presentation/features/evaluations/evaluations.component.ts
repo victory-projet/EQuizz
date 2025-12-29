@@ -388,6 +388,24 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
     });
   }
 
+  async duplicateEvaluation(evaluation: Evaluation): Promise<void> {
+    const confirmed = await this.confirmationService.confirmDuplicate(evaluation.titre);
+    if (!confirmed) return;
+
+    this.isLoading.set(true);
+    this.evaluationUseCase.duplicateEvaluation(evaluation.id as any).subscribe({
+      next: () => {
+        this.successMessage.set('Évaluation dupliquée avec succès');
+        this.loadEvaluations();
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error) => {
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la duplication');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
   getStatusBadgeClass(status: string): string {
     switch (status) {
       case 'BROUILLON': return 'badge-draft';
