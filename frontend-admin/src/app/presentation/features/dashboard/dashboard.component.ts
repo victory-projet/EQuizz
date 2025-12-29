@@ -1,10 +1,21 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Subject, takeUntil } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
+
+// Import des nouveaux composants
+import { DashboardAlertsComponent } from '../../shared/components/dashboard-alerts/dashboard-alerts.component';
+import { RecentActivitiesComponent } from '../../shared/components/recent-activities/recent-activities.component';
+import { NotificationSummaryComponent } from '../../shared/components/notification-summary/notification-summary.component';
+
+// Import des services
+import { DashboardService, DashboardAlert, RecentActivity } from '../../../core/services/dashboard.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { Notification } from '../../../core/domain/entities/notification.entity';
 
 interface DashboardData {
   overview: {
@@ -72,14 +83,31 @@ interface DashboardData {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, BaseChartDirective],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    BaseChartDirective,
+    DashboardAlertsComponent,
+    RecentActivitiesComponent,
+    NotificationSummaryComponent
+  ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
+  // Services injectés
+  private dashboardService = inject(DashboardService);
+  private notificationService = inject(NotificationService);
+  private destroy$ = new Subject<void>();
   dashboardData = signal<DashboardData | null>(null);
   isLoading = signal(true);
   errorMessage = signal('');
+
+  // Nouvelles données pour les composants intégrés
+  systemAlerts = signal<DashboardAlert[]>([]);
+  recentActivities = signal<RecentActivity[]>([]);
+  criticalNotifications = signal<Notification[]>([]);
+  systemMetrics = signal<any>(null);
 
   // Valeurs par défaut pour éviter les erreurs
   defaultTrends = { etudiants: 0, cours: 0, evaluations: 0 };
@@ -257,6 +285,50 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDashboard();
+    this.setupSubscriptions();
+    this.loadSystemData();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private setupSubscriptions(): void {
+    // Écouter les alertes système
+    this.dashboardService.alerts$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(alerts => {
+        this.systemAlerts.set(alerts);
+      });
+
+    // Écouter les activités récentes
+    this.dashboardService.recentActivities$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(activities => {
+        this.recentActivities.set(activities);
+      });
+
+    // Écouter les notifications critiques
+    this.notificationService.getCriticalNotifications()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(notifications => {
+        this.criticalNotifications.set(notifications);
+      });
+
+    // Écouter les métriques système
+    this.dashboardService.metrics$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(metrics => {
+        this.systemMetrics.set(metrics);
+      });
+  }
+
+  private loadSystemData(): void {
+    // Charger les données système en parallèle
+    this.dashboardService.getAlerts().subscribe();
+    this.dashboardService.getRecentActivities(10).subscribe();
+    this.dashboardService.getMetrics().subscribe();
   }
 
   loadDashboard(): void {
@@ -658,5 +730,174 @@ export class DashboardComponent implements OnInit {
       day: '2-digit',
       month: 'short'
     });
+  }
+
+  // === GESTIONNAIRES D'ÉVÉNEMENTS POUR LES NOUVEAUX COMPOSANTS ===
+
+  /**
+   * Gestionnaire pour les clics sur les alertes système
+   */
+  onSystemAlertClick(alert: DashboardAlert): void {
+    console.log('Alert clicked:', alert);
+    
+    // Marquer l'alerte comme vue si elle a une action
+    if (alert.actionUrl) {
+      window.open(alert.actionUrl, '_blank');
+    }
+    
+    // Optionnel : marquer comme résolue automatiquement
+    if (alert.actionRequired) {
+      this.dashboardService.resolveAlert(alert.id).subscribe();
+    }
+  }
+
+  /**
+   * Gestionnaire pour les clics sur les activités récentes
+   */
+  onRecentActivityClick(activity: RecentActivity): void {
+    console.log('Activity clicked:', activity);
+    
+    // Navigation vers la page appropriée selon le type d'activité
+    switch (activity.type) {
+      case 'evaluation_created':
+      case 'evaluation_published':
+      case 'evaluation_updated':
+        // Naviguer vers la page des évaluations
+        window.location.href = '/evaluations';
+        break;
+      case 'user_created':
+      case 'user_updated':
+        // Naviguer vers la page des utilisateurs
+        window.location.href = '/users';
+        break;
+      case 'class_created':
+      case 'class_updated':
+        // Naviguer vers la page des classes
+        window.location.href = '/classes';
+        break;
+      default:
+        console.log('No specific action for activity type:', activity.type);
+    }
+  }
+
+  /**
+   * Gestionnaire pour les clics sur les notifications
+   */
+  onNotificationClick(notification: Notification): void {
+    console.log('Notification clicked:', notification);
+    
+    // Marquer comme lue si pas déjà fait
+    if (!notification.isRead) {
+      this.notificationService.markAsRead(notification.id).subscribe();
+    }
+    
+    // Navigation vers l'URL d'action si disponible
+    if (notification.actionUrl) {
+      window.open(notification.actionUrl, '_blank');
+    }
+  }
+
+  /**
+   * Gestionnaire pour voir toutes les notifications
+   */
+  onViewAllNotifications(): void {
+    // Navigation vers la page complète des notifications
+    window.location.href = '/notifications';
+  }
+
+  /**
+   * Gestionnaire pour voir toutes les activités
+   */
+  onViewAllActivities(): void {
+    // Navigation vers la page complète des activités
+    window.location.href = '/activities';
+  }
+
+  /**
+   * Gestionnaire pour les détails d'une activité
+   */
+  onActivityDetails(activity: RecentActivity): void {
+    console.log('Activity details requested:', activity);
+    
+    // Afficher un modal ou naviguer vers une page de détails
+    // Pour l'instant, on log les détails
+    if (activity.metadata) {
+      console.log('Activity metadata:', activity.metadata);
+    }
+  }
+
+  /**
+   * Gestionnaire pour les paramètres des alertes
+   */
+  onAlertsSettings(): void {
+    // Navigation vers les paramètres des alertes
+    window.location.href = '/settings/alerts';
+  }
+
+  /**
+   * Gestionnaire pour les filtres de notifications
+   */
+  onNotificationFilter(filter: { type: string; value: string }): void {
+    console.log('Notification filter applied:', filter);
+    
+    // Appliquer le filtre et naviguer vers la page des notifications
+    const params = new URLSearchParams();
+    params.set(filter.type, filter.value);
+    window.location.href = `/notifications?${params.toString()}`;
+  }
+
+  /**
+   * Actualise toutes les données du dashboard
+   */
+  refreshAllData(): void {
+    this.loadDashboard();
+    this.loadSystemData();
+    this.dashboardService.refreshAll();
+  }
+
+  /**
+   * Obtient le statut global du système
+   */
+  getSystemStatus(): 'healthy' | 'warning' | 'critical' {
+    const metrics = this.systemMetrics();
+    if (!metrics) return 'healthy';
+    
+    return metrics.systemHealth?.status || 'healthy';
+  }
+
+  /**
+   * Obtient le nombre total d'alertes actives
+   */
+  getActiveAlertsCount(): number {
+    return this.systemAlerts().filter(alert => alert.isActive).length;
+  }
+
+  /**
+   * Obtient le nombre de notifications non lues
+   */
+  getUnreadNotificationsCount(): number {
+    return this.criticalNotifications().filter(n => !n.isRead).length;
+  }
+
+  /**
+   * Vérifie s'il y a des problèmes critiques
+   */
+  hasCriticalIssues(): boolean {
+    const criticalAlerts = this.systemAlerts().filter(
+      alert => alert.severity === 'critical' && alert.isActive
+    );
+    const criticalNotifications = this.criticalNotifications().filter(
+      n => n.priority === 'critical' && !n.isRead
+    );
+    
+    return criticalAlerts.length > 0 || criticalNotifications.length > 0;
+  }
+
+  /**
+   * Obtient la classe CSS pour l'indicateur de santé du système
+   */
+  getSystemHealthClass(): string {
+    const status = this.getSystemStatus();
+    return `system-health-${status}`;
   }
 }

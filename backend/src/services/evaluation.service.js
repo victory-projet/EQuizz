@@ -264,6 +264,19 @@ class EvaluationService {
       }))
     }));
   }
+
+  async duplicate(id) {
+    const transaction = await db.sequelize.transaction();
+
+    try {
+      const duplicatedEvaluation = await evaluationRepository.duplicate(id, transaction);
+      await transaction.commit();
+      return duplicatedEvaluation;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
   
 }
 

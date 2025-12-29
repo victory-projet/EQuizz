@@ -47,6 +47,8 @@ const Evaluation = sequelize.define('Evaluation', {
     defaultValue: 'BROUILLON',
   },
 
+}, {
+  freezeTableName: true // Empêche la pluralisation automatique
 });
 
 module.exports = Evaluation;

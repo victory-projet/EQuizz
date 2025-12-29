@@ -34,12 +34,14 @@ class AuthService {
   async login(loginIdentifier, password) {
     // 1. Le service appelle le repository pour trouver l'utilisateur
     const utilisateur = await utilisateurRepository.findByLogin(loginIdentifier);
+    
     if (!utilisateur) {
       throw AppError.unauthorized('Identifiants invalides.', 'INVALID_CREDENTIALS');
     }
 
     // 2. Le service utilise la méthode du modèle pour vérifier le mot de passe
     const isMatch = await utilisateur.isPasswordMatch(password);
+    
     if (!isMatch) {
       throw AppError.unauthorized('Identifiants invalides.', 'INVALID_CREDENTIALS');
     }

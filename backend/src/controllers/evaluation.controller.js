@@ -91,6 +91,15 @@ class EvaluationController {
     const submissions = await evaluationService.getSubmissions(id);
     res.status(200).json(submissions);
   });
+
+  duplicate = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const duplicatedEvaluation = await evaluationService.duplicate(id);
+    res.status(201).json({
+      message: 'Évaluation dupliquée avec succès.',
+      evaluation: duplicatedEvaluation
+    });
+  });
 }
 
 module.exports = new EvaluationController();

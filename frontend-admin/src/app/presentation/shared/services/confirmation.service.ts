@@ -201,4 +201,17 @@ export class ConfirmationService {
       icon: 'download'
     });
   }
+
+  confirmDuplicate(itemName?: string): Promise<boolean> {
+    return this.confirm({
+      title: 'Confirmer la duplication',
+      message: itemName
+        ? `Êtes-vous sûr de vouloir dupliquer "${itemName}" ? Une copie sera créée en brouillon.`
+        : 'Êtes-vous sûr de vouloir dupliquer cet élément ? Une copie sera créée en brouillon.',
+      confirmText: 'Dupliquer',
+      cancelText: 'Annuler',
+      type: 'info',
+      icon: 'content_copy'
+    });
+  }
 }

@@ -26,6 +26,8 @@ const Notification = sequelize.define('Notification', {
     allowNull: false,
   },
   
+}, {
+  freezeTableName: true // Empêche la pluralisation automatique
 });
 
 module.exports = Notification;

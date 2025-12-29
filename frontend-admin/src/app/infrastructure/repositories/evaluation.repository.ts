@@ -105,4 +105,10 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
   getSubmissions(evaluationId: string | number): Observable<SessionReponse[]> {
     return this.api.get<SessionReponse[]>(`/evaluations/${evaluationId}/submissions`);
   }
+
+  duplicateEvaluation(id: string | number): Observable<Evaluation> {
+    return this.api.post<any>(`/evaluations/${id}/duplicate`, {}).pipe(
+      map((response: any) => this.mapEvaluationFromBackend(response.evaluation))
+    );
+  }
 }

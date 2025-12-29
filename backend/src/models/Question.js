@@ -30,6 +30,8 @@ const Question = sequelize.define('Question', {
     defaultValue: 1,
   },
 
+}, {
+  freezeTableName: true // Empêche la pluralisation automatique
 });
 
 module.exports = Question;

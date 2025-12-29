@@ -20,4 +20,7 @@ export abstract class EvaluationRepositoryInterface {
 
   // Soumissions
   abstract getSubmissions(evaluationId: string | number): Observable<SessionReponse[]>;
+
+  // Duplication
+  abstract duplicateEvaluation(id: string | number): Observable<Evaluation>;
 }
