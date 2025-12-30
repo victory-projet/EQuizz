@@ -1,0 +1,82 @@
+.theme-toggle-button {
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--primary-color);
+    background-color: var(--hover-background);
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+:host ::ng-deep .theme-menu {
+  .mat-mdc-menu-content {
+    padding: 8px 0;
+  }
+
+  .mat-mdc-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    min-height: 48px;
+    position: relative;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--hover-background);
+    }
+
+    &.active {
+      background-color: var(--primary-background-light);
+      color: var(--primary-color);
+
+      mat-icon:not(.check-icon) {
+        color: var(--primary-color);
+      }
+    }
+
+    mat-icon:not(.check-icon) {
+      color: var(--text-secondary);
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    span {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 400;
+    }
+
+    .check-icon {
+      color: var(--primary-color);
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-left: auto;
+    }
+  }
+}
+
+// Animation pour le changement d'icône
+.theme-toggle-button mat-icon {
+  animation: iconChange 0.3s ease;
+}
+
+@keyframes iconChange {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(0.8) rotate(180deg);
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+  }
+}

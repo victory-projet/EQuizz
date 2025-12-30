@@ -4,6 +4,7 @@ import { GlobalConfirmationComponent } from './presentation/shared/components/gl
 import { ErrorToastComponent } from './presentation/shared/components/error-toast/error-toast.component';
 import { ChunkLoaderService } from './core/services/chunk-loader.service';
 import { ErrorHandlerService } from './core/services/error-handler.service';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -20,9 +21,11 @@ export class App implements OnInit, OnDestroy {
   
   private chunkLoader = inject(ChunkLoaderService);
   private errorHandler = inject(ErrorHandlerService);
+  private themeService = inject(ThemeService); // Initialise le service de thème
   
   ngOnInit(): void {
     this.setupGlobalErrorHandlers();
+    // Le thème est automatiquement initialisé par le service
   }
   
   ngOnDestroy(): void {

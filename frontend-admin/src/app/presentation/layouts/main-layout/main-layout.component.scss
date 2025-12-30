@@ -12,7 +12,7 @@
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--elevated-shadow);
 
   &.collapsed {
     width: 70px;
@@ -149,18 +149,20 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #F5F7FA;
+  background: var(--background-secondary);
+  transition: background-color var(--theme-transition);
 }
 
 // Header Styles
 .header {
-  background: white;
+  background: var(--surface-primary);
   padding: 20px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--card-shadow);
   z-index: 10;
+  transition: background-color var(--theme-transition), box-shadow var(--theme-transition);
 }
 
 .header-left {
@@ -170,14 +172,16 @@
 .page-title {
   font-size: 24px;
   font-weight: 600;
-  color: #2C3E50;
+  color: var(--text-primary);
   margin: 0 0 5px 0;
+  transition: color var(--theme-transition);
 }
 
 .page-subtitle {
   font-size: 14px;
-  color: #7F8C8D;
+  color: var(--text-secondary);
   margin: 0;
+  transition: color var(--theme-transition);
 }
 
 .header-right {
@@ -195,30 +199,32 @@
 .search-icon {
   position: absolute;
   left: 12px;
-  color: #95A5A6;
+  color: var(--text-tertiary);
   font-size: 20px;
+  transition: color var(--theme-transition);
 }
 
 .search-input {
   padding: 10px 15px 10px 40px;
-  border: 1px solid #E0E6ED;
-  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--border-radius-medium);
   width: 300px;
   font-size: 14px;
-  transition: all 0.2s;
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  transition: all 0.2s, background-color var(--theme-transition), 
+              color var(--theme-transition), border-color var(--theme-transition);
 
   &:focus {
     outline: none;
-    border-color: #5B7396;
-    box-shadow: 0 0 0 3px rgba(91, 115, 150, 0.1);
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
   }
 
   &::placeholder {
-    color: #BDC3C7;
+    color: var(--text-tertiary);
   }
 }
-
-
 
 .user-profile {
   display: flex;
@@ -226,11 +232,11 @@
   gap: 12px;
   cursor: pointer;
   padding: 8px 12px;
-  border-radius: 8px;
-  transition: background 0.2s;
+  border-radius: var(--border-radius-medium);
+  transition: background-color 0.2s, background-color var(--theme-transition);
 
   &:hover {
-    background: #F5F7FA;
+    background: var(--hover-background);
   }
 }
 
@@ -243,6 +249,8 @@
 .user-name {
   font-size: 14px;
   font-weight: 500;
+  color: var(--text-primary);
+  transition: color var(--theme-transition);
   color: #2C3E50;
 }
 

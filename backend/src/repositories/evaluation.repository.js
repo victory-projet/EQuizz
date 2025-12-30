@@ -102,7 +102,7 @@ class EvaluationRepository {
       const quizzData = {
         titre: originalEvaluation.Quizz.titre,
         description: originalEvaluation.Quizz.description,
-        evaluationId: newEvaluation.id
+        evaluation_id: newEvaluation.id // Utiliser evaluation_id au lieu de evaluationId
       };
 
       const newQuizz = await db.Quizz.create(quizzData, { transaction });
@@ -114,7 +114,7 @@ class EvaluationRepository {
           typeQuestion: question.typeQuestion,
           options: question.options,
           ordre: question.ordre,
-          quizzId: newQuizz.id
+          quizz_id: newQuizz.id // Utiliser quizz_id au lieu de quizzId
         }));
 
         await db.Question.bulkCreate(questionsData, { transaction });
