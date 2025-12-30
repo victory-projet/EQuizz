@@ -12,10 +12,22 @@
 
   <!-- Messages -->
   @if (successMessage()) {
-    <div class="alert alert-success">{{ successMessage() }}</div>
+    <div class="alert alert-success">
+      <span class="material-icons">check_circle</span>
+      {{ successMessage() }}
+      <button class="alert-close" (click)="successMessage.set('')">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
   }
   @if (errorMessage()) {
-    <div class="alert alert-error">{{ errorMessage() }}</div>
+    <div class="alert alert-error">
+      <span class="material-icons">error</span>
+      {{ errorMessage() }}
+      <button class="alert-close" (click)="errorMessage.set('')">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
   }
 
   <!-- Stats Cards -->
@@ -361,7 +373,45 @@
             <span class="badge" [ngClass]="getStatusBadgeClass(evaluation.statut)">
               {{ getStatusLabel(evaluation.statut) }}
             </span>
-            <button class="btn-menu">⋮</button>
+            <div class="card-actions">
+              <button class="btn-icon" [title]="'Actions pour ' + evaluation.titre" (click)="toggleCardMenu(evaluation.id)">
+                <span class="material-icons">more_vert</span>
+              </button>
+              @if (showCardMenu() === evaluation.id) {
+                <div class="card-menu">
+                  @if (evaluation.statut === 'BROUILLON') {
+                    <button class="menu-item" (click)="editEvaluation(evaluation); hideCardMenu()">
+                      <span class="material-icons">edit</span> Modifier
+                    </button>
+                    <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
+                      <span class="material-icons">content_copy</span> Dupliquer
+                    </button>
+                    <button class="menu-item danger" (click)="deleteEvaluation(evaluation); hideCardMenu()">
+                      <span class="material-icons">delete</span> Supprimer
+                    </button>
+                  }
+                  @if (evaluation.statut === 'PUBLIEE') {
+                    <button class="menu-item" (click)="viewSubmissions(evaluation); hideCardMenu()">
+                      <span class="material-icons">assignment_turned_in</span> Voir les soumissions
+                    </button>
+                    <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
+                      <span class="material-icons">content_copy</span> Dupliquer
+                    </button>
+                  }
+                  @if (evaluation.statut === 'CLOTUREE') {
+                    <button class="menu-item" (click)="viewSubmissions(evaluation); hideCardMenu()">
+                      <span class="material-icons">assignment_turned_in</span> Voir les soumissions
+                    </button>
+                    <button class="menu-item" (click)="exportResults(evaluation); hideCardMenu()">
+                      <span class="material-icons">download</span> Exporter les résultats
+                    </button>
+                    <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
+                      <span class="material-icons">content_copy</span> Dupliquer
+                    </button>
+                  }
+                </div>
+              }
+            </div>
           </div>
 
           <div class="card-body" (click)="viewEvaluation(evaluation.id)">
@@ -392,6 +442,12 @@
                 <span class="material-icons">people</span>
                 <span>{{ getClassesCount(evaluation) }} classe(s)</span>
               </div>
+              @if (evaluation.statut === 'PUBLIEE' || evaluation.statut === 'CLOTUREE') {
+                <div class="stat-item">
+                  <span class="material-icons">assignment_turned_in</span>
+                  <span>{{ getSubmissionsCount(evaluation) }} soumissions</span>
+                </div>
+              }
             </div>
           </div>
 
@@ -400,19 +456,22 @@
               <button class="btn-outline" (click)="editEvaluation(evaluation); $event.stopPropagation()">
                 <span class="material-icons">edit</span> Modifier
               </button>
-              <button class="btn-secondary" (click)="duplicateEvaluation(evaluation); $event.stopPropagation()">
-                <span class="material-icons">content_copy</span> Dupliquer
-              </button>
-              <button class="btn-primary" (click)="publishEvaluation(evaluation); $event.stopPropagation()">
-                <span class="material-icons">send</span> Publier
-              </button>
-              <button class="btn-danger" (click)="deleteEvaluation(evaluation); $event.stopPropagation()">
-                <span class="material-icons">delete</span> Supprimer
-              </button>
+              @if (getQuestionCount(evaluation) > 0) {
+                <button class="btn-primary" (click)="publishEvaluation(evaluation); $event.stopPropagation()">
+                  <span class="material-icons">send</span> Publier
+                </button>
+              } @else {
+                <button class="btn-primary" disabled title="Ajoutez des questions avant de publier">
+                  <span class="material-icons">send</span> Publier
+                </button>
+              }
             }
             @if (evaluation.statut === 'PUBLIEE') {
               <button class="btn-outline" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
                 <span class="material-icons">visibility</span> Voir
+              </button>
+              <button class="btn-secondary" (click)="viewSubmissions(evaluation); $event.stopPropagation()">
+                <span class="material-icons">assignment_turned_in</span> Soumissions
               </button>
               <button class="btn-primary" (click)="closeEvaluation(evaluation); $event.stopPropagation()">
                 <span class="material-icons">lock</span> Fermer
@@ -422,7 +481,10 @@
               <button class="btn-outline" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
                 <span class="material-icons">visibility</span> Voir
               </button>
-              <button class="btn-primary" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
+              <button class="btn-secondary" (click)="viewSubmissions(evaluation); $event.stopPropagation()">
+                <span class="material-icons">assignment_turned_in</span> Soumissions
+              </button>
+              <button class="btn-primary" (click)="viewResults(evaluation); $event.stopPropagation()">
                 <span class="material-icons">bar_chart</span> Rapport
               </button>
             }

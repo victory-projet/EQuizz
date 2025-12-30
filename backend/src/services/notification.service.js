@@ -101,6 +101,51 @@ class NotificationService {
   }
 
   /**
+   * Notifie les étudiants qu'une évaluation a été clôturée
+   * @param {string} evaluationId - L'ID de l'évaluation
+   */
+  async notifyEvaluationClosed(evaluationId) {
+    const evaluation = await db.Evaluation.findByPk(evaluationId, {
+      include: [
+        { model: db.Cours, required: false },
+        { 
+          model: db.Classe,
+          include: [{ model: db.Etudiant }]
+        }
+      ]
+    });
+
+    if (!evaluation) {
+      throw new Error('Évaluation non trouvée');
+    }
+
+    // Récupérer tous les étudiants des classes ciblées
+    const etudiantIds = [];
+    evaluation.Classes.forEach(classe => {
+      classe.Etudiants.forEach(etudiant => {
+        if (!etudiantIds.includes(etudiant.id)) {
+          etudiantIds.push(etudiant.id);
+        }
+      });
+    });
+
+    if (etudiantIds.length === 0) {
+      return { sent: 0 };
+    }
+
+    const coursNom = evaluation.Cour?.nom || evaluation.Cours?.nom || 'ce cours';
+    
+    const notification = await this.createNotification(
+      evaluationId,
+      'EVALUATION_CLOTUREE',
+      'Évaluation clôturée',
+      `L'évaluation "${evaluation.titre}" pour le cours "${coursNom}" a été clôturée. Les résultats seront bientôt disponibles.`
+    );
+
+    return this.sendToEtudiants(notification.id, etudiantIds);
+  }
+
+  /**
    * Récupère les notifications d'un étudiant
    * @param {string} etudiantId - L'ID de l'étudiant
    * @param {boolean} nonLuesOnly - Ne récupérer que les non lues

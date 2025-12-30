@@ -64,4 +64,18 @@ router.get('/:id/submissions', evaluationController.getSubmissions);
 // POST /api/evaluations/:id/duplicate - Dupliquer une évaluation en brouillon
 router.post('/:id/duplicate', evaluationController.duplicate);
 
+// =========================================================
+// --- Routes pour l'analyse des sentiments et export ---
+// =========================================================
+
+// GET /api/evaluations/:id/sentiment-analysis - Analyser les sentiments des réponses
+router.get('/:id/sentiment-analysis', evaluationController.analyzeSentiments);
+
+// GET /api/evaluations/:id/export - Exporter un rapport complet
+// Query params: format (excel|pdf), includeSentimentAnalysis (true|false), includeChartData (true|false)
+router.get('/:id/export', evaluationController.exportReport);
+
+// GET /api/evaluations/:id/advanced-report - Générer un rapport d'analyse avancé
+router.get('/:id/advanced-report', evaluationController.generateAdvancedReport);
+
 module.exports = router;

@@ -8,12 +8,17 @@ const storage = multer.memoryStorage();
 
 // On filtre pour n'accepter que les fichiers Excel
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-    // Accepter le fichier (format .xlsx)
+  const allowedMimeTypes = [
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+    'application/vnd.ms-excel' // .xls
+  ];
+  
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    // Accepter le fichier
     cb(null, true);
   } else {
     // Rejeter le fichier
-    cb(new Error('Format de fichier non valide. Seuls les fichiers .xlsx sont autorisés.'), false);
+    cb(new Error('Format de fichier non valide. Seuls les fichiers .xlsx et .xls sont autorisés.'), false);
   }
 };
 

@@ -38,6 +38,7 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
 
   errorMessage = signal('');
   successMessage = signal('');
+  showCardMenu = signal<number | string | null>(null);
 
   private confirmationService = inject(ConfirmationService);
 
@@ -382,8 +383,25 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
+        console.error('❌ Erreur suppression:', error);
+        let errorMsg = 'Erreur lors de la suppression';
+        
+        if (error.error?.message) {
+          errorMsg = error.error.message;
+        } else if (error.message) {
+          errorMsg = error.message;
+        }
+        
+        // Messages d'erreur spécifiques
+        if (errorMsg.includes('non trouvée')) {
+          errorMsg = 'Cette évaluation n\'existe plus ou a déjà été supprimée.';
+        } else if (errorMsg.includes('soumissions')) {
+          errorMsg = 'Impossible de supprimer une évaluation qui a des soumissions d\'étudiants.';
+        }
+        
+        this.errorMessage.set(errorMsg);
         this.isLoading.set(false);
+        setTimeout(() => this.errorMessage.set(''), 5000);
       }
     });
   }
@@ -400,10 +418,52 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la duplication');
+        console.error('❌ Erreur duplication:', error);
+        let errorMsg = 'Erreur lors de la duplication';
+        
+        if (error.error?.message) {
+          errorMsg = error.error.message;
+        } else if (error.message) {
+          errorMsg = error.message;
+        }
+        
+        this.errorMessage.set(errorMsg);
         this.isLoading.set(false);
+        setTimeout(() => this.errorMessage.set(''), 5000);
       }
     });
+  }
+
+  // Nouvelles méthodes pour l'interface améliorée
+  toggleCardMenu(evaluationId: number | string): void {
+    if (this.showCardMenu() === evaluationId) {
+      this.showCardMenu.set(null);
+    } else {
+      this.showCardMenu.set(evaluationId);
+    }
+  }
+
+  hideCardMenu(): void {
+    this.showCardMenu.set(null);
+  }
+
+  viewSubmissions(evaluation: Evaluation): void {
+    this.router.navigate(['/evaluations', evaluation.id, 'submissions']);
+  }
+
+  viewResults(evaluation: Evaluation): void {
+    this.router.navigate(['/evaluations', evaluation.id, 'results']);
+  }
+
+  exportResults(evaluation: Evaluation): void {
+    // TODO: Implémenter l'export des résultats
+    this.successMessage.set('Export des résultats en cours de développement...');
+    setTimeout(() => this.successMessage.set(''), 3000);
+  }
+
+  getSubmissionsCount(evaluation: Evaluation): number {
+    // TODO: Récupérer le nombre réel de soumissions depuis l'API
+    return (evaluation as any).submissionsCount || 0;
   }
 
   getStatusBadgeClass(status: string): string {
@@ -425,7 +485,18 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
   }
 
   formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('fr-FR');
+    if (!date) return 'Date non définie';
+    
+    try {
+      const dateObj = new Date(date);
+      if (isNaN(dateObj.getTime())) {
+        return 'Date invalide';
+      }
+      return dateObj.toLocaleDateString('fr-FR');
+    } catch (error) {
+      console.error('Erreur formatage date:', error);
+      return 'Date invalide';
+    }
   }
 
   getQuestionCount(evaluation: Evaluation): number {
@@ -436,9 +507,15 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
 
   getCoursName(evaluation: Evaluation): string {
     // Le backend peut retourner 'Cour' (singulier), 'Cours' (pluriel) ou 'cours' (camelCase)
-    const coursName = (evaluation as any).Cour?.nom || (evaluation as any).Cours?.nom || evaluation.cours?.nom || 'Cours non défini';
+    const coursName = (evaluation as any).Cour?.nom || 
+                     (evaluation as any).Cours?.nom || 
+                     evaluation.cours?.nom || 
+                     (evaluation as any).cours_nom ||
+                     'Cours non défini';
     console.log('📚 Cours pour', evaluation.titre, ':', coursName);
-    console.log('📚 Objet évaluation:', evaluation);
+    if (coursName === 'Cours non défini') {
+      console.log('📚 Objet évaluation complet:', JSON.stringify(evaluation, null, 2));
+    }
     return coursName;
   }
 
