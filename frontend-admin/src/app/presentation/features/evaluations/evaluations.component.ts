@@ -19,6 +19,12 @@ export class EvaluationsComponent implements OnInit {
   isLoading = signal(false);
   searchQuery = signal('');
   filterStatus = signal<string>('ALL');
+  filterPeriod = signal<string>('ALL');
+  filterQuestions = signal<string>('ALL');
+  sortBy = signal<string>('dateCreation');
+  sortOrder = signal<'asc' | 'desc'>('desc');
+  showFilters = signal(false);
+  showSortMenu = signal(false);
   
   // Stats
   totalQuiz = signal(0);
@@ -74,19 +80,122 @@ export class EvaluationsComponent implements OnInit {
   applyFilters(): void {
     let filtered = this.evaluations();
     
+    // Filtrage par statut
     if (this.filterStatus() !== 'ALL') {
       filtered = filtered.filter(e => e.statut === this.filterStatus());
     }
     
+    // Filtrage par période
+    if (this.filterPeriod() !== 'ALL') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      filtered = filtered.filter(e => {
+        const creationDate = new Date(e.dateCreation || 0);
+        
+        switch (this.filterPeriod()) {
+          case 'TODAY':
+            return creationDate >= today;
+          case 'WEEK':
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return creationDate >= weekAgo;
+          case 'MONTH':
+            const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+            return creationDate >= monthAgo;
+          case 'SEMESTER':
+            const semesterAgo = new Date(today.getFullYear(), today.getMonth() - 6, today.getDate());
+            return creationDate >= semesterAgo;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Filtrage par nombre de questions
+    if (this.filterQuestions() !== 'ALL') {
+      filtered = filtered.filter(e => {
+        const questionCount = this.getQuestionCount(e);
+        
+        switch (this.filterQuestions()) {
+          case 'EMPTY':
+            return questionCount === 0;
+          case 'FEW':
+            return questionCount >= 1 && questionCount <= 5;
+          case 'MEDIUM':
+            return questionCount >= 6 && questionCount <= 15;
+          case 'MANY':
+            return questionCount >= 16;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Recherche textuelle
     if (this.searchQuery()) {
       const query = this.searchQuery().toLowerCase();
       filtered = filtered.filter(e => 
         e.titre.toLowerCase().includes(query) ||
-        (e.description && e.description.toLowerCase().includes(query))
+        (e.description && e.description.toLowerCase().includes(query)) ||
+        this.getCoursName(e).toLowerCase().includes(query)
       );
     }
     
+    // Tri
+    filtered = this.sortEvaluations(filtered);
+    
     this.filteredEvaluations.set(filtered);
+  }
+
+  private sortEvaluations(evaluations: Evaluation[]): Evaluation[] {
+    const sortBy = this.sortBy();
+    const order = this.sortOrder();
+    
+    return [...evaluations].sort((a, b) => {
+      let valueA: any;
+      let valueB: any;
+      
+      switch (sortBy) {
+        case 'titre':
+          valueA = a.titre.toLowerCase();
+          valueB = b.titre.toLowerCase();
+          break;
+        case 'dateCreation':
+          valueA = new Date(a.dateCreation || 0);
+          valueB = new Date(b.dateCreation || 0);
+          break;
+        case 'dateDebut':
+          valueA = new Date(a.dateDebut);
+          valueB = new Date(b.dateDebut);
+          break;
+        case 'dateFin':
+          valueA = new Date(a.dateFin);
+          valueB = new Date(b.dateFin);
+          break;
+        case 'statut':
+          valueA = a.statut;
+          valueB = b.statut;
+          break;
+        case 'cours':
+          valueA = this.getCoursName(a).toLowerCase();
+          valueB = this.getCoursName(b).toLowerCase();
+          break;
+        case 'questions':
+          valueA = this.getQuestionCount(a);
+          valueB = this.getQuestionCount(b);
+          break;
+        default:
+          return 0;
+      }
+      
+      if (valueA < valueB) {
+        return order === 'asc' ? -1 : 1;
+      }
+      if (valueA > valueB) {
+        return order === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
   }
 
   onSearch(event: Event): void {
@@ -98,6 +207,82 @@ export class EvaluationsComponent implements OnInit {
   onFilterStatus(status: string): void {
     this.filterStatus.set(status);
     this.applyFilters();
+  }
+
+  onFilterPeriod(period: string): void {
+    this.filterPeriod.set(period);
+    this.applyFilters();
+  }
+
+  onFilterQuestions(questions: string): void {
+    this.filterQuestions.set(questions);
+    this.applyFilters();
+  }
+
+  onSort(sortBy: string): void {
+    if (this.sortBy() === sortBy) {
+      // Si on clique sur le même critère, on inverse l'ordre
+      this.sortOrder.set(this.sortOrder() === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Nouveau critère, on commence par ordre décroissant
+      this.sortBy.set(sortBy);
+      this.sortOrder.set('desc');
+    }
+    this.showSortMenu.set(false);
+    this.applyFilters();
+  }
+
+  toggleFilters(): void {
+    this.showFilters.set(!this.showFilters());
+  }
+
+  toggleSortMenu(): void {
+    this.showSortMenu.set(!this.showSortMenu());
+  }
+
+  clearSearch(): void {
+    this.searchQuery.set('');
+    this.applyFilters();
+  }
+
+  resetFilters(): void {
+    this.searchQuery.set('');
+    this.filterStatus.set('ALL');
+    this.filterPeriod.set('ALL');
+    this.filterQuestions.set('ALL');
+    this.sortBy.set('dateCreation');
+    this.sortOrder.set('desc');
+    this.showFilters.set(false);
+    this.applyFilters();
+  }
+
+  hasActiveFilters(): boolean {
+    return this.filterStatus() !== 'ALL' || 
+           this.filterPeriod() !== 'ALL' || 
+           this.filterQuestions() !== 'ALL' ||
+           this.searchQuery() !== '';
+  }
+
+  getActiveFiltersCount(): number {
+    let count = 0;
+    if (this.filterStatus() !== 'ALL') count++;
+    if (this.filterPeriod() !== 'ALL') count++;
+    if (this.filterQuestions() !== 'ALL') count++;
+    if (this.searchQuery() !== '') count++;
+    return count;
+  }
+
+  getSortLabel(sortBy: string): string {
+    const labels: { [key: string]: string } = {
+      'titre': 'Titre',
+      'dateCreation': 'Date de création',
+      'dateDebut': 'Date de début',
+      'dateFin': 'Date de fin',
+      'statut': 'Statut',
+      'cours': 'Cours',
+      'questions': 'Nombre de questions'
+    };
+    return labels[sortBy] || sortBy;
   }
 
   createEvaluation(): void {
