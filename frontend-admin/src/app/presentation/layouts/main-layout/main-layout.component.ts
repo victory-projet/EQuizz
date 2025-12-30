@@ -4,13 +4,14 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } fro
 import { AuthService } from '../../shared/services/auth.service';
 import { MessagesService } from '../../shared/services/messages.service';
 import { GlobalSearchService, SearchConfig } from '../../shared/services/global-search.service';
+import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ThemeToggleComponent],
   templateUrl: './main-layout.component.html',
   styleUrls: ['./main-layout.component.scss']
 })

@@ -484,6 +484,15 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
     }
   }
 
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case 'BROUILLON': return 'edit_note';
+      case 'PUBLIEE': return 'play_circle';
+      case 'CLOTUREE': return 'lock';
+      default: return 'help_outline';
+    }
+  }
+
   formatDate(date: Date): string {
     if (!date) return 'Date non définie';
     

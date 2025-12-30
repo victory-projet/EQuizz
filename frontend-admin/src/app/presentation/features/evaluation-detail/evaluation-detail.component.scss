@@ -62,7 +62,7 @@
 }
 
 // Buttons
-%btn-base {
+@mixin btn-base {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -80,7 +80,7 @@
 }
 
 .btn-back {
-  @extend %btn-base;
+  @include btn-base;
   width: 40px;
   height: 40px;
   border: 1px solid var(--border-color);
@@ -94,7 +94,7 @@
 }
 
 .btn-primary {
-  @extend %btn-base;
+  @include btn-base;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   background: var(--primary-color);
@@ -110,7 +110,7 @@
 }
 
 .btn-secondary {
-  @extend %btn-base;
+  @include btn-base;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   background: var(--bg-primary);
@@ -128,7 +128,7 @@
 }
 
 .btn-icon {
-  @extend %btn-base;
+  @include btn-base;
   width: 32px;
   height: 32px;
   border: 1px solid var(--border-color);
@@ -156,7 +156,7 @@
 }
 
 .btn-close {
-  @extend %btn-base;
+  @include btn-base;
   width: 32px;
   height: 32px;
   background: transparent;
@@ -235,7 +235,7 @@
 }
 
 // Cards
-%card-base {
+@mixin card-base {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -243,7 +243,7 @@
 }
 
 .description-card {
-  @extend %card-base;
+  @include card-base;
   margin-bottom: 2rem;
 
   h3 {
@@ -288,7 +288,7 @@
 }
 
 .question-card {
-  @extend %card-base;
+  @include card-base;
   transition: box-shadow 0.2s ease;
 
   &:hover {
