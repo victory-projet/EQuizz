@@ -1,10 +1,12 @@
-﻿import { Component, OnInit, signal, inject } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
 import { Evaluation } from '../../../core/domain/entities/evaluation.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
+import { GlobalSearchService } from '../../shared/services/global-search.service';
 
 @Component({
   selector: 'app-evaluations',
@@ -13,7 +15,9 @@ import { ConfirmationService } from '../../shared/services/confirmation.service'
   templateUrl: './evaluations.component.html',
   styleUrls: ['./evaluations.component.scss']
 })
-export class EvaluationsComponent implements OnInit {
+export class EvaluationsComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  
   evaluations = signal<Evaluation[]>([]);
   filteredEvaluations = signal<Evaluation[]>([]);
   isLoading = signal(false);
@@ -39,11 +43,43 @@ export class EvaluationsComponent implements OnInit {
 
   constructor(
     private evaluationUseCase: EvaluationUseCase,
-    private router: Router
+    private router: Router,
+    private globalSearchService: GlobalSearchService
   ) {}
 
   ngOnInit(): void {
     this.loadEvaluations();
+    this.setupGlobalSearch();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.globalSearchService.clearConfig();
+  }
+
+  private setupGlobalSearch(): void {
+    // Configurer la recherche pour cette page
+    this.globalSearchService.setSearchConfig({
+      placeholder: 'Rechercher un quiz par titre, UE ou classe...',
+      suggestions: ['Programmation Web', 'Mathématiques', 'ING4ISI', 'BROUILLON', 'PUBLIEE'],
+      onSearch: (query: string) => {
+        this.searchQuery.set(query);
+        this.applyFilters();
+      },
+      onClear: () => {
+        this.searchQuery.set('');
+        this.applyFilters();
+      }
+    });
+
+    // Écouter les recherches depuis la navbar
+    this.globalSearchService.search$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(query => {
+        this.searchQuery.set(query);
+        this.applyFilters();
+      });
   }
 
   loadEvaluations(): void {
