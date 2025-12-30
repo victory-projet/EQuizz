@@ -8,7 +8,7 @@ async function cleanupExpiredTokens() {
     const result = await db.PasswordResetToken.destroy({
       where: {
         expiresAt: {
-          [db.sequelize.Sequelize.Op.lt]: new Date()
+          [db.Sequelize.Op.lt]: new Date()
         }
       }
     });

@@ -51,7 +51,7 @@
 
           @if ((currentQuestion()!.type === 'CHOIX_MULTIPLE' || currentQuestion()!.type === 'QCM') && currentQuestion()!.options && currentQuestion()!.options!.length > 0) {
             <div class="options-list">
-              @for (option of currentQuestion()!.options; track $index) {
+              @for (option of currentQuestion()!.options; track option + '_' + $index) {
                 <div class="option-card">
                   <div class="option-letter">{{ String.fromCharCode(65 + $index) }}</div>
                   <div class="option-text">{{ option }}</div>

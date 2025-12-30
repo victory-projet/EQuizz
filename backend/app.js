@@ -19,10 +19,12 @@ const academicRoutes = require('./src/routes/academic.routes');
 const evaluationRoutes = require('./src/routes/evaluation.routes');
 const studentRoutes = require('./src/routes/student.routes');
 const initRoutes = require('./src/routes/init.routes');
+const { seedDatabase } = require('./src/routes/init.routes');
 const reportRoutes = require('./src/routes/report.routes');
 const notificationRoutes = require('./src/routes/notification.routes');
 const dashboardRoutes = require('./src/routes/dashboard.routes');
 const utilisateurRoutes = require('./src/routes/utilisateur.routes');
+const questionRoutes = require('./src/routes/question.routes');
 
 // --- Middlewares Globaux ---
 // Configuration CORS pour autoriser les requêtes depuis le frontend
@@ -52,6 +54,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/utilisateurs', utilisateurRoutes);
+app.use('/api', questionRoutes);
 
 // --- Route 404 pour les endpoints non trouvés ---
 app.use((req, res, next) => {
@@ -76,8 +79,22 @@ if (process.env.NODE_ENV !== 'test') {
       console.log('✅ Connexion à la base de données établie avec succès.');
       return db.sequelize.sync({ alter: true }); // Utiliser alter au lieu de force en production
     })
-    .then(() => {
+    .then(async () => {
       console.log('✅ Base de données synchronisée avec succès.');
+      
+      // Vérifier si la base de données est vide et l'initialiser automatiquement
+      const userCount = await db.Utilisateur.count();
+      if (userCount === 0 && process.env.AUTO_SEED !== 'false') {
+        console.log('🌱 Base de données vide détectée, initialisation automatique...');
+        try {
+          await seedDatabase();
+          console.log('✅ Données d\'initialisation chargées automatiquement.');
+        } catch (error) {
+          console.error('❌ Erreur lors de l\'initialisation automatique:', error.message);
+          console.log('💡 Vous pouvez initialiser manuellement avec: POST /api/init/seed');
+        }
+      }
+      
       app.listen(PORT, () => {
         console.log(`🚀 Serveur démarré sur le port ${PORT}`);
       });

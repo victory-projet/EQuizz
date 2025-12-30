@@ -1,0 +1,173 @@
+.submissions-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+
+  .back-button {
+    color: #666;
+  }
+
+  h1 {
+    margin: 0;
+    color: #333;
+    font-size: 24px;
+    font-weight: 500;
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 16px;
+
+  p {
+    color: #666;
+    margin: 0;
+  }
+}
+
+.error-card {
+  margin-bottom: 24px;
+
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #d32f2f;
+
+    mat-icon {
+      font-size: 24px;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+
+  .stat-card {
+    .stat-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        color: #1976d2;
+      }
+
+      div {
+        h3 {
+          margin: 0;
+          font-size: 24px;
+          font-weight: 600;
+          color: #333;
+        }
+
+        p {
+          margin: 4px 0 0 0;
+          color: #666;
+          font-size: 14px;
+        }
+      }
+    }
+  }
+}
+
+.submissions-table-card {
+  mat-card-header {
+    margin-bottom: 16px;
+
+    mat-card-title {
+      color: #333;
+      font-size: 18px;
+      font-weight: 500;
+    }
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .submissions-table {
+    width: 100%;
+    
+    .student-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      strong {
+        color: #333;
+      }
+
+      small {
+        color: #666;
+        font-size: 12px;
+      }
+    }
+
+    .mat-mdc-chip {
+      &.status-completed {
+        background-color: #e8f5e8;
+        color: #2e7d32;
+
+        mat-icon {
+          color: #2e7d32;
+        }
+      }
+
+      &.status-in-progress {
+        background-color: #fff3e0;
+        color: #f57c00;
+
+        mat-icon {
+          color: #f57c00;
+        }
+      }
+    }
+
+    th {
+      font-weight: 600;
+      color: #333;
+    }
+
+    td {
+      color: #666;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .submissions-container {
+    padding: 16px;
+  }
+
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    h1 {
+      font-size: 20px;
+    }
+  }
+}

@@ -3,8 +3,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../models');
 
-// Route pour initialiser toutes les données
-router.post('/seed', async (req, res) => {
+// Fonction d'initialisation exportée pour être utilisée par app.js
+async function seedDatabase() {
   const transaction = await db.sequelize.transaction();
 
   try {
@@ -15,9 +15,7 @@ router.post('/seed', async (req, res) => {
     const userCount = await db.Utilisateur.count();
     if (userCount > 0) {
       await transaction.rollback();
-      return res.status(400).json({
-        message: 'La base de données contient déjà des données. Utilisez /reset pour réinitialiser.'
-      });
+      throw new Error('La base de données contient déjà des données.');
     }
 
     // 1. Créer l'école
@@ -250,7 +248,7 @@ router.post('/seed', async (req, res) => {
 
     await transaction.commit();
 
-    res.json({
+    return {
       success: true,
       message: '✅ Base de données peuplée avec succès !',
       data: {
@@ -273,14 +271,24 @@ router.post('/seed', async (req, res) => {
           password: 'Prof123!'
         },
         etudiant: {
-          email: 'sophie.bernard@saintjeaningenieur.org',
+          email: 'gills.sims@saintjeaningenieur.org',
           password: 'Etudiant123!'
         }
       }
-    });
+    };
 
   } catch (error) {
     await transaction.rollback();
+    throw error;
+  }
+}
+
+// Route pour initialiser toutes les données
+router.post('/seed', async (req, res) => {
+  try {
+    const result = await seedDatabase();
+    res.json(result);
+  } catch (error) {
     console.error('❌ Erreur lors du peuplement:', error);
     res.status(500).json({
       success: false,
@@ -346,4 +354,6 @@ router.post('/reset', async (req, res) => {
   }
 });
 
+// Exporter le router et la fonction seedDatabase
 module.exports = router;
+module.exports.seedDatabase = seedDatabase;

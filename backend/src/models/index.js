@@ -1,6 +1,7 @@
 // backend/src/models/index.js
 
 const sequelize = require('../config/database');
+const { Sequelize, DataTypes } = require('sequelize');
 
 // --- Importation de tous les modèles ---
 const Utilisateur = require('./Utilisateur');
@@ -21,12 +22,12 @@ const ReponseEtudiant = require('./ReponseEtudiant');
 const Notification = require('./Notification');
 const AnalyseReponse = require('./AnalyseReponse');
 const PasswordResetToken = require('./PasswordResetToken');
-const { DataTypes } = require('sequelize');
 
 // --- Centralisation dans un objet 'db' ---
 const db = {};
 
 db.sequelize = sequelize;
+db.Sequelize = Sequelize;
 db.Utilisateur = Utilisateur;
 db.Administrateur = Administrateur;
 db.Enseignant = Enseignant;

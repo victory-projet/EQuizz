@@ -1,10 +1,11 @@
-﻿import { Component, OnInit, signal } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
 import { Cours, Classe } from '../../../core/domain/entities/academic.entity';
+import { EvaluationApiData } from '../../../core/domain/entities/evaluation.entity';
 
 @Component({
   selector: 'app-evaluation-create',
@@ -13,7 +14,7 @@ import { Cours, Classe } from '../../../core/domain/entities/academic.entity';
   templateUrl: './evaluation-create.component.html',
   styleUrls: ['./evaluation-create.component.scss']
 })
-export class EvaluationCreateComponent implements OnInit {
+export class EvaluationCreateComponent implements OnInit, OnDestroy {
   // Step management
   currentStep = signal(1);
   
@@ -22,6 +23,11 @@ export class EvaluationCreateComponent implements OnInit {
   classes = signal<Classe[]>([]);
   isLoading = signal(false);
   
+  // Draft management
+  draftEvaluationId = signal<string | number | null>(null);
+  autoSaveEnabled = signal(true);
+  lastSaved = signal<Date | null>(null);
+  
   // Form data
   formData = {
     titre: '',
@@ -29,7 +35,7 @@ export class EvaluationCreateComponent implements OnInit {
     dateDebut: '',
     dateFin: '',
     coursId: 0,
-    classeIds: [] as (number | string)[]  // Peut être des nombres ou des UUIDs
+    classeIds: [] as (number | string)[]
   };
 
   // Modal
@@ -38,6 +44,8 @@ export class EvaluationCreateComponent implements OnInit {
 
   errorMessage = signal('');
   successMessage = signal('');
+
+  private autoSaveInterval: any;
 
   constructor(
     private evaluationUseCase: EvaluationUseCase,
@@ -48,6 +56,85 @@ export class EvaluationCreateComponent implements OnInit {
   ngOnInit(): void {
     this.loadCours();
     this.loadClasses();
+    this.initializeAutoSave();
+  }
+
+  ngOnDestroy(): void {
+    if (this.autoSaveInterval) {
+      clearInterval(this.autoSaveInterval);
+    }
+  }
+
+  initializeAutoSave(): void {
+    // Sauvegarde automatique toutes les 30 secondes
+    this.autoSaveInterval = setInterval(() => {
+      if (this.autoSaveEnabled() && this.hasMinimalData()) {
+        this.saveDraft();
+      }
+    }, 30000);
+  }
+
+  hasMinimalData(): boolean {
+    return this.formData.titre.trim().length > 0;
+  }
+
+  saveDraft(): void {
+    if (!this.hasMinimalData()) return;
+
+    const draftData: EvaluationApiData = {
+      titre: this.formData.titre || 'Brouillon sans titre',
+      description: this.formData.description,
+      dateDebut: this.formData.dateDebut ? new Date(this.formData.dateDebut).toISOString() : new Date().toISOString(),
+      dateFin: this.formData.dateFin ? new Date(this.formData.dateFin).toISOString() : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      cours_id: this.formData.coursId || undefined,
+      classeIds: this.formData.classeIds.length > 0 ? this.formData.classeIds : [1], // Classe par défaut
+      statut: 'BROUILLON' as const
+    };
+
+    if (this.draftEvaluationId()) {
+      // Mettre à jour le brouillon existant
+      this.updateDraft(draftData);
+    } else {
+      // Créer un nouveau brouillon
+      this.createDraft(draftData);
+    }
+  }
+
+  createDraft(draftData: EvaluationApiData): void {
+    this.evaluationUseCase.createEvaluation(draftData as any).subscribe({
+      next: (evaluation) => {
+        this.draftEvaluationId.set(evaluation.id);
+        this.lastSaved.set(new Date());
+        console.log('💾 Brouillon créé automatiquement:', evaluation.id);
+      },
+      error: (error) => {
+        console.warn('⚠️ Erreur lors de la sauvegarde automatique:', error);
+      }
+    });
+  }
+
+  updateDraft(draftData: EvaluationApiData): void {
+    const draftId = this.draftEvaluationId();
+    if (!draftId) return;
+
+    this.evaluationUseCase.updateEvaluation(draftId.toString(), draftData as any).subscribe({
+      next: (evaluation) => {
+        this.lastSaved.set(new Date());
+        console.log('💾 Brouillon mis à jour automatiquement:', evaluation.id);
+      },
+      error: (error) => {
+        console.warn('⚠️ Erreur lors de la mise à jour automatique:', error);
+      }
+    });
+  }
+
+  onFormChange(): void {
+    // Déclencher une sauvegarde après 3 secondes d'inactivité
+    if (this.autoSaveEnabled() && this.hasMinimalData()) {
+      setTimeout(() => {
+        this.saveDraft();
+      }, 3000);
+    }
   }
 
   loadCours(): void {
@@ -110,9 +197,45 @@ export class EvaluationCreateComponent implements OnInit {
         return;
       }
       
-      // Créer l'évaluation en mode brouillon
-      this.createDraftEvaluation();
+      // Si on a déjà un brouillon, le mettre à jour, sinon le créer
+      if (this.draftEvaluationId()) {
+        this.updateDraftAndProceed();
+      } else {
+        this.createDraftEvaluation();
+      }
     }
+  }
+
+  updateDraftAndProceed(): void {
+    this.isLoading.set(true);
+    
+    const evaluationData: EvaluationApiData = {
+      titre: this.formData.titre,
+      description: this.formData.description,
+      dateDebut: new Date(this.formData.dateDebut).toISOString(),
+      dateFin: new Date(this.formData.dateFin).toISOString(),
+      cours_id: this.formData.coursId,
+      classeIds: this.formData.classeIds,
+      statut: 'BROUILLON' as const
+    };
+
+    const draftId = this.draftEvaluationId();
+    if (!draftId) return;
+
+    this.evaluationUseCase.updateEvaluation(draftId.toString(), evaluationData as any).subscribe({
+      next: (evaluation) => {
+        console.log('✅ Brouillon mis à jour:', evaluation);
+        this.createdEvaluationId.set(evaluation.id);
+        this.successMessage.set('Évaluation sauvegardée');
+        this.isLoading.set(false);
+        this.showMethodModal.set(true);
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors de la mise à jour:', error);
+        this.errorMessage.set('Erreur lors de la sauvegarde');
+        this.isLoading.set(false);
+      }
+    });
   }
 
   createDraftEvaluation(): void {
@@ -120,7 +243,7 @@ export class EvaluationCreateComponent implements OnInit {
     
     console.log('📝 Création d\'évaluation - Données du formulaire:', this.formData);
     
-    const evaluationData = {
+    const evaluationData: EvaluationApiData = {
       titre: this.formData.titre,
       description: this.formData.description,
       // Le modèle Sequelize attend camelCase
@@ -133,11 +256,6 @@ export class EvaluationCreateComponent implements OnInit {
     };
 
     console.log('📤 Envoi au backend:', evaluationData);
-    console.log('📤 JSON stringifié:', JSON.stringify(evaluationData, null, 2));
-    console.log('📤 Type de cours_id:', typeof evaluationData.cours_id);
-    console.log('📤 Type de classeIds:', typeof evaluationData.classeIds);
-    console.log('📤 classeIds est un tableau?', Array.isArray(evaluationData.classeIds));
-    console.log('📤 Contenu de classeIds:', evaluationData.classeIds);
 
     this.evaluationUseCase.createEvaluation(evaluationData as any).subscribe({
       next: (evaluation) => {
@@ -149,14 +267,6 @@ export class EvaluationCreateComponent implements OnInit {
       },
       error: (error) => {
         console.error('❌ Erreur lors de la création:', error);
-        console.error('📋 Détails de l\'erreur:', error.error);
-        if (error.error?.errors) {
-          console.error('🔍 Erreurs de validation:', error.error.errors);
-          console.error('🔍 Erreurs détaillées:', JSON.stringify(error.error.errors, null, 2));
-          error.error.errors.forEach((err: any, index: number) => {
-            console.error(`   Erreur ${index + 1}:`, err);
-          });
-        }
         const errorMsg = error.error?.errors 
           ? `Erreur de validation: ${error.error.errors.map((e: any) => e.message || e.msg || JSON.stringify(e)).join(', ')}`
           : error.error?.message || 'Erreur lors de la création';

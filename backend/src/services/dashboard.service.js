@@ -335,12 +335,12 @@ class DashboardService {
       // Récupérer directement les réponses textuelles
       const reponses = await db.ReponseEtudiant.findAll({
         where: {
-          reponseTexte: { [Op.ne]: null }
+          contenu: { [Op.ne]: null }
         },
         include: [
           {
             model: db.Question,
-            where: { type: { [Op.in]: ['REPONSE_OUVERTE', 'TEXTE_LIBRE'] } },
+            where: { typeQuestion: { [Op.in]: ['REPONSE_OUVERTE', 'TEXTE_LIBRE'] } },
             required: true,
             include: [
               {
@@ -363,9 +363,9 @@ class DashboardService {
       const wordFrequency = new Map();
 
       reponses.forEach(reponse => {
-        if (reponse.reponseTexte) {
+        if (reponse.contenu) {
           // Nettoyer et extraire les mots
-          const words = reponse.reponseTexte
+          const words = reponse.contenu
             .toLowerCase()
             .replace(/[^\wàâäéèêëïîôùûüÿæœç\s]/g, '')
             .split(/\s+/)

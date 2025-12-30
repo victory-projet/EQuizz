@@ -192,7 +192,7 @@ export class QuestionImportComponent {
     }
   }
 
-  validateAndPreview(): void {
+  async validateAndPreview(): Promise<void> {
     const file = this.selectedFile();
     if (!file) {
       this.errorMessage.set('Veuillez sélectionner un fichier');
@@ -202,16 +202,94 @@ export class QuestionImportComponent {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    // For now, we'll just show a preview message
-    // In a real implementation, you would parse the Excel file here
-    setTimeout(() => {
-      this.previewQuestions.set([
-        { enonce: 'Question 1 importée', type: 'QCM', options: ['Option A', 'Option B'] },
-        { enonce: 'Question 2 importée', type: 'TEXTE_LIBRE' }
-      ]);
+    try {
+      const questions = await this.parseExcelFile(file);
+      if (questions.length === 0) {
+        this.errorMessage.set('Aucune question valide trouvée dans le fichier');
+        this.isLoading.set(false);
+        return;
+      }
+
+      this.previewQuestions.set(questions);
       this.showPreview.set(true);
       this.isLoading.set(false);
-    }, 1000);
+    } catch (error) {
+      console.error('❌ Erreur lors du parsing Excel:', error);
+      this.errorMessage.set('Erreur lors de la lecture du fichier Excel');
+      this.isLoading.set(false);
+    }
+  }
+
+  private async parseExcelFile(file: File): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = async (e) => {
+        try {
+          const arrayBuffer = e.target?.result as ArrayBuffer;
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.load(arrayBuffer);
+          
+          const worksheet = workbook.worksheets[0];
+          if (!worksheet) {
+            throw new Error('Aucune feuille de calcul trouvée');
+          }
+
+          const questions: any[] = [];
+          let hasHeader = false;
+
+          worksheet.eachRow((row, rowNumber) => {
+            // Skip header row
+            if (rowNumber === 1) {
+              hasHeader = true;
+              return;
+            }
+
+            const enonce = row.getCell(1).value?.toString()?.trim();
+            const type = row.getCell(2).value?.toString()?.trim()?.toUpperCase();
+            const optionsRaw = row.getCell(3).value?.toString()?.trim();
+
+            // Skip empty rows
+            if (!enonce || !type) {
+              return;
+            }
+
+            // Validate question type
+            if (type !== 'CHOIX_MULTIPLE' && type !== 'REPONSE_OUVERTE') {
+              console.warn(`Ligne ${rowNumber}: Type de question invalide "${type}". Types acceptés: CHOIX_MULTIPLE, REPONSE_OUVERTE`);
+              return;
+            }
+
+            let options: string[] = [];
+            if (type === 'CHOIX_MULTIPLE') {
+              if (!optionsRaw) {
+                console.warn(`Ligne ${rowNumber}: Options manquantes pour une question CHOIX_MULTIPLE`);
+                return;
+              }
+              options = optionsRaw.split(';').map(opt => opt.trim()).filter(opt => opt.length > 0);
+              if (options.length < 2) {
+                console.warn(`Ligne ${rowNumber}: Au moins 2 options requises pour une question CHOIX_MULTIPLE`);
+                return;
+              }
+            }
+
+            questions.push({
+              enonce,
+              type,
+              typeQuestion: type, // Backend expects typeQuestion
+              options: options.length > 0 ? options : undefined
+            });
+          });
+
+          resolve(questions);
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      reader.onerror = () => reject(new Error('Erreur lors de la lecture du fichier'));
+      reader.readAsArrayBuffer(file);
+    });
   }
 
   confirmImport(): void {

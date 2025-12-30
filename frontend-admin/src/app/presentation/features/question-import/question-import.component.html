@@ -94,7 +94,7 @@
           </div>
 
           <div class="preview-list">
-            @for (question of previewQuestions(); track $index) {
+            @for (question of previewQuestions(); track 'question_' + $index) {
               <div class="preview-item">
                 <div class="preview-number">{{ $index + 1 }}</div>
                 <div class="preview-content">
@@ -102,7 +102,7 @@
                   <div class="preview-text">{{ question.enonce }}</div>
                   @if (question.options && question.options.length > 0) {
                     <div class="preview-options">
-                      @for (option of question.options; track $index) {
+                      @for (option of question.options; track option + '_' + $index) {
                         <span class="preview-option">{{ option }}</span>
                       }
                     </div>

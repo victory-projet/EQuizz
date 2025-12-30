@@ -1,17 +1,39 @@
-﻿import { Component, OnInit, signal } from '@angular/core';
+﻿import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
 import { Evaluation, Question } from '../../../core/domain/entities/evaluation.entity';
+import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { QuestionFormComponent } from '../question-form/question-form.component';
 import { QuestionImportComponent } from '../question-import/question-import.component';
-import { EvaluationPublishComponent } from '../evaluation-publish/evaluation-publish.component';
+import { SentimentAnalysisComponent } from '../../shared/components/sentiment-analysis/sentiment-analysis.component';
+import { ReportExportComponent } from '../../shared/components/report-export/report-export.component';
 
 @Component({
   selector: 'app-evaluation-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, QuestionFormComponent, QuestionImportComponent, EvaluationPublishComponent],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    MatTabsModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
+    QuestionFormComponent, 
+    QuestionImportComponent,
+    SentimentAnalysisComponent,
+    ReportExportComponent
+  ],
   templateUrl: './evaluation-detail.component.html',
   styleUrls: ['./evaluation-detail.component.scss']
 })
@@ -19,20 +41,15 @@ export class EvaluationDetailComponent implements OnInit {
   evaluation = signal<Evaluation | null>(null);
   questions = signal<Question[]>([]);
   isLoading = signal(false);
-  
-  // Mode: 'view', 'manual', 'import'
-  mode = signal<string>('view');
-  
-  // Question editing
-  editingQuestion = signal<Question | null>(null);
   showQuestionForm = signal(false);
-  showImportForm = signal(false);
-  showPublishModal = signal(false);
-  showDeleteQuestionModal = signal(false);
-  selectedQuestion = signal<Question | null>(null);
-
+  showQuestionImport = signal(false);
+  editingQuestion = signal<Question | null>(null);
+  
   errorMessage = signal('');
   successMessage = signal('');
+
+  private confirmationService = inject(ConfirmationService);
+  private snackBar = inject(MatSnackBar);
 
   constructor(
     private route: ActivatedRoute,
@@ -42,47 +59,29 @@ export class EvaluationDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
-    const mode = this.route.snapshot.queryParamMap.get('mode');
-    
     if (id) {
-      // L'ID peut être un nombre ou un UUID, on le passe tel quel
       this.loadEvaluation(id);
-      
-      if (mode === 'manual') {
-        this.mode.set('manual');
-        this.showQuestionForm.set(true);
-      } else if (mode === 'import') {
-        this.mode.set('import');
-        this.showImportForm.set(true);
-      }
     }
   }
 
-  loadEvaluation(id: number | string): void {
+  loadEvaluation(id: string): void {
     this.isLoading.set(true);
-    this.evaluationUseCase.getEvaluation(id as any).subscribe({
+    this.evaluationUseCase.getEvaluation(id).subscribe({
       next: (evaluation) => {
+        console.log('📥 Évaluation chargée:', evaluation);
         this.evaluation.set(evaluation);
         this.questions.set(evaluation.quizz?.questions || []);
         this.isLoading.set(false);
       },
       error: (error) => {
         console.error('❌ Erreur lors du chargement de l\'évaluation:', error);
-        if (error.status === 404) {
-          this.errorMessage.set('Cette évaluation n\'existe pas ou a été supprimée.');
-          // Rediriger vers la liste après 2 secondes
-          setTimeout(() => {
-            this.router.navigate(['/evaluations']);
-          }, 2000);
-        } else {
-          this.errorMessage.set('Erreur lors du chargement de l\'évaluation');
-        }
+        this.errorMessage.set('Erreur lors du chargement de l\'évaluation');
         this.isLoading.set(false);
       }
     });
   }
 
-  addQuestion(): void {
+  openQuestionForm(): void {
     this.editingQuestion.set(null);
     this.showQuestionForm.set(true);
   }
@@ -92,24 +91,56 @@ export class EvaluationDetailComponent implements OnInit {
     this.showQuestionForm.set(true);
   }
 
-  deleteQuestion(question: Question): void {
-    this.selectedQuestion.set(question);
-    this.showDeleteQuestionModal.set(true);
+  closeQuestionForm(): void {
+    this.showQuestionForm.set(false);
+    this.editingQuestion.set(null);
   }
 
-  confirmDeleteQuestion(): void {
-    const question = this.selectedQuestion();
-    if (!question) return;
+  openQuestionImport(): void {
+    this.showQuestionImport.set(true);
+  }
+
+  closeQuestionImport(): void {
+    this.showQuestionImport.set(false);
+  }
+
+  onQuestionsImported(questions: Question[]): void {
+    const currentQuestions = this.questions();
+    this.questions.set([...currentQuestions, ...questions]);
+    this.closeQuestionImport();
+    this.successMessage.set(`${questions.length} questions importées avec succès`);
+    setTimeout(() => this.successMessage.set(''), 3000);
+  }
+
+  onQuestionSaved(question: Question): void {
+    const currentQuestions = this.questions();
+    const existingIndex = currentQuestions.findIndex(q => q.id === question.id);
+    
+    if (existingIndex >= 0) {
+      // Update existing question
+      currentQuestions[existingIndex] = question;
+    } else {
+      // Add new question
+      currentQuestions.push(question);
+    }
+    
+    this.questions.set([...currentQuestions]);
+    this.closeQuestionForm();
+    this.successMessage.set('Question sauvegardée avec succès');
+    setTimeout(() => this.successMessage.set(''), 3000);
+  }
+
+  async deleteQuestion(question: Question): Promise<void> {
+    const confirmed = await this.confirmationService.confirmDelete(`la question "${question.enonce}"`);
+    if (!confirmed) return;
 
     this.isLoading.set(true);
-    this.evaluationUseCase.deleteQuestion(question.id as any).subscribe({
+    this.evaluationUseCase.deleteQuestion(question.id).subscribe({
       next: () => {
+        const currentQuestions = this.questions();
+        this.questions.set(currentQuestions.filter(q => q.id !== question.id));
         this.successMessage.set('Question supprimée avec succès');
-        this.closeDeleteQuestionModal();
-        const evalId = this.evaluation()?.id;
-        if (evalId) {
-          this.loadEvaluation(evalId);
-        }
+        this.isLoading.set(false);
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
@@ -119,136 +150,91 @@ export class EvaluationDetailComponent implements OnInit {
     });
   }
 
-  closeDeleteQuestionModal(): void {
-    this.showDeleteQuestionModal.set(false);
-    this.selectedQuestion.set(null);
-    this.errorMessage.set('');
-  }
-
-  onQuestionSaved(question: Question): void {
-    this.showQuestionForm.set(false);
-    this.editingQuestion.set(null);
-    this.successMessage.set('Question enregistrée avec succès');
-    const evalId = this.evaluation()?.id;
-    if (evalId) {
-      this.loadEvaluation(evalId);
-    }
-    setTimeout(() => this.successMessage.set(''), 3000);
-  }
-
-  onQuestionFormCancelled(): void {
-    this.showQuestionForm.set(false);
-    this.editingQuestion.set(null);
-  }
-
-  openImport(): void {
-    this.showImportForm.set(true);
-  }
-
-  onQuestionsImported(questions: Question[]): void {
-    this.showImportForm.set(false);
-    this.successMessage.set(`${questions.length} questions importées avec succès`);
-    const evalId = this.evaluation()?.id;
-    if (evalId) {
-      this.loadEvaluation(evalId);
-    }
-    setTimeout(() => this.successMessage.set(''), 3000);
-  }
-
-  onImportCancelled(): void {
-    this.showImportForm.set(false);
-  }
-
-  openPublishModal(): void {
-    this.showPublishModal.set(true);
-  }
-
-  publishEvaluation(): void {
+  async publishEvaluation(): Promise<void> {
     const evaluation = this.evaluation();
     if (!evaluation) return;
 
+    if (this.questions().length === 0) {
+      this.errorMessage.set('Impossible de publier une évaluation sans questions');
+      return;
+    }
+
+    const confirmed = await this.confirmationService.confirmPublish(evaluation.titre);
+    if (!confirmed) return;
+
     this.isLoading.set(true);
-    this.errorMessage.set('');
-    this.successMessage.set('');
-
-    console.log('📤 Publishing evaluation:', evaluation.id);
-
     this.evaluationUseCase.publishEvaluation(evaluation.id).subscribe({
-      next: (response: any) => {
-        console.log('✅ Evaluation published:', response);
+      next: (updatedEvaluation) => {
+        this.evaluation.set(updatedEvaluation);
+        this.successMessage.set('Évaluation publiée avec succès');
         this.isLoading.set(false);
-        this.showPublishModal.set(false);
-        this.successMessage.set('Évaluation publiée avec succès ! Les notifications ont été envoyées.');
-        this.loadEvaluation(evaluation.id);
-        setTimeout(() => this.successMessage.set(''), 5000);
+        setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
-        console.error('❌ Error publishing evaluation:', error);
-        this.isLoading.set(false);
-        this.showPublishModal.set(false);
         this.errorMessage.set(error.error?.message || 'Erreur lors de la publication');
+        this.isLoading.set(false);
       }
     });
   }
 
-  cancelPublish(): void {
-    this.showPublishModal.set(false);
-  }
-
-  backToList(): void {
+  goBack(): void {
     this.router.navigate(['/evaluations']);
-  }
-
-  previewEvaluation(): void {
-    const evaluation = this.evaluation();
-    if (evaluation) {
-      this.router.navigate(['/evaluations', evaluation.id, 'preview']);
-    }
   }
 
   getQuestionTypeLabel(type: string): string {
     switch (type) {
       case 'CHOIX_MULTIPLE': return 'QCM';
-      case 'REPONSE_OUVERTE': return 'Réponse Ouverte';
-      case 'QCM': return 'QCM';  // Fallback pour ancien format
-      case 'TEXTE_LIBRE': return 'Réponse Ouverte';  // Fallback pour ancien format
+      case 'REPONSE_OUVERTE': return 'Réponse libre';
       default: return type;
     }
   }
 
-  formatDate(date: Date): string {
+  getStatusBadgeClass(status: string): string {
+    switch (status) {
+      case 'BROUILLON': return 'badge-draft';
+      case 'PUBLIEE': return 'badge-active';
+      case 'CLOTUREE': return 'badge-closed';
+      default: return '';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'BROUILLON': return 'Brouillon';
+      case 'PUBLIEE': return 'En cours';
+      case 'CLOTUREE': return 'Clôturée';
+      default: return status;
+    }
+  }
+
+  formatDate(date: Date | string): string {
     return new Date(date).toLocaleDateString('fr-FR');
   }
 
-  moveQuestionUp(index: number): void {
-    if (index > 0) {
-      const questions = [...this.questions()];
-      [questions[index - 1], questions[index]] = [questions[index], questions[index - 1]];
-      this.questions.set(questions);
-      this.updateQuestionsOrder();
+  getOptionText(option: any): string {
+    if (typeof option === 'string') {
+      return option;
     }
-  }
-
-  moveQuestionDown(index: number): void {
-    const questions = this.questions();
-    if (index < questions.length - 1) {
-      const newQuestions = [...questions];
-      [newQuestions[index], newQuestions[index + 1]] = [newQuestions[index + 1], newQuestions[index]];
-      this.questions.set(newQuestions);
-      this.updateQuestionsOrder();
+    if (option && typeof option === 'object') {
+      return option.texte || option.text || String(option);
     }
+    return String(option || '');
   }
 
-  updateQuestionsOrder(): void {
-    // Update ordre for each question
-    const questions = this.questions();
-    questions.forEach((q, index) => {
-      if (q.ordre !== index + 1) {
-        this.evaluationUseCase.updateQuestion(q.id as any, { ordre: index + 1 }).subscribe();
-      }
-    });
+  getStringFromCharCode(code: number): string {
+    return String.fromCharCode(code);
   }
 
-  // Expose String for template
-  String = String;
+  getQuestionType(question: Question): string {
+    return question.type || (question as any).typeQuestion || '';
+  }
+
+  isMultipleChoice(question: Question): boolean {
+    const type = this.getQuestionType(question);
+    return type === 'CHOIX_MULTIPLE';
+  }
+
+  getQuizzId(evaluation: Evaluation): string | number {
+    return evaluation.quizz?.id || evaluation.quizzId || '';
+  }
 }

@@ -489,3 +489,29 @@
   color: #1e40af;
   font-weight: 500;
 }
+/* Indicateur de sauvegarde automatique */
+.auto-save-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: #e8f5e8;
+  color: #2e7d32;
+  border-radius: 4px;
+  font-size: 12px;
+  
+  .material-icons {
+    font-size: 16px;
+  }
+}
+
+/* Animation pour l'indicateur */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.auto-save-indicator {
+  animation: fadeIn 0.3s ease-out;
+}

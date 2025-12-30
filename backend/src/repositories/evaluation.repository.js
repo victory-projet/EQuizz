@@ -10,9 +10,19 @@ class EvaluationRepository {
   async findAll() {
     return db.Evaluation.findAll({
       include: [
-        { model: db.Cours },
-        { model: db.Quizz },
-        { model: db.Classe } // Inclure les classes associées
+        { 
+          model: db.Cours,
+          required: false // Allow evaluations without courses for debugging
+        },
+        { 
+          model: db.Quizz, 
+          include: [db.Question],
+          required: false
+        },
+        { 
+          model: db.Classe,
+          required: false
+        }
       ],
       order: [['dateDebut', 'DESC']]
     });
@@ -21,9 +31,19 @@ class EvaluationRepository {
   async findById(id) {
     return db.Evaluation.findByPk(id, {
       include: [
-        { model: db.Cours },
-        { model: db.Quizz, include: [db.Question] }, // Inclure les questions du quizz
-        { model: db.Classe } // Inclure les classes associées
+        { 
+          model: db.Cours,
+          required: false
+        },
+        { 
+          model: db.Quizz, 
+          include: [db.Question],
+          required: false
+        },
+        { 
+          model: db.Classe,
+          required: false
+        }
       ]
     });
   }
@@ -43,7 +63,7 @@ class EvaluationRepository {
     });
   }
 
-  async duplicate(id, transaction) {
+  async duplicate(id, adminId, transaction) {
     // Récupérer l'évaluation originale avec toutes ses relations
     const originalEvaluation = await db.Evaluation.findByPk(id, {
       include: [
@@ -69,6 +89,8 @@ class EvaluationRepository {
       dateDebut: originalEvaluation.dateDebut,
       dateFin: originalEvaluation.dateFin,
       statut: 'BROUILLON', // Toujours créer en brouillon
+      administrateur_id: adminId, // Utiliser l'ID de l'admin connecté
+      cours_id: originalEvaluation.cours_id,
       coursId: originalEvaluation.coursId,
       classeId: originalEvaluation.classeId
     };

@@ -94,11 +94,44 @@ class EvaluationController {
 
   duplicate = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const duplicatedEvaluation = await evaluationService.duplicate(id);
+    const adminId = req.user.id; // Récupérer l'ID de l'admin connecté
+    const duplicatedEvaluation = await evaluationService.duplicate(id, adminId);
     res.status(201).json({
       message: 'Évaluation dupliquée avec succès.',
       evaluation: duplicatedEvaluation
     });
+  });
+
+  analyzeSentiments = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const sentimentAnalysis = await evaluationService.analyzeSentiments(id);
+    res.status(200).json(sentimentAnalysis);
+  });
+
+  exportReport = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { format = 'excel', includeSentimentAnalysis = true, includeChartData = true } = req.query;
+    
+    const options = {
+      includeSentimentAnalysis: includeSentimentAnalysis === 'true',
+      includeChartData: includeChartData === 'true'
+    };
+
+    const reportBuffer = await evaluationService.exportReport(id, format, options);
+    
+    const filename = `rapport_evaluation_${id}_${new Date().toISOString().split('T')[0]}`;
+    const extension = format === 'pdf' ? 'pdf' : 'xlsx';
+    const mimeType = format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}.${extension}"`);
+    res.send(reportBuffer);
+  });
+
+  generateAdvancedReport = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const advancedReport = await evaluationService.generateAdvancedReport(id);
+    res.status(200).json(advancedReport);
   });
 }
 

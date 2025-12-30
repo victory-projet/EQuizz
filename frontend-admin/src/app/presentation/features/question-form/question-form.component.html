@@ -1,79 +1,70 @@
-<div class="modal-overlay" (click)="cancel()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ question ? 'Modifier la question' : 'Ajouter une question' }}</h2>
-      <button class="btn-close" (click)="cancel()">×</button>
-    </div>
+<div class="question-form">
+  @if (errorMessage()) {
+    <div class="alert alert-error">{{ errorMessage() }}</div>
+  }
 
-    <div class="modal-body">
-      @if (errorMessage()) {
-        <div class="alert alert-error">{{ errorMessage() }}</div>
-      }
+  <div class="form-group">
+    <label class="form-label">Type de question *</label>
+    <select class="form-select" [(ngModel)]="formData.type" (change)="onTypeChange()">
+      <option value="CHOIX_MULTIPLE">QCM (Choix multiples)</option>
+      <option value="REPONSE_OUVERTE">Réponse Ouverte</option>
+    </select>
+  </div>
 
-      <div class="form-group">
-        <label class="form-label">Type de question *</label>
-        <select class="form-select" [(ngModel)]="formData.type" (change)="onTypeChange()">
-          <option value="CHOIX_MULTIPLE">QCM (Choix multiples)</option>
-          <option value="REPONSE_OUVERTE">Réponse Ouverte</option>
-        </select>
-      </div>
+  <div class="form-group">
+    <label class="form-label">Énoncé de la question *</label>
+    <textarea 
+      class="form-textarea" 
+      rows="4"
+      placeholder="Saisissez votre question ici..."
+      [(ngModel)]="formData.enonce"
+    ></textarea>
+  </div>
 
-      <div class="form-group">
-        <label class="form-label">Énoncé de la question *</label>
-        <textarea 
-          class="form-textarea" 
-          rows="4"
-          placeholder="Saisissez votre question ici..."
-          [(ngModel)]="formData.enonce"
-        ></textarea>
-      </div>
-
-      @if (formData.type === 'CHOIX_MULTIPLE') {
-        <div class="form-group">
-          <label class="form-label">Options de réponse *</label>
-          <div class="options-list">
-            @for (option of formData.options; track $index) {
-              <div class="option-input-group">
-                <span class="option-letter">{{ String.fromCharCode(65 + $index) }}</span>
-                <input 
-                  type="text" 
-                  class="form-input"
-                  placeholder="Option {{ $index + 1 }}"
-                  [(ngModel)]="formData.options[$index]"
-                />
-                @if (formData.options.length > 2) {
-                  <button class="btn-remove" (click)="removeOption($index)">
-                    <i class="icon-trash"></i>
-                  </button>
-                }
-              </div>
+  @if (formData.type === 'CHOIX_MULTIPLE') {
+    <div class="form-group">
+      <label class="form-label">Options de réponse *</label>
+      <div class="options-list">
+        @for (option of formData.options; track 'option_' + $index) {
+          <div class="option-input-group">
+            <span class="option-letter">{{ String.fromCharCode(65 + $index) }}</span>
+            <input 
+              type="text" 
+              class="form-input"
+              placeholder="Option {{ $index + 1 }}"
+              [(ngModel)]="formData.options[$index]"
+            />
+            @if (formData.options.length > 2) {
+              <button class="btn-remove" (click)="removeOption($index)" type="button">
+                <span class="material-icons">delete</span>
+              </button>
             }
           </div>
-          <button class="btn-add-option" (click)="addOption()">
-            <i class="icon-plus"></i> Ajouter une option
-          </button>
-        </div>
-      }
-
-      @if (formData.type === 'REPONSE_OUVERTE') {
-        <div class="info-box">
-          <i class="icon-info"></i>
-          <span>Les étudiants pourront saisir une réponse libre en texte.</span>
-        </div>
-      }
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="cancel()" [disabled]="isLoading()">
-        Annuler
-      </button>
-      <button class="btn-primary" (click)="save()" [disabled]="isLoading()">
-        @if (isLoading()) {
-          <span>Enregistrement...</span>
-        } @else {
-          <span>{{ question ? 'Mettre à jour' : 'Ajouter' }}</span>
         }
+      </div>
+      <button class="btn-add-option" (click)="addOption()" type="button">
+        <span class="material-icons">add</span> Ajouter une option
       </button>
     </div>
+  }
+
+  @if (formData.type === 'REPONSE_OUVERTE') {
+    <div class="info-box">
+      <span class="material-icons">info</span>
+      <span>Les étudiants pourront saisir une réponse libre en texte.</span>
+    </div>
+  }
+
+  <div class="form-actions">
+    <button class="btn-secondary" (click)="cancel()" [disabled]="isLoading()" type="button">
+      Annuler
+    </button>
+    <button class="btn-primary" (click)="save()" [disabled]="isLoading()" type="button">
+      @if (isLoading()) {
+        <span>Enregistrement...</span>
+      } @else {
+        <span>{{ question ? 'Mettre à jour' : 'Ajouter' }}</span>
+      }
+    </button>
   </div>
 </div>

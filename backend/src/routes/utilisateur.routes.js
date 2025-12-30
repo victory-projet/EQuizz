@@ -14,5 +14,6 @@ router.post('/', utilisateurController.createUtilisateur);
 router.put('/:id', utilisateurController.updateUtilisateur);
 router.delete('/:id', utilisateurController.deleteUtilisateur);
 router.post('/:id/reset-password', utilisateurController.resetPassword);
+router.post('/import', utilisateurController.importUtilisateurs);
 
 module.exports = router;

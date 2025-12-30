@@ -51,7 +51,7 @@ import {
               <span class="material-icons">priority_high</span>
             </div>
             <div class="stat-content">
-              <span class="stat-value">{{ summary()!.byPriority?.critical || 0 }}</span>
+              <span class="stat-value">{{ summary()!.byPriority.critical || 0 }}</span>
               <span class="stat-label">Critiques</span>
             </div>
           </div>
@@ -61,7 +61,7 @@ import {
               <span class="material-icons">warning</span>
             </div>
             <div class="stat-content">
-              <span class="stat-value">{{ summary()!.byPriority?.high || 0 }}</span>
+              <span class="stat-value">{{ summary()!.byPriority.high || 0 }}</span>
               <span class="stat-label">Importantes</span>
             </div>
           </div>
