@@ -105,10 +105,46 @@
           <input 
             type="text" 
             class="search-input" 
-            placeholder="Search for anything..."
+            [placeholder]="searchPlaceholder()"
             (input)="onSearch($event)"
+            (focus)="onSearchFocus()"
+            (blur)="onSearchBlur()"
             [value]="searchQuery()"
           >
+          
+          @if (searchQuery()) {
+            <button class="clear-search-btn" (click)="clearSearch()">
+              <span class="material-icons">close</span>
+            </button>
+          }
+          
+          <!-- Search Suggestions Dropdown -->
+          @if (showSearchSuggestions() && searchSuggestions().length > 0) {
+            <div class="search-suggestions">
+              <div class="suggestions-header">
+                <span class="material-icons">history</span>
+                <span>Suggestions</span>
+              </div>
+              
+              @for (suggestion of searchSuggestions(); track suggestion) {
+                <button 
+                  class="suggestion-item"
+                  (click)="onSuggestionClick(suggestion)">
+                  <span class="material-icons">search</span>
+                  <span>{{ suggestion }}</span>
+                </button>
+              }
+              
+              @if (searchQuery()) {
+                <div class="suggestions-footer">
+                  <button class="suggestion-item search-all" (click)="onSuggestionClick(searchQuery())">
+                    <span class="material-icons">search</span>
+                    <span>Rechercher "{{ searchQuery() }}"</span>
+                  </button>
+                </div>
+              }
+            </div>
+          }
         </div>
 
         <div class="user-profile" (click)="toggleUserMenu()">

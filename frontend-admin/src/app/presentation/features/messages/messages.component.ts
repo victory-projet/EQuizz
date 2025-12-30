@@ -1,6 +1,8 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject, takeUntil } from 'rxjs';
 import { MessagesService, Message } from '../../shared/services/messages.service';
+import { GlobalSearchService } from '../../shared/services/global-search.service';
 
 @Component({
   selector: 'app-messages',
@@ -9,16 +11,53 @@ import { MessagesService, Message } from '../../shared/services/messages.service
   templateUrl: './messages.component.html',
   styleUrls: ['./messages.component.scss']
 })
-export class MessagesComponent implements OnInit {
+export class MessagesComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  
   messages = signal<Message[]>([]);
   filteredMessages = signal<Message[]>([]);
   selectedFilter = signal<'all' | 'unread' | 'read'>('all');
   selectedType = signal<'all' | 'info' | 'warning' | 'success' | 'error'>('all');
+  searchQuery = signal('');
 
-  constructor(private messagesService: MessagesService) {}
+  constructor(
+    private messagesService: MessagesService,
+    private globalSearchService: GlobalSearchService
+  ) {}
 
   ngOnInit(): void {
     this.loadMessages();
+    this.setupGlobalSearch();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.globalSearchService.clearConfig();
+  }
+
+  private setupGlobalSearch(): void {
+    // Configurer la recherche pour cette page
+    this.globalSearchService.setSearchConfig({
+      placeholder: 'Rechercher dans les messages...',
+      suggestions: ['évaluation', 'maintenance', 'erreur', 'non lu', 'système'],
+      onSearch: (query: string) => {
+        this.searchQuery.set(query);
+        this.applyFilters();
+      },
+      onClear: () => {
+        this.searchQuery.set('');
+        this.applyFilters();
+      }
+    });
+
+    // Écouter les recherches depuis la navbar
+    this.globalSearchService.search$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(query => {
+        this.searchQuery.set(query);
+        this.applyFilters();
+      });
   }
 
   private loadMessages(): void {
@@ -49,6 +88,16 @@ export class MessagesComponent implements OnInit {
     // Filtre par type
     if (this.selectedType() !== 'all') {
       filtered = filtered.filter(msg => msg.type === this.selectedType());
+    }
+
+    // Recherche textuelle
+    if (this.searchQuery()) {
+      const query = this.searchQuery().toLowerCase();
+      filtered = filtered.filter(msg => 
+        msg.title.toLowerCase().includes(query) ||
+        msg.content.toLowerCase().includes(query) ||
+        (msg.sender && msg.sender.toLowerCase().includes(query))
+      );
     }
 
     this.filteredMessages.set(filtered);
