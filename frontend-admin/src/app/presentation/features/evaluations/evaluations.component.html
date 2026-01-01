@@ -12,10 +12,22 @@
 
   <!-- Messages -->
   @if (successMessage()) {
-    <div class="alert alert-success">{{ successMessage() }}</div>
+    <div class="alert alert-success">
+      <span class="material-icons">check_circle</span>
+      {{ successMessage() }}
+      <button class="alert-close" (click)="successMessage.set('')">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
   }
   @if (errorMessage()) {
-    <div class="alert alert-error">{{ errorMessage() }}</div>
+    <div class="alert alert-error">
+      <span class="material-icons">error</span>
+      {{ errorMessage() }}
+      <button class="alert-close" (click)="errorMessage.set('')">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
   }
 
   <!-- Stats Cards -->
@@ -75,14 +87,243 @@
         (input)="onSearch($event)"
         [value]="searchQuery()"
       />
+      @if (searchQuery()) {
+        <button class="clear-search" (click)="clearSearch()">
+          <span class="material-icons">close</span>
+        </button>
+      }
     </div>
+    
     <div class="filter-buttons">
-      <button class="btn-filter" (click)="onFilterStatus('ALL')">
-        <span class="material-icons">filter_list</span> Filtres
-      </button>
-      <button class="btn-filter">
-        <span class="material-icons">sort</span> Trier par
-      </button>
+      <!-- Filtres Dropdown -->
+      <div class="dropdown-container">
+        <button class="btn-filter" (click)="toggleFilters()" [class.active]="showFilters()">
+          <span class="material-icons">filter_list</span> 
+          Filtres
+          @if (hasActiveFilters()) {
+            <span class="filter-count">{{ getActiveFiltersCount() }}</span>
+          }
+        </button>
+        
+        @if (showFilters()) {
+          <div class="dropdown-menu filters-menu">
+            <div class="dropdown-header">
+              <h4>Filtrer les évaluations</h4>
+              <button class="btn-text" (click)="resetFilters()">Réinitialiser</button>
+            </div>
+            
+            <!-- Filtre par Statut -->
+            <div class="filter-group">
+              <label class="filter-label">Statut</label>
+              <div class="filter-options">
+                <label class="checkbox-option">
+                  <input type="radio" name="status" value="ALL" 
+                         [checked]="filterStatus() === 'ALL'"
+                         (change)="onFilterStatus('ALL')">
+                  <span>Tous les statuts</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="radio" name="status" value="BROUILLON"
+                         [checked]="filterStatus() === 'BROUILLON'"
+                         (change)="onFilterStatus('BROUILLON')">
+                  <span>Brouillons ({{ draftQuiz() }})</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="radio" name="status" value="PUBLIEE"
+                         [checked]="filterStatus() === 'PUBLIEE'"
+                         (change)="onFilterStatus('PUBLIEE')">
+                  <span>En cours ({{ activeQuiz() }})</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="radio" name="status" value="CLOTUREE"
+                         [checked]="filterStatus() === 'CLOTUREE'"
+                         (change)="onFilterStatus('CLOTUREE')">
+                  <span>Clôturées ({{ closedQuiz() }})</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Filtre par Période -->
+            <div class="filter-group">
+              <label class="filter-label">Période de création</label>
+              <div class="filter-options">
+                <label class="checkbox-option">
+                  <input type="radio" name="period" value="ALL"
+                         [checked]="filterPeriod() === 'ALL'"
+                         (change)="onFilterPeriod('ALL')">
+                  <span>Toutes les périodes</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="radio" name="period" value="TODAY"
+                         [checked]="filterPeriod() === 'TODAY'"
+                         (change)="onFilterPeriod('TODAY')">
+                  <span>Aujourd'hui</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="radio" name="period" value="WEEK"
+                         [checked]="filterPeriod() === 'WEEK'"
+                         (change)="onFilterPeriod('WEEK')">
+                  <span>Cette semaine</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="radio" name="period" value="MONTH"
+                         [checked]="filterPeriod() === 'MONTH'"
+                         (change)="onFilterPeriod('MONTH')">
+                  <span>Ce mois</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="radio" name="period" value="SEMESTER"
+                         [checked]="filterPeriod() === 'SEMESTER'"
+                         (change)="onFilterPeriod('SEMESTER')">
+                  <span>Ce semestre</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Filtre par Nombre de Questions -->
+            <div class="filter-group">
+              <label class="filter-label">Nombre de questions</label>
+              <div class="filter-options">
+                <label class="checkbox-option">
+                  <input type="radio" name="questions" value="ALL"
+                         [checked]="filterQuestions() === 'ALL'"
+                         (change)="onFilterQuestions('ALL')">
+                  <span>Tous</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="radio" name="questions" value="EMPTY"
+                         [checked]="filterQuestions() === 'EMPTY'"
+                         (change)="onFilterQuestions('EMPTY')">
+                  <span>Sans questions (0)</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="radio" name="questions" value="FEW"
+                         [checked]="filterQuestions() === 'FEW'"
+                         (change)="onFilterQuestions('FEW')">
+                  <span>Peu de questions (1-5)</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="radio" name="questions" value="MEDIUM"
+                         [checked]="filterQuestions() === 'MEDIUM'"
+                         (change)="onFilterQuestions('MEDIUM')">
+                  <span>Questions moyennes (6-15)</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="radio" name="questions" value="MANY"
+                         [checked]="filterQuestions() === 'MANY'"
+                         (change)="onFilterQuestions('MANY')">
+                  <span>Beaucoup de questions (16+)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Tri Dropdown -->
+      <div class="dropdown-container">
+        <button class="btn-filter" (click)="toggleSortMenu()" [class.active]="showSortMenu()">
+          <span class="material-icons">sort</span> 
+          Trier par: {{ getSortLabel(sortBy()) }}
+          <span class="material-icons sort-direction">
+            {{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+          </span>
+        </button>
+        
+        @if (showSortMenu()) {
+          <div class="dropdown-menu sort-menu">
+            <div class="dropdown-header">
+              <h4>Trier les évaluations</h4>
+            </div>
+            
+            <div class="sort-options">
+              <button class="sort-option" 
+                      [class.active]="sortBy() === 'dateCreation'"
+                      (click)="onSort('dateCreation')">
+                <span class="material-icons">schedule</span>
+                <span>Date de création</span>
+                @if (sortBy() === 'dateCreation') {
+                  <span class="material-icons sort-icon">
+                    {{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </span>
+                }
+              </button>
+              
+              <button class="sort-option"
+                      [class.active]="sortBy() === 'titre'"
+                      (click)="onSort('titre')">
+                <span class="material-icons">title</span>
+                <span>Titre (A-Z)</span>
+                @if (sortBy() === 'titre') {
+                  <span class="material-icons sort-icon">
+                    {{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </span>
+                }
+              </button>
+              
+              <button class="sort-option"
+                      [class.active]="sortBy() === 'dateDebut'"
+                      (click)="onSort('dateDebut')">
+                <span class="material-icons">event_available</span>
+                <span>Date de début</span>
+                @if (sortBy() === 'dateDebut') {
+                  <span class="material-icons sort-icon">
+                    {{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </span>
+                }
+              </button>
+              
+              <button class="sort-option"
+                      [class.active]="sortBy() === 'dateFin'"
+                      (click)="onSort('dateFin')">
+                <span class="material-icons">event_busy</span>
+                <span>Date de fin</span>
+                @if (sortBy() === 'dateFin') {
+                  <span class="material-icons sort-icon">
+                    {{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </span>
+                }
+              </button>
+              
+              <button class="sort-option"
+                      [class.active]="sortBy() === 'statut'"
+                      (click)="onSort('statut')">
+                <span class="material-icons">flag</span>
+                <span>Statut</span>
+                @if (sortBy() === 'statut') {
+                  <span class="material-icons sort-icon">
+                    {{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </span>
+                }
+              </button>
+              
+              <button class="sort-option"
+                      [class.active]="sortBy() === 'cours'"
+                      (click)="onSort('cours')">
+                <span class="material-icons">book</span>
+                <span>Cours/UE</span>
+                @if (sortBy() === 'cours') {
+                  <span class="material-icons sort-icon">
+                    {{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </span>
+                }
+              </button>
+              
+              <button class="sort-option"
+                      [class.active]="sortBy() === 'questions'"
+                      (click)="onSort('questions')">
+                <span class="material-icons">help_outline</span>
+                <span>Nombre de questions</span>
+                @if (sortBy() === 'questions') {
+                  <span class="material-icons sort-icon">
+                    {{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+                  </span>
+                }
+              </button>
+            </div>
+          </div>
+        }
+      </div>
     </div>
   </div>
 
@@ -129,10 +370,67 @@
       @for (evaluation of filteredEvaluations(); track evaluation.id) {
         <div class="evaluation-card">
           <div class="card-header">
-            <span class="badge" [ngClass]="getStatusBadgeClass(evaluation.statut)">
-              {{ getStatusLabel(evaluation.statut) }}
+            <span class="badge modern-badge" [ngClass]="getStatusBadgeClass(evaluation.statut)">
+              <span class="badge-icon material-icons">{{ getStatusIcon(evaluation.statut) }}</span>
+              <span class="badge-text">{{ getStatusLabel(evaluation.statut) }}</span>
             </span>
-            <button class="btn-menu">⋮</button>
+            <div class="card-actions">
+              <button class="btn-icon" [title]="'Actions pour ' + evaluation.titre" (click)="toggleCardMenu(evaluation.id)">
+                <span class="material-icons">more_vert</span>
+              </button>
+              @if (showCardMenu() === evaluation.id) {
+                <div class="card-menu modern-menu">
+                  @if (evaluation.statut === 'BROUILLON') {
+                    <button class="menu-item edit-item" (click)="editEvaluation(evaluation); hideCardMenu()" title="Modifier cette évaluation">
+                      <div class="menu-icon edit-icon">
+                        <span class="material-icons">edit</span>
+                      </div>
+                      <div class="menu-content">
+                        <span class="menu-title">Modifier</span>
+                        <span class="menu-subtitle">Éditer le contenu</span>
+                      </div>
+                    </button>
+                    <button class="menu-item duplicate-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()" title="Créer une copie de cette évaluation">
+                      <div class="menu-icon duplicate-icon">
+                        <span class="material-icons">content_copy</span>
+                      </div>
+                      <div class="menu-content">
+                        <span class="menu-title">Dupliquer</span>
+                        <span class="menu-subtitle">Créer une copie</span>
+                      </div>
+                    </button>
+                    <button class="menu-item delete-item" (click)="deleteEvaluation(evaluation); hideCardMenu()" title="Supprimer définitivement cette évaluation">
+                      <div class="menu-icon delete-icon">
+                        <span class="material-icons">delete</span>
+                      </div>
+                      <div class="menu-content">
+                        <span class="menu-title">Supprimer</span>
+                        <span class="menu-subtitle">Action irréversible</span>
+                      </div>
+                    </button>
+                  }
+                  @if (evaluation.statut === 'PUBLIEE') {
+                    <button class="menu-item" (click)="viewSubmissions(evaluation); hideCardMenu()">
+                      <span class="material-icons">assignment_turned_in</span> Voir les soumissions
+                    </button>
+                    <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
+                      <span class="material-icons">content_copy</span> Dupliquer
+                    </button>
+                  }
+                  @if (evaluation.statut === 'CLOTUREE') {
+                    <button class="menu-item" (click)="viewSubmissions(evaluation); hideCardMenu()">
+                      <span class="material-icons">assignment_turned_in</span> Voir les soumissions
+                    </button>
+                    <button class="menu-item" (click)="exportResults(evaluation); hideCardMenu()">
+                      <span class="material-icons">download</span> Exporter les résultats
+                    </button>
+                    <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
+                      <span class="material-icons">content_copy</span> Dupliquer
+                    </button>
+                  }
+                </div>
+              }
+            </div>
           </div>
 
           <div class="card-body" (click)="viewEvaluation(evaluation.id)">
@@ -163,21 +461,47 @@
                 <span class="material-icons">people</span>
                 <span>{{ getClassesCount(evaluation) }} classe(s)</span>
               </div>
+              @if (evaluation.statut === 'PUBLIEE' || evaluation.statut === 'CLOTUREE') {
+                <div class="stat-item">
+                  <span class="material-icons">assignment_turned_in</span>
+                  <span>{{ getSubmissionsCount(evaluation) }} soumissions</span>
+                </div>
+              }
             </div>
           </div>
 
-          <div class="card-footer">
+          <div class="card-footer modern-footer">
             @if (evaluation.statut === 'BROUILLON') {
-              <button class="btn-outline" (click)="editEvaluation(evaluation); $event.stopPropagation()">
-                <span class="material-icons">edit</span> Modifier
-              </button>
-              <button class="btn-primary" (click)="publishEvaluation(evaluation); $event.stopPropagation()">
-                <span class="material-icons">send</span> Publier
-              </button>
+              <div class="footer-actions">
+                <button class="btn-action btn-edit" (click)="editEvaluation(evaluation); $event.stopPropagation()" title="Modifier cette évaluation">
+                  <span class="material-icons">edit</span>
+                  <span class="btn-text">Modifier</span>
+                </button>
+                @if (getQuestionCount(evaluation) > 0) {
+                  <button class="btn-action btn-publish" (click)="publishEvaluation(evaluation); $event.stopPropagation()" title="Publier cette évaluation">
+                    <span class="material-icons">send</span>
+                    <span class="btn-text">Publier</span>
+                  </button>
+                } @else {
+                  <button class="btn-action btn-publish disabled" disabled title="Ajoutez des questions avant de publier">
+                    <span class="material-icons">send</span>
+                    <span class="btn-text">Publier</span>
+                  </button>
+                }
+              </div>
+              <div class="footer-status">
+                <div class="status-indicator draft-status">
+                  <span class="material-icons">edit_note</span>
+                  <span class="status-text">Brouillon</span>
+                </div>
+              </div>
             }
             @if (evaluation.statut === 'PUBLIEE') {
               <button class="btn-outline" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
                 <span class="material-icons">visibility</span> Voir
+              </button>
+              <button class="btn-secondary" (click)="viewSubmissions(evaluation); $event.stopPropagation()">
+                <span class="material-icons">assignment_turned_in</span> Soumissions
               </button>
               <button class="btn-primary" (click)="closeEvaluation(evaluation); $event.stopPropagation()">
                 <span class="material-icons">lock</span> Fermer
@@ -187,7 +511,10 @@
               <button class="btn-outline" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
                 <span class="material-icons">visibility</span> Voir
               </button>
-              <button class="btn-primary" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
+              <button class="btn-secondary" (click)="viewSubmissions(evaluation); $event.stopPropagation()">
+                <span class="material-icons">assignment_turned_in</span> Soumissions
+              </button>
+              <button class="btn-primary" (click)="viewResults(evaluation); $event.stopPropagation()">
                 <span class="material-icons">bar_chart</span> Rapport
               </button>
             }

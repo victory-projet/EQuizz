@@ -4,13 +4,30 @@
 const sgMail = require('@sendgrid/mail');
 require('dotenv').config();
 
-// 2. Configurer la clé API une seule fois au démarrage
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// 2. Vérifier si les emails sont désactivés
+const emailsDisabled = process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true';
+
+// 3. Configurer la clé API seulement si les emails sont activés
+if (!emailsDisabled && process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 const verifiedSender = process.env.SENDGRID_VERIFIED_SENDER;
 
 class EmailService {
   async sendAccountClaimEmail(etudiant, password) {
+    // Vérifier si les emails sont désactivés
+    if (emailsDisabled) {
+      console.log('📧 Email désactivé - sendAccountClaimEmail pour:', etudiant.Utilisateur.email);
+      return { success: true, message: 'Email désactivé en mode développement' };
+    }
+
+    // Vérifier si la clé API SendGrid est configurée
+    if (!process.env.SENDGRID_API_KEY || !verifiedSender) {
+      console.log('📧 SendGrid non configuré - sendAccountClaimEmail pour:', etudiant.Utilisateur.email);
+      return { success: true, message: 'SendGrid non configuré en mode développement' };
+    }
+
     // L'objet etudiant contient : { Utilisateur: {...}, matricule, ... }
     const utilisateur = etudiant.Utilisateur;
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
@@ -139,6 +156,18 @@ class EmailService {
   }
 
   async sendNotificationEmail(email, titre, message) {
+    // Vérifier si les emails sont désactivés
+    if (emailsDisabled) {
+      console.log('📧 Email désactivé - sendNotificationEmail pour:', email);
+      return { success: true, message: 'Email désactivé en mode développement' };
+    }
+
+    // Vérifier si la clé API SendGrid est configurée
+    if (!process.env.SENDGRID_API_KEY || !verifiedSender) {
+      console.log('📧 SendGrid non configuré - sendNotificationEmail pour:', email);
+      return { success: true, message: 'SendGrid non configuré en mode développement' };
+    }
+
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     
     const msg = {
@@ -222,6 +251,18 @@ class EmailService {
   }
 
   async sendCardLinkConfirmation(etudiant, idCarte) {
+    // Vérifier si les emails sont désactivés
+    if (emailsDisabled) {
+      console.log('📧 Email désactivé - sendCardLinkConfirmation pour:', etudiant.Utilisateur.email);
+      return { success: true, message: 'Email désactivé en mode développement' };
+    }
+
+    // Vérifier si la clé API SendGrid est configurée
+    if (!process.env.SENDGRID_API_KEY || !verifiedSender) {
+      console.log('📧 SendGrid non configuré - sendCardLinkConfirmation pour:', etudiant.Utilisateur.email);
+      return { success: true, message: 'SendGrid non configuré en mode développement' };
+    }
+
     const utilisateur = etudiant.Utilisateur;
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     
@@ -340,6 +381,18 @@ class EmailService {
 
   // Nouvelle fonction pour l'email de bienvenue (admin/enseignant)
   async sendWelcomeEmail(user, temporaryPassword) {
+    // Vérifier si les emails sont désactivés
+    if (emailsDisabled) {
+      console.log('📧 Email désactivé - sendWelcomeEmail pour:', user.email);
+      return { success: true, message: 'Email désactivé en mode développement' };
+    }
+
+    // Vérifier si la clé API SendGrid est configurée
+    if (!process.env.SENDGRID_API_KEY || !verifiedSender) {
+      console.log('📧 SendGrid non configuré - sendWelcomeEmail pour:', user.email);
+      return { success: true, message: 'SendGrid non configuré en mode développement' };
+    }
+
     const roleLabel = user.role === 'ADMIN' ? 'Administrateur' : 'Enseignant';
     const roleIcon = user.role === 'ADMIN' ? '👨‍💼' : '👨‍🏫';
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
@@ -467,11 +520,24 @@ class EmailService {
       }
       // Ne pas bloquer la création de l'utilisateur si l'email échoue
       console.warn('⚠️ L\'utilisateur a été créé mais l\'email n\'a pas pu être envoyé');
+      throw new Error('Email service not configured properly');
     }
   }
 
   // Nouvelle fonction pour l'email de réinitialisation de mot de passe
   async sendPasswordResetEmail(utilisateur, token) {
+    // Vérifier si les emails sont désactivés
+    if (emailsDisabled) {
+      console.log('📧 Email désactivé - sendPasswordResetEmail pour:', utilisateur.email);
+      return { success: true, message: 'Email désactivé en mode développement' };
+    }
+
+    // Vérifier si la clé API SendGrid est configurée
+    if (!process.env.SENDGRID_API_KEY || !verifiedSender) {
+      console.log('📧 SendGrid non configuré - sendPasswordResetEmail pour:', utilisateur.email);
+      return { success: true, message: 'SendGrid non configuré en mode développement' };
+    }
+
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 

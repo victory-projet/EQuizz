@@ -13,10 +13,30 @@
       <h2>Gestion des Administrateurs</h2>
       <p>Gérer les comptes administrateurs du système</p>
     </div>
-    <button class="btn btn-primary" (click)="openCreateModal()">
-      <span class="material-icons">add</span>
-      Nouvel Administrateur
-    </button>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="toggleImportMenu()">
+        <span class="material-icons">more_vert</span>
+        Actions
+      </button>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <span class="material-icons">add</span>
+        Nouvel Administrateur
+      </button>
+      
+      <!-- Menu déroulant pour les actions -->
+      @if (showImportMenu()) {
+        <div class="dropdown-menu">
+          <button class="dropdown-item" (click)="openImportDialog()">
+            <span class="material-icons">upload_file</span>
+            Importer depuis Excel
+          </button>
+          <button class="dropdown-item" (click)="exportUsers()">
+            <span class="material-icons">download</span>
+            Exporter vers Excel
+          </button>
+        </div>
+      }
+    </div>
   </div>
 
   <!-- Filters -->
@@ -29,6 +49,70 @@
         (input)="onSearch($event)"
         [value]="searchQuery()"
       >
+    </div>
+
+    <!-- Cache Controls -->
+    <div class="cache-controls">
+      <div class="cache-status">
+        <span class="material-icons">storage</span>
+        <span class="cache-label">Cache:</span>
+        <span class="cache-status-badge" [ngClass]="getCacheStatusClass()">
+          {{ getCacheStatus() }}
+        </span>
+        @if (lastRefresh()) {
+          <small class="last-refresh">
+            Dernière MAJ: {{ lastRefresh()!.toLocaleTimeString() }}
+          </small>
+        }
+      </div>
+
+      <div class="cache-actions">
+        <button 
+          class="btn-cache" 
+          [class.active]="cacheEnabled()"
+          (click)="toggleCache()"
+          title="Activer/Désactiver le cache">
+          <span class="material-icons">
+            {{ cacheEnabled() ? 'cached' : 'sync_disabled' }}
+          </span>
+        </button>
+
+        <button 
+          class="btn-cache" 
+          (click)="refreshData()"
+          title="Actualiser les données">
+          <span class="material-icons">refresh</span>
+        </button>
+
+        <button 
+          class="btn-cache" 
+          (click)="clearCache()"
+          title="Vider le cache">
+          <span class="material-icons">clear_all</span>
+        </button>
+
+        @if (cacheStats()) {
+          <div class="cache-stats-dropdown">
+            <button class="btn-cache" title="Statistiques du cache">
+              <span class="material-icons">analytics</span>
+            </button>
+            <div class="cache-stats-content">
+              <div class="stat-item">
+                <span>Utilisateurs en cache:</span>
+                <span>{{ cacheStats()!.totalUsers }}</span>
+              </div>
+              <div class="stat-item">
+                <span>Taux de succès:</span>
+                <span>{{ formatHitRate(cacheStats()!.cacheHitRate) }}</span>
+              </div>
+              <div class="stat-item">
+                <span>Mémoire utilisée:</span>
+                <span>{{ formatMemorySize(cacheStats()!.memoryUsage) }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
     </div>
   </div>
 
@@ -102,7 +186,7 @@
                   <button 
                     class="btn-icon btn-danger" 
                     title="Supprimer"
-                    (click)="openDeleteModal(user)">
+                    (click)="deleteUser(user)">
                     <span class="material-icons">delete</span>
                   </button>
                 </div>
@@ -254,34 +338,6 @@
     </div>
   }
 
-  <!-- Delete Modal -->
-  @if (showDeleteModal()) {
-    <div class="modal-overlay" (click)="closeModal()">
-      <div class="modal-content modal-small" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>Confirmer la suppression</h3>
-          <button class="close-btn" (click)="closeModal()">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-
-        <div class="modal-body">
-          <p>Êtes-vous sûr de vouloir supprimer l'utilisateur <strong>{{ selectedUser()?.prenom }} {{ selectedUser()?.nom }}</strong> ?</p>
-          <p class="warning-text">Cette action est irréversible.</p>
-        </div>
-
-        <div class="modal-footer">
-          <button class="btn btn-secondary" (click)="closeModal()">
-            Annuler
-          </button>
-          <button class="btn btn-danger" (click)="deleteUser()" [disabled]="isLoading()">
-            Supprimer
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-
   <!-- Password Reset Modal -->
   @if (showPasswordModal()) {
     <div class="modal-overlay" (click)="closeModal()">
@@ -293,7 +349,7 @@
           </button>
         </div>
 
-        <form (ngSubmit)="resetPassword()">
+        <form (ngSubmit)="resetPassword(selectedUser()!)">>
           <div class="modal-body">
             @if (errorMessage()) {
               <div class="alert alert-error">
@@ -333,6 +389,33 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  }
+
+  <!-- Import Excel Modal -->
+  @if (showImportDialog()) {
+    <div class="modal-overlay" (click)="closeImportDialog()">
+      <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Importer des utilisateurs depuis Excel</h3>
+          <button class="close-btn" (click)="closeImportDialog()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <app-excel-upload
+            title="Importer des utilisateurs"
+            description="Sélectionnez un fichier Excel contenant les données des utilisateurs"
+            [config]="importConfig()"
+            [showCustomActions]="true"
+            [allowQuickValidation]="true"
+            (fileUploaded)="onExcelFileUploaded($event)"
+            (uploadCancelled)="onImportCancelled()"
+            (validationCompleted)="onValidationCompleted($event)">
+          </app-excel-upload>
+        </div>
       </div>
     </div>
   }

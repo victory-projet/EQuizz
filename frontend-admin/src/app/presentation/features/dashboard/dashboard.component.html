@@ -15,6 +15,36 @@
   }
 
   @if (!isLoading() && !errorMessage() && dashboardData()) {
+    <!-- Section supérieure : Indicateur de santé système -->
+    <div class="system-health-bar" [class]="getSystemHealthClass()">
+      <div class="health-indicator">
+        <span class="material-icons">{{ getSystemStatus() === 'healthy' ? 'check_circle' : getSystemStatus() === 'warning' ? 'warning' : 'error' }}</span>
+        <span class="health-text">
+          @switch (getSystemStatus()) {
+            @case ('healthy') { Système opérationnel }
+            @case ('warning') { Attention requise }
+            @case ('critical') { Problème critique }
+          }
+        </span>
+      </div>
+      <div class="health-stats">
+        @if (getActiveAlertsCount() > 0) {
+          <span class="stat-item">
+            <span class="material-icons">warning</span>
+            {{ getActiveAlertsCount() }} alerte(s)
+          </span>
+        }
+        @if (getUnreadNotificationsCount() > 0) {
+          <span class="stat-item">
+            <span class="material-icons">notifications</span>
+            {{ getUnreadNotificationsCount() }} notification(s)
+          </span>
+        }
+        <button class="btn-refresh" (click)="refreshAllData()" title="Actualiser">
+          <span class="material-icons">refresh</span>
+        </button>
+      </div>
+    </div>
 
 
     <!-- Cards de statistiques -->
@@ -180,28 +210,119 @@
 
     </div>
 
-    <!-- Section inférieure : Alertes & Activités -->
-    <div class="bottom-section">
-      <!-- Alertes & Suivi -->
+    <!-- Section inférieure : Nouveaux composants intégrés -->
+    <div class="integrated-components">
+      <!-- Ligne 1: Alertes système et Résumé des notifications -->
+      <div class="components-row">
+        <div class="component-col-large">
+          <app-dashboard-alerts 
+            [compact]="false"
+            [maxDisplayed]="5"
+            [showSettings]="true"
+            [showSummary]="true"
+            (alertClick)="onSystemAlertClick($event)"
+            (settingsClick)="onAlertsSettings()">
+          </app-dashboard-alerts>
+        </div>
+        
+        <div class="component-col-small">
+          <app-notification-summary 
+            [compact]="true"
+            [maxRecent]="3"
+            [showCriticalOnly]="false"
+            (notificationClick)="onNotificationClick($event)"
+            (viewAllClick)="onViewAllNotifications()"
+            (filterClick)="onNotificationFilter($event)">
+          </app-notification-summary>
+        </div>
+      </div>
+
+      <!-- Ligne 2: Activités récentes -->
+      <div class="components-row">
+        <div class="component-col-full">
+          <app-recent-activities 
+            [compact]="false"
+            [maxDisplayed]="8"
+            [showFilters]="true"
+            [showSummary]="true"
+            [showActions]="true"
+            (activityClick)="onRecentActivityClick($event)"
+            (viewAllClick)="onViewAllActivities()"
+            (activityDetailsClick)="onActivityDetails($event)">
+          </app-recent-activities>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section inférieure : Alertes & Activités (ancienne version - à supprimer après migration) -->
+    <div class="bottom-section legacy-section" style="display: none;">
+      <!-- Alertes & Notifications -->
       <div class="alerts-section">
-        <h3>Alertes & Suivi</h3>
+        <div class="section-header">
+          <div class="header-left">
+            <h3>Alertes & Notifications</h3>
+            @if (unreadAlertsCount() > 0) {
+              <span class="unread-badge">{{ unreadAlertsCount() }}</span>
+            }
+          </div>
+          <div class="header-actions">
+            @if (dashboardData()!.alerts && dashboardData()!.alerts.length > 0) {
+              <button class="btn-text" (click)="markAllAlertsAsRead()" 
+                      [disabled]="unreadAlertsCount() === 0">
+                <span class="material-icons">done_all</span>
+                Tout marquer comme lu
+              </button>
+            }
+            @if (dashboardData()!.alerts && dashboardData()!.alerts.length > 3) {
+              <button class="btn-text" (click)="toggleShowAllAlerts()">
+                {{ showAllAlerts() ? 'Voir moins' : 'Voir tout' }}
+                <span class="material-icons">
+                  {{ showAllAlerts() ? 'expand_less' : 'expand_more' }}
+                </span>
+              </button>
+            }
+          </div>
+        </div>
+
         <div class="alerts-list">
-          @if (dashboardData()!.alerts && dashboardData()!.alerts.length > 0) {
-            @for (alert of dashboardData()!.alerts; track $index) {
-              <div class="alert-item" [class.warning]="alert.type === 'warning'">
-                <div class="alert-content">
-                  <h4>{{ alert.title }}</h4>
-                  <p>{{ alert.message }}</p>
+          @if (getDisplayedAlerts().length > 0) {
+            @for (alert of getDisplayedAlerts(); track alert.id) {
+              <div class="alert-item" 
+                   [class]="getAlertClass(alert.type) + ' ' + getPriorityClass(alert.priority)"
+                   [class.unread]="!alert.isRead">
+                <div class="alert-icon">
+                  <span class="material-icons">{{ getAlertIcon(alert.type) }}</span>
                 </div>
-                <button class="alert-action">
-                  <span class="material-icons">add</span>
-                </button>
+                <div class="alert-content" (click)="markAlertAsRead(alert.id)">
+                  <div class="alert-header">
+                    <h4>{{ alert.title }}</h4>
+                    <span class="alert-time">{{ getTimeAgo(alert.date) }}</span>
+                  </div>
+                  <p>{{ alert.message }}</p>
+                  @if (alert.actionUrl && alert.actionLabel) {
+                    <a [href]="alert.actionUrl" class="alert-action-link">
+                      {{ alert.actionLabel }}
+                      <span class="material-icons">arrow_forward</span>
+                    </a>
+                  }
+                </div>
+                <div class="alert-actions">
+                  @if (!alert.isRead) {
+                    <button class="btn-icon" (click)="markAlertAsRead(alert.id)" title="Marquer comme lu">
+                      <span class="material-icons">check</span>
+                    </button>
+                  }
+                  <button class="btn-icon" (click)="dismissAlert(alert.id)" title="Supprimer">
+                    <span class="material-icons">close</span>
+                  </button>
+                </div>
               </div>
             }
           } @else {
             <div class="empty-state">
               <span class="material-icons">notifications_none</span>
               <p>Aucune alerte pour le moment</p>
+              <small>Les notifications importantes apparaîtront ici</small>
             </div>
           }
         </div>
@@ -209,27 +330,53 @@
 
       <!-- Activités récentes -->
       <div class="activities-section">
-        <div class="activities-header">
-          <h3>Activités récentes</h3>
-          <a href="#" class="view-more">Voir plus</a>
+        <div class="section-header">
+          <div class="header-left">
+            <h3>Activités récentes</h3>
+          </div>
+          <div class="header-actions">
+            @if (dashboardData()!.activitesRecentes && dashboardData()!.activitesRecentes.length > 4) {
+              <button class="btn-text" (click)="toggleShowAllActivities()">
+                {{ showAllActivities() ? 'Voir moins' : 'Voir tout' }}
+                <span class="material-icons">
+                  {{ showAllActivities() ? 'expand_less' : 'expand_more' }}
+                </span>
+              </button>
+            }
+            <a href="/notifications" class="btn-text">
+              Voir toutes les activités
+              <span class="material-icons">arrow_forward</span>
+            </a>
+          </div>
         </div>
+
         <div class="activities-list">
-          @for (evaluation of dashboardData()!.evaluationsRecentes.slice(0, 2); track evaluation.id) {
-            <div class="activity-item" [class.highlighted]="$index === 1">
-              <div class="activity-icon">
-                <span class="material-icons">wb_sunny</span>
+          @if (getDisplayedActivities().length > 0) {
+            @for (activity of getDisplayedActivities(); track activity.id) {
+              <div class="activity-item">
+                <div class="activity-icon" [style.background-color]="activity.color">
+                  <span class="material-icons">{{ getActivityIcon(activity.type) }}</span>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-header">
+                    <h4>{{ activity.title }}</h4>
+                    <span class="activity-time">{{ getTimeAgo(activity.date) }}</span>
+                  </div>
+                  <p>{{ activity.description }}</p>
+                  <div class="activity-meta">
+                    <span class="activity-user">
+                      <span class="material-icons">person</span>
+                      {{ activity.user }}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div class="activity-content">
-                <h4>Nouveau quizz publié</h4>
-                <p>{{ evaluation.titre }} – {{ evaluation.cours }}</p>
-                <span class="activity-time">Il y a 2 heures</span>
-              </div>
-            </div>
-          }
-          @if (dashboardData()!.evaluationsRecentes.length === 0) {
+            }
+          } @else {
             <div class="empty-state">
               <span class="material-icons">inbox</span>
               <p>Aucune activité récente</p>
+              <small>Les dernières actions apparaîtront ici</small>
             </div>
           }
         </div>

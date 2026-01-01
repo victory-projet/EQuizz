@@ -5,6 +5,7 @@ const generatePassword = require('generate-password');
 const utilisateurRepository = require('../repositories/utilisateur.repository');
 const jwtService = require('./jwt.service');
 const AppError = require('../utils/AppError');
+const db = require('../models');
 
 class AuthService {
   async processAccountClaim(matricule, email, classeId) {
@@ -34,12 +35,14 @@ class AuthService {
   async login(loginIdentifier, password) {
     // 1. Le service appelle le repository pour trouver l'utilisateur
     const utilisateur = await utilisateurRepository.findByLogin(loginIdentifier);
+    
     if (!utilisateur) {
       throw AppError.unauthorized('Identifiants invalides.', 'INVALID_CREDENTIALS');
     }
 
     // 2. Le service utilise la méthode du modèle pour vérifier le mot de passe
     const isMatch = await utilisateur.isPasswordMatch(password);
+    
     if (!isMatch) {
       throw AppError.unauthorized('Identifiants invalides.', 'INVALID_CREDENTIALS');
     }
@@ -93,7 +96,7 @@ class AuthService {
     const recentTokens = await db.PasswordResetToken.count({
       where: {
         utilisateurId: utilisateur.id,
-        createdAt: { [db.sequelize.Sequelize.Op.gte]: oneHourAgo }
+        createdAt: { [db.Sequelize.Op.gte]: oneHourAgo }
       }
     });
 
@@ -192,7 +195,7 @@ class AuthService {
         where: {
           utilisateurId: utilisateur.id,
           usedAt: null,
-          id: { [db.sequelize.Sequelize.Op.ne]: resetToken.id }
+          id: { [db.Sequelize.Op.ne]: resetToken.id }
         }
       }
     );

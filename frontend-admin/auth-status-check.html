@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EQuizz Auth Status Check</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 EQuizz Authentication Status Check</h1>
+    
+    <div id="status-container">
+        <div class="info">Loading authentication status...</div>
+    </div>
+    
+    <div>
+        <button onclick="checkAuth()">🔄 Refresh Status</button>
+        <button onclick="testAPI()">🌐 Test API Call</button>
+        <button onclick="clearAuth()">🗑️ Clear Auth Data</button>
+        <button onclick="goToLogin()">🔑 Go to Login</button>
+    </div>
+    
+    <div id="api-result"></div>
+
+    <script>
+        function updateStatus(message, type = 'info') {
+            const container = document.getElementById('status-container');
+            container.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            let status = '<h3>📊 Authentication Status</h3>';
+            
+            // Check token
+            if (!token || token === 'null' || token === 'undefined') {
+                status += '<div class="error">❌ No authentication token found</div>';
+            } else {
+                status += '<div class="success">✅ Authentication token exists</div>';
+                status += `<div class="info">Token preview: ${token.substring(0, 50)}...</div>`;
+                
+                // Try to decode JWT
+                try {
+                    const parts = token.split('.');
+                    if (parts.length === 3) {
+                        const payload = JSON.parse(atob(parts[1]));
+                        const now = Math.floor(Date.now() / 1000);
+                        
+                        status += '<div class="info">Token payload:</div>';
+                        status += `<pre>${JSON.stringify(payload, null, 2)}</pre>`;
+                        
+                        if (payload.exp) {
+                            const expDate = new Date(payload.exp * 1000);
+                            const isExpired = payload.exp < now;
+                            
+                            status += `<div class="info">Expires: ${expDate.toLocaleString()}</div>`;
+                            
+                            if (isExpired) {
+                                status += '<div class="error">❌ Token is expired</div>';
+                            } else {
+                                status += '<div class="success">✅ Token is valid</div>';
+                            }
+                        }
+                    }
+                } catch (e) {
+                    status += '<div class="warning">⚠️ Could not decode token</div>';
+                }
+            }
+            
+            // Check user data
+            if (!user || user === 'null' || user === 'undefined') {
+                status += '<div class="error">❌ No user data found</div>';
+            } else {
+                try {
+                    const userData = JSON.parse(user);
+                    status += '<div class="success">✅ User data exists</div>';
+                    status += '<div class="info">User data:</div>';
+                    status += `<pre>${JSON.stringify(userData, null, 2)}</pre>`;
+                } catch (e) {
+                    status += '<div class="error">❌ Invalid user data format</div>';
+                }
+            }
+            
+            document.getElementById('status-container').innerHTML = status;
+        }
+
+        async function testAPI() {
+            const token = localStorage.getItem('token');
+            const resultDiv = document.getElementById('api-result');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<div class="error">❌ No token available for API test</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="info">🌐 Testing API call...</div>';
+            
+            try {
+                const response = await fetch('https://equizz-backend.onrender.com/api/dashboard/admin?year=2025-2026', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                let result = `<h3>🌐 API Test Result</h3>`;
+                result += `<div class="info">Status: ${response.status} ${response.statusText}</div>`;
+                
+                if (response.status === 401) {
+                    result += '<div class="error">❌ Authentication failed - 401 Unauthorized</div>';
+                    result += '<div class="warning">The token might be invalid or expired</div>';
+                } else if (response.ok) {
+                    result += '<div class="success">✅ Authentication successful</div>';
+                    const data = await response.json();
+                    result += '<div class="info">Response data:</div>';
+                    result += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    result += `<div class="warning">⚠️ Other error: ${response.status}</div>`;
+                    const text = await response.text();
+                    result += `<div class="info">Response: ${text}</div>`;
+                }
+                
+                resultDiv.innerHTML = result;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ API call failed: ${error.message}</div>`;
+            }
+        }
+
+        function clearAuth() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            updateStatus('🗑️ Authentication data cleared', 'warning');
+            setTimeout(checkAuth, 500);
+        }
+
+        function goToLogin() {
+            window.location.href = '/login';
+        }
+
+        // Initial check
+        checkAuth();
+    </script>
+</body>
+</html>

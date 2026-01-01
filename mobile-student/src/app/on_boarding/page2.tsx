@@ -1,11 +1,12 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { completeOnboarding } from '@/src/utils/onboarding';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function Page2() {
+export default function Page3() {
     const router = useRouter();
 
     const handleNext = () => {
@@ -16,43 +17,61 @@ export default function Page2() {
         completeOnboarding();
         router.replace('/(auth)/Views/LoginScreen');
     };
+    
     const illustration = require('@/assets/images/illustration3.png');
 
     return (
-        
-        <View style={styles.container}>
-            <LinearGradient
-                colors={['#3A5689', '#6D8DC7']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.illustrationContainer}
-            >
-                <Image source={illustration} style={styles.illustration} />
-            </LinearGradient>
+        <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+            <View style={styles.container}>
+                <LinearGradient
+                    colors={['#3A5689', '#6D8DC7']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={styles.illustrationContainer}
+                >
+                    <Image source={illustration} style={styles.illustration} />
+                </LinearGradient>
 
-            <Text style={styles.title}>Evaluez vos enseignements
-            simplement</Text>
+                <View style={styles.contentContainer}>
+                    <Text style={styles.title}>
+                        Evaluez vos enseignements simplement
+                    </Text>
 
-            <Text style={styles.subtitle}>
-                Ton feedback pour un 
-                meilleur enseignement.
-            </Text>
+                    <Text style={styles.subtitle}>
+                        Ton feedback pour un meilleur enseignement.
+                    </Text>
+                </View>
 
-            <View style={styles.buttonsContainer}>
-                <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-                <Text style={styles.skipText}>Ignorer</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-                <Text style={styles.nextText}>Suivant 
-                    <MaterialIcons name="arrow-forward-ios" size={20} color="#3A5689" />
-                </Text>
-                </TouchableOpacity>
+                <View style={styles.buttonsContainer}>
+                    <TouchableOpacity 
+                        style={styles.skipButton} 
+                        onPress={handleSkip}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={styles.skipText}>Ignorer</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                        style={styles.nextButton} 
+                        onPress={handleNext}
+                        activeOpacity={0.7}
+                    >
+                        <View style={styles.nextButtonContent}>
+                            <Text style={styles.nextText}>Suivant</Text>
+                            <MaterialIcons name="arrow-forward-ios" size={18} color="#3A5689" />
+                        </View>
+                    </TouchableOpacity>
+                </View>
             </View>
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+    },
     container: {
         flex: 1,
         justifyContent: 'space-between',
@@ -62,60 +81,89 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 200,
         borderBottomLeftRadius: 200,
         backgroundColor: '#3A5689',
-        height: 600
+        ...Platform.select({
+            ios: {
+                height: 500,
+            },
+            android: {
+                height: 450,
+            },
+        }),
     },
     illustration: {
-        marginTop: 200,
-        width: 300,
-        height: 400,
+        marginTop: Platform.select({
+            ios: 150,
+            android: 120,
+        }),
+        width: 280,
+        height: 350,
+        resizeMode: 'contain',
+    },
+    contentContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        paddingHorizontal: 30,
+        paddingVertical: 20,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: 'black',
+        color: '#1F2937',
         textAlign: 'center',
-        marginBottom: 10,
-        marginTop: 20,
+        marginBottom: 15,
+        lineHeight: 32,
     },
     subtitle: {
         fontSize: 16,
-        color: '#212121',
+        color: '#4B5563',
         textAlign: 'center',
         lineHeight: 24,
-        marginHorizontal: 40,
-        marginBottom: 100,
     },
     buttonsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'center',
         width: '100%',
-        paddingHorizontal: 40,
-        marginBottom: 50,
-        fontSize: 30
+        paddingHorizontal: 30,
+        paddingBottom: Platform.select({
+            ios: 20,
+            android: 30,
+        }),
     },
     skipButton: {
-        flex: 1,
-        backgroundColor: 'transparent',
         paddingVertical: 15,
-        alignItems: 'flex-start', // Aligné à gauche
+        paddingHorizontal: 10,
     },
     skipText: {
-        color: '#212121',
+        color: '#6B7280',
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '600',
     },
     nextButton: {
-        flex: 1,
-        
+        backgroundColor: '#F3F4F6',
         borderRadius: 25,
-        alignItems: 'flex-end', // Aligné à droite
-        marginLeft: 20, // Espacement entre boutons
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
+    },
+    nextButtonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
     nextText: {
-        color: '#212121', // Bleu pour contraster
-        fontSize: 15,
-        fontWeight: 'bold',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
+        color: '#3A5689',
+        fontSize: 16,
+        fontWeight: '700',
     },
 });

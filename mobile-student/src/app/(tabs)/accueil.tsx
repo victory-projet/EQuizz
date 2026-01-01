@@ -7,6 +7,7 @@ import { useAuth } from '../../presentation/hooks/useAuth';
 import Header from '../../presentation/components/Header.component';
 import { QuizzCard } from '../../presentation/components/QuizzCard';
 import LoadingSpinner from '../../presentation/components/LoadingSpinner.component';
+import { CourseCardSkeletonList } from '@/src/presentation/components/CourseCardSkeleton.component';
 
 export default function Accueil() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -101,7 +102,7 @@ export default function Accueil() {
                 contentContainerStyle={styles.scrollViewContent}
             >
                 {loading ? (
-                    <LoadingSpinner />
+                    <CourseCardSkeletonList count={3} />
                 ) : error ? (
                     <View style={styles.errorContainer}>
                         <Text style={styles.errorText}>{error}</Text>

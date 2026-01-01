@@ -1,68 +1,97 @@
 import { HttpInterceptorFn, HttpResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { of, tap } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { of } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
+import { CacheService } from '../services/cache.service';
 
-// Simple in-memory cache
-const cache = new Map<string, { response: HttpResponse<any>; timestamp: number }>();
-
+/**
+ * Intercepteur fonctionnel pour la mise en cache HTTP
+ */
 export const cacheInterceptor: HttpInterceptorFn = (req, next) => {
-  // Only cache GET requests in production
-  if (!environment.enableCache || req.method !== 'GET') {
+  const cacheService = inject(CacheService);
+
+  // URLs qui doivent être mises en cache
+  const cacheableUrls = [
+    '/api/users',
+    '/api/classes',
+    '/api/teachers',
+    '/api/students',
+    '/api/evaluations'
+  ];
+
+  // Méthodes HTTP qui peuvent être mises en cache
+  const cacheableMethods = ['GET'];
+
+  // Vérifier si la requête peut être mise en cache
+  if (!shouldCache(req, cacheableMethods, cacheableUrls)) {
     return next(req);
   }
 
-  // Skip cache for certain endpoints
-  const skipCache = ['/auth/', '/login', '/logout'].some(path => req.url.includes(path));
-  if (skipCache) {
-    return next(req);
+  const cacheKey = generateCacheKey(req);
+  
+  // Vérifier si la réponse est en cache
+  const cachedResponse = cacheService.get<any>(cacheKey);
+  if (cachedResponse) {
+    // Retourner la réponse mise en cache
+    return of(new HttpResponse({
+      body: cachedResponse,
+      status: 200,
+      statusText: 'OK (from cache)'
+    }));
   }
 
-  const cacheKey = req.urlWithParams;
-  const cached = cache.get(cacheKey);
-
-  // Return cached response if valid
-  if (cached) {
-    const age = Date.now() - cached.timestamp;
-    if (age < environment.cacheTimeout) {
-      console.log('📦 Cache hit:', cacheKey);
-      return of(cached.response.clone());
-    } else {
-      // Remove expired cache
-      cache.delete(cacheKey);
-    }
-  }
-
-  // Make request and cache response
+  // Exécuter la requête et mettre en cache la réponse
   return next(req).pipe(
     tap(event => {
-      if (event instanceof HttpResponse) {
-        console.log('💾 Caching response:', cacheKey);
-        cache.set(cacheKey, {
-          response: event.clone(),
-          timestamp: Date.now()
+      if (event instanceof HttpResponse && event.status === 200) {
+        // Déterminer le TTL basé sur l'URL
+        const ttl = getTtlForUrl(req.url);
+        
+        // Mettre en cache la réponse
+        cacheService.set(cacheKey, event.body, {
+          ttl,
+          persistToStorage: true
         });
-
-        // Limit cache size to 50 entries
-        if (cache.size > 50) {
-          const firstKey = cache.keys().next().value;
-          if (firstKey) {
-            cache.delete(firstKey);
-          }
-        }
       }
+    }),
+    catchError(error => {
+      // En cas d'erreur, ne pas mettre en cache
+      throw error;
     })
   );
 };
 
-// Function to clear cache
-export function clearCache(): void {
-  cache.clear();
-  console.log('🗑️ Cache cleared');
+function shouldCache(req: any, cacheableMethods: string[], cacheableUrls: string[]): boolean {
+  // Vérifier la méthode HTTP
+  if (!cacheableMethods.includes(req.method)) {
+    return false;
+  }
+
+  // Vérifier si l'URL est dans la liste des URLs cachables
+  return cacheableUrls.some(url => req.url.includes(url));
 }
 
-// Function to clear specific cache entry
-export function clearCacheEntry(url: string): void {
-  cache.delete(url);
-  console.log('🗑️ Cache entry cleared:', url);
+function generateCacheKey(req: any): string {
+  // Générer une clé unique basée sur l'URL et les paramètres
+  const url = req.urlWithParams;
+  const method = req.method;
+  return `http_${method}_${btoa(url)}`;
+}
+
+function getTtlForUrl(url: string): number {
+  // Définir des TTL différents selon le type de données
+  if (url.includes('/users')) {
+    return 10 * 60 * 1000; // 10 minutes pour les utilisateurs
+  }
+  
+  if (url.includes('/classes')) {
+    return 30 * 60 * 1000; // 30 minutes pour les classes
+  }
+  
+  if (url.includes('/evaluations')) {
+    return 5 * 60 * 1000; // 5 minutes pour les évaluations
+  }
+  
+  // TTL par défaut
+  return 15 * 60 * 1000; // 15 minutes
 }

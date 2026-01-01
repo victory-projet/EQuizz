@@ -145,7 +145,12 @@ exports.createUtilisateur = async (req, res) => {
 
     // Envoyer un email de bienvenue si c'est un admin ou enseignant avec mot de passe
     if ((role === 'ADMIN' || role === 'ENSEIGNANT') && motDePasse) {
-      await emailService.sendWelcomeEmail(userData, motDePasse);
+      try {
+        await emailService.sendWelcomeEmail(userData, motDePasse);
+      } catch (emailError) {
+        console.warn('⚠️ L\'utilisateur a été créé mais l\'email n\'a pas pu être envoyé:', emailError.message);
+        // Ne pas faire échouer la création de l'utilisateur si l'email échoue
+      }
     }
 
     res.status(201).json(userData);
@@ -255,5 +260,120 @@ exports.resetPassword = async (req, res) => {
   } catch (error) {
     console.error('Erreur lors de la réinitialisation du mot de passe:', error);
     res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
+
+// Importer des utilisateurs depuis un fichier Excel
+exports.importUtilisateurs = async (req, res) => {
+  try {
+    const { users } = req.body;
+
+    if (!users || !Array.isArray(users) || users.length === 0) {
+      return res.status(400).json({ message: 'Aucun utilisateur à importer' });
+    }
+
+    let imported = 0;
+    const errors = [];
+
+    for (let i = 0; i < users.length; i++) {
+      const userData = users[i];
+      
+      try {
+        // Validation des données requises
+        if (!userData.nom || !userData.prenom || !userData.email) {
+          errors.push(`Ligne ${i + 1}: Nom, prénom et email sont requis`);
+          continue;
+        }
+
+        // Vérifier si l'email existe déjà
+        const existingUser = await Utilisateur.findOne({ where: { email: userData.email } });
+        if (existingUser) {
+          errors.push(`Ligne ${i + 1}: L'email ${userData.email} existe déjà`);
+          continue;
+        }
+
+        // Déterminer le rôle (par défaut ETUDIANT)
+        const role = userData.type?.toUpperCase() || 'ETUDIANT';
+        if (!['ADMIN', 'ENSEIGNANT', 'ETUDIANT'].includes(role)) {
+          errors.push(`Ligne ${i + 1}: Rôle invalide "${userData.type}"`);
+          continue;
+        }
+
+        // Générer un mot de passe temporaire pour les admins et enseignants
+        let motDePasseHash = null;
+        if (role === 'ADMIN' || role === 'ENSEIGNANT') {
+          motDePasseHash = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+        }
+
+        // Créer l'utilisateur
+        const utilisateur = await Utilisateur.create({
+          nom: userData.nom.trim(),
+          prenom: userData.prenom.trim(),
+          email: userData.email.trim().toLowerCase(),
+          motDePasseHash: motDePasseHash,
+          estActif: true
+        });
+
+        // Créer le rôle correspondant
+        if (role === 'ADMIN') {
+          await Administrateur.create({ id: utilisateur.id });
+        } else if (role === 'ENSEIGNANT') {
+          await Enseignant.create({ 
+            id: utilisateur.id,
+            specialite: userData.specialite || null
+          });
+        } else if (role === 'ETUDIANT') {
+          // Générer un matricule unique si non fourni
+          let matricule = userData.matricule;
+          if (!matricule) {
+            const year = new Date().getFullYear();
+            const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            matricule = `${year}${randomNum}`;
+          }
+          
+          // Vérifier l'unicité du matricule
+          const existingMatricule = await Etudiant.findOne({ where: { matricule } });
+          if (existingMatricule) {
+            // Générer un nouveau matricule
+            const year = new Date().getFullYear();
+            const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            matricule = `${year}${randomNum}`;
+          }
+          
+          await Etudiant.create({ 
+            id: utilisateur.id,
+            matricule: matricule
+          });
+        }
+
+        imported++;
+
+        // Envoyer un email de bienvenue si c'est un admin ou enseignant avec mot de passe
+        if ((role === 'ADMIN' || role === 'ENSEIGNANT') && motDePasseHash) {
+          try {
+            const userData = utilisateur.toJSON();
+            userData.role = role;
+            await emailService.sendWelcomeEmail(userData, motDePasseHash);
+          } catch (emailError) {
+            console.warn(`⚠️ Email non envoyé pour ${userData.email}:`, emailError.message);
+            // Ne pas faire échouer l'import si l'email échoue
+          }
+        }
+
+      } catch (userError) {
+        console.error(`Erreur lors de l'import de l'utilisateur ligne ${i + 1}:`, userError);
+        errors.push(`Ligne ${i + 1}: ${userError.message}`);
+      }
+    }
+
+    res.json({
+      imported,
+      errors,
+      message: `${imported} utilisateur(s) importé(s) avec succès${errors.length > 0 ? `, ${errors.length} erreur(s)` : ''}`
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de l\'import des utilisateurs:', error);
+    res.status(500).json({ message: 'Erreur serveur lors de l\'import' });
   }
 };

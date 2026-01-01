@@ -19,6 +19,8 @@ const Quizz = sequelize.define('Quizz', {
     allowNull: true,
     // ex: "Veuillez répondre honnêtement. Vos réponses sont anonymes."
   },
+}, {
+  freezeTableName: true // Empêche la pluralisation automatique
 });
 
 module.exports = Quizz;

@@ -1,8 +1,9 @@
-﻿import { Component, OnInit, signal, computed } from '@angular/core';
+﻿import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserUseCase } from '../../../core/usecases/user.usecase';
 import { Enseignant } from '../../../core/domain/entities/user.entity';
+import { ConfirmationService } from '../../shared/services/confirmation.service';
 
 @Component({
   selector: 'app-teachers',
@@ -19,6 +20,8 @@ export class TeachersComponent implements OnInit {
   showModal = signal(false);
   showDeleteModal = signal(false);
   selectedTeacher = signal<Enseignant | null>(null);
+  
+  private confirmationService = inject(ConfirmationService);
   
   searchQuery = signal('');
   filterStatus = signal<string>('ALL');

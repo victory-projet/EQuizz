@@ -75,6 +75,11 @@
         <span class="material-icons">admin_panel_settings</span>
         <span class="nav-text" *ngIf="!isSidebarCollapsed()">Administrateurs</span>
       </a>
+
+      <a routerLink="/profile" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">person</span>
+        <span class="nav-text" *ngIf="!isSidebarCollapsed()">Mon Profil</span>
+      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -91,7 +96,7 @@
     <header class="header">
       <div class="header-left">
         <h1 class="page-title">{{ getPageTitle() }}</h1>
-        <p class="page-subtitle">Vue d'ensemble du système d'évaluation des enseignements</p>
+        <p class="page-subtitle">{{ getPageSubtitle() }}</p>
       </div>
 
       <div class="header-right">
@@ -100,19 +105,87 @@
           <input 
             type="text" 
             class="search-input" 
-            placeholder="Search for anything..."
+            [placeholder]="searchPlaceholder()"
             (input)="onSearch($event)"
+            (focus)="onSearchFocus()"
+            (blur)="onSearchBlur()"
             [value]="searchQuery()"
           >
+          
+          @if (searchQuery()) {
+            <button class="clear-search-btn" (click)="clearSearch()">
+              <span class="material-icons">close</span>
+            </button>
+          }
+          
+          <!-- Search Suggestions Dropdown -->
+          @if (showSearchSuggestions() && searchSuggestions().length > 0) {
+            <div class="search-suggestions">
+              <div class="suggestions-header">
+                <span class="material-icons">history</span>
+                <span>Suggestions</span>
+              </div>
+              
+              @for (suggestion of searchSuggestions(); track suggestion) {
+                <button 
+                  class="suggestion-item"
+                  (click)="onSuggestionClick(suggestion)">
+                  <span class="material-icons">search</span>
+                  <span>{{ suggestion }}</span>
+                </button>
+              }
+              
+              @if (searchQuery()) {
+                <div class="suggestions-footer">
+                  <button class="suggestion-item search-all" (click)="onSuggestionClick(searchQuery())">
+                    <span class="material-icons">search</span>
+                    <span>Rechercher "{{ searchQuery() }}"</span>
+                  </button>
+                </div>
+              }
+            </div>
+          }
         </div>
 
-        <div class="user-profile">
+        <!-- Theme Toggle -->
+        <app-theme-toggle></app-theme-toggle>
+
+        <div class="user-profile" (click)="toggleUserMenu()">
           <div class="user-info">
             <span class="user-name">{{ authService.currentUser()?.prenom }} {{ authService.currentUser()?.nom }}</span>
             <span class="user-role">Admin</span>
           </div>
           <div class="user-avatar">
             <span class="material-icons">account_circle</span>
+          </div>
+          
+          <!-- User Dropdown Menu -->
+          <div class="user-dropdown" [class.active]="isUserMenuOpen()">
+            <a routerLink="/profile" class="dropdown-item" (click)="closeUserMenu()">
+              <span class="material-icons">person</span>
+              <div class="item-content">
+                <span class="item-title">Mon Profil</span>
+                <span class="item-subtitle">Gérer mes informations</span>
+              </div>
+            </a>
+            
+            <a routerLink="/messages" class="dropdown-item messages-item" (click)="closeUserMenu()">
+              <span class="material-icons">notifications</span>
+              <div class="item-content">
+                <span class="item-title">Messages</span>
+                <span class="item-subtitle">{{ messagesService.getUnreadCount() }} nouveaux messages</span>
+              </div>
+              <span class="notification-badge" *ngIf="messagesService.getUnreadCount() > 0">{{ messagesService.getUnreadCount() }}</span>
+            </a>
+            
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item logout-item" (click)="logout()">
+              <span class="material-icons">logout</span>
+              <div class="item-content">
+                <span class="item-title">Déconnexion</span>
+                <span class="item-subtitle">Se déconnecter du système</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>

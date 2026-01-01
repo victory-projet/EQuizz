@@ -1,10 +1,21 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Subject, takeUntil } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
+
+// Import des nouveaux composants
+import { DashboardAlertsComponent } from '../../shared/components/dashboard-alerts/dashboard-alerts.component';
+import { RecentActivitiesComponent } from '../../shared/components/recent-activities/recent-activities.component';
+import { NotificationSummaryComponent } from '../../shared/components/notification-summary/notification-summary.component';
+
+// Import des services
+import { DashboardService, DashboardAlert, RecentActivity } from '../../../core/services/dashboard.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { Notification } from '../../../core/domain/entities/notification.entity';
 
 interface DashboardData {
   overview: {
@@ -22,10 +33,15 @@ interface DashboardData {
     evaluations: number;
   };
   alerts: Array<{
-    type: string;
+    id: string;
+    type: 'info' | 'warning' | 'error' | 'success';
     title: string;
     message: string;
     date: string;
+    isRead: boolean;
+    priority: 'low' | 'medium' | 'high';
+    actionUrl?: string;
+    actionLabel?: string;
   }>;
   evaluationsRecentes: Array<{
     id: string;
@@ -35,6 +51,16 @@ interface DashboardData {
     dateDebut: string;
     dateFin: string;
     nombreClasses: number;
+  }>;
+  activitesRecentes: Array<{
+    id: string;
+    type: 'evaluation_created' | 'evaluation_published' | 'evaluation_closed' | 'user_created' | 'course_created' | 'class_created';
+    title: string;
+    description: string;
+    date: string;
+    user: string;
+    icon: string;
+    color: string;
   }>;
   statsParCours: Array<{
     id: string;
@@ -57,18 +83,41 @@ interface DashboardData {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, BaseChartDirective],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    BaseChartDirective,
+    DashboardAlertsComponent,
+    RecentActivitiesComponent,
+    NotificationSummaryComponent
+  ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
+  // Services injectés
+  private dashboardService = inject(DashboardService);
+  private notificationService = inject(NotificationService);
+  private destroy$ = new Subject<void>();
   dashboardData = signal<DashboardData | null>(null);
   isLoading = signal(true);
   errorMessage = signal('');
 
+  // Nouvelles données pour les composants intégrés
+  systemAlerts = signal<DashboardAlert[]>([]);
+  recentActivities = signal<RecentActivity[]>([]);
+  criticalNotifications = signal<Notification[]>([]);
+  systemMetrics = signal<any>(null);
+
   // Valeurs par défaut pour éviter les erreurs
   defaultTrends = { etudiants: 0, cours: 0, evaluations: 0 };
   defaultAlerts: any[] = [];
+  defaultActivites: any[] = [];
+
+  // État des notifications
+  unreadAlertsCount = signal(0);
+  showAllAlerts = signal(false);
+  showAllActivities = signal(false);
 
   // Filtres
   selectedYear = signal<string>('2025-2026');
@@ -236,6 +285,50 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDashboard();
+    this.setupSubscriptions();
+    this.loadSystemData();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private setupSubscriptions(): void {
+    // Écouter les alertes système
+    this.dashboardService.alerts$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(alerts => {
+        this.systemAlerts.set(alerts);
+      });
+
+    // Écouter les activités récentes
+    this.dashboardService.recentActivities$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(activities => {
+        this.recentActivities.set(activities);
+      });
+
+    // Écouter les notifications critiques
+    this.notificationService.getCriticalNotifications()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(notifications => {
+        this.criticalNotifications.set(notifications);
+      });
+
+    // Écouter les métriques système
+    this.dashboardService.metrics$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(metrics => {
+        this.systemMetrics.set(metrics);
+      });
+  }
+
+  private loadSystemData(): void {
+    // Charger les données système en parallèle
+    this.dashboardService.getAlerts().subscribe();
+    this.dashboardService.getRecentActivities(10).subscribe();
+    this.dashboardService.getMetrics().subscribe();
   }
 
   loadDashboard(): void {
@@ -268,10 +361,12 @@ export class DashboardComponent implements OnInit {
           ...data,
           trends: data.trends || this.defaultTrends,
           alerts: data.alerts || this.defaultAlerts,
+          activitesRecentes: data.activitesRecentes || this.defaultActivites,
           participationTimeline: data.participationTimeline || [],
           topKeywords: data.topKeywords || []
         };
         this.dashboardData.set(completeData);
+        this.updateUnreadCount();
         this.updateCharts();
         this.isLoading.set(false);
       },
@@ -465,5 +560,344 @@ export class DashboardComponent implements OnInit {
         ]
       });
     }
+  }
+
+  // Gestion des alertes et notifications
+  updateUnreadCount(): void {
+    const data = this.dashboardData();
+    if (!data || !data.alerts) {
+      this.unreadAlertsCount.set(0);
+      return;
+    }
+    
+    const unreadCount = data.alerts.filter(alert => !alert.isRead).length;
+    this.unreadAlertsCount.set(unreadCount);
+  }
+
+  markAlertAsRead(alertId: string): void {
+    const data = this.dashboardData();
+    if (!data || !data.alerts) return;
+
+    const updatedAlerts = data.alerts.map(alert => 
+      alert.id === alertId ? { ...alert, isRead: true } : alert
+    );
+
+    this.dashboardData.set({
+      ...data,
+      alerts: updatedAlerts
+    });
+
+    this.updateUnreadCount();
+
+    // Appel API pour marquer comme lu
+    this.http.patch(`${environment.apiUrl}/notifications/${alertId}/read`, {}).subscribe({
+      next: () => console.log('✅ Alert marked as read'),
+      error: (error) => console.error('❌ Error marking alert as read:', error)
+    });
+  }
+
+  markAllAlertsAsRead(): void {
+    const data = this.dashboardData();
+    if (!data || !data.alerts) return;
+
+    const updatedAlerts = data.alerts.map(alert => ({ ...alert, isRead: true }));
+
+    this.dashboardData.set({
+      ...data,
+      alerts: updatedAlerts
+    });
+
+    this.updateUnreadCount();
+
+    // Appel API pour marquer toutes comme lues
+    this.http.patch(`${environment.apiUrl}/notifications/mark-all-read`, {}).subscribe({
+      next: () => console.log('✅ All alerts marked as read'),
+      error: (error) => console.error('❌ Error marking all alerts as read:', error)
+    });
+  }
+
+  dismissAlert(alertId: string): void {
+    const data = this.dashboardData();
+    if (!data || !data.alerts) return;
+
+    const updatedAlerts = data.alerts.filter(alert => alert.id !== alertId);
+
+    this.dashboardData.set({
+      ...data,
+      alerts: updatedAlerts
+    });
+
+    this.updateUnreadCount();
+
+    // Appel API pour supprimer l'alerte
+    this.http.delete(`${environment.apiUrl}/notifications/${alertId}`).subscribe({
+      next: () => console.log('✅ Alert dismissed'),
+      error: (error) => console.error('❌ Error dismissing alert:', error)
+    });
+  }
+
+  getAlertIcon(type: string): string {
+    const icons: { [key: string]: string } = {
+      'info': 'info',
+      'warning': 'warning',
+      'error': 'error',
+      'success': 'check_circle'
+    };
+    return icons[type] || 'notifications';
+  }
+
+  getAlertClass(type: string): string {
+    const classes: { [key: string]: string } = {
+      'info': 'alert-info',
+      'warning': 'alert-warning',
+      'error': 'alert-error',
+      'success': 'alert-success'
+    };
+    return classes[type] || 'alert-info';
+  }
+
+  getPriorityClass(priority: string): string {
+    const classes: { [key: string]: string } = {
+      'low': 'priority-low',
+      'medium': 'priority-medium',
+      'high': 'priority-high'
+    };
+    return classes[priority] || 'priority-medium';
+  }
+
+  toggleShowAllAlerts(): void {
+    this.showAllAlerts.set(!this.showAllAlerts());
+  }
+
+  toggleShowAllActivities(): void {
+    this.showAllActivities.set(!this.showAllActivities());
+  }
+
+  getDisplayedAlerts() {
+    const data = this.dashboardData();
+    if (!data || !data.alerts) return [];
+    
+    const alerts = [...data.alerts].sort((a, b) => {
+      // Trier par priorité puis par date
+      const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+      const priorityDiff = (priorityOrder[b.priority] || 2) - (priorityOrder[a.priority] || 2);
+      if (priorityDiff !== 0) return priorityDiff;
+      
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
+    return this.showAllAlerts() ? alerts : alerts.slice(0, 3);
+  }
+
+  getDisplayedActivities() {
+    const data = this.dashboardData();
+    if (!data || !data.activitesRecentes) return [];
+    
+    const activities = [...data.activitesRecentes].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    return this.showAllActivities() ? activities : activities.slice(0, 4);
+  }
+
+  getActivityIcon(type: string): string {
+    const icons: { [key: string]: string } = {
+      'evaluation_created': 'quiz',
+      'evaluation_published': 'publish',
+      'evaluation_closed': 'lock',
+      'user_created': 'person_add',
+      'course_created': 'menu_book',
+      'class_created': 'group_add'
+    };
+    return icons[type] || 'notifications';
+  }
+
+  getTimeAgo(date: string): string {
+    const now = new Date();
+    const activityDate = new Date(date);
+    const diffInMinutes = Math.floor((now.getTime() - activityDate.getTime()) / (1000 * 60));
+
+    if (diffInMinutes < 1) return 'À l\'instant';
+    if (diffInMinutes < 60) return `Il y a ${diffInMinutes} min`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `Il y a ${diffInHours}h`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `Il y a ${diffInDays}j`;
+    
+    return activityDate.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'short'
+    });
+  }
+
+  // === GESTIONNAIRES D'ÉVÉNEMENTS POUR LES NOUVEAUX COMPOSANTS ===
+
+  /**
+   * Gestionnaire pour les clics sur les alertes système
+   */
+  onSystemAlertClick(alert: DashboardAlert): void {
+    console.log('Alert clicked:', alert);
+    
+    // Marquer l'alerte comme vue si elle a une action
+    if (alert.actionUrl) {
+      window.open(alert.actionUrl, '_blank');
+    }
+    
+    // Optionnel : marquer comme résolue automatiquement
+    if (alert.actionRequired) {
+      this.dashboardService.resolveAlert(alert.id).subscribe();
+    }
+  }
+
+  /**
+   * Gestionnaire pour les clics sur les activités récentes
+   */
+  onRecentActivityClick(activity: RecentActivity): void {
+    console.log('Activity clicked:', activity);
+    
+    // Navigation vers la page appropriée selon le type d'activité
+    switch (activity.type) {
+      case 'evaluation_created':
+      case 'evaluation_published':
+      case 'evaluation_updated':
+        // Naviguer vers la page des évaluations
+        window.location.href = '/evaluations';
+        break;
+      case 'user_created':
+      case 'user_updated':
+        // Naviguer vers la page des utilisateurs
+        window.location.href = '/users';
+        break;
+      case 'class_created':
+      case 'class_updated':
+        // Naviguer vers la page des classes
+        window.location.href = '/classes';
+        break;
+      default:
+        console.log('No specific action for activity type:', activity.type);
+    }
+  }
+
+  /**
+   * Gestionnaire pour les clics sur les notifications
+   */
+  onNotificationClick(notification: Notification): void {
+    console.log('Notification clicked:', notification);
+    
+    // Marquer comme lue si pas déjà fait
+    if (!notification.isRead) {
+      this.notificationService.markAsRead(notification.id).subscribe();
+    }
+    
+    // Navigation vers l'URL d'action si disponible
+    if (notification.actionUrl) {
+      window.open(notification.actionUrl, '_blank');
+    }
+  }
+
+  /**
+   * Gestionnaire pour voir toutes les notifications
+   */
+  onViewAllNotifications(): void {
+    // Navigation vers la page complète des notifications
+    window.location.href = '/notifications';
+  }
+
+  /**
+   * Gestionnaire pour voir toutes les activités
+   */
+  onViewAllActivities(): void {
+    // Navigation vers la page complète des activités
+    window.location.href = '/activities';
+  }
+
+  /**
+   * Gestionnaire pour les détails d'une activité
+   */
+  onActivityDetails(activity: RecentActivity): void {
+    console.log('Activity details requested:', activity);
+    
+    // Afficher un modal ou naviguer vers une page de détails
+    // Pour l'instant, on log les détails
+    if (activity.metadata) {
+      console.log('Activity metadata:', activity.metadata);
+    }
+  }
+
+  /**
+   * Gestionnaire pour les paramètres des alertes
+   */
+  onAlertsSettings(): void {
+    // Navigation vers les paramètres des alertes
+    window.location.href = '/settings/alerts';
+  }
+
+  /**
+   * Gestionnaire pour les filtres de notifications
+   */
+  onNotificationFilter(filter: { type: string; value: string }): void {
+    console.log('Notification filter applied:', filter);
+    
+    // Appliquer le filtre et naviguer vers la page des notifications
+    const params = new URLSearchParams();
+    params.set(filter.type, filter.value);
+    window.location.href = `/notifications?${params.toString()}`;
+  }
+
+  /**
+   * Actualise toutes les données du dashboard
+   */
+  refreshAllData(): void {
+    this.loadDashboard();
+    this.loadSystemData();
+    this.dashboardService.refreshAll();
+  }
+
+  /**
+   * Obtient le statut global du système
+   */
+  getSystemStatus(): 'healthy' | 'warning' | 'critical' {
+    const metrics = this.systemMetrics();
+    if (!metrics) return 'healthy';
+    
+    return metrics.systemHealth?.status || 'healthy';
+  }
+
+  /**
+   * Obtient le nombre total d'alertes actives
+   */
+  getActiveAlertsCount(): number {
+    return this.systemAlerts().filter(alert => alert.isActive).length;
+  }
+
+  /**
+   * Obtient le nombre de notifications non lues
+   */
+  getUnreadNotificationsCount(): number {
+    return this.criticalNotifications().filter(n => !n.isRead).length;
+  }
+
+  /**
+   * Vérifie s'il y a des problèmes critiques
+   */
+  hasCriticalIssues(): boolean {
+    const criticalAlerts = this.systemAlerts().filter(
+      alert => alert.severity === 'critical' && alert.isActive
+    );
+    const criticalNotifications = this.criticalNotifications().filter(
+      n => n.priority === 'critical' && !n.isRead
+    );
+    
+    return criticalAlerts.length > 0 || criticalNotifications.length > 0;
+  }
+
+  /**
+   * Obtient la classe CSS pour l'indicateur de santé du système
+   */
+  getSystemHealthClass(): string {
+    const status = this.getSystemStatus();
+    return `system-health-${status}`;
   }
 }

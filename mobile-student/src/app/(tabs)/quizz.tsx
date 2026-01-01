@@ -20,6 +20,9 @@ import { TypeQuestion, QuizzAnswer } from '../../domain/entities/Quizz';
 import LoadingSpinner from '../../presentation/components/LoadingSpinner.component';
 import { PrimaryButton } from '../../presentation/components/PrimaryButton';
 import { useAuth } from '../../presentation/hooks/useAuth';
+import { QuizCardSkeletonList } from '../../presentation/components/QuizCardSkeleton.component';
+import { QuizDetailSkeleton } from '../../presentation/components/QuizDetailSkeleton.component';
+import { ConfirmSubmitModal } from '@/src/presentation/components/ConfirmSubmitModal';
 
 // Composant pour afficher la liste des quiz
 function QuizListView() {
@@ -125,7 +128,7 @@ function QuizListView() {
                 }
             >
                 {loading && quizzes.length === 0 ? (
-                    <LoadingSpinner />
+                    <QuizCardSkeletonList count={3} />
                 ) : error ? (
                     <View style={styles.errorContainer}>
                         <MaterialIcons name="error-outline" size={64} color="#DC2626" />
@@ -184,6 +187,9 @@ function QuizDetailView({ id }: { id: string }) {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<Map<string, string>>(new Map());
 
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [unansweredCount, setUnansweredCount] = useState(0);
+
     // Sauvegarder l'ID du quiz en cours dans AsyncStorage
     React.useEffect(() => {
         if (id && !loading && !error) {
@@ -196,7 +202,7 @@ function QuizDetailView({ id }: { id: string }) {
     if (loading) {
         return (
             <SafeAreaView style={styles.container}>
-                <LoadingSpinner />
+                <QuizDetailSkeleton />;
             </SafeAreaView>
         );
     }
@@ -247,7 +253,7 @@ function QuizDetailView({ id }: { id: string }) {
         }
     };
 
-    const handleSubmit = () => {
+    /*const handleSubmit = () => {
         const unansweredQuestions = quizz.Questions.filter(
             (q) => !answers.has(q.id)
         );
@@ -264,7 +270,51 @@ function QuizDetailView({ id }: { id: string }) {
         } else {
             confirmSubmit();
         }
+    };*/
+
+    const performSubmit = async () => {
+    setShowConfirmModal(false);
+
+    const reponses: QuizzAnswer[] = Array.from(answers.entries()).map(
+        ([question_id, contenu]) => ({
+        question_id,
+        contenu,
+        })
+    );
+
+    const success = await submitQuizz(id!, { reponses });
+
+    if (success) {
+        await AsyncStorage.removeItem('@current_quiz_id');
+
+        Alert.alert(
+        'Succès',
+        'Vos réponses ont été soumises avec succès !',
+        [
+            {
+            text: 'OK',
+            onPress: () => router.replace('/(tabs)/accueil'),
+            },
+        ]
+        );
+    } else {
+        Alert.alert(
+        'Erreur',
+        'Une erreur est survenue lors de la soumission.'
+        );
+    }
     };
+
+
+    const handleSubmit = () => {
+    const unanswered = quizz.Questions.filter(
+        (q) => !answers.has(q.id)
+    ).length;
+
+    setUnansweredCount(unanswered);
+    setShowConfirmModal(true);
+    };
+
 
     const confirmSubmit = async () => {
         Alert.alert(
@@ -315,6 +365,13 @@ function QuizDetailView({ id }: { id: string }) {
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
+            <ConfirmSubmitModal
+            visible={showConfirmModal}
+            unansweredCount={unansweredCount}
+            onCancel={() => setShowConfirmModal(false)}
+            onConfirm={performSubmit}
+            />
+
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.push('/(tabs)/quizz')} style={styles.backIcon}>
                     <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
@@ -488,7 +545,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         flexDirection: 'row',
-        gap: 170,
+        //gap: 170,
         alignItems: 'center',
         height: 120,
         paddingTop: 75

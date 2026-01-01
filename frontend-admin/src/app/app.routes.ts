@@ -62,6 +62,10 @@ export const routes: Routes = [
         loadComponent: () => import('./presentation/features/evaluation-detail/evaluation-detail.component').then(m => m.EvaluationDetailComponent)
       },
       {
+        path: 'evaluations/:id/submissions',
+        loadComponent: () => import('./presentation/features/evaluation-submissions/evaluation-submissions.component').then(m => m.EvaluationSubmissionsComponent)
+      },
+      {
         path: 'evaluations/:id/preview',
         loadComponent: () => import('./presentation/features/evaluation-preview/evaluation-preview.component').then(m => m.EvaluationPreviewComponent)
       },
@@ -76,6 +80,14 @@ export const routes: Routes = [
       {
         path: 'notifications',
         loadComponent: () => import('./presentation/features/notifications/notifications.component').then(m => m.NotificationsComponent)
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./presentation/features/profile/profile.component').then(m => m.ProfileComponent)
+      },
+      {
+        path: 'messages',
+        loadComponent: () => import('./presentation/features/messages/messages.component').then(m => m.MessagesComponent)
       },
       {
         path: '',

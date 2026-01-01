@@ -1,10 +1,13 @@
-﻿import { Component, OnInit, signal, computed } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 import { UserUseCase } from '../../../core/usecases/user.usecase';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
 import { User, Etudiant } from '../../../core/domain/entities/user.entity';
 import { Classe } from '../../../core/domain/entities/academic.entity';
+import { ConfirmationService } from '../../shared/services/confirmation.service';
+import { UserCacheService } from '../../../core/services/user-cache.service';
 
 @Component({
   selector: 'app-students',
@@ -13,7 +16,7 @@ import { Classe } from '../../../core/domain/entities/academic.entity';
   templateUrl: './students.component.html',
   styleUrls: ['./students.component.scss']
 })
-export class StudentsComponent implements OnInit {
+export class StudentsComponent implements OnInit, OnDestroy {
   students = signal<Etudiant[]>([]);
   filteredStudents = signal<Etudiant[]>([]);
   classes = signal<Classe[]>([]);
@@ -22,6 +25,16 @@ export class StudentsComponent implements OnInit {
   showModal = signal(false);
   showDeleteModal = signal(false);
   selectedStudent = signal<Etudiant | null>(null);
+  
+  // Cache management
+  cacheEnabled = signal(true);
+  lastRefresh = signal<Date | null>(null);
+  
+  private confirmationService = inject(ConfirmationService);
+  private userCacheService = inject(UserCacheService);
+  
+  // Destruction subject for cleanup
+  private destroy$ = new Subject<void>();
   
   searchQuery = signal('');
   filterClasse = signal<string>('ALL');
@@ -51,10 +64,57 @@ export class StudentsComponent implements OnInit {
   ngOnInit(): void {
     this.loadStudents();
     this.loadClasses();
+    this.setupCacheObservation();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  setupCacheObservation(): void {
+    // Observer les changements des étudiants en temps réel
+    this.userCacheService.observeStudents()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(students => {
+        if (students.length > 0) {
+          this.students.set(students as Etudiant[]);
+          this.applyFilters();
+          this.lastRefresh.set(new Date());
+        }
+      });
   }
 
   loadStudents(): void {
     this.isLoading.set(true);
+    
+    if (this.cacheEnabled()) {
+      // Utiliser le cache service
+      this.userCacheService.getStudents({
+        ttl: 10 * 60 * 1000, // 10 minutes
+        persistToStorage: true
+      }).pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (students) => {
+          this.students.set(students as Etudiant[]);
+          this.applyFilters();
+          this.isLoading.set(false);
+          this.lastRefresh.set(new Date());
+        },
+        error: (error) => {
+          console.error('Erreur lors du chargement des étudiants:', error);
+          this.errorMessage.set('Erreur lors du chargement des étudiants');
+          this.isLoading.set(false);
+          // Fallback vers l'API directe
+          this.loadStudentsDirectly();
+        }
+      });
+    } else {
+      this.loadStudentsDirectly();
+    }
+  }
+
+  loadStudentsDirectly(): void {
     this.userUseCase.getAllUsers().subscribe({
       next: (users: User[]) => {
         const students = users.filter((u: User) => u.role === 'ETUDIANT') as Etudiant[];
@@ -62,6 +122,7 @@ export class StudentsComponent implements OnInit {
         this.students.set(students);
         this.applyFilters();
         this.isLoading.set(false);
+        this.lastRefresh.set(new Date());
       },
       error: (error: any) => {
         console.error('Erreur lors du chargement des étudiants:', error);
@@ -185,10 +246,17 @@ export class StudentsComponent implements OnInit {
     };
 
     this.userUseCase.createUser(data).subscribe({
-      next: () => {
+      next: (newStudent) => {
         this.successMessage.set('Étudiant créé avec succès');
         this.closeModal();
-        this.loadStudents();
+        
+        // Mettre à jour le cache
+        if (this.cacheEnabled()) {
+          this.userCacheService.updateCacheAfterOperation('create', newStudent);
+        } else {
+          this.loadStudents();
+        }
+        
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error: any) => {
@@ -210,10 +278,17 @@ export class StudentsComponent implements OnInit {
     };
 
     this.userUseCase.updateUser(student.id.toString(), data).subscribe({
-      next: () => {
+      next: (updatedStudent) => {
         this.successMessage.set('Étudiant mis à jour avec succès');
         this.closeModal();
-        this.loadStudents();
+        
+        // Mettre à jour le cache
+        if (this.cacheEnabled()) {
+          this.userCacheService.updateCacheAfterOperation('update', updatedStudent);
+        } else {
+          this.loadStudents();
+        }
+        
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error: any) => {
@@ -223,15 +298,14 @@ export class StudentsComponent implements OnInit {
     });
   }
 
-  deleteStudent(): void {
-    const student = this.selectedStudent();
-    if (!student) return;
+  async deleteStudent(student: Etudiant): Promise<void> {
+    const confirmed = await this.confirmationService.confirmDelete(`${student.prenom} ${student.nom}`);
+    if (!confirmed) return;
 
     this.isLoading.set(true);
     this.userUseCase.deleteUser(student.id.toString()).subscribe({
       next: () => {
         this.successMessage.set('Étudiant supprimé avec succès');
-        this.closeModal();
         this.loadStudents();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
@@ -242,7 +316,19 @@ export class StudentsComponent implements OnInit {
     });
   }
 
-  toggleStatus(student: Etudiant): void {
+  async toggleStatus(student: Etudiant): Promise<void> {
+    const action = student.estActif ? 'désactiver' : 'activer';
+    const confirmed = await this.confirmationService.confirm({
+      title: `Confirmer ${action === 'désactiver' ? 'la désactivation' : 'l\'activation'}`,
+      message: `Êtes-vous sûr de vouloir ${action} l'étudiant "${student.prenom} ${student.nom}" ?`,
+      confirmText: action === 'désactiver' ? 'Désactiver' : 'Activer',
+      cancelText: 'Annuler',
+      type: action === 'désactiver' ? 'warning' : 'success',
+      icon: action === 'désactiver' ? 'person_off' : 'person'
+    });
+    
+    if (!confirmed) return;
+
     this.userUseCase.updateUser(student.id.toString(), { estActif: !student.estActif }).subscribe({
       next: () => {
         this.successMessage.set(`Étudiant ${student.estActif ? 'désactivé' : 'activé'} avec succès`);
@@ -259,5 +345,71 @@ export class StudentsComponent implements OnInit {
     if (!classeId) return 'Non assignée';
     const classe = this.classes().find(c => c.id.toString() === classeId.toString());
     return classe ? classe.nom : 'Non assignée';
+  }
+
+  // === MÉTHODES DE GESTION DU CACHE ===
+
+  /**
+   * Active ou désactive le cache
+   */
+  toggleCache(): void {
+    this.cacheEnabled.set(!this.cacheEnabled());
+    if (this.cacheEnabled()) {
+      this.loadStudents();
+    } else {
+      this.userCacheService.invalidateAllUsers();
+      this.loadStudentsDirectly();
+    }
+  }
+
+  /**
+   * Actualise manuellement les données
+   */
+  refreshData(): void {
+    if (this.cacheEnabled()) {
+      this.userCacheService.refreshByRole('ETUDIANT');
+    } else {
+      this.loadStudentsDirectly();
+    }
+  }
+
+  /**
+   * Vide le cache des étudiants
+   */
+  clearCache(): void {
+    this.userCacheService.refreshByRole('ETUDIANT');
+    this.lastRefresh.set(null);
+    this.successMessage.set('Cache des étudiants vidé avec succès');
+    setTimeout(() => this.successMessage.set(''), 3000);
+  }
+
+  /**
+   * Vérifie si les données sont récentes
+   */
+  isDataFresh(): boolean {
+    const lastRefresh = this.lastRefresh();
+    if (!lastRefresh) return false;
+    
+    const now = new Date();
+    const diffMinutes = (now.getTime() - lastRefresh.getTime()) / (1000 * 60);
+    return diffMinutes < 5; // Considéré comme frais si moins de 5 minutes
+  }
+
+  /**
+   * Obtient le statut du cache pour l'affichage
+   */
+  getCacheStatus(): string {
+    if (!this.cacheEnabled()) return 'Désactivé';
+    if (this.isDataFresh()) return 'Actuel';
+    return 'Expiré';
+  }
+
+  /**
+   * Obtient la classe CSS pour le statut du cache
+   */
+  getCacheStatusClass(): string {
+    if (!this.cacheEnabled()) return 'cache-disabled';
+    if (this.isDataFresh()) return 'cache-fresh';
+    return 'cache-expired';
   }
 }

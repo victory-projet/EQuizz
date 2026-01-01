@@ -32,4 +32,8 @@ export class UserUseCase {
   resetPassword(id: string, nouveauMotDePasse: string): Observable<void> {
     return this.userRepository.resetPassword(id, nouveauMotDePasse);
   }
+
+  importUsers(users: any[]): Observable<{ imported: number; errors: any[] }> {
+    return this.userRepository.importUsers(users);
+  }
 }

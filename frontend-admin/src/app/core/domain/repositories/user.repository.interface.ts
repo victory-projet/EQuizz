@@ -26,4 +26,5 @@ export abstract class UserRepositoryInterface {
   abstract update(id: string, data: UpdateUserDto): Observable<User>;
   abstract delete(id: string): Observable<void>;
   abstract resetPassword(id: string, nouveauMotDePasse: string): Observable<void>;
+  abstract importUsers(users: any[]): Observable<{ imported: number; errors: any[] }>;
 }
