@@ -124,6 +124,14 @@ class AuthController {
 
     await utilisateur.update({ nom, prenom, email });
 
+    // Envoyer notification de sécurité
+    try {
+      const notificationService = require('../services/notification.service');
+      await notificationService.notifySecurityAction(userId, 'profile_updated');
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de la notification de sécurité:', error);
+    }
+
     res.status(200).json({
       id: utilisateur.id,
       nom: utilisateur.nom,
@@ -153,6 +161,14 @@ class AuthController {
     // Mettre à jour le mot de passe
     utilisateur.motDePasseHash = newPassword;
     await utilisateur.save();
+
+    // Envoyer notification de sécurité
+    try {
+      const notificationService = require('../services/notification.service');
+      await notificationService.notifySecurityAction(userId, 'password_changed');
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de la notification de sécurité:', error);
+    }
 
     res.status(200).json({ message: 'Mot de passe modifié avec succès' });
   });

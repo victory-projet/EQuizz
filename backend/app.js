@@ -12,6 +12,8 @@ if (fs.existsSync(envPath)) {
 
 const app = express();
 const db = require('./src/models'); // Importer db pour la connexion
+const { initializeFirebase } = require('./src/config/firebase');
+const schedulerService = require('./src/services/scheduler.service');
 
 // --- Importation des Routeurs ---
 const authRoutes = require('./src/routes/auth.routes');
@@ -22,6 +24,7 @@ const initRoutes = require('./src/routes/init.routes');
 const { seedDatabase } = require('./src/routes/init.routes');
 const reportRoutes = require('./src/routes/report.routes');
 const notificationRoutes = require('./src/routes/notification.routes');
+const pushNotificationRoutes = require('./src/routes/push-notification.routes');
 const dashboardRoutes = require('./src/routes/dashboard.routes');
 const utilisateurRoutes = require('./src/routes/utilisateur.routes');
 const questionRoutes = require('./src/routes/question.routes');
@@ -52,6 +55,7 @@ app.use('/api/student', studentRoutes);
 app.use('/api/init', initRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/push-notifications', pushNotificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/utilisateurs', utilisateurRoutes);
 app.use('/api', questionRoutes);
@@ -94,6 +98,13 @@ if (process.env.NODE_ENV !== 'test') {
           console.log('💡 Vous pouvez initialiser manuellement avec: POST /api/init/seed');
         }
       }
+      
+      // Initialiser Firebase
+      console.log('🔥 Initialisation de Firebase...');
+      initializeFirebase();
+      
+      // Démarrer les tâches programmées
+      schedulerService.startAllJobs();
       
       app.listen(PORT, () => {
         console.log(`🚀 Serveur démarré sur le port ${PORT}`);
