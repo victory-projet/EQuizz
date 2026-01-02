@@ -1,0 +1,563 @@
+<!-- Evaluation Form Component -->
+<div class="form-container">
+  <!-- Success/Error Messages -->
+  <div class="success-message" *ngIf="successMessage()">
+    <span class="material-icons">check_circle</span>
+    {{ successMessage() }}
+  </div>
+  
+  <div class="error-message" *ngIf="errorMessage()">
+    <span class="material-icons">error</span>
+    {{ errorMessage() }}
+  </div>
+  <!-- Progress Steps -->
+  <div class="progress-steps">
+    <div class="step" [class.active]="currentStep() >= 1" [class.completed]="currentStep() > 1">
+      <div class="step-circle">
+        <span class="step-number" *ngIf="currentStep() <= 1">1</span>
+        <span class="material-icons" *ngIf="currentStep() > 1">check</span>
+      </div>
+      <div class="step-content">
+        <div class="step-title">Informations de base</div>
+        <div class="step-subtitle">Titre, description et dates</div>
+      </div>
+    </div>
+
+    <div class="step-connector" [class.completed]="currentStep() > 1"></div>
+
+    <div class="step" [class.active]="currentStep() >= 2" [class.completed]="currentStep() > 2">
+      <div class="step-circle">
+        <span class="step-number" *ngIf="currentStep() <= 2">2</span>
+        <span class="material-icons" *ngIf="currentStep() > 2">check</span>
+      </div>
+      <div class="step-content">
+        <div class="step-title">Ajout de questions</div>
+        <div class="step-subtitle">Créer et organiser les questions</div>
+      </div>
+    </div>
+
+    <div class="step-connector" [class.completed]="currentStep() > 2"></div>
+
+    <div class="step" [class.active]="currentStep() >= 3" [class.completed]="currentStep() > 3">
+      <div class="step-circle">
+        <span class="step-number" *ngIf="currentStep() <= 3">3</span>
+        <span class="material-icons" *ngIf="currentStep() > 3">check</span>
+      </div>
+      <div class="step-content">
+        <div class="step-title">Révision et publication</div>
+        <div class="step-subtitle">Vérifier et publier l'évaluation</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Content -->
+  <form [formGroup]="evaluationForm" (ngSubmit)="onSubmit()" class="evaluation-form">
+    
+    <!-- Step 1: Basic Information -->
+    <div class="form-step" *ngIf="currentStep() === 1">
+      <div class="step-header">
+        <h2>Informations de base</h2>
+        <p>Définissez les informations principales de votre évaluation</p>
+      </div>
+
+      <div class="form-grid">
+        <!-- Title -->
+        <div class="form-group full-width">
+          <label for="titre" class="form-label required">
+            <div class="label-content">
+              <span class="label-text">Titre de l'évaluation</span>
+              <span class="label-hint">Un titre clair et descriptif</span>
+            </div>
+          </label>
+          <div class="input-wrapper modern-input" [class.focused]="isFocused('titre')" [class.has-value]="hasValue('titre')" [class.error]="isFieldInvalid('titre')">
+            <div class="input-icon">
+              <span class="material-icons">quiz</span>
+            </div>
+            <input
+              id="titre"
+              type="text"
+              formControlName="titre"
+              class="form-input"
+              placeholder="Ex: Évaluation Mi-parcours - Algorithmique"
+              [class.error]="isFieldInvalid('titre')"
+              (focus)="setFocus('titre', true)"
+              (blur)="setFocus('titre', false)"
+              maxlength="100"
+              autocomplete="off"
+              spellcheck="true"
+            />
+            <div class="input-actions">
+              <button type="button" class="clear-btn" *ngIf="hasValue('titre')" (click)="clearField('titre')" title="Effacer">
+                <span class="material-icons">clear</span>
+              </button>
+              <div class="character-counter" [class.warning]="getCharacterCount('titre') > 80" [class.danger]="getCharacterCount('titre') > 95">
+                <span class="counter-text">{{ getCharacterCount('titre') }}/100</span>
+                <div class="counter-bar">
+                  <div class="counter-fill" [style.width.%]="getCharacterCount('titre')"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('titre')">
+            <span class="material-icons">error</span>
+            {{ getFieldError('titre') }}
+          </div>
+          <div class="field-hint" *ngIf="!isFieldInvalid('titre')">
+            <span class="material-icons">lightbulb</span>
+            Le titre apparaîtra dans la liste des évaluations et sera visible par les étudiants
+          </div>
+          <!-- Suggestions de titres -->
+          <div class="title-suggestions" *ngIf="isFocused('titre') && !hasValue('titre')">
+            <div class="suggestions-header">
+              <span class="material-icons">auto_awesome</span>
+              Suggestions de titres
+            </div>
+            <div class="suggestion-chips">
+              <button type="button" class="suggestion-chip" (click)="applySuggestion('titre', 'Évaluation Mi-parcours')">
+                Évaluation Mi-parcours
+              </button>
+              <button type="button" class="suggestion-chip" (click)="applySuggestion('titre', 'Contrôle Continu')">
+                Contrôle Continu
+              </button>
+              <button type="button" class="suggestion-chip" (click)="applySuggestion('titre', 'Examen Final')">
+                Examen Final
+              </button>
+              <button type="button" class="suggestion-chip" (click)="applySuggestion('titre', 'QCM de Révision')">
+                QCM de Révision
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group full-width">
+          <label for="description" class="form-label">
+            <div class="label-content">
+              <span class="label-text">Description</span>
+              <span class="label-hint">Optionnel - Décrivez le contenu et les objectifs</span>
+            </div>
+          </label>
+          <div class="textarea-wrapper modern-textarea" [class.focused]="isFocused('description')" [class.has-value]="hasValue('description')" [class.error]="isFieldInvalid('description')">
+            <div class="textarea-icon">
+              <span class="material-icons">description</span>
+            </div>
+            <textarea
+              id="description"
+              formControlName="description"
+              class="form-textarea"
+              placeholder="Décrivez brièvement le contenu et les objectifs de cette évaluation..."
+              rows="4"
+              [class.error]="isFieldInvalid('description')"
+              (focus)="setFocus('description', true)"
+              (blur)="setFocus('description', false)"
+              maxlength="500"
+              spellcheck="true"
+            ></textarea>
+            <div class="textarea-actions">
+              <button type="button" class="clear-btn" *ngIf="hasValue('description')" (click)="clearField('description')" title="Effacer">
+                <span class="material-icons">clear</span>
+              </button>
+              <div class="textarea-counter" [class.warning]="getCharacterCount('description') > 400" [class.danger]="getCharacterCount('description') > 475">
+                <span class="counter-text">{{ getCharacterCount('description') }}/500</span>
+                <div class="counter-bar">
+                  <div class="counter-fill" [style.width.%]="(getCharacterCount('description') / 500) * 100"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('description')">
+            <span class="material-icons">error</span>
+            {{ getFieldError('description') }}
+          </div>
+          <div class="field-hint" *ngIf="!isFieldInvalid('description')">
+            <span class="material-icons">lightbulb</span>
+            Une bonne description aide les étudiants à mieux se préparer
+          </div>
+          <!-- Templates de description -->
+          <div class="description-templates" *ngIf="isFocused('description') && !hasValue('description')">
+            <div class="templates-header">
+              <span class="material-icons">template_add</span>
+              Modèles de description
+            </div>
+            <div class="template-options">
+              <button type="button" class="template-option" (click)="applyDescriptionTemplate('evaluation')">
+                <div class="template-title">Évaluation standard</div>
+                <div class="template-preview">Cette évaluation porte sur les concepts vus en cours...</div>
+              </button>
+              <button type="button" class="template-option" (click)="applyDescriptionTemplate('qcm')">
+                <div class="template-title">QCM</div>
+                <div class="template-preview">Questionnaire à choix multiples pour tester vos connaissances...</div>
+              </button>
+              <button type="button" class="template-option" (click)="applyDescriptionTemplate('projet')">
+                <div class="template-title">Projet</div>
+                <div class="template-preview">Évaluation pratique basée sur un projet à réaliser...</div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Date Range -->
+        <div class="form-group">
+          <label for="dateDebut" class="form-label required">
+            <div class="label-content">
+              <span class="label-text">Date de début</span>
+              <span class="label-hint">Quand l'évaluation sera disponible</span>
+            </div>
+          </label>
+          <div class="input-wrapper modern-input" [class.focused]="isFocused('dateDebut')" [class.has-value]="hasValue('dateDebut')" [class.error]="isFieldInvalid('dateDebut')">
+            <div class="input-icon">
+              <span class="material-icons">event_available</span>
+            </div>
+            <input
+              id="dateDebut"
+              type="datetime-local"
+              formControlName="dateDebut"
+              class="form-input"
+              [class.error]="isFieldInvalid('dateDebut')"
+              (focus)="setFocus('dateDebut', true)"
+              (blur)="setFocus('dateDebut', false)"
+              [min]="getMinDateTime()"
+            />
+            <div class="input-actions">
+              <button type="button" class="quick-date-btn" (click)="setQuickDate('dateDebut', 'tomorrow')" title="Demain à 8h">
+                <span class="material-icons">today</span>
+              </button>
+              <button type="button" class="quick-date-btn" (click)="setQuickDate('dateDebut', 'now')" title="Maintenant">
+                <span class="material-icons">schedule</span>
+              </button>
+            </div>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('dateDebut')">
+            <span class="material-icons">error</span>
+            {{ getFieldError('dateDebut') }}
+          </div>
+          <div class="quick-dates" *ngIf="!isFieldInvalid('dateDebut') && isFocused('dateDebut')">
+            <button type="button" class="quick-date-option" (click)="setQuickDate('dateDebut', 'tomorrow')">
+              <span class="material-icons">wb_sunny</span>
+              Demain 8h
+            </button>
+            <button type="button" class="quick-date-option" (click)="setQuickDate('dateDebut', 'nextWeek')">
+              <span class="material-icons">date_range</span>
+              Semaine prochaine
+            </button>
+            <button type="button" class="quick-date-option" (click)="setQuickDate('dateDebut', 'nextMonth')">
+              <span class="material-icons">calendar_month</span>
+              Mois prochain
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="dateFin" class="form-label required">
+            <div class="label-content">
+              <span class="label-text">Date de fin</span>
+              <span class="label-hint">Quand l'évaluation se terminera</span>
+            </div>
+          </label>
+          <div class="input-wrapper modern-input" [class.focused]="isFocused('dateFin')" [class.has-value]="hasValue('dateFin')" [class.error]="isFieldInvalid('dateFin')">
+            <div class="input-icon">
+              <span class="material-icons">event_busy</span>
+            </div>
+            <input
+              id="dateFin"
+              type="datetime-local"
+              formControlName="dateFin"
+              class="form-input"
+              [class.error]="isFieldInvalid('dateFin')"
+              (focus)="setFocus('dateFin', true)"
+              (blur)="setFocus('dateFin', false)"
+              [min]="getMinEndDate()"
+            />
+            <div class="input-actions">
+              <button type="button" class="duration-btn" (click)="addDuration(2)" title="Ajouter 2 heures">
+                <span class="material-icons">add_alarm</span>
+                +2h
+              </button>
+              <button type="button" class="duration-btn" (click)="addDuration(1)" title="Ajouter 1 heure">
+                <span class="material-icons">schedule</span>
+                +1h
+              </button>
+            </div>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('dateFin')">
+            <span class="material-icons">error</span>
+            {{ getFieldError('dateFin') }}
+          </div>
+          <div class="duration-info" *ngIf="getDuration()">
+            <div class="duration-display">
+              <span class="material-icons">schedule</span>
+              <span class="duration-text">Durée : {{ getDuration() }}</span>
+              <div class="duration-indicator" [class]="getDurationClass()">
+                {{ getDurationLabel() }}
+              </div>
+            </div>
+            <div class="duration-suggestions" *ngIf="isFocused('dateFin')">
+              <button type="button" class="duration-suggestion" (click)="setDuration(1)">1h</button>
+              <button type="button" class="duration-suggestion" (click)="setDuration(2)">2h</button>
+              <button type="button" class="duration-suggestion" (click)="setDuration(3)">3h</button>
+              <button type="button" class="duration-suggestion" (click)="setDuration(4)">4h</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Course Selection -->
+        <div class="form-group full-width">
+          <label for="coursId" class="form-label required">
+            <div class="label-content">
+              <span class="label-text">Cours / Unité d'Enseignement</span>
+              <span class="label-hint">Sélectionnez le cours concerné</span>
+            </div>
+          </label>
+          <div class="select-wrapper modern-select" [class.focused]="isFocused('coursId')" [class.has-value]="hasValue('coursId')" [class.error]="isFieldInvalid('coursId')">
+            <div class="select-icon-left">
+              <span class="material-icons">school</span>
+            </div>
+            <select
+              id="coursId"
+              formControlName="coursId"
+              class="form-select"
+              [class.error]="isFieldInvalid('coursId')"
+              (focus)="setFocus('coursId', true)"
+              (blur)="setFocus('coursId', false)"
+              (change)="onCourseChange()"
+            >
+              <option value="" disabled>Sélectionnez un cours</option>
+              <option *ngFor="let cours of availableCourses()" [value]="cours.id">
+                {{ cours.nom }} - {{ cours.code }}
+              </option>
+            </select>
+            <div class="select-icon">
+              <span class="material-icons">expand_more</span>
+            </div>
+          </div>
+          <div class="field-error" *ngIf="isFieldInvalid('coursId')">
+            <span class="material-icons">error</span>
+            {{ getFieldError('coursId') }}
+          </div>
+          <div class="course-info" *ngIf="getSelectedCourse() && !isFieldInvalid('coursId')">
+            <div class="course-details">
+              <span class="material-icons">info</span>
+              <div class="course-meta">
+                <span class="course-name">{{ getSelectedCourse()?.nom }}</span>
+                <span class="course-code">({{ getSelectedCourse()?.code }})</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Class Selection -->
+        <div class="form-group full-width">
+          <label class="form-label required">
+            <div class="label-content">
+              <span class="label-text">Classes</span>
+              <span class="label-hint">Sélectionnez les classes concernées (sélection multiple)</span>
+            </div>
+          </label>
+          
+          <!-- Selection Summary -->
+          <div class="selection-summary" *ngIf="selectedClasses().length > 0">
+            <div class="summary-stats">
+              <div class="stat-item">
+                <span class="material-icons">groups</span>
+                <span>{{ selectedClasses().length }} classe(s)</span>
+              </div>
+              <div class="stat-item">
+                <span class="material-icons">person</span>
+                <span>{{ getTotalSelectedStudents() }} étudiants</span>
+              </div>
+            </div>
+            <button type="button" class="clear-selection" (click)="clearAllClasses()" title="Tout désélectionner">
+              <span class="material-icons">clear_all</span>
+            </button>
+          </div>
+
+          <!-- Search and Filter -->
+          <div class="class-controls">
+            <div class="search-wrapper">
+              <div class="search-icon">
+                <span class="material-icons">search</span>
+              </div>
+              <input
+                type="text"
+                placeholder="Rechercher une classe..."
+                class="search-input"
+                [(ngModel)]="classSearchTerm"
+                (input)="filterClasses()"
+              />
+            </div>
+            <div class="filter-buttons">
+              <button type="button" 
+                      class="filter-btn" 
+                      [class.active]="classFilter === 'all'"
+                      (click)="setClassFilter('all')">
+                Toutes
+              </button>
+              <button type="button" 
+                      class="filter-btn" 
+                      [class.active]="classFilter === 'ING3'"
+                      (click)="setClassFilter('ING3')">
+                ING3
+              </button>
+              <button type="button" 
+                      class="filter-btn" 
+                      [class.active]="classFilter === 'ING4'"
+                      (click)="setClassFilter('ING4')">
+                ING4
+              </button>
+            </div>
+          </div>
+
+          <div class="classes-grid">
+            <div 
+              *ngFor="let classe of getFilteredClasses()" 
+              class="class-option"
+              [class.selected]="isClassSelected(classe.id)"
+              (click)="toggleClass(classe.id)"
+              [attr.aria-selected]="isClassSelected(classe.id)"
+              role="option"
+            >
+              <div class="class-checkbox">
+                <input 
+                  type="checkbox" 
+                  [checked]="isClassSelected(classe.id)"
+                  (change)="toggleClass(classe.id)"
+                  [id]="'class-' + classe.id"
+                />
+                <span class="checkmark">
+                  <span class="material-icons">check</span>
+                </span>
+              </div>
+              <div class="class-info">
+                <div class="class-header">
+                  <div class="class-name">{{ classe.nom }}</div>
+                  <div class="class-badge" [class]="'badge-' + classe.niveau.toLowerCase()">
+                    {{ classe.niveau }}
+                  </div>
+                </div>
+                <div class="class-details">
+                  <span class="material-icons">person</span>
+                  {{ classe.effectif }} étudiants
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="field-error" *ngIf="selectedClasses().length === 0 && formSubmitted()">
+            <span class="material-icons">error</span>
+            Veuillez sélectionner au moins une classe
+          </div>
+          
+          <!-- Quick Actions -->
+          <div class="quick-actions" *ngIf="availableClasses().length > 0">
+            <button type="button" class="quick-action-btn" (click)="selectAllClasses()">
+              <span class="material-icons">select_all</span>
+              Tout sélectionner
+            </button>
+            <button type="button" class="quick-action-btn" (click)="selectByLevel('ING3')">
+              <span class="material-icons">filter_3</span>
+              Sélectionner ING3
+            </button>
+            <button type="button" class="quick-action-btn" (click)="selectByLevel('ING4')">
+              <span class="material-icons">filter_4</span>
+              Sélectionner ING4
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Draft Notice -->
+      <div class="info-notice">
+        <div class="notice-icon">
+          <span class="material-icons">info</span>
+        </div>
+        <div class="notice-content">
+          <div class="notice-title">Note importante</div>
+          <div class="notice-text">
+            L'évaluation sera créée en mode brouillon. Vous pourrez ajouter des questions avant de la publier.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Questions (Placeholder for now) -->
+    <div class="form-step" *ngIf="currentStep() === 2">
+      <div class="step-header">
+        <h2>Ajout de questions</h2>
+        <p>Créez et organisez les questions de votre évaluation</p>
+      </div>
+
+      <div class="questions-placeholder">
+        <div class="placeholder-icon">
+          <span class="material-icons">quiz</span>
+        </div>
+        <h3>Fonctionnalité en développement</h3>
+        <p>L'interface d'ajout de questions sera disponible dans une prochaine version.</p>
+        <p>Pour l'instant, vous pouvez créer l'évaluation en brouillon et ajouter les questions plus tard.</p>
+      </div>
+    </div>
+
+    <!-- Step 3: Review (Placeholder for now) -->
+    <div class="form-step" *ngIf="currentStep() === 3">
+      <div class="step-header">
+        <h2>Révision et publication</h2>
+        <p>Vérifiez les informations avant de publier</p>
+      </div>
+
+      <div class="review-placeholder">
+        <div class="placeholder-icon">
+          <span class="material-icons">preview</span>
+        </div>
+        <h3>Aperçu de l'évaluation</h3>
+        <p>Cette section permettra de prévisualiser l'évaluation avant publication.</p>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <div class="actions-left">
+        <button 
+          type="button" 
+          class="btn-secondary"
+          (click)="onCancel()"
+        >
+          <span class="material-icons">close</span>
+          Annuler
+        </button>
+      </div>
+
+      <div class="actions-right">
+        <button 
+          type="button" 
+          class="btn-outline"
+          *ngIf="currentStep() > 1"
+          (click)="previousStep()"
+        >
+          <span class="material-icons">arrow_back</span>
+          Précédent
+        </button>
+
+        <button 
+          type="button" 
+          class="btn-primary"
+          *ngIf="currentStep() < 3"
+          (click)="nextStep()"
+          [disabled]="!canProceedToNextStep()"
+        >
+          Suivant
+          <span class="material-icons">arrow_forward</span>
+        </button>
+
+        <button 
+          type="submit" 
+          class="btn-primary"
+          *ngIf="currentStep() === 1"
+          [disabled]="evaluationForm.invalid || isSubmitting()"
+        >
+          <span class="spinner" *ngIf="isSubmitting()"></span>
+          <span class="material-icons" *ngIf="!isSubmitting()">save</span>
+          {{ isSubmitting() ? 'Création...' : 'Créer en brouillon' }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

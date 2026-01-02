@@ -58,6 +58,10 @@ export const routes: Routes = [
         loadComponent: () => import('./presentation/features/evaluation-create/evaluation-create.component').then(m => m.EvaluationCreateComponent)
       },
       {
+        path: 'evaluations/:id/edit',
+        loadComponent: () => import('./presentation/features/evaluation-create/evaluation-create.component').then(m => m.EvaluationCreateComponent)
+      },
+      {
         path: 'evaluations/:id',
         loadComponent: () => import('./presentation/features/evaluation-detail/evaluation-detail.component').then(m => m.EvaluationDetailComponent)
       },
@@ -70,12 +74,8 @@ export const routes: Routes = [
         loadComponent: () => import('./presentation/features/evaluation-preview/evaluation-preview.component').then(m => m.EvaluationPreviewComponent)
       },
       {
-        path: 'reports',
+        path: 'rapports',
         loadComponent: () => import('./presentation/features/reports/reports.component').then(m => m.ReportsComponent)
-      },
-      {
-        path: 'reports/:id',
-        loadComponent: () => import('./presentation/features/report-detail/report-detail.component').then(m => m.ReportDetailComponent)
       },
       {
         path: 'notifications',

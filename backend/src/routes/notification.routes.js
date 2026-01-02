@@ -26,4 +26,19 @@ router.put('/read-all', notificationController.markAllAsRead);
 // PATCH /api/notifications/mark-all-read - Marquer toutes les notifications comme lues (alternative)
 router.patch('/mark-all-read', notificationController.markAllAsRead);
 
+// POST /api/notifications/fcm-token - Mettre à jour le token FCM
+router.post('/fcm-token', notificationController.updateFCMToken);
+
+// DELETE /api/notifications/fcm-token - Supprimer le token FCM
+router.delete('/fcm-token', notificationController.removeFCMToken);
+
+// POST /api/notifications/system - Envoyer une notification système (admin seulement)
+router.post('/system', notificationController.sendSystemNotification);
+
+// GET /api/notifications/stats - Statistiques des connexions WebSocket (admin seulement)
+router.get('/stats', notificationController.getConnectionStats);
+
+// POST /api/notifications/test - Test de notification (développement seulement)
+router.post('/test', notificationController.testNotification);
+
 module.exports = router;

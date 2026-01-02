@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -22,6 +22,17 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   cours = signal<Cours[]>([]);
   classes = signal<Classe[]>([]);
   isLoading = signal(false);
+  
+  // Computed signals to ensure arrays are always valid
+  validCours = computed(() => {
+    const coursData = this.cours();
+    return Array.isArray(coursData) ? coursData : [];
+  });
+  
+  validClasses = computed(() => {
+    const classesData = this.classes();
+    return Array.isArray(classesData) ? classesData : [];
+  });
   
   // Draft management
   draftEvaluationId = signal<string | number | null>(null);
@@ -54,6 +65,10 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Ensure signals are properly initialized with empty arrays
+    this.cours.set([]);
+    this.classes.set([]);
+    
     this.loadCours();
     this.loadClasses();
     this.initializeAutoSave();
@@ -86,6 +101,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
       description: this.formData.description,
       dateDebut: this.formData.dateDebut ? new Date(this.formData.dateDebut).toISOString() : new Date().toISOString(),
       dateFin: this.formData.dateFin ? new Date(this.formData.dateFin).toISOString() : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      coursId: this.formData.coursId || 1, // Add required coursId
       cours_id: this.formData.coursId || undefined,
       classeIds: this.formData.classeIds.length > 0 ? this.formData.classeIds : [1], // Classe par défaut
       statut: 'BROUILLON' as const
@@ -140,23 +156,37 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   loadCours(): void {
     this.academicUseCase.getCours().subscribe({
       next: (cours) => {
-        this.cours.set(cours);
+        // Ensure we always set a valid array
+        if (Array.isArray(cours)) {
+          this.cours.set(cours);
+        } else {
+          console.warn('Cours data is not an array:', cours);
+          this.cours.set([]);
+        }
       },
       error: (error) => {
         console.error('Erreur lors du chargement des cours:', error);
+        this.cours.set([]); // Ensure we always have an array
       }
     });
   }
 
   loadClasses(): void {
-    this.academicUseCase.getClasses().subscribe({
+    this.academicUseCase.getAllClasses().subscribe({
       next: (classes) => {
         console.log('📚 Classes chargées:', classes);
         console.log('📚 Types des IDs:', classes.map(c => ({ nom: c.nom, id: c.id, type: typeof c.id })));
-        this.classes.set(classes);
+        // Ensure we always set a valid array
+        if (Array.isArray(classes)) {
+          this.classes.set(classes);
+        } else {
+          console.warn('Classes data is not an array:', classes);
+          this.classes.set([]);
+        }
       },
       error: (error) => {
         console.error('Erreur lors du chargement des classes:', error);
+        this.classes.set([]); // Ensure we always have an array
       }
     });
   }
@@ -214,6 +244,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
       description: this.formData.description,
       dateDebut: new Date(this.formData.dateDebut).toISOString(),
       dateFin: new Date(this.formData.dateFin).toISOString(),
+      coursId: this.formData.coursId, // Add required coursId
       cours_id: this.formData.coursId,
       classeIds: this.formData.classeIds,
       statut: 'BROUILLON' as const
@@ -249,6 +280,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
       // Le modèle Sequelize attend camelCase
       dateDebut: new Date(this.formData.dateDebut).toISOString(),
       dateFin: new Date(this.formData.dateFin).toISOString(),
+      coursId: this.formData.coursId, // Add required coursId
       // Le service attend snake_case pour cours_id
       cours_id: this.formData.coursId,
       classeIds: this.formData.classeIds,
@@ -296,7 +328,8 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
     this.showMethodModal.set(false);
     const evalId = this.createdEvaluationId();
     if (evalId) {
-      this.router.navigate(['/evaluations', evalId], { 
+      // Navigate to manual creation interface
+      this.router.navigate(['/evaluations', evalId, 'questions'], { 
         queryParams: { mode: 'manual' } 
       });
     }
@@ -306,19 +339,20 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
     this.showMethodModal.set(false);
     const evalId = this.createdEvaluationId();
     if (evalId) {
-      this.router.navigate(['/evaluations', evalId], { 
-        queryParams: { mode: 'import' } 
+      // Navigate to Excel import interface
+      this.router.navigate(['/evaluations', evalId, 'import'], { 
+        queryParams: { mode: 'excel' } 
       });
     }
   }
 
   getCoursName(coursId: number): string {
-    const cours = this.cours().find(c => c.id === coursId);
+    const cours = this.validCours().find(c => c.id === coursId);
     return cours?.nom || '';
   }
 
   getClassName(classeId: number): string {
-    const classe = this.classes().find(c => c.id === classeId);
+    const classe = this.validClasses().find(c => c.id === classeId);
     return classe?.nom || '';
   }
 

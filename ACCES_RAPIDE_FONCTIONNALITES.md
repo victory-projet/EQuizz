@@ -60,7 +60,13 @@ npm start
 3. Configurez les options d'export
 4. Cliquez sur **"Exporter EXCEL"**
 
-### **Options Disponibles**
+### **Contenu des Rapports**
+- **Graphiques QCM** : Pour chaque question QCM, un graphique montre la répartition des réponses
+- **Réponses Ouvertes** : Les réponses anonymes aux questions ouvertes sont listées
+- **Options de Filtrage** : Filtres disponibles (Classes, Enseignants, etc.)
+- **Métriques Globales** : Taux de participation, temps moyen, etc.
+
+### **Options d'Export**
 - **Format** : Excel (.xlsx) ou PDF
 - **Contenu** : Sentiments, Graphiques, Statistiques
 - **Aperçu** : Visualisation avant export

@@ -1,8 +1,11 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CoursService, Enseignant } from '../../../core/services/cours.service';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
-import { Cours, AnneeAcademique, Semestre } from '../../../core/domain/entities/academic.entity';
+import { AnneeAcademique, Semestre, Cours } from '../../../core/domain/entities/academic.entity';
+import { UserCacheService } from '../../../core/services/user-cache.service';
+import { User } from '../../../core/domain/entities/user.entity';
 
 @Component({
   selector: 'app-courses',
@@ -16,7 +19,8 @@ export class CoursesComponent implements OnInit {
   filteredCours = signal<Cours[]>([]);
   anneesAcademiques = signal<AnneeAcademique[]>([]);
   semestres = signal<Semestre[]>([]);
-  enseignants = signal<any[]>([]);
+  enseignants = signal<User[]>([]);
+  availableEnseignants = signal<Enseignant[]>([]);
   
   isLoading = signal(false);
   showModal = signal(false);
@@ -27,23 +31,37 @@ export class CoursesComponent implements OnInit {
   filterStatus = signal<'ALL' | 'ACTIVE' | 'ARCHIVED'>('ALL');
   filterSemestre = signal<string>('ALL');
 
+  // Pagination
+  pagination = signal({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10,
+    hasNextPage: false,
+    hasPrevPage: false
+  });
+
   formData = {
     code: '',
     nom: '',
     description: '',
     semestre_id: '',
-    enseignant_id: ''
+    enseignantIds: [] as string[]
   };
 
   errorMessage = signal('');
   successMessage = signal('');
 
   // Computed statistics
-  totalCours = computed(() => this.cours().length);
+  totalCours = computed(() => this.pagination().totalItems);
   coursActifs = computed(() => this.cours().filter(c => !c.estArchive).length);
   coursArchives = computed(() => this.cours().filter(c => c.estArchive).length);
 
-  constructor(private academicUseCase: AcademicUseCase) {}
+  constructor(
+    private coursService: CoursService,
+    private academicUseCase: AcademicUseCase,
+    private userCacheService: UserCacheService
+  ) {}
 
   ngOnInit(): void {
     this.loadCours();
@@ -52,9 +70,24 @@ export class CoursesComponent implements OnInit {
   }
 
   loadEnseignants(): void {
-    // TODO: Implémenter quand le use case enseignants sera disponible
-    // Pour l'instant, on laisse vide
-    this.enseignants.set([]);
+    this.userCacheService.getTeachers().subscribe({
+      next: (teachers) => {
+        this.enseignants.set(teachers);
+        // Convertir en format Enseignant pour la compatibilité
+        const enseignantsFormatted = teachers.map(teacher => ({
+          id: teacher.id.toString(), // Convert to string to match Enseignant type
+          Utilisateur: {
+            nom: teacher.nom,
+            prenom: teacher.prenom,
+            email: teacher.email
+          }
+        }));
+        this.availableEnseignants.set(enseignantsFormatted);
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des enseignants:', error);
+      }
+    });
   }
 
   onAnneeChange(anneeId: string): void {
@@ -65,22 +98,30 @@ export class CoursesComponent implements OnInit {
     }
   }
 
-  loadCours(): void {
+  loadCours(page: number = 1, search: string = ''): void {
     this.isLoading.set(true);
-    this.academicUseCase.getCours().subscribe({
-      next: (cours) => {
-        console.log('📚 Cours chargés:', cours);
-        cours.forEach(c => {
-          console.log(`Cours ${c.nom}:`, {
-            id: c.id,
-            code: c.code,
-            enseignantId: c.enseignantId,
-            enseignant: c.enseignant,
-            objetComplet: c
+    this.coursService.getCours({ page, limit: 10, search }).subscribe({
+      next: (response) => {
+        console.log('📚 Cours chargés:', response);
+        
+        if ('pagination' in response) {
+          // Réponse paginée
+          this.cours.set(response['cours'] as Cours[]); // Cast to entity type
+          this.pagination.set(response.pagination);
+        } else {
+          // Réponse simple (fallback)
+          this.cours.set(response as Cours[]); // Cast to entity type
+          this.pagination.set({
+            currentPage: 1,
+            totalPages: 1,
+            totalItems: response.length,
+            itemsPerPage: response.length,
+            hasNextPage: false,
+            hasPrevPage: false
           });
-        });
-        this.cours.set(cours);
-        this.applyFilters();
+        }
+        
+        this.applyStatusFilter();
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -113,7 +154,7 @@ export class CoursesComponent implements OnInit {
     });
   }
 
-  applyFilters(): void {
+  applyStatusFilter(): void {
     let filtered = this.cours();
 
     // Filter by status
@@ -123,27 +164,49 @@ export class CoursesComponent implements OnInit {
       filtered = filtered.filter(c => c.estArchive);
     }
 
-    // Filter by search query
-    if (this.searchQuery()) {
-      const query = this.searchQuery().toLowerCase();
-      filtered = filtered.filter(c =>
-        c.code.toLowerCase().includes(query) ||
-        c.nom.toLowerCase().includes(query)
-      );
-    }
-
     this.filteredCours.set(filtered);
   }
 
   onSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchQuery.set(input.value);
-    this.applyFilters();
+    this.loadCours(1, input.value); // Recharger avec recherche
   }
 
   onFilterStatus(status: 'ALL' | 'ACTIVE' | 'ARCHIVED'): void {
     this.filterStatus.set(status);
-    this.applyFilters();
+    this.applyStatusFilter();
+  }
+
+  onPageChange(page: number): void {
+    this.loadCours(page, this.searchQuery());
+  }
+
+  // Gestion de la sélection multiple d'enseignants
+  onEnseignantToggle(enseignantId: string): void {
+    const current = this.formData.enseignantIds;
+    if (current.includes(enseignantId)) {
+      this.formData.enseignantIds = current.filter(id => id !== enseignantId);
+    } else {
+      this.formData.enseignantIds = [...current, enseignantId];
+    }
+  }
+
+  isEnseignantSelected(enseignantId: string): boolean {
+    return this.formData.enseignantIds.includes(enseignantId);
+  }
+
+  getSelectedEnseignantsNames(): string {
+    const selected = this.formData.enseignantIds;
+    const enseignants = this.availableEnseignants();
+    
+    return selected
+      .map(id => {
+        const enseignant = enseignants.find(e => e.id === id);
+        return enseignant ? `${enseignant.Utilisateur.prenom} ${enseignant.Utilisateur.nom}` : '';
+      })
+      .filter(name => name)
+      .join(', ');
   }
 
   openCreateModal(): void {
@@ -159,7 +222,7 @@ export class CoursesComponent implements OnInit {
       nom: cours.nom,
       description: cours.description || '',
       semestre_id: '',
-      enseignant_id: ''
+      enseignantIds: cours.Enseignants?.map(e => e.id.toString()) || [] // Convert to string
     };
     this.showModal.set(true);
   }
@@ -181,7 +244,7 @@ export class CoursesComponent implements OnInit {
       nom: '',
       description: '',
       semestre_id: '',
-      enseignant_id: ''
+      enseignantIds: []
     };
   }
 
@@ -196,26 +259,20 @@ export class CoursesComponent implements OnInit {
   }
 
   createCours(): void {
-    if (!this.formData.semestre_id || !this.formData.enseignant_id) {
-      this.errorMessage.set('Le semestre et l\'enseignant sont requis');
-      return;
-    }
-
     this.isLoading.set(true);
     const data = {
       code: this.formData.code,
       nom: this.formData.nom,
       description: this.formData.description,
-      semestre_id: this.formData.semestre_id,
-      enseignant_id: this.formData.enseignant_id,
+      enseignantIds: this.formData.enseignantIds,
       estArchive: false
     };
 
-    this.academicUseCase.createCours(data).subscribe({
+    this.coursService.createCours(data).subscribe({
       next: () => {
         this.successMessage.set('Cours créé avec succès');
         this.closeModal();
-        this.loadCours();
+        this.loadCours(this.pagination().currentPage, this.searchQuery());
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
@@ -233,14 +290,15 @@ export class CoursesComponent implements OnInit {
     const data = {
       code: this.formData.code,
       nom: this.formData.nom,
-      description: this.formData.description
+      description: this.formData.description,
+      enseignantIds: this.formData.enseignantIds
     };
 
-    this.academicUseCase.updateCours(cours.id, data).subscribe({
+    this.coursService.updateCours(cours.id.toString(), data).subscribe({
       next: () => {
         this.successMessage.set('Cours mis à jour avec succès');
         this.closeModal();
-        this.loadCours();
+        this.loadCours(this.pagination().currentPage, this.searchQuery());
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
@@ -255,11 +313,11 @@ export class CoursesComponent implements OnInit {
     if (!cours) return;
 
     this.isLoading.set(true);
-    this.academicUseCase.deleteCours(cours.id).subscribe({
+    this.coursService.deleteCours(cours.id.toString()).subscribe({
       next: () => {
         this.successMessage.set('Cours supprimé avec succès');
         this.closeModal();
-        this.loadCours();
+        this.loadCours(this.pagination().currentPage, this.searchQuery());
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
@@ -270,12 +328,12 @@ export class CoursesComponent implements OnInit {
   }
 
   toggleArchiveStatus(cours: Cours): void {
-    this.academicUseCase.updateCours(cours.id, {
+    this.coursService.updateCours(cours.id.toString(), {
       estArchive: !cours.estArchive
     }).subscribe({
       next: () => {
         this.successMessage.set(`Cours ${cours.estArchive ? 'désarchivé' : 'archivé'} avec succès`);
-        this.loadCours();
+        this.loadCours(this.pagination().currentPage, this.searchQuery());
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
@@ -283,4 +341,7 @@ export class CoursesComponent implements OnInit {
       }
     });
   }
+
+  // Expose Array for template
+  Array = Array;
 }

@@ -199,7 +199,7 @@
                 <div class="stat-item">
                   <mat-icon>schedule</mat-icon>
                   <div class="stat-content">
-                    <span class="stat-value">{{ formatDate(evaluation()!.dateCreation) }}</span>
+                    <span class="stat-value">{{ formatDate(evaluation()!.dateCreation || evaluation()!.createdAt || '') }}</span>
                     <span class="stat-label">Date de création</span>
                   </div>
                 </div>

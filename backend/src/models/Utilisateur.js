@@ -54,6 +54,12 @@ const Utilisateur = sequelize.define('Utilisateur', {
     type: DataTypes.STRING(255),
     allowNull: true,
   },
+
+  fcmToken: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'Token Firebase Cloud Messaging pour les notifications push'
+  },
 }, {
 // Ajout des Hooks
   hooks: {

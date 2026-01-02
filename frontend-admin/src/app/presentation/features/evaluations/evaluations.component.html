@@ -2,12 +2,35 @@
   <!-- Header -->
   <div class="page-header">
     <div class="header-content">
-      <h1 class="page-title">Gestion des Quiz</h1>
-      <p class="page-subtitle">Vue d'ensemble de tous vos questionnaires d'évaluation</p>
+      <div class="header-main">
+        <h1 class="page-title">
+          <span class="title-icon">
+            <span class="material-icons">assignment</span>
+          </span>
+          Gestion des Quiz
+        </h1>
+        <p class="page-subtitle">Créez, gérez et analysez vos questionnaires d'évaluation</p>
+      </div>
+      <div class="header-stats">
+        <div class="quick-stat">
+          <span class="stat-number">{{ totalQuiz() }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="quick-stat">
+          <span class="stat-number">{{ activeQuiz() }}</span>
+          <span class="stat-label">Actifs</span>
+        </div>
+      </div>
     </div>
-    <button class="btn-primary" (click)="createEvaluation()">
-      <span class="material-icons">add</span> Créer un Quiz
-    </button>
+    <div class="header-actions">
+      <button class="btn-primary create-btn" (click)="createEvaluation()">
+        <span class="btn-icon">
+          <span class="material-icons">add</span>
+        </span>
+        <span class="btn-text">Créer un Quiz</span>
+        <div class="btn-shine"></div>
+      </button>
+    </div>
   </div>
 
   <!-- Messages -->
@@ -140,63 +163,56 @@
     <div class="evaluations-grid">
       @for (evaluation of filteredEvaluations(); track evaluation.id) {
         <div class="evaluation-card">
+          <!-- Menu Dupliquer flottant -->
+          @if (evaluation.statut === 'PUBLIEE' || evaluation.statut === 'CLOTUREE') {
+            <div class="duplicate-menu">
+              <button class="duplicate-btn" (click)="duplicateEvaluation(evaluation)" title="Dupliquer cette évaluation">
+                <span class="material-icons">content_copy</span>
+                Dupliquer
+                <span class="duplicate-subtitle">Créer une copie</span>
+              </button>
+            </div>
+          }
+
           <div class="card-header">
-            <span class="badge modern-badge" [ngClass]="getStatusBadgeClass(evaluation.statut)">
-              <span class="badge-icon material-icons">{{ getStatusIcon(evaluation.statut) }}</span>
-              <span class="badge-text">{{ getStatusLabel(evaluation.statut) }}</span>
+            <span class="status-badge" [ngClass]="getStatusBadgeClass(evaluation.statut)">
+              <span class="material-icons">{{ getStatusIcon(evaluation.statut) }}</span>
+              {{ getStatusLabel(evaluation.statut) }}
             </span>
             <div class="card-actions">
-              <button class="btn-icon" [title]="'Actions pour ' + evaluation.titre" (click)="toggleCardMenu(evaluation.id)">
+              <button class="btn-menu" [title]="'Actions pour ' + evaluation.titre" (click)="toggleCardMenu(evaluation.id)">
                 <span class="material-icons">more_vert</span>
               </button>
               @if (showCardMenu() === evaluation.id) {
-                <div class="card-menu modern-menu">
+                <div class="dropdown-menu card-menu">
                   @if (evaluation.statut === 'BROUILLON') {
-                    <button class="menu-item edit-item" (click)="editEvaluation(evaluation); hideCardMenu()" title="Modifier cette évaluation">
-                      <div class="menu-icon edit-icon">
-                        <span class="material-icons">edit</span>
-                      </div>
-                      <div class="menu-content">
-                        <span class="menu-title">Modifier</span>
-                        <span class="menu-subtitle">Éditer le contenu</span>
-                      </div>
+                    <button class="menu-item" (click)="editEvaluation(evaluation); hideCardMenu()">
+                      <span class="material-icons">edit</span>
+                      Modifier
                     </button>
-                    <button class="menu-item duplicate-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()" title="Créer une copie de cette évaluation">
-                      <div class="menu-icon duplicate-icon">
-                        <span class="material-icons">content_copy</span>
-                      </div>
-                      <div class="menu-content">
-                        <span class="menu-title">Dupliquer</span>
-                        <span class="menu-subtitle">Créer une copie</span>
-                      </div>
+                    <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
+                      <span class="material-icons">content_copy</span>
+                      Dupliquer
                     </button>
-                    <button class="menu-item delete-item" (click)="deleteEvaluation(evaluation); hideCardMenu()" title="Supprimer définitivement cette évaluation">
-                      <div class="menu-icon delete-icon">
-                        <span class="material-icons">delete</span>
-                      </div>
-                      <div class="menu-content">
-                        <span class="menu-title">Supprimer</span>
-                        <span class="menu-subtitle">Action irréversible</span>
-                      </div>
+                    <button class="menu-item delete-item" (click)="deleteEvaluation(evaluation); hideCardMenu()">
+                      <span class="material-icons">delete</span>
+                      Supprimer
                     </button>
                   }
                   @if (evaluation.statut === 'PUBLIEE') {
-                    <button class="menu-item" (click)="viewSubmissions(evaluation); hideCardMenu()">
-                      <span class="material-icons">assignment_turned_in</span> Voir les soumissions
-                    </button>
                     <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
-                      <span class="material-icons">content_copy</span> Dupliquer
+                      <span class="material-icons">content_copy</span>
+                      Dupliquer
                     </button>
                   }
                   @if (evaluation.statut === 'CLOTUREE') {
-                    <button class="menu-item" (click)="viewSubmissions(evaluation); hideCardMenu()">
-                      <span class="material-icons">assignment_turned_in</span> Voir les soumissions
-                    </button>
                     <button class="menu-item" (click)="exportResults(evaluation); hideCardMenu()">
-                      <span class="material-icons">download</span> Exporter les résultats
+                      <span class="material-icons">download</span>
+                      Exporter les résultats
                     </button>
                     <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
-                      <span class="material-icons">content_copy</span> Dupliquer
+                      <span class="material-icons">content_copy</span>
+                      Dupliquer
                     </button>
                   }
                 </div>
@@ -204,9 +220,9 @@
             </div>
           </div>
 
-          <div class="card-body" (click)="viewEvaluation(evaluation.id)">
+          <div class="card-body" (click)="viewEvaluationDetails(evaluation)">
             <h3 class="card-title">{{ evaluation.titre }}</h3>
-            <p class="card-description">{{ evaluation.description || 'Aucune description' }}</p>
+            <p class="card-description">{{ evaluation.description || 'Évaluation de satisfaction du cours de ' + getCoursName(evaluation) }}</p>
             
             <div class="card-meta">
               <div class="meta-item">
@@ -215,78 +231,51 @@
               </div>
               <div class="meta-item">
                 <span class="material-icons">calendar_today</span>
-                <span>{{ formatDate(evaluation.dateDebut) }}</span>
+                <span>{{ formatDate(evaluation.dateDebut) }} - {{ formatDate(evaluation.dateFin) }}</span>
               </div>
               <div class="meta-item">
-                <span class="material-icons">schedule</span>
-                <span>Fin: {{ formatDate(evaluation.dateFin) }}</span>
-              </div>
-            </div>
-
-            <div class="card-stats">
-              <div class="stat-item">
                 <span class="material-icons">help_outline</span>
-                <span>{{ getQuestionCount(evaluation) }} questions</span>
+                <span>{{ getQuestionCount(evaluation) }} questions • {{ getClassesCount(evaluation) }} classe(s)</span>
               </div>
-              <div class="stat-item">
-                <span class="material-icons">people</span>
-                <span>{{ getClassesCount(evaluation) }} classe(s)</span>
-              </div>
-              @if (evaluation.statut === 'PUBLIEE' || evaluation.statut === 'CLOTUREE') {
-                <div class="stat-item">
-                  <span class="material-icons">assignment_turned_in</span>
-                  <span>{{ getSubmissionsCount(evaluation) }} soumissions</span>
-                </div>
-              }
             </div>
           </div>
 
-          <div class="card-footer modern-footer">
+          <div class="card-footer">
             @if (evaluation.statut === 'BROUILLON') {
-              <div class="footer-actions">
-                <button class="btn-action btn-edit" (click)="editEvaluation(evaluation); $event.stopPropagation()" title="Modifier cette évaluation">
-                  <span class="material-icons">edit</span>
-                  <span class="btn-text">Modifier</span>
+              <button class="btn-outline" (click)="editEvaluation(evaluation); $event.stopPropagation()">
+                <span class="material-icons">edit</span>
+                Modifier
+              </button>
+              @if (getQuestionCount(evaluation) > 0) {
+                <button class="btn-primary card-btn" (click)="publishEvaluation(evaluation); $event.stopPropagation()">
+                  <span class="material-icons">send</span>
+                  Publier
                 </button>
-                @if (getQuestionCount(evaluation) > 0) {
-                  <button class="btn-action btn-publish" (click)="publishEvaluation(evaluation); $event.stopPropagation()" title="Publier cette évaluation">
-                    <span class="material-icons">send</span>
-                    <span class="btn-text">Publier</span>
-                  </button>
-                } @else {
-                  <button class="btn-action btn-publish disabled" disabled title="Ajoutez des questions avant de publier">
-                    <span class="material-icons">send</span>
-                    <span class="btn-text">Publier</span>
-                  </button>
-                }
-              </div>
-              <div class="footer-status">
-                <div class="status-indicator draft-status">
-                  <span class="material-icons">edit_note</span>
-                  <span class="status-text">Brouillon</span>
-                </div>
-              </div>
+              } @else {
+                <button class="btn-primary card-btn disabled" disabled>
+                  <span class="material-icons">send</span>
+                  Publier
+                </button>
+              }
             }
             @if (evaluation.statut === 'PUBLIEE') {
-              <button class="btn-outline" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
-                <span class="material-icons">visibility</span> Voir
+              <button class="btn-view" (click)="viewSubmissions(evaluation); $event.stopPropagation()">
+                <span class="material-icons">people</span>
+                Soumissions
               </button>
-              <button class="btn-secondary" (click)="viewSubmissions(evaluation); $event.stopPropagation()">
-                <span class="material-icons">assignment_turned_in</span> Soumissions
-              </button>
-              <button class="btn-primary" (click)="closeEvaluation(evaluation); $event.stopPropagation()">
-                <span class="material-icons">lock</span> Fermer
+              <button class="btn-close" (click)="closeEvaluation(evaluation); $event.stopPropagation()">
+                <span class="material-icons">lock</span>
+                Fermer
               </button>
             }
             @if (evaluation.statut === 'CLOTUREE') {
-              <button class="btn-outline" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
-                <span class="material-icons">visibility</span> Voir
+              <button class="btn-view" (click)="viewResults(evaluation); $event.stopPropagation()">
+                <span class="material-icons">bar_chart</span>
+                Résultats
               </button>
-              <button class="btn-secondary" (click)="viewSubmissions(evaluation); $event.stopPropagation()">
-                <span class="material-icons">assignment_turned_in</span> Soumissions
-              </button>
-              <button class="btn-primary" (click)="viewResults(evaluation); $event.stopPropagation()">
-                <span class="material-icons">bar_chart</span> Rapport
+              <button class="btn-export" (click)="exportResults(evaluation); $event.stopPropagation()">
+                <span class="material-icons">download</span>
+                Exporter
               </button>
             }
           </div>

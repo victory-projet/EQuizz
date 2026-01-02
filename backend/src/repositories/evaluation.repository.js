@@ -77,10 +77,8 @@ class EvaluationRepository {
       throw new Error('Évaluation non trouvée');
     }
 
-    // Vérifier que l'évaluation est en statut BROUILLON
-    if (originalEvaluation.statut !== 'BROUILLON') {
-      throw new Error('Seules les évaluations en brouillon peuvent être dupliquées');
-    }
+    // On peut dupliquer une évaluation quel que soit son statut
+    // La copie sera toujours créée en statut BROUILLON pour permettre les modifications
 
     // Créer la nouvelle évaluation (copie)
     const evaluationData = {

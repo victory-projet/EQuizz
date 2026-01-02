@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
-import { Question } from '../../../core/domain/entities/evaluation.entity';
+import { Question } from '../../../core/domain/entities/question.entity';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 

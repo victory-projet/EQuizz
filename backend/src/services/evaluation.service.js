@@ -17,7 +17,13 @@ class EvaluationService {
    * @param {string} adminId - ID de l'administrateur qui crée l'évaluation.
    */
   async create(data, adminId) {
-    const { classeIds, ...evaluationData } = data;
+    const { classeIds, coursId, ...evaluationData } = data;
+    
+    // Mapper coursId vers cours_id pour la compatibilité backend
+    if (coursId) {
+      evaluationData.cours_id = coursId;
+    }
+    
     if (!classeIds || !Array.isArray(classeIds) || classeIds.length === 0) {
       throw AppError.badRequest('Au moins une classe doit être ciblée.', 'CLASSES_REQUIRED');
     }

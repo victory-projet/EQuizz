@@ -1,0 +1,44 @@
+.evaluation-submissions {
+  padding: 20px;
+
+  .header {
+    margin-bottom: 20px;
+    
+    h2 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+    
+    p {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+  }
+
+  .no-submissions {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+  }
+
+  .submissions-list {
+    .submission-item {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 10px;
+      
+      &:hover {
+        background: #e9ecef;
+      }
+    }
+  }
+}

@@ -21,7 +21,7 @@
     ></textarea>
   </div>
 
-  @if (formData.type === 'CHOIX_MULTIPLE') {
+  @if (formData.type === 'QCM') {
     <div class="form-group">
       <label class="form-label">Options de réponse *</label>
       <div class="options-list">
@@ -48,7 +48,7 @@
     </div>
   }
 
-  @if (formData.type === 'REPONSE_OUVERTE') {
+  @if (formData.type === 'TEXTE_LIBRE') {
     <div class="info-box">
       <span class="material-icons">info</span>
       <span>Les étudiants pourront saisir une réponse libre en texte.</span>

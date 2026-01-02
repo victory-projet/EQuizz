@@ -25,11 +25,29 @@ export class MainLayoutComponent {
     '/classes': 'Classes',
     '/associations': 'Associations',
     '/academic-years': 'Année académique',
-    '/reports': 'Rapports',
+    '/rapports': 'Rapports',
     '/users': 'Utilisateurs',
     '/students': 'Étudiants',
     '/teachers': 'Enseignants',
-    '/notifications': 'Notifications'
+    '/notifications': 'Notifications',
+    '/profile': 'Mon Profil',
+    '/messages': 'Messages'
+  };
+
+  private pageSubtitles: { [key: string]: string } = {
+    '/dashboard': 'Vue d\'ensemble du système d\'évaluation des enseignements',
+    '/evaluations': 'Gestion des évaluations et questionnaires',
+    '/courses': 'Gestion des cours et unités d\'enseignement',
+    '/classes': 'Gestion des classes et groupes d\'étudiants',
+    '/associations': 'Gestion des associations cours-classes',
+    '/academic-years': 'Gestion des années académiques et semestres',
+    '/rapports': 'Rapports et statistiques d\'évaluation',
+    '/users': 'Gestion des comptes administrateurs',
+    '/students': 'Gestion des comptes étudiants',
+    '/teachers': 'Gestion des comptes enseignants',
+    '/notifications': 'Centre de notifications système',
+    '/profile': 'Espace compte administrateur',
+    '/messages': 'Centre de messages et notifications'
   };
 
   constructor(

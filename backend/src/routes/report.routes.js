@@ -1,38 +1,18 @@
-// backend/src/routes/report.routes.js
-
 const express = require('express');
 const router = express.Router();
-const { authenticate, isAdmin } = require('../middlewares/auth.middleware');
 const reportController = require('../controllers/report.controller');
-const exportController = require('../controllers/export.controller');
+const { authenticate } = require('../middlewares/auth.middleware');
 
-// Toutes les routes nécessitent l'authentification admin
-router.use(authenticate, isAdmin);
+// Toutes les routes nécessitent une authentification
+router.use(authenticate);
 
-// =========================================================
-// --- Routes pour les Rapports ---
-// =========================================================
+// Obtenir le rapport complet d'une évaluation
+router.get('/evaluations/:id', reportController.getEvaluationReport);
 
-// GET /api/reports/:id - Récupérer le rapport d'une évaluation
-router.get('/:id', reportController.getReport);
+// Obtenir les options de filtrage (classes, enseignants)
+router.get('/filter-options', reportController.getFilterOptions);
 
-// GET /api/reports/:id/pdf - Exporter le rapport en PDF
-router.get('/:id/pdf', reportController.exportPDF);
-
-// =========================================================
-// --- Routes pour les Exports Excel ---
-// =========================================================
-
-// GET /api/reports/:id/excel - Exporter une évaluation en Excel
-router.get('/:id/excel', exportController.exportEvaluationExcel);
-
-// GET /api/reports/export/students - Exporter la liste des étudiants
-router.get('/export/students', exportController.exportStudentsExcel);
-
-// GET /api/reports/export/courses - Exporter la liste des cours
-router.get('/export/courses', exportController.exportCoursesExcel);
-
-// GET /api/reports/export/stats - Exporter les statistiques globales
-router.get('/export/stats', exportController.exportGlobalStatsExcel);
+// Exporter un rapport en PDF
+router.post('/evaluations/:id/export-pdf', reportController.exportToPDF);
 
 module.exports = router;

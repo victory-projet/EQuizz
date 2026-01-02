@@ -106,17 +106,17 @@
           <div class="card-body">
             <div class="info-row">
               <span class="material-icons">calendar_today</span>
-              <span>{{ classe.anneeAcademique?.libelle || getAnneeLibelle(classe.anneeAcademiqueId) }}</span>
+              <span>{{ getAnneeLibelle(classe.anneeAcademiqueId) }}</span>
             </div>
 
             <div class="info-row">
               <span class="material-icons">people</span>
-              <span>{{ classe.etudiants?.length || 0 }} étudiants</span>
+              <span>{{ classe.effectif || 0 }} étudiants</span>
             </div>
 
             <div class="info-row">
               <span class="material-icons">menu_book</span>
-              <span>{{ classe.cours?.length || 0 }} cours</span>
+              <span>0 cours</span>
             </div>
           </div>
 

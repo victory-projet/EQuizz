@@ -349,6 +349,83 @@ class NotificationController {
       res.status(200).json([]);
     }
   });
+
+  // Nouvelles méthodes pour WebSocket et FCM
+  updateFCMToken = asyncHandler(async (req, res) => {
+    const { fcmToken } = req.body;
+    const userId = req.user.id;
+    
+    if (!fcmToken) {
+      return res.status(400).json({ error: 'Token FCM requis' });
+    }
+    
+    const result = await notificationService.updateFCMToken(userId, fcmToken);
+    res.status(200).json(result);
+  });
+
+  removeFCMToken = asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    
+    const result = await notificationService.removeFCMToken(userId);
+    res.status(200).json(result);
+  });
+
+  sendSystemNotification = asyncHandler(async (req, res) => {
+    // Seuls les administrateurs peuvent envoyer des notifications système
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
+    
+    const { message, type = 'SYSTEM', targetRole } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: 'Message requis' });
+    }
+    
+    const result = await notificationService.sendSystemNotification(message, type, targetRole);
+    res.status(200).json(result);
+  });
+
+  getConnectionStats = asyncHandler(async (req, res) => {
+    // Seuls les administrateurs peuvent voir les statistiques
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
+    
+    const stats = notificationService.getConnectionStats();
+    res.status(200).json(stats);
+  });
+
+  testNotification = asyncHandler(async (req, res) => {
+    // Endpoint de test pour les développeurs
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(404).json({ error: 'Endpoint non disponible en production' });
+    }
+    
+    const { type = 'test', message = 'Notification de test' } = req.body;
+    const userId = req.user.id;
+    
+    const webSocketService = require('../services/websocket.service');
+    
+    const result = await webSocketService.sendNotification({
+      userIds: [userId],
+      notification: {
+        id: Date.now(),
+        type,
+        titre: 'Test de notification',
+        message,
+        timestamp: new Date().toISOString(),
+        estLue: false
+      },
+      pushData: {
+        type,
+        action: 'test'
+      },
+      socketEvent: 'test-notification'
+    });
+    
+    res.status(200).json(result);
+  });
 }
 
 module.exports = new NotificationController();

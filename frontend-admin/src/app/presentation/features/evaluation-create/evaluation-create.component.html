@@ -59,8 +59,6 @@
             [(ngModel)]="formData.titre"
             (input)="onFormChange()"
             required>
-            [(ngModel)]="formData.titre"
-          />
         </div>
 
         <div class="form-group">
@@ -98,7 +96,7 @@
             <label class="form-label">Cours / Unité d'Enseignement *</label>
             <select class="form-select" [(ngModel)]="formData.coursId">
               <option [value]="0">Sélectionnez un cours</option>
-              @for (c of cours(); track c.id) {
+              @for (c of validCours(); track c.id) {
                 <option [value]="c.id">{{ c.nom }}</option>
               }
             </select>
@@ -109,7 +107,7 @@
         <div class="form-group">
           <label class="form-label">Classes * (sélection multiple)</label>
           <div class="classes-grid">
-            @for (classe of classes(); track classe.id) {
+            @for (classe of validClasses(); track classe.id) {
               <div 
                 class="class-card" 
                 [class.selected]="isClasseSelected(classe.id)"
@@ -162,18 +160,34 @@
     <div class="modal-content method-modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>Choisissez votre méthode de création</h2>
+        <p class="modal-subtitle">Sélectionnez la méthode qui convient le mieux à vos besoins</p>
         <button class="btn-close" (click)="closeMethodModal()">×</button>
       </div>
 
       <div class="method-options">
-        <div class="method-card" (click)="selectManualCreation()">
+        <div class="method-card manual-creation" (click)="selectManualCreation()">
           <div class="method-icon method-icon-manual">
-            <span class="material-icons">edit</span>
+            <span class="material-icons">edit_note</span>
           </div>
           <h3>Création Manuelle</h3>
-          <p>Créez votre quiz en configurant manuellement tous les paramètres et questions</p>
-          <button class="btn-method">
-            <span class="material-icons">create</span> Créer manuellement
+          <p>Créez vos questions une par une avec un contrôle total sur le contenu et la structure</p>
+          <div class="method-features">
+            <div class="feature-item">
+              <span class="material-icons">check_circle</span>
+              <span>Interface dédiée et focalisée</span>
+            </div>
+            <div class="feature-item">
+              <span class="material-icons">check_circle</span>
+              <span>Contrôle total du contenu</span>
+            </div>
+            <div class="feature-item">
+              <span class="material-icons">check_circle</span>
+              <span>Validation en temps réel</span>
+            </div>
+          </div>
+          <button class="btn-method btn-method-manual">
+            <span class="material-icons">create</span> 
+            Créer manuellement
           </button>
         </div>
 
@@ -181,16 +195,38 @@
           <span>ou</span>
         </div>
 
-        <div class="method-card" (click)="selectManualCreation()">
-          <div class="method-icon method-icon-template">
-            <span class="material-icons">library_books</span>
+        <div class="method-card excel-import" (click)="selectExcelImport()">
+          <div class="method-icon method-icon-import">
+            <span class="material-icons">upload_file</span>
           </div>
-          <h3>Utiliser un Template</h3>
-          <p>Commencez avec un modèle pré-défini et personnalisez selon vos besoins</p>
-          <button class="btn-method">
-            <span class="material-icons">content_copy</span> Utiliser un Template
+          <h3>Import Excel</h3>
+          <p>Importez vos questions depuis un fichier Excel pré-formaté pour gagner du temps</p>
+          <div class="method-features">
+            <div class="feature-item">
+              <span class="material-icons">check_circle</span>
+              <span>Import rapide et efficace</span>
+            </div>
+            <div class="feature-item">
+              <span class="material-icons">check_circle</span>
+              <span>Format standardisé</span>
+            </div>
+            <div class="feature-item">
+              <span class="material-icons">check_circle</span>
+              <span>Validation automatique</span>
+            </div>
+          </div>
+          <button class="btn-method btn-method-import">
+            <span class="material-icons">file_upload</span> 
+            Importer depuis Excel
           </button>
         </div>
+      </div>
+
+      <div class="modal-footer">
+        <p class="help-text">
+          <span class="material-icons">info</span>
+          Vous pourrez toujours modifier vos questions après la création initiale
+        </p>
       </div>
     </div>
   </div>

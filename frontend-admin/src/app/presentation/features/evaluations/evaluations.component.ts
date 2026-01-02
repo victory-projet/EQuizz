@@ -29,6 +29,7 @@ export class EvaluationsComponent implements OnInit {
   errorMessage = signal('');
   successMessage = signal('');
   showCardMenu = signal<number | string | null>(null);
+  showDuplicateMenuId = signal<number | string | null>(null);
 
   private confirmationService = inject(ConfirmationService);
 
@@ -110,7 +111,7 @@ export class EvaluationsComponent implements OnInit {
   }
 
   editEvaluation(evaluation: Evaluation): void {
-    this.router.navigate(['/evaluations', evaluation.id]);
+    this.router.navigate(['/evaluations', evaluation.id, 'edit']);
   }
 
   // Actions avec confirmation
@@ -226,12 +227,39 @@ export class EvaluationsComponent implements OnInit {
     this.showCardMenu.set(null);
   }
 
+  showDuplicateMenu(evaluationId: number | string): void {
+    this.showDuplicateMenuId.set(evaluationId);
+  }
+
+  hideDuplicateMenu(): void {
+    this.showDuplicateMenuId.set(null);
+  }
+
+  // Méthode unifiée pour voir les détails/résultats
+  viewEvaluationDetails(evaluation: Evaluation): void {
+    if (evaluation.statut === 'CLOTUREE') {
+      // Pour les évaluations clôturées, aller vers la section Rapports
+      this.router.navigate(['/rapports'], { 
+        queryParams: { evaluationId: evaluation.id } 
+      });
+    } else if (evaluation.statut === 'PUBLIEE') {
+      // Pour les évaluations en cours, voir les soumissions en temps réel
+      this.router.navigate(['/evaluations', evaluation.id, 'submissions']);
+    } else {
+      // Pour les brouillons, éditer
+      this.editEvaluation(evaluation);
+    }
+  }
+
   viewSubmissions(evaluation: Evaluation): void {
     this.router.navigate(['/evaluations', evaluation.id, 'submissions']);
   }
 
   viewResults(evaluation: Evaluation): void {
-    this.router.navigate(['/evaluations', evaluation.id, 'results']);
+    // Rediriger vers la section Rapports au lieu de evaluation-results
+    this.router.navigate(['/rapports'], { 
+      queryParams: { evaluationId: evaluation.id } 
+    });
   }
 
   exportResults(evaluation: Evaluation): void {
@@ -272,7 +300,7 @@ export class EvaluationsComponent implements OnInit {
     }
   }
 
-  formatDate(date: Date): string {
+  formatDate(date: Date | string): string {
     if (!date) return 'Date non définie';
     
     try {

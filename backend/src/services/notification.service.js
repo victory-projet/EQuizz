@@ -2,6 +2,7 @@
 
 const db = require('../models');
 const emailService = require('./email.service');
+const webSocketService = require('./websocket.service');
 
 class NotificationService {
   /**
@@ -39,6 +40,29 @@ class NotificationService {
       where: { id: etudiantIds },
       include: [{ model: db.Utilisateur }]
     });
+
+    // Envoyer via WebSocket et push notifications
+    try {
+      await webSocketService.sendNotification({
+        userIds: etudiantIds,
+        notification: {
+          id: notification.id,
+          type: notification.typeNotification,
+          titre: notification.titre,
+          message: notification.message,
+          evaluationId: notification.evaluation_id,
+          timestamp: notification.createdAt,
+          estLue: false
+        },
+        pushData: {
+          type: notification.typeNotification,
+          evaluationId: notification.evaluation_id?.toString(),
+          notificationId: notification.id.toString()
+        }
+      });
+    } catch (error) {
+      console.error('Erreur envoi WebSocket/Push:', error);
+    }
 
     // Envoyer les emails
     const emailPromises = etudiants.map(etudiant => 
@@ -97,6 +121,13 @@ class NotificationService {
       `L'évaluation "${evaluation.titre}" pour le cours "${coursNom}" est maintenant disponible. Merci de la compléter avant le ${new Date(evaluation.dateFin).toLocaleDateString('fr-FR')}.`
     );
 
+    // Envoyer via WebSocket et push notifications
+    try {
+      await webSocketService.notifyNewEvaluation(evaluationId, etudiantIds);
+    } catch (error) {
+      console.error('Erreur envoi WebSocket/Push nouvelle évaluation:', error);
+    }
+
     return this.sendToEtudiants(notification.id, etudiantIds);
   }
 
@@ -141,6 +172,13 @@ class NotificationService {
       'Évaluation clôturée',
       `L'évaluation "${evaluation.titre}" pour le cours "${coursNom}" a été clôturée. Les résultats seront bientôt disponibles.`
     );
+
+    // Envoyer via WebSocket et push notifications
+    try {
+      await webSocketService.notifyEvaluationClosed(evaluationId, etudiantIds);
+    } catch (error) {
+      console.error('Erreur envoi WebSocket/Push évaluation clôturée:', error);
+    }
 
     return this.sendToEtudiants(notification.id, etudiantIds);
   }
@@ -196,6 +234,69 @@ class NotificationService {
       { where: { EtudiantId: etudiantId, estLue: false } }
     );
     return { success: true };
+  }
+
+  /**
+   * Met à jour le token FCM d'un utilisateur
+   * @param {string} userId - L'ID de l'utilisateur
+   * @param {string} fcmToken - Le token FCM
+   */
+  async updateFCMToken(userId, fcmToken) {
+    await db.Utilisateur.update(
+      { fcmToken },
+      { where: { id: userId } }
+    );
+    return { success: true };
+  }
+
+  /**
+   * Supprime le token FCM d'un utilisateur (déconnexion)
+   * @param {string} userId - L'ID de l'utilisateur
+   */
+  async removeFCMToken(userId) {
+    await db.Utilisateur.update(
+      { fcmToken: null },
+      { where: { id: userId } }
+    );
+    return { success: true };
+  }
+
+  /**
+   * Notifie les administrateurs d'une nouvelle réponse
+   * @param {string} evaluationId - L'ID de l'évaluation
+   * @param {string} etudiantNom - Nom de l'étudiant
+   */
+  async notifyNewResponse(evaluationId, etudiantNom) {
+    try {
+      await webSocketService.notifyNewResponse(evaluationId, etudiantNom);
+      return { success: true };
+    } catch (error) {
+      console.error('Erreur notification nouvelle réponse:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Envoie une notification système
+   * @param {string} message - Message de la notification
+   * @param {string} type - Type de notification
+   * @param {string} targetRole - Rôle cible (optionnel)
+   */
+  async sendSystemNotification(message, type = 'SYSTEM', targetRole = null) {
+    try {
+      await webSocketService.sendSystemNotification(message, type, targetRole);
+      return { success: true };
+    } catch (error) {
+      console.error('Erreur notification système:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Obtient les statistiques des connexions
+   */
+  getConnectionStats() {
+    return webSocketService.getConnectionStats();
   }
 }
 

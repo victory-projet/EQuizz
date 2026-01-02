@@ -56,19 +56,27 @@ export class AcademicRepository implements AcademicRepositoryInterface {
 
   // Semestres
   createSemestre(semestre: Partial<Semestre>): Observable<Semestre> {
-    return this.api.post<Semestre>('/academic/semestres', semestre);
+    return this.api.post<any>('/academic/semestres', semestre).pipe(
+      map((data: any) => this.mapSemestreFromBackend(data))
+    );
   }
 
   getSemestresByAnnee(anneeId: string | number): Observable<Semestre[]> {
-    return this.api.get<Semestre[]>(`/academic/annees-academiques/${anneeId}/semestres`);
+    return this.api.get<any[]>(`/academic/annees-academiques/${anneeId}/semestres`).pipe(
+      map((semestres: any[]) => semestres.map(s => this.mapSemestreFromBackend(s)))
+    );
   }
 
   getSemestre(id: string | number): Observable<Semestre> {
-    return this.api.get<Semestre>(`/academic/semestres/${id}`);
+    return this.api.get<any>(`/academic/semestres/${id}`).pipe(
+      map((data: any) => this.mapSemestreFromBackend(data))
+    );
   }
 
   updateSemestre(id: string | number, semestre: Partial<Semestre>): Observable<Semestre> {
-    return this.api.put<Semestre>(`/academic/semestres/${id}`, semestre);
+    return this.api.put<any>(`/academic/semestres/${id}`, semestre).pipe(
+      map((data: any) => this.mapSemestreFromBackend(data))
+    );
   }
 
   deleteSemestre(id: string | number): Observable<void> {
@@ -81,7 +89,20 @@ export class AcademicRepository implements AcademicRepositoryInterface {
   }
 
   getCours(): Observable<Cours[]> {
-    return this.api.get<Cours[]>('/academic/cours');
+    return this.api.get<any>('/academic/cours').pipe(
+      map((response: any) => {
+        // Handle the paginated response structure
+        if (response && response.cours && Array.isArray(response.cours)) {
+          return response.cours;
+        }
+        // Fallback for direct array response
+        if (Array.isArray(response)) {
+          return response;
+        }
+        console.warn('Invalid cours response structure:', response);
+        return [];
+      })
+    );
   }
 
   getCoursById(id: string | number): Observable<Cours> {
@@ -103,9 +124,28 @@ export class AcademicRepository implements AcademicRepositoryInterface {
     );
   }
 
-  getClasses(): Observable<Classe[]> {
-    return this.api.get<any[]>('/academic/classes').pipe(
-      map((classes: any[]) => classes.map(c => this.mapClasseFromBackend(c)))
+  getClasses(page: number = 1, limit: number = 10, search?: string): Observable<{classes: Classe[], pagination: any}> {
+    let params = `?page=${page}&limit=${limit}`;
+    if (search) {
+      params += `&search=${encodeURIComponent(search)}`;
+    }
+    
+    return this.api.get<any>(`/academic/classes${params}`).pipe(
+      map((response: any) => {
+        // Ensure response has the expected structure
+        if (!response || typeof response !== 'object') {
+          console.warn('Invalid response structure from /academic/classes:', response);
+          return { classes: [], pagination: {} };
+        }
+        
+        // Handle case where classes might be undefined or not an array
+        const classes = Array.isArray(response.classes) ? response.classes : [];
+        
+        return {
+          classes: classes.map((c: any) => this.mapClasseFromBackend(c)),
+          pagination: response.pagination || {}
+        };
+      })
     );
   }
 
@@ -163,6 +203,21 @@ export class AcademicRepository implements AcademicRepositoryInterface {
       } : undefined,
       cours: data.Cours || [],
       etudiants: data.Etudiants || [],
+      dateCreation: data.createdAt,
+      dateModification: data.updatedAt
+    };
+    
+    return mapped;
+  }
+
+  private mapSemestreFromBackend(data: any): Semestre {
+    const mapped = {
+      id: data.id,
+      libelle: data.nom || data.libelle, // Backend uses 'nom', frontend expects 'libelle'
+      numero: data.numero,
+      dateDebut: data.dateDebut,
+      dateFin: data.dateFin,
+      anneeAcademiqueId: data.annee_academique_id,
       dateCreation: data.createdAt,
       dateModification: data.updatedAt
     };

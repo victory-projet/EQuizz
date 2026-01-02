@@ -1,0 +1,21 @@
+<div class="evaluation-submissions">
+  <div class="header">
+    <h2>Soumissions de l'évaluation</h2>
+    <p *ngIf="evaluationId">ID de l'évaluation: {{ evaluationId }}</p>
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    <p>Chargement des soumissions...</p>
+  </div>
+
+  <div *ngIf="!loading && submissions.length === 0" class="no-submissions">
+    <p>Aucune soumission trouvée pour cette évaluation.</p>
+  </div>
+
+  <div *ngIf="!loading && submissions.length > 0" class="submissions-list">
+    <div *ngFor="let submission of submissions" class="submission-item">
+      <!-- TODO: Implement submission display -->
+      <p>Soumission: {{ submission.id }}</p>
+    </div>
+  </div>
+</div>

@@ -10,7 +10,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
-import { Evaluation, Question } from '../../../core/domain/entities/evaluation.entity';
+import { Evaluation } from '../../../core/domain/entities/evaluation.entity';
+import { Question } from '../../../core/domain/entities/question.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { QuestionFormComponent } from '../question-form/question-form.component';
 import { QuestionImportComponent } from '../question-import/question-import.component';
@@ -135,7 +136,7 @@ export class EvaluationDetailComponent implements OnInit {
     if (!confirmed) return;
 
     this.isLoading.set(true);
-    this.evaluationUseCase.deleteQuestion(question.id).subscribe({
+    this.evaluationUseCase.deleteQuestion(question.id!).subscribe({
       next: () => {
         const currentQuestions = this.questions();
         this.questions.set(currentQuestions.filter(q => q.id !== question.id));

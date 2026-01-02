@@ -1,9 +1,9 @@
-﻿import { Component, OnInit, signal, computed, inject } from '@angular/core';
+﻿import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Classe as ServiceClasse } from '../../../core/services/cours.service';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
-import { Classe, AnneeAcademique } from '../../../core/domain/entities/academic.entity';
-import { ConfirmationService } from '../../shared/services/confirmation.service';
+import { AnneeAcademique } from '../../../core/domain/entities/academic.entity';
 
 @Component({
   selector: 'app-classes',
@@ -13,19 +13,27 @@ import { ConfirmationService } from '../../shared/services/confirmation.service'
   styleUrls: ['./classes.component.scss']
 })
 export class ClassesComponent implements OnInit {
-  classes = signal<Classe[]>([]);
-  filteredClasses = signal<Classe[]>([]);
+  classes = signal<ServiceClasse[]>([]);
+  filteredClasses = signal<ServiceClasse[]>([]);
   anneesAcademiques = signal<AnneeAcademique[]>([]);
   
   isLoading = signal(false);
   showModal = signal(false);
   showDeleteModal = signal(false);
-  selectedClasse = signal<Classe | null>(null);
-  
-  private confirmationService = inject(ConfirmationService);
+  selectedClasse = signal<ServiceClasse | null>(null);
   
   searchQuery = signal('');
   filterAnnee = signal<string>('ALL');
+
+  // Pagination
+  pagination = signal({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10,
+    hasNextPage: false,
+    hasPrevPage: false
+  });
 
   formData = {
     nom: '',
@@ -37,20 +45,35 @@ export class ClassesComponent implements OnInit {
   successMessage = signal('');
 
   // Computed statistics
-  totalClasses = computed(() => this.classes().length);
+  totalClasses = computed(() => this.pagination().totalItems);
 
-  constructor(private academicUseCase: AcademicUseCase) {}
+  constructor(
+    private academicUseCase: AcademicUseCase
+  ) {}
 
   ngOnInit(): void {
     this.loadClasses();
     this.loadAnneesAcademiques();
   }
 
-  loadClasses(): void {
+  loadClasses(page: number = 1, search: string = ''): void {
     this.isLoading.set(true);
-    this.academicUseCase.getClasses().subscribe({
-      next: (classes) => {
-        this.classes.set(classes);
+    this.academicUseCase.getClasses(page, 10, search).subscribe({
+      next: (response) => {
+        console.log('👥 Classes chargées:', response);
+        
+        // Convert domain entities to service types for consistency
+        const serviceClasses: ServiceClasse[] = response.classes.map(classe => ({
+          id: classe.id.toString(), // Ensure string type
+          nom: classe.nom,
+          niveau: classe.niveau || '',
+          anneeAcademiqueId: classe.anneeAcademiqueId?.toString(),
+          effectif: classe.effectif
+        }));
+        
+        this.classes.set(serviceClasses);
+        this.pagination.set(response.pagination);
+        
         this.applyFilters();
         this.isLoading.set(false);
       },
@@ -96,12 +119,16 @@ export class ClassesComponent implements OnInit {
   onSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchQuery.set(input.value);
-    this.applyFilters();
+    this.loadClasses(1, input.value); // Recharger avec recherche
   }
 
   onFilterAnnee(anneeId: string | number): void {
     this.filterAnnee.set(anneeId.toString());
     this.applyFilters();
+  }
+
+  onPageChange(page: number): void {
+    this.loadClasses(page, this.searchQuery());
   }
 
   openCreateModal(): void {
@@ -110,7 +137,7 @@ export class ClassesComponent implements OnInit {
     this.showModal.set(true);
   }
 
-  openEditModal(classe: Classe): void {
+  openEditModal(classe: ServiceClasse): void {
     this.selectedClasse.set(classe);
     this.formData = {
       nom: classe.nom,
@@ -120,7 +147,7 @@ export class ClassesComponent implements OnInit {
     this.showModal.set(true);
   }
 
-  openDeleteModal(classe: Classe): void {
+  openDeleteModal(classe: ServiceClasse): void {
     this.selectedClasse.set(classe);
     this.showDeleteModal.set(true);
   }
@@ -161,7 +188,7 @@ export class ClassesComponent implements OnInit {
       next: () => {
         this.successMessage.set('Classe créée avec succès');
         this.closeModal();
-        this.loadClasses();
+        this.loadClasses(this.pagination().currentPage, this.searchQuery());
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
@@ -186,7 +213,7 @@ export class ClassesComponent implements OnInit {
       next: () => {
         this.successMessage.set('Classe mise à jour avec succès');
         this.closeModal();
-        this.loadClasses();
+        this.loadClasses(this.pagination().currentPage, this.searchQuery());
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
@@ -205,7 +232,7 @@ export class ClassesComponent implements OnInit {
       next: () => {
         this.successMessage.set('Classe supprimée avec succès');
         this.closeModal();
-        this.loadClasses();
+        this.loadClasses(this.pagination().currentPage, this.searchQuery());
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {

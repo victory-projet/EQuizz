@@ -75,8 +75,10 @@ Cours.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id' });
 Semestre.hasMany(Cours, { foreignKey: { name: 'semestre_id', allowNull: false } });
 Cours.belongsTo(Semestre, { foreignKey: 'semestre_id' });
 
-Enseignant.hasMany(Cours, { foreignKey: { name: 'enseignant_id', allowNull: false } });
-Cours.belongsTo(Enseignant, { foreignKey: 'enseignant_id' });
+// Relation Plusieurs-à-Plusieurs entre Cours et Enseignant
+const CoursEnseignant = sequelize.define('CoursEnseignant', {}, { freezeTableName: true, paranoid: false, underscored: true });
+Cours.belongsToMany(Enseignant, { through: CoursEnseignant });
+Enseignant.belongsToMany(Cours, { through: CoursEnseignant });
 
 Classe.hasMany(Etudiant, { foreignKey: 'classe_id' });
 Etudiant.belongsTo(Classe, { foreignKey: 'classe_id' });

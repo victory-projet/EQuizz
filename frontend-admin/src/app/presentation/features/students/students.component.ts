@@ -133,12 +133,19 @@ export class StudentsComponent implements OnInit, OnDestroy {
   }
 
   loadClasses(): void {
-    this.academicUseCase.getClasses().subscribe({
+    this.academicUseCase.getAllClasses().subscribe({
       next: (classes) => {
-        this.classes.set(classes);
+        // Ensure classes is an array
+        if (Array.isArray(classes)) {
+          this.classes.set(classes);
+        } else {
+          console.warn('Classes response is not an array:', classes);
+          this.classes.set([]);
+        }
       },
       error: (error) => {
         console.error('Erreur lors du chargement des classes:', error);
+        this.classes.set([]); // Set empty array on error
       }
     });
   }

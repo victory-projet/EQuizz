@@ -126,10 +126,10 @@
             <div class="course-meta">
               <div class="meta-item">
                 <span class="material-icons">person</span>
-                @if (cours.Enseignant?.Utilisateur) {
-                  <span>{{ cours.Enseignant?.Utilisateur?.prenom }} {{ cours.Enseignant?.Utilisateur?.nom }}</span>
+                @if (cours.Enseignants && cours.Enseignants.length > 0) {
+                  <span>{{ cours.Enseignants.length }} enseignant(s)</span>
                 } @else {
-                  <span class="text-muted">Enseignant non assigné</span>
+                  <span class="text-muted">Aucun enseignant assigné</span>
                 }
               </div>
               <div class="meta-item">
@@ -173,7 +173,7 @@
         <span class="material-icons">school</span>
         <p>Aucun cours trouvé</p>
         @if (searchQuery() || filterStatus() !== 'ALL') {
-          <button class="btn btn-secondary" (click)="searchQuery.set(''); filterStatus.set('ALL'); applyFilters()">
+          <button class="btn btn-secondary" (click)="searchQuery.set(''); filterStatus.set('ALL'); loadCours(1, '')">
             Réinitialiser les filtres
           </button>
         } @else {
@@ -181,6 +181,45 @@
             Créer le premier cours
           </button>
         }
+      </div>
+    }
+
+    <!-- Pagination Controls -->
+    @if (pagination().totalPages > 1) {
+      <div class="pagination-controls">
+        <div class="pagination-info">
+          <span>Page {{ pagination().currentPage }} sur {{ pagination().totalPages }}</span>
+          <span class="total-items">({{ pagination().totalItems }} cours au total)</span>
+        </div>
+        
+        <div class="pagination-buttons">
+          <button 
+            class="btn btn-secondary"
+            [disabled]="!pagination().hasPrevPage"
+            (click)="onPageChange(pagination().currentPage - 1)">
+            <span class="material-icons">chevron_left</span>
+            Précédent
+          </button>
+          
+          <div class="page-numbers">
+            @for (page of Array(pagination().totalPages).fill(0); track $index) {
+              <button 
+                class="page-btn"
+                [class.active]="$index + 1 === pagination().currentPage"
+                (click)="onPageChange($index + 1)">
+                {{ $index + 1 }}
+              </button>
+            }
+          </div>
+          
+          <button 
+            class="btn btn-secondary"
+            [disabled]="!pagination().hasNextPage"
+            (click)="onPageChange(pagination().currentPage + 1)">
+            Suivant
+            <span class="material-icons">chevron_right</span>
+          </button>
+        </div>
       </div>
     }
   }
@@ -266,19 +305,41 @@
               </div>
 
               <div class="form-group">
-                <label>Enseignant *</label>
-                <select 
-                  [(ngModel)]="formData.enseignant_id" 
-                  name="enseignant_id"
-                  required>
-                  <option value="">Sélectionner un enseignant</option>
-                  @for (enseignant of enseignants(); track enseignant.id) {
-                    <option [value]="enseignant.id">{{ enseignant.nom }}</option>
+                <label>Enseignants</label>
+                <div class="enseignants-selection">
+                  @if (availableEnseignants().length > 0) {
+                    <div class="selected-summary">
+                      @if (formData.enseignantIds.length > 0) {
+                        <span class="selected-count">{{ formData.enseignantIds.length }} enseignant(s) sélectionné(s)</span>
+                        <small class="selected-names">{{ getSelectedEnseignantsNames() }}</small>
+                      } @else {
+                        <span class="no-selection">Aucun enseignant sélectionné</span>
+                      }
+                    </div>
+                    
+                    <div class="enseignants-list">
+                      @for (enseignant of availableEnseignants(); track enseignant.id) {
+                        <div class="enseignant-item">
+                          <input 
+                            type="checkbox"
+                            [id]="'enseignant-' + enseignant.id"
+                            [checked]="isEnseignantSelected(enseignant.id)"
+                            (change)="onEnseignantToggle(enseignant.id)">
+                          <label [for]="'enseignant-' + enseignant.id">
+                            {{ enseignant.Utilisateur.prenom }} {{ enseignant.Utilisateur.nom }}
+                            <small>{{ enseignant.Utilisateur.email }}</small>
+                          </label>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <div class="no-enseignants">
+                      <span class="material-icons">person_off</span>
+                      <p>Aucun enseignant disponible</p>
+                      <small>Créez d'abord des enseignants pour les assigner aux cours.</small>
+                    </div>
                   }
-                </select>
-                @if (enseignants().length === 0) {
-                  <small class="warning-text">Aucun enseignant disponible. Créez d'abord des enseignants.</small>
-                }
+                </div>
               </div>
             }
           </div>

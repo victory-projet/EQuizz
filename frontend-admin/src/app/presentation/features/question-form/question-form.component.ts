@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
-import { Question } from '../../../core/domain/entities/evaluation.entity';
+import { Question } from '../../../core/domain/entities/question.entity';
 
 @Component({
   selector: 'app-question-form',
@@ -25,7 +25,7 @@ export class QuestionFormComponent implements OnInit {
 
   formData = {
     enonce: '',
-    type: 'CHOIX_MULTIPLE' as 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE',  // Types backend
+    type: 'QCM' as 'QCM' | 'VRAI_FAUX' | 'TEXTE_LIBRE' | 'NUMERIQUE' | 'OUI_NON' | 'ECHELLE',
     options: ['', '', '', ''],
     ordre: 1
   };
@@ -34,9 +34,24 @@ export class QuestionFormComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.question) {
+      // Map frontend types to backend types
+      let backendType: 'QCM' | 'VRAI_FAUX' | 'TEXTE_LIBRE' | 'NUMERIQUE' | 'OUI_NON' | 'ECHELLE' = 'QCM';
+      const questionType = this.question.typeQuestion || this.question.type;
+      
+      // Map various frontend types to backend types
+      if (questionType === 'TEXTE_LIBRE' || questionType === 'NUMERIQUE') {
+        backendType = questionType;
+      } else if (questionType === 'VRAI_FAUX' || questionType === 'OUI_NON') {
+        backendType = questionType;
+      } else if (questionType === 'ECHELLE') {
+        backendType = 'ECHELLE';
+      } else {
+        backendType = 'QCM';
+      }
+
       this.formData = {
         enonce: this.question.enonce,
-        type: (this.question as any).typeQuestion || this.question.type,  // Backend utilise 'typeQuestion'
+        type: backendType,
         options: this.question.options || ['', '', '', ''],
         ordre: this.question.ordre
       };
@@ -56,7 +71,7 @@ export class QuestionFormComponent implements OnInit {
   }
 
   onTypeChange(): void {
-    if (this.formData.type === 'CHOIX_MULTIPLE' && this.formData.options.length === 0) {
+    if (this.formData.type === 'QCM' && this.formData.options.length === 0) {
       this.formData.options = ['', '', '', ''];
     }
   }
@@ -67,7 +82,7 @@ export class QuestionFormComponent implements OnInit {
       return false;
     }
 
-    if (this.formData.type === 'CHOIX_MULTIPLE') {
+    if (this.formData.type === 'QCM') {
       const validOptions = this.formData.options.filter(o => o.trim());
       if (validOptions.length < 2) {
         this.errorMessage.set('Au moins 2 options sont requises pour un QCM');
@@ -93,11 +108,11 @@ export class QuestionFormComponent implements OnInit {
       ordre: this.formData.ordre
     };
 
-    if (this.formData.type === 'CHOIX_MULTIPLE') {
+    if (this.formData.type === 'QCM') {
       questionData.options = this.formData.options.filter(o => o.trim());
     }
 
-    if (this.question) {
+    if (this.question && this.question.id) {
       // Update existing question
       this.evaluationUseCase.updateQuestion(this.question.id, questionData).subscribe({
         next: (question) => {
