@@ -1,5 +1,3 @@
-// backend/migrations/20250102000001-add-push-notifications-tables.js
-
 'use strict';
 
 module.exports = {
@@ -143,44 +141,25 @@ module.exports = {
       }
     });
 
-    // Index pour DeviceToken
+    // Seulement les index essentiels pour éviter la limite de 64 index
     await queryInterface.addIndex('DeviceToken', {
       fields: ['utilisateur_id'],
-      name: 'device_token_user_index'
+      name: 'dt_user_idx'
     });
 
-    await queryInterface.addIndex('DeviceToken', {
-      fields: ['platform'],
-      name: 'device_token_platform_index'
-    });
-
-    await queryInterface.addIndex('DeviceToken', {
-      fields: ['isActive'],
-      name: 'device_token_active_index'
-    });
-
-    await queryInterface.addIndex('DeviceToken', {
-      fields: ['lastUsed'],
-      name: 'device_token_last_used_index'
-    });
-
-    // Index pour NotificationPreference
     await queryInterface.addIndex('NotificationPreference', {
       fields: ['utilisateur_id'],
       unique: true,
-      name: 'notification_preference_user_unique'
+      name: 'np_user_unique'
     });
 
-    console.log('✅ Tables de push notifications créées avec succès');
+    console.log('✅ Tables de push notifications créées avec index minimaux');
   },
 
   async down(queryInterface, Sequelize) {
     // Supprimer les index
-    await queryInterface.removeIndex('DeviceToken', 'device_token_user_index');
-    await queryInterface.removeIndex('DeviceToken', 'device_token_platform_index');
-    await queryInterface.removeIndex('DeviceToken', 'device_token_active_index');
-    await queryInterface.removeIndex('DeviceToken', 'device_token_last_used_index');
-    await queryInterface.removeIndex('NotificationPreference', 'notification_preference_user_unique');
+    await queryInterface.removeIndex('DeviceToken', 'dt_user_idx');
+    await queryInterface.removeIndex('NotificationPreference', 'np_user_unique');
 
     // Supprimer les tables
     await queryInterface.dropTable('NotificationPreference');
