@@ -142,6 +142,17 @@ class QuizzService {
       // 7. Valider la transaction
       await transaction.commit();
 
+      // 8. Envoyer notification de confirmation si soumission finale
+      if (estFinal) {
+        try {
+          const notificationService = require('./notification.service');
+          await notificationService.notifySubmissionConfirmation(etudiantId, quizz.evaluation_id);
+        } catch (error) {
+          console.error('Erreur lors de l\'envoi de la notification de confirmation:', error);
+          // Ne pas faire échouer la soumission si la notification échoue
+        }
+      }
+
       return { 
         message: estFinal ? 'Vos réponses ont été soumises avec succès.' : 'Vos réponses ont été sauvegardées.',
         tokenAnonyme: session.tokenAnonyme,
