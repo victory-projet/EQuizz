@@ -81,7 +81,7 @@ if (process.env.NODE_ENV !== 'test') {
   db.sequelize.authenticate()
     .then(() => {
       console.log('✅ Connexion à la base de données établie avec succès.');
-      return db.sequelize.sync({ alter: true }); // Utiliser alter au lieu de force en production
+      return db.sequelize.sync({ force: false }); // Pas de sync en production, utiliser les migrations
     })
     .then(async () => {
       console.log('✅ Base de données synchronisée avec succès.');

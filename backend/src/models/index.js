@@ -22,9 +22,8 @@ const ReponseEtudiant = require('./ReponseEtudiant');
 const Notification = require('./Notification');
 const AnalyseReponse = require('./AnalyseReponse');
 const PasswordResetToken = require('./PasswordResetToken');
-// Temporarily disabled to fix production DB index limit issue
-// const DeviceToken = require('./DeviceToken');
-// const NotificationPreference = require('./NotificationPreference');
+const DeviceToken = require('./DeviceToken');
+const NotificationPreference = require('./NotificationPreference');
 
 // --- Centralisation dans un objet 'db' ---
 const db = {};
@@ -49,9 +48,10 @@ db.ReponseEtudiant = ReponseEtudiant;
 db.Notification = Notification;
 db.AnalyseReponse = AnalyseReponse;
 db.PasswordResetToken = PasswordResetToken;
-// Temporarily disabled to fix production DB index limit issue
-// db.DeviceToken = DeviceToken;
-// db.NotificationPreference = NotificationPreference;
+db.DeviceToken = DeviceToken;
+db.NotificationPreference = NotificationPreference;
+db.DeviceToken = DeviceToken;
+db.NotificationPreference = NotificationPreference;
 
 // --- Définition de toutes les Relations (Associations) ---
 
@@ -149,11 +149,11 @@ Classe.belongsToMany(Evaluation, { through: EvaluationClasse });
 Utilisateur.hasMany(PasswordResetToken, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });
 PasswordResetToken.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
 
-// --- 7. Push Notifications (temporarily disabled) ---
-// Utilisateur.hasMany(DeviceToken, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });
-// DeviceToken.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
+// --- 7. Push Notifications ---
+Utilisateur.hasMany(DeviceToken, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });
+DeviceToken.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
 
-// Utilisateur.hasOne(NotificationPreference, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });
-// NotificationPreference.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
+Utilisateur.hasOne(NotificationPreference, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });
+NotificationPreference.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
 
 module.exports = db;
