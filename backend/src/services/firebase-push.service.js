@@ -158,44 +158,51 @@ class FirebasePushService {
       };
     }
 
-    const message = {
-      notification: {
-        title: notification.title,
-        body: notification.body,
-        ...(notification.imageUrl && { imageUrl: notification.imageUrl })
-      },
-      data: {
-        ...data,
-        timestamp: Date.now().toString(),
-        click_action: data.click_action || 'FLUTTER_NOTIFICATION_CLICK'
-      },
-      tokens: validFCMTokens,
-      android: {
+    // Essayer d'abord avec sendEach (plus robuste)
+    try {
+      console.log(`🚀 Envoi Firebase à ${validFCMTokens.length} token(s) FCM (méthode sendEach)...`);
+      
+      const messages = validFCMTokens.map(token => ({
         notification: {
-          icon: 'ic_notification',
-          color: '#2196F3',
-          sound: 'default',
-          priority: 'high'
-        }
-      },
-      apns: {
-        payload: {
-          aps: {
+          title: notification.title,
+          body: notification.body,
+          ...(notification.imageUrl && { imageUrl: notification.imageUrl })
+        },
+        data: {
+          ...data,
+          timestamp: Date.now().toString(),
+          click_action: data.click_action || 'FLUTTER_NOTIFICATION_CLICK'
+        },
+        token: token,
+        android: {
+          notification: {
+            icon: 'ic_notification',
+            color: '#2196F3',
             sound: 'default',
-            badge: 1
+            priority: 'high'
+          }
+        },
+        apns: {
+          payload: {
+            aps: {
+              sound: 'default',
+              badge: 1
+            }
           }
         }
-      }
-    };
+      }));
 
-    try {
-      console.log(`🚀 Envoi Firebase à ${validFCMTokens.length} token(s) FCM...`);
-      const response = await this.messaging.sendMulticast(message);
+      const response = await this.messaging.sendEach(messages);
       
       // Identifier les tokens invalides
       const invalidTokens = [];
+      let successCount = 0;
+      
       response.responses.forEach((resp, idx) => {
-        if (!resp.success) {
+        if (resp.success) {
+          successCount++;
+          console.log(`✅ Token ${idx}: ${resp.messageId}`);
+        } else {
           const error = resp.error;
           console.log(`❌ Erreur pour token ${idx}:`, error.code, error.message);
           if (error.code === 'messaging/invalid-registration-token' || 
@@ -205,27 +212,88 @@ class FirebasePushService {
         }
       });
 
-      console.log(`✅ Notifications Firebase envoyées: ${response.successCount}/${validFCMTokens.length}`);
+      console.log(`✅ Notifications Firebase envoyées: ${successCount}/${validFCMTokens.length}`);
       
       return {
-        successCount: response.successCount,
-        failureCount: response.failureCount,
+        successCount,
+        failureCount: validFCMTokens.length - successCount,
         invalidTokens
       };
+      
     } catch (error) {
-      console.error('❌ Erreur lors de l\'envoi multicast Firebase:', error.message);
+      console.error('❌ Erreur avec sendEach, tentative avec sendMulticast:', error.message);
       
-      // Si c'est une erreur de réseau/configuration, marquer tous les tokens comme invalides
-      if (error.message.includes('404') || error.message.includes('batch')) {
-        console.error('🌐 Problème de réseau ou de configuration Firebase détecté');
-        return {
-          successCount: 0,
-          failureCount: validFCMTokens.length,
-          invalidTokens: validFCMTokens
+      // Fallback vers sendMulticast
+      try {
+        const message = {
+          notification: {
+            title: notification.title,
+            body: notification.body,
+            ...(notification.imageUrl && { imageUrl: notification.imageUrl })
+          },
+          data: {
+            ...data,
+            timestamp: Date.now().toString(),
+            click_action: data.click_action || 'FLUTTER_NOTIFICATION_CLICK'
+          },
+          tokens: validFCMTokens,
+          android: {
+            notification: {
+              icon: 'ic_notification',
+              color: '#2196F3',
+              sound: 'default',
+              priority: 'high'
+            }
+          },
+          apns: {
+            payload: {
+              aps: {
+                sound: 'default',
+                badge: 1
+              }
+            }
+          }
         };
+
+        console.log(`🔄 Tentative sendMulticast...`);
+        const response = await this.messaging.sendMulticast(message);
+        
+        // Identifier les tokens invalides
+        const invalidTokens = [];
+        response.responses.forEach((resp, idx) => {
+          if (!resp.success) {
+            const error = resp.error;
+            console.log(`❌ Erreur pour token ${idx}:`, error.code, error.message);
+            if (error.code === 'messaging/invalid-registration-token' || 
+                error.code === 'messaging/registration-token-not-registered') {
+              invalidTokens.push(validFCMTokens[idx]);
+            }
+          }
+        });
+
+        console.log(`✅ Notifications Firebase envoyées: ${response.successCount}/${validFCMTokens.length}`);
+        
+        return {
+          successCount: response.successCount,
+          failureCount: response.failureCount,
+          invalidTokens
+        };
+        
+      } catch (multicastError) {
+        console.error('❌ Erreur lors de l\'envoi multicast Firebase:', multicastError.message);
+        
+        // Si c'est une erreur de réseau/configuration, marquer tous les tokens comme invalides
+        if (multicastError.message.includes('404') || multicastError.message.includes('batch')) {
+          console.error('🌐 Problème de réseau ou de configuration Firebase détecté');
+          return {
+            successCount: 0,
+            failureCount: validFCMTokens.length,
+            invalidTokens: validFCMTokens
+          };
+        }
+        
+        throw multicastError;
       }
-      
-      throw error;
     }
   }
 
