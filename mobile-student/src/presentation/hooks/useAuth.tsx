@@ -58,6 +58,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     console.log('🔄 Auth state updated, isAuthenticated should be true now');
     
+    // Initialiser les notifications push en arrière-plan
+    setTimeout(async () => {
+      try {
+        console.log('🔔 Initialisation des notifications push...');
+        const pushNotificationService = (await import('../../core/services/push-notification.service')).default;
+        await pushNotificationService.initialize();
+      } catch (error) {
+        console.error('❌ Impossible d\'obtenir le token Expo Push');
+        // Ne pas bloquer l'app si les notifications échouent
+      }
+    }, 500);
+    
     // Récupérer les informations complètes de l'étudiant en arrière-plan
     // Ne pas attendre pour ne pas bloquer la navigation
     setTimeout(async () => {

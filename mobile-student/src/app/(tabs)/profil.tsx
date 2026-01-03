@@ -108,10 +108,10 @@ export default function Profil() {
                     {utilisateur.prenom} {utilisateur.nom}
                 </Text>
                 <Text style={styles.classInfo}>
-                    {utilisateur.Classe?.nom || 'Inge 4 - ISI FR'}
+                    {(utilisateur as any).classe?.nom || utilisateur.Classe?.nom}
                 </Text>
                 <Text style={styles.schoolInfo}>
-                    {utilisateur.Ecole?.nom || 'Saint Jean Ingénieur'}
+                    {(utilisateur as any).ecole?.nom || utilisateur.Ecole?.nom}
                 </Text>
             </View>
 
@@ -131,6 +131,18 @@ export default function Profil() {
                         </View>
                     </View>
 
+                    {/* Email */}
+                    {utilisateur.email && (
+                        <View style={styles.formField}>
+                            <Text style={styles.fieldLabel}>Email</Text>
+                            <View style={styles.fieldValue}>
+                                <Text style={styles.fieldText}>
+                                    {utilisateur.email}
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+
                     {/* Mot de passe (masqué) */}
                     <View style={styles.formField}>
                         <Text style={styles.fieldLabel}>Mot de passe</Text>
@@ -147,40 +159,46 @@ export default function Profil() {
                         <Text style={styles.fieldLabel}>Matricule</Text>
                         <View style={styles.fieldValue}>
                             <Text style={styles.fieldText}>
-                                {utilisateur.matricule || '20210335'}
+                                {utilisateur.matricule}
                             </Text>
                         </View>
                     </View>
 
                     {/* Année Académique */}
-                    <View style={styles.formField}>
-                        <Text style={styles.fieldLabel}>Année Académique</Text>
-                        <View style={styles.fieldValue}>
-                            <Text style={styles.fieldText}>
-                                {utilisateur.anneeScolaire || '2025-2026'}
-                            </Text>
+                    {utilisateur.anneeScolaire && (
+                        <View style={styles.formField}>
+                            <Text style={styles.fieldLabel}>Année Académique</Text>
+                            <View style={styles.fieldValue}>
+                                <Text style={styles.fieldText}>
+                                    {utilisateur.anneeScolaire}
+                                </Text>
+                            </View>
                         </View>
-                    </View>
+                    )}
 
                     {/* Niveau */}
-                    <View style={styles.formField}>
-                        <Text style={styles.fieldLabel}>Niveau</Text>
-                        <View style={styles.fieldValue}>
-                            <Text style={styles.fieldText}>
-                                {utilisateur.Classe?.Niveau?.nom || '4'}
-                            </Text>
+                    {((utilisateur as any).classe?.niveau || utilisateur.Classe?.Niveau?.nom) && (
+                        <View style={styles.formField}>
+                            <Text style={styles.fieldLabel}>Niveau</Text>
+                            <View style={styles.fieldValue}>
+                                <Text style={styles.fieldText}>
+                                    {(utilisateur as any).classe?.niveau || utilisateur.Classe?.Niveau?.nom}
+                                </Text>
+                            </View>
                         </View>
-                    </View>
+                    )}
 
                     {/* Classe */}
-                    <View style={styles.formField}>
-                        <Text style={styles.fieldLabel}>Classe</Text>
-                        <View style={styles.fieldValue}>
-                            <Text style={styles.fieldText}>
-                                {utilisateur.Classe?.nom || 'Inge ISI FR'}
-                            </Text>
+                    {((utilisateur as any).classe?.nom || utilisateur.Classe?.nom) && (
+                        <View style={styles.formField}>
+                            <Text style={styles.fieldLabel}>Classe</Text>
+                            <View style={styles.fieldValue}>
+                                <Text style={styles.fieldText}>
+                                    {(utilisateur as any).classe?.nom || utilisateur.Classe?.nom}
+                                </Text>
+                            </View>
                         </View>
-                    </View>
+                    )}
                 </View>
 
                 <View style={styles.bottomSpacing} />

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet, StatusBar, View, Alert, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAvailableQuizzes } from '../../presentation/hooks/useAvailableQuizzes';
 import { useAuth } from '../../presentation/hooks/useAuth';
 import Header from '../../presentation/components/Header.component';
@@ -75,7 +76,6 @@ export default function Accueil() {
                     // Navigation vers le quiz dans les tabs
                     onPress: async () => {
                         // Sauvegarder l'ID du quiz en cours
-                        const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
                         await AsyncStorage.setItem('@current_quiz_id', quizzId);
                         router.push(`/(tabs)/quizz?id=${quizzId}`);
                     }

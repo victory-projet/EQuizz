@@ -11,6 +11,8 @@ export const API_BASE_URL = API_CONFIG.BASE_URL;
 export const STORAGE_KEYS = {
   AUTH_TOKEN: 'auth_token',
   USER_DATA: 'user_data',
+  PUSH_TOKEN: 'push_token',
+  NOTIFICATION_PREFERENCES: 'notification_preferences',
 } as const;
 
 // Couleurs de l'application
