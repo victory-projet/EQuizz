@@ -326,23 +326,6 @@ const NotificationSettingsScreen: React.FC = () => {
             {/* Actions */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Actions</Text>
-              
-              <TouchableOpacity 
-                style={styles.actionButton} 
-                onPress={handleTestNotification}
-              >
-                <Ionicons name="send" size={20} color={COLORS.primary} />
-                <Text style={styles.actionButtonText}>Tester les notifications (serveur)</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.actionButton} 
-                onPress={handleShowDebugLogs}
-              >
-                <Ionicons name="bug" size={20} color={COLORS.primary} />
-                <Text style={styles.actionButtonText}>Voir les logs de debug</Text>
-              </TouchableOpacity>
-
               <TouchableOpacity 
                 style={[styles.actionButton, styles.dangerButton]} 
                 onPress={handleDisableNotifications}
