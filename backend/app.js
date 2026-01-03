@@ -91,12 +91,18 @@ if (process.env.NODE_ENV !== 'test') {
       if (userCount === 0 && process.env.AUTO_SEED !== 'false') {
         console.log('🌱 Base de données vide détectée, initialisation automatique...');
         try {
-          await seedDatabase();
-          console.log('✅ Données d\'initialisation chargées automatiquement.');
+          const result = await seedDatabase();
+          if (result.success) {
+            console.log('✅ Données d\'initialisation chargées automatiquement.');
+          } else if (result.skipSeed) {
+            console.log('ℹ️  Initialisation ignorée - données déjà présentes.');
+          }
         } catch (error) {
           console.error('❌ Erreur lors de l\'initialisation automatique:', error.message);
           console.log('💡 Vous pouvez initialiser manuellement avec: POST /api/init/seed');
         }
+      } else if (userCount > 0) {
+        console.log(`ℹ️  Base de données déjà initialisée (${userCount} utilisateurs trouvés).`);
       }
       
       // Initialiser Firebase
