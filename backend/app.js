@@ -110,7 +110,7 @@ if (process.env.NODE_ENV !== 'test') {
         console.log(`🚀 Serveur démarré sur le port ${PORT}`);
       });
     })
-    .catch(err => {
+    .catch(async err => {
       console.error('❌ Erreur lors de l\'initialisation:');
       console.error('Type:', err.name);
       console.error('Message:', err.message);
@@ -118,6 +118,32 @@ if (process.env.NODE_ENV !== 'test') {
       if (err.parent) {
         console.error('Parent Error:', err.parent.message);
       }
+
+      // Si c'est l'erreur "Too many keys specified", on essaie de continuer sans sync
+      if (err.message && err.message.includes('Too many keys specified')) {
+        console.log('⚠️  Erreur d\'index détectée, tentative de démarrage sans synchronisation...');
+        try {
+          // Vérifier la connexion de base
+          await db.sequelize.authenticate();
+          console.log('✅ Connexion de base fonctionnelle');
+          
+          // Initialiser Firebase
+          console.log('🔥 Initialisation de Firebase...');
+          initializeFirebase();
+          
+          // Démarrer les tâches programmées (sans les tables push notifications pour l'instant)
+          console.log('⚠️  Démarrage en mode dégradé (sans tables push notifications)');
+          
+          app.listen(PORT, () => {
+            console.log(`🚀 Serveur démarré sur le port ${PORT} (mode dégradé)`);
+            console.log('💡 Pour corriger: exécutez le script reset-push-migrations.js');
+          });
+          return;
+        } catch (fallbackError) {
+          console.error('❌ Impossible de démarrer même en mode dégradé:', fallbackError.message);
+        }
+      }
+
       process.exit(1); // Arrêter le processus en cas d'erreur
     });
 }
