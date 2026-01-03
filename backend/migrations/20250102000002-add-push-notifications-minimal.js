@@ -2,6 +2,8 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
+    console.log('📱 Création des tables push notifications avec index minimaux...');
+    
     // Table DeviceToken
     await queryInterface.createTable('DeviceToken', {
       id: {
@@ -141,25 +143,27 @@ module.exports = {
       }
     });
 
-    // Seulement les index essentiels pour éviter la limite de 64 index
-    await queryInterface.addIndex('DeviceToken', {
-      fields: ['utilisateur_id'],
-      name: 'dt_user_idx'
-    });
+    // UN SEUL index essentiel pour éviter la limite
+    try {
+      await queryInterface.addIndex('DeviceToken', {
+        fields: ['utilisateur_id'],
+        name: 'dt_user_idx'
+      });
+      console.log('✅ Index DeviceToken créé');
+    } catch (error) {
+      console.log('⚠️  Index DeviceToken déjà existant ou limite atteinte');
+    }
 
-    await queryInterface.addIndex('NotificationPreference', {
-      fields: ['utilisateur_id'],
-      unique: true,
-      name: 'np_user_unique'
-    });
-
-    console.log('✅ Tables de push notifications créées avec index minimaux');
+    console.log('✅ Tables de push notifications créées avec index minimal');
   },
 
   async down(queryInterface, Sequelize) {
-    // Supprimer les index
-    await queryInterface.removeIndex('DeviceToken', 'dt_user_idx');
-    await queryInterface.removeIndex('NotificationPreference', 'np_user_unique');
+    // Supprimer l'index
+    try {
+      await queryInterface.removeIndex('DeviceToken', 'dt_user_idx');
+    } catch (error) {
+      // Index n'existe pas
+    }
 
     // Supprimer les tables
     await queryInterface.dropTable('NotificationPreference');
