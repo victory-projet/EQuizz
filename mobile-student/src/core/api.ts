@@ -1,20 +1,21 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { STORAGE_KEYS } from './constants';
+import { API_CONFIG } from './config';
 
 /**
  * Instance axios centralisée pour toutes les requêtes API
  * Configure automatiquement l'URL de base et les headers d'authentification
  */
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://equizz-backend.onrender.com/api';
+const API_URL = API_CONFIG.BASE_URL;
 
 console.log('🌐 API URL configurée:', API_URL);
 
 // Instance axios principale
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
-  timeout: 15000,
+  timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },

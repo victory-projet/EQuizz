@@ -7,7 +7,27 @@ export interface Utilisateur {
   prenom: string;
   email: string;
   matricule?: string;  // Optionnel car peut ne pas être retourné par le login
-  role: 'etudiant';
+  role: 'etudiant' | 'ETUDIANT';
+  classe?: {
+    id: string;
+    nom: string;
+    niveau: string;
+  };
+  ecole?: {
+    nom: string;
+  };
+  anneeScolaire?: string;
+  avatar?: string;
+  estActif?: boolean;
+  idCarte?: string | null;
+  
+  // Champs additionnels pour l'étudiant
+  Etudiant?: {
+    matricule: string;
+    classe_id: string;
+  };
+
+  // Support pour l'ancienne structure (rétrocompatibilité)
   Classe?: {
     nom: string;
     Niveau?: {
@@ -16,13 +36,5 @@ export interface Utilisateur {
   };
   Ecole?: {
     nom: string;
-  };
-  anneeScolaire?: string;
-  avatar?: string;
-  
-  // Champs additionnels pour l'étudiant
-  Etudiant?: {
-    matricule: string;
-    classe_id: string;
   };
 }

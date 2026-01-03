@@ -202,7 +202,7 @@ function QuizDetailView({ id }: { id: string }) {
     if (loading) {
         return (
             <SafeAreaView style={styles.container}>
-                <QuizDetailSkeleton />;
+                <QuizDetailSkeleton />
             </SafeAreaView>
         );
     }
