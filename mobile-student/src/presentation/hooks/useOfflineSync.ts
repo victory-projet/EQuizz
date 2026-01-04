@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { SyncService } from '../../data/services/SyncService';
 import { useNetworkStatus } from './useNetworkStatus';
 import NetInfo from '@react-native-community/netinfo';
 
 /**
  * Hook pour la gestion de la synchronisation offline/online
- * Gère la synchronisation automatique et manuelle
+ * Gère la synchronisation automatique, manuelle et en arrière-plan
  */
 export function useOfflineSync() {
   const { isOnline } = useNetworkStatus();
@@ -18,24 +19,51 @@ export function useOfflineSync() {
 
   const syncService = SyncService.getInstance();
 
-  // Synchronisation automatique lors de la reconnexion
+  // Démarrer la synchronisation automatique au montage
+  useEffect(() => {
+    console.log('🚀 Initialisation de la synchronisation automatique...');
+    syncService.startAutoSync();
+  }, []);
+
+  // Synchronisation automatique lors de la reconnexion réseau
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       if (state.isConnected && state.isInternetReachable) {
-        console.log('📡 Connexion détectée, déclenchement de l\'auto-sync...');
-        // Délai de 2 secondes pour stabilité de la connexion
+        console.log('📡 Connexion rétablie, déclenchement sync prioritaire...');
+        // Synchronisation immédiate avec haute priorité
         setTimeout(() => {
-          if (!syncService.isCurrentlySyncing) {
-            syncService.syncAll().then(() => {
-              loadSyncStatus();
-            });
-          }
-        }, 2000);
+          syncService.forceSyncNow().then(() => {
+            loadSyncStatus();
+          });
+        }, 1000); // 1 seconde pour stabilité
       }
     });
     
     return () => unsubscribe();
   }, []);
+
+  // Synchronisation lors du retour en premier plan
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        console.log('📱 App en premier plan, vérification sync...');
+        // Synchronisation si dernière sync > 5 minutes
+        const now = Date.now();
+        if (!syncStatus.lastSync || (now - syncStatus.lastSync) > 5 * 60 * 1000) {
+          setTimeout(() => {
+            if (isOnline) {
+              syncService.forceSyncNow().then(() => {
+                loadSyncStatus();
+              });
+            }
+          }, 2000);
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [isOnline, syncStatus.lastSync]);
 
   // Charger le statut de synchronisation
   const loadSyncStatus = useCallback(async () => {
@@ -49,23 +77,27 @@ export function useOfflineSync() {
 
   // Synchronisation manuelle
   const sync = useCallback(async () => {
-    if (!isOnline || isSyncing) {
-      console.log('⏸️ Sync impossible: hors ligne ou déjà en cours');
+    if (!isOnline) {
+      console.log('📵 Sync impossible: hors ligne');
       return { 
         success: false, 
-        message: isOnline ? 'Synchronisation déjà en cours' : 'Hors ligne' 
+        message: 'Aucune connexion réseau disponible'
+      };
+    }
+
+    if (isSyncing) {
+      console.log('⏸️ Sync déjà en cours');
+      return { 
+        success: false, 
+        message: 'Synchronisation déjà en cours'
       };
     }
 
     setIsSyncing(true);
     try {
       console.log('🔄 Début de la synchronisation manuelle...');
-      const result = await syncService.syncAll();
+      const result = await syncService.forceSyncNow();
       
-      if (result.success > 0) {
-        await syncService.setLastSyncTime();
-      }
-
       await loadSyncStatus();
 
       const message = result.success > 0 
@@ -88,20 +120,37 @@ export function useOfflineSync() {
     }
   }, [isOnline, isSyncing, loadSyncStatus]);
 
-  // Auto-sync quand connexion rétablie et éléments en attente
-  useEffect(() => {
-    if (isOnline && syncStatus.pending > 0 && !isSyncing) {
-      console.log('📡 Connexion rétablie avec éléments en attente, auto-sync...');
-      const timer = setTimeout(() => {
-        sync();
-      }, 2000);
-      return () => clearTimeout(timer);
+  // Ajouter une soumission à la queue de sync
+  const queueSubmission = useCallback(async (
+    quizzId: string,
+    evaluationId: string,
+    userId: string,
+    responses: any[]
+  ) => {
+    try {
+      await syncService.queueSubmissionForSync(quizzId, evaluationId, userId, responses);
+      await loadSyncStatus();
+      
+      return {
+        success: true,
+        message: 'Soumission ajoutée à la queue de synchronisation'
+      };
+    } catch (error: any) {
+      console.error('❌ Erreur ajout soumission:', error);
+      return {
+        success: false,
+        message: error.message || 'Erreur lors de l\'ajout à la queue'
+      };
     }
-  }, [isOnline, syncStatus.pending, isSyncing, sync]);
+  }, [loadSyncStatus]);
 
-  // Charger le statut au montage
+  // Charger le statut au montage et périodiquement
   useEffect(() => {
     loadSyncStatus();
+    
+    // Rafraîchir le statut toutes les 30 secondes
+    const interval = setInterval(loadSyncStatus, 30000);
+    return () => clearInterval(interval);
   }, [loadSyncStatus]);
 
   return {
@@ -109,6 +158,7 @@ export function useOfflineSync() {
     isSyncing,
     syncStatus,
     sync,
+    queueSubmission,
     refreshStatus: loadSyncStatus,
   };
 }
