@@ -15,6 +15,10 @@ class AuthController {
 
     const { token, utilisateur } = await authService.login(loginIdentifier, motDePasse);
 
+    // Générer les tokens d'accès et de rafraîchissement
+    const jwtService = require('../services/jwt.service');
+    const tokens = jwtService.generateTokenPair(utilisateur);
+
     // Déterminer le rôle et préparer les informations complètes
     let role = 'ETUDIANT';
     let additionalInfo = {};
@@ -41,7 +45,8 @@ class AuthController {
 
     // Retourner toutes les informations non sensibles
     res.status(200).json({
-      token,
+      token: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       utilisateur: {
         id: utilisateur.id,
         nom: utilisateur.nom,
@@ -183,22 +188,37 @@ class AuthController {
       });
     }
 
-    // Pour l'instant, on génère simplement un nouveau token
-    // Dans une vraie application, on vérifierait le refresh token
     const jwtService = require('../services/jwt.service');
 
     try {
-      // Vérifier le token
-      const decoded = jwtService.verifyToken(refreshToken);
+      // Vérifier le refresh token
+      const decoded = jwtService.verifyRefreshToken(refreshToken);
 
-      // Générer un nouveau token
-      const newToken = jwtService.generateToken({
-        id: decoded.id,
-        email: decoded.email
+      // Récupérer l'utilisateur pour générer un nouveau token
+      const utilisateur = await db.Utilisateur.findByPk(decoded.id, {
+        include: [
+          { model: db.Administrateur, as: 'Administrateur' },
+          { model: db.Enseignant, as: 'Enseignant' },
+          { 
+            model: db.Etudiant, 
+            as: 'Etudiant',
+            include: [{ model: db.Classe, as: 'Classe' }]
+          }
+        ]
       });
 
+      if (!utilisateur || !utilisateur.estActif) {
+        return res.status(401).json({
+          error: 'Utilisateur non trouvé ou inactif'
+        });
+      }
+
+      // Générer de nouveaux tokens
+      const tokens = jwtService.generateTokenPair(utilisateur);
+
       res.status(200).json({
-        token: newToken
+        token: tokens.accessToken,
+        refreshToken: tokens.refreshToken
       });
     } catch (error) {
       res.status(401).json({
