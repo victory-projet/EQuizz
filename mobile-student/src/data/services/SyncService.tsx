@@ -508,10 +508,10 @@ export class SyncService {
   }
 
   /**
-   * Force une synchronisation immédiate
+   * Force une synchronisation immédiate (usage interne uniquement)
    */
-  async forceSyncNow(): Promise<{ success: number; failed: number }> {
-    console.log('🚀 Synchronisation forcée...');
+  private async forceSyncNow(): Promise<{ success: number; failed: number }> {
+    console.log('🚀 Synchronisation automatique déclenchée...');
     
     // Vider la queue actuelle et ajouter une sync haute priorité
     this.syncQueue = [];
@@ -595,5 +595,34 @@ export class SyncService {
     const failed = this.syncQueue.filter(task => task.retries >= this.maxRetries).length;
     
     return { total, highPriority, failed };
+  }
+
+  /**
+   * Déclenche une synchronisation automatique sur reconnexion réseau
+   */
+  async triggerNetworkSync(): Promise<void> {
+    console.log('📡 Déclenchement sync automatique (reconnexion réseau)...');
+    
+    // Ajouter une tâche de sync avec haute priorité
+    this.addToSyncQueue('full_sync', {}, 0);
+    
+    // Traiter la queue
+    this.processSyncQueue();
+  }
+
+  /**
+   * Déclenche une synchronisation automatique au retour en premier plan
+   */
+  async triggerForegroundSync(): Promise<void> {
+    console.log('📱 Déclenchement sync automatique (premier plan)...');
+    
+    // Vérifier si une sync est nécessaire (dernière sync > 5 minutes)
+    const status = await this.getSyncStatus();
+    const now = Date.now();
+    
+    if (!status.lastSync || (now - status.lastSync) > 5 * 60 * 1000) {
+      this.addToSyncQueue('full_sync', {}, 1);
+      this.processSyncQueue();
+    }
   }
 }

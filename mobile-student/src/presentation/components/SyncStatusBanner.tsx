@@ -1,29 +1,18 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 
 /**
- * Bannière d'état de synchronisation
- * Affiche le statut offline/online et permet la synchronisation manuelle
+ * Bannière d'état de synchronisation automatique
+ * Affiche le statut offline/online (pas de synchronisation manuelle)
  */
 export function SyncStatusBanner() {
-  const { isOnline, isSyncing, syncStatus, sync } = useOfflineSync();
+  const { isOnline, isSyncing, syncStatus } = useOfflineSync();
 
   // Ne pas afficher si tout est OK
   if (isOnline && syncStatus.pending === 0 && syncStatus.failed === 0 && !isSyncing) {
     return null;
   }
-
-  const handleSync = async () => {
-    if (!isSyncing && isOnline) {
-      const result = await sync();
-      if (result.success) {
-        console.log('✅ Synchronisation manuelle réussie:', result.message);
-      } else {
-        console.error('❌ Synchronisation manuelle échouée:', result.message);
-      }
-    }
-  };
 
   const getStatusColor = () => {
     if (!isOnline) return '#DC2626'; // Rouge pour offline
@@ -34,11 +23,11 @@ export function SyncStatusBanner() {
   };
 
   const getStatusText = () => {
-    if (!isOnline) return 'Hors ligne';
-    if (isSyncing) return 'Synchronisation...';
-    if (syncStatus.failed > 0) return `${syncStatus.failed} échec(s)`;
-    if (syncStatus.pending > 0) return `${syncStatus.pending} en attente`;
-    return 'Synchronisé';
+    if (!isOnline) return 'Hors ligne - Synchronisation automatique suspendue';
+    if (isSyncing) return 'Synchronisation automatique en cours...';
+    if (syncStatus.failed > 0) return `${syncStatus.failed} échec(s) - Nouvelle tentative automatique prévue`;
+    if (syncStatus.pending > 0) return `${syncStatus.pending} élément(s) en attente de synchronisation`;
+    return 'Synchronisé automatiquement';
   };
 
   const getLastSyncText = () => {
@@ -48,14 +37,14 @@ export function SyncStatusBanner() {
     const diff = now - syncStatus.lastSync;
     const minutes = Math.floor(diff / (1000 * 60));
     
-    if (minutes < 1) return 'À l\'instant';
-    if (minutes < 60) return `Il y a ${minutes}min`;
+    if (minutes < 1) return 'Dernière sync: À l\'instant';
+    if (minutes < 60) return `Dernière sync: Il y a ${minutes}min`;
     
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `Il y a ${hours}h`;
+    if (hours < 24) return `Dernière sync: Il y a ${hours}h`;
     
     const days = Math.floor(hours / 24);
-    return `Il y a ${days}j`;
+    return `Dernière sync: Il y a ${days}j`;
   };
 
   return (
@@ -63,17 +52,13 @@ export function SyncStatusBanner() {
       <View style={styles.content}>
         <View style={styles.statusSection}>
           {isSyncing && <ActivityIndicator size="small" color="white" style={styles.spinner} />}
-          <Text style={styles.statusText}>{getStatusText()}</Text>
-          {syncStatus.lastSync && (
-            <Text style={styles.lastSyncText}>{getLastSyncText()}</Text>
-          )}
+          <View style={styles.textContainer}>
+            <Text style={styles.statusText}>{getStatusText()}</Text>
+            {syncStatus.lastSync && (
+              <Text style={styles.lastSyncText}>{getLastSyncText()}</Text>
+            )}
+          </View>
         </View>
-        
-        {isOnline && !isSyncing && (syncStatus.pending > 0 || syncStatus.failed > 0) && (
-          <TouchableOpacity style={styles.syncButton} onPress={handleSync}>
-            <Text style={styles.syncButtonText}>Synchroniser</Text>
-          </TouchableOpacity>
-        )}
       </View>
     </View>
   );
@@ -82,7 +67,7 @@ export function SyncStatusBanner() {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 12,
   },
   content: {
     flexDirection: 'row',
@@ -97,6 +82,9 @@ const styles = StyleSheet.create({
   spinner: {
     marginRight: 8,
   },
+  textContainer: {
+    flex: 1,
+  },
   statusText: {
     color: 'white',
     fontSize: 14,
@@ -105,17 +93,6 @@ const styles = StyleSheet.create({
   lastSyncText: {
     color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 12,
-    marginLeft: 8,
-  },
-  syncButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  syncButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
+    marginTop: 2,
   },
 });
