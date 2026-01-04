@@ -1,7 +1,76 @@
 import { useEffect, useState } from 'react';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { Stack, useRouter, useSegments, useNavigationContainerRef } from 'expo-router';
 import { AuthProvider, useAuth } from '../presentation/hooks/useAuth';
 import { isOnboardingCompleted } from '../utils/onboarding';
+import { SQLiteDatabase } from '../data/database/SQLiteDatabase';
+import { SyncService } from '../data/services/SyncService';
+
+/**
+ * Composant d'initialisation de l'application
+ * Initialise la base de données avant le démarrage de l'app
+ */
+interface AppInitializerProps {
+  children: React.ReactNode;
+}
+
+function AppInitializer({ children }: AppInitializerProps) {
+  const [dbReady, setDbReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<string>('Initialisation...');
+
+  useEffect(() => {
+    initializeApp();
+  }, []);
+
+  const initializeApp = async () => {
+    try {
+      console.log('🔧 Initialisation de l\'application...');
+      
+      setStep('Initialisation de la base de données...');
+      const db = SQLiteDatabase.getInstance();
+      await db.init();
+
+      setStep('Vérification du schéma...');
+      await db.migrateUserTable();
+
+      setStep('Nettoyage des anciennes données...');
+      const syncService = SyncService.getInstance();
+      await syncService.cleanOldData();
+
+      if (__DEV__) {
+        await db.debugSchema();
+      }
+
+      console.log('✅ Application initialisée avec succès');
+      setDbReady(true);
+    } catch (err: any) {
+      console.error('❌ Erreur d\'initialisation:', err);
+      setError(err.message || 'Erreur d\'initialisation');
+    }
+  };
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorTitle}>Erreur d'initialisation</Text>
+        <Text style={styles.errorMessage}>{error}</Text>
+        <Text style={styles.errorHint}>Veuillez redémarrer l'application</Text>
+      </View>
+    );
+  }
+
+  if (!dbReady) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#3A5689" />
+        <Text style={styles.loadingText}>{step}</Text>
+      </View>
+    );
+  }
+
+  return <>{children}</>;
+}
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -80,8 +149,45 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
+    <AppInitializer>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </AppInitializer>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#DC2626',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  errorMessage: {
+    fontSize: 16,
+    color: '#DC2626',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  errorHint: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    marginTop: 16,
+  },
+});
