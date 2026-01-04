@@ -43,6 +43,7 @@ export class EvaluationUseCase {
     return this.evaluationRepository.duplicateEvaluation(id);
   }
 
+<<<<<<< Updated upstream
   // Méthodes pour les questions
   addQuestion(quizzId: string | number, questionData: QuestionFormData): Observable<Question> {
     return this.evaluationRepository.addQuestion(quizzId, questionData);
@@ -50,6 +51,18 @@ export class EvaluationUseCase {
 
   updateQuestion(questionId: string | number, questionData: QuestionFormData): Observable<Question> {
     return this.evaluationRepository.updateQuestion(questionId, questionData);
+=======
+  createQuestion(quizzId: string | number, question: Partial<Question>): Observable<Question> {
+    return this.evaluationRepository.addQuestion(quizzId, question);
+  }
+
+  getQuestionsByQuizz(quizzId: string | number): Observable<Question[]> {
+    return this.evaluationRepository.getQuestionsByQuizz(quizzId);
+  }
+
+  updateQuestion(questionId: string | number, question: Partial<Question>): Observable<Question> {
+    return this.evaluationRepository.updateQuestion(questionId, question);
+>>>>>>> Stashed changes
   }
 
   deleteQuestion(questionId: string | number): Observable<void> {
@@ -68,4 +81,12 @@ export class EvaluationUseCase {
   getResults(evaluationId: string | number): Observable<any> {
     return this.evaluationRepository.getResults(evaluationId);
   }
+<<<<<<< Updated upstream
 }
+=======
+
+  debugDelete(id: string | number): Observable<any> {
+    return this.evaluationRepository.debugDelete(id);
+  }
+}
+>>>>>>> Stashed changes

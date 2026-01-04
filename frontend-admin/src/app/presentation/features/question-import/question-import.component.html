@@ -1,150 +1,112 @@
-<div class="modal-overlay" (click)="cancel()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Importer des questions depuis Excel</h2>
-      <button class="btn-close" (click)="cancel()">×</button>
+<div class="question-import-container">
+  <div class="import-header">
+    <h3 class="import-title">
+      <i class="material-icons">upload_file</i>
+      Import de questions depuis Excel
+    </h3>
+    <p class="import-description">
+      Importez vos questions en masse depuis un fichier Excel (.xlsx ou .xls)
+    </p>
+    
+    <!-- Validation du quizzId -->
+    @if (!quizzId || quizzId === 'null' || quizzId === 'undefined') {
+      <div class="alert alert-error">
+        <i class="material-icons">error</i>
+        Erreur: ID du quiz manquant. Veuillez rafraîchir la page ou créer d'abord un quiz.
+      </div>
+    }
+  </div>
+
+  <!-- Messages d'état -->
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      <i class="material-icons">error</i>
+      {{ errorMessage() }}
     </div>
+  }
 
-    <div class="modal-body">
-      @if (errorMessage()) {
-        <div class="alert alert-error">{{ errorMessage() }}</div>
-      }
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      <i class="material-icons">check_circle</i>
+      {{ successMessage() }}
+    </div>
+  }
 
-      @if (!showPreview()) {
-        <!-- Step 1: File Selection -->
-        <div class="import-section">
-          <div class="section-header">
-            <div class="step-number">1</div>
-            <div>
-              <h3>Téléchargez le modèle Excel</h3>
-              <p>Utilisez notre modèle pour formater correctement vos questions</p>
+  <!-- Section d'upload (seulement si quizzId valide) -->
+  @if (quizzId && quizzId !== 'null' && quizzId !== 'undefined') {
+    <div class="upload-section">
+      <div class="upload-area">
+        <div class="upload-content">
+          <i class="material-icons upload-icon">cloud_upload</i>
+          <h4>Sélectionnez votre fichier Excel</h4>
+          <p>Formats acceptés: .xlsx, .xls</p>
+          
+          <input 
+            type="file" 
+            id="excel-file" 
+            accept=".xlsx,.xls"
+            (change)="onFileSelected($event)"
+            class="file-input">
+          
+          <label for="excel-file" class="btn btn-primary">
+            <i class="material-icons">folder_open</i>
+            Choisir un fichier
+          </label>
+        </div>
+      </div>
+
+      @if (selectedFile()) {
+        <div class="file-info">
+          <div class="file-details">
+            <i class="material-icons">description</i>
+            <div class="file-meta">
+              <span class="file-name">{{ selectedFile()?.name }}</span>
+              <span class="file-size">{{ (selectedFile()?.size || 0) / 1024 | number:'1.0-1' }} KB</span>
             </div>
           </div>
-          <button class="btn-download" (click)="downloadTemplate()">
-            <span class="material-icons">download</span> Télécharger le modèle Excel
-          </button>
-          <p class="download-hint">📊 Fichier .xlsx avec exemples et instructions</p>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="import-section">
-          <div class="section-header">
-            <div class="step-number">2</div>
-            <div>
-              <h3>Téléversez votre fichier</h3>
-              <p>Sélectionnez le fichier Excel contenant vos questions</p>
-            </div>
-          </div>
-
-          <div class="upload-area">
-            <input 
-              type="file" 
-              id="file-input" 
-              accept=".xlsx,.xls"
-              (change)="onFileSelected($event)"
-              hidden
-            />
-            <label for="file-input" class="upload-label">
-              <span class="material-icons">upload_file</span>
-              <span class="upload-text">
-                @if (selectedFile()) {
-                  <strong>{{ selectedFile()!.name }}</strong>
-                } @else {
-                  <strong>Cliquez pour sélectionner</strong> ou glissez-déposez
-                }
-              </span>
-              <span class="upload-hint">Formats acceptés: .xlsx, .xls (max 5MB)</span>
-            </label>
-          </div>
-
-          @if (selectedFile()) {
-            <div class="file-info">
-              <span class="material-icons">description</span>
-              <div class="file-details">
-                <div class="file-name">{{ selectedFile()!.name }}</div>
-                <div class="file-size">{{ (selectedFile()!.size / 1024).toFixed(2) }} KB</div>
-              </div>
-              <button class="btn-remove-file" (click)="resetImport()">
-                <span class="material-icons">delete</span>
-              </button>
-            </div>
-          }
-        </div>
-
-        <div class="info-box">
-          <span class="material-icons">info</span>
-          <div>
-            <strong>Format du fichier :</strong>
-            <ul>
-              <li>Colonne 1 (Enonce) : Texte de la question</li>
-              <li>Colonne 2 (Type) : CHOIX_MULTIPLE ou REPONSE_OUVERTE</li>
-              <li>Colonne 3 (Options) : Options séparées par ; pour les QCM</li>
-            </ul>
-          </div>
-        </div>
-      }
-
-      @if (showPreview()) {
-        <!-- Step 3: Preview -->
-        <div class="preview-section">
-          <div class="preview-header">
-            <h3>Prévisualisation</h3>
-            <p>{{ previewQuestions().length }} questions détectées</p>
-          </div>
-
-          <div class="preview-list">
-            @for (question of previewQuestions(); track 'question_' + $index) {
-              <div class="preview-item">
-                <div class="preview-number">{{ $index + 1 }}</div>
-                <div class="preview-content">
-                  <div class="preview-type">{{ question.type }}</div>
-                  <div class="preview-text">{{ question.enonce }}</div>
-                  @if (question.options && question.options.length > 0) {
-                    <div class="preview-options">
-                      @for (option of question.options; track option + '_' + $index) {
-                        <span class="preview-option">{{ option }}</span>
-                      }
-                    </div>
-                  }
-                </div>
-              </div>
+          
+          <button 
+            class="btn btn-success"
+            (click)="onImportQuestions()"
+            [disabled]="isLoading()">
+            @if (isLoading()) {
+              <i class="material-icons spinning">refresh</i>
+              Import en cours...
+            } @else {
+              <i class="material-icons">file_upload</i>
+              Importer les questions
             }
-          </div>
-
-          <button class="btn-back" (click)="resetImport()">
-            <span class="material-icons">arrow_back</span> Modifier le fichier
           </button>
         </div>
       }
-    </div>
 
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="cancel()" [disabled]="isLoading()">
-        Annuler
-      </button>
-      @if (!showPreview()) {
+      <!-- Template de téléchargement -->
+      <div class="template-section">
+        <div class="template-info">
+          <i class="material-icons">info</i>
+          <div>
+            <h5>Besoin d'un modèle ?</h5>
+            <p>Téléchargez notre template pour formater correctement vos questions</p>
+            <p><strong>Format attendu :</strong> Énoncé | Type de question | Options (séparées par ;)</p>
+          </div>
+        </div>
         <button 
-          class="btn-primary" 
-          (click)="validateAndPreview()" 
-          [disabled]="!selectedFile() || isLoading()"
-        >
-          @if (isLoading()) {
-            <span>Validation...</span>
-          } @else {
-            <span>Valider et prévisualiser</span>
-          }
+          class="btn btn-outline"
+          (click)="downloadTemplate()">
+          <i class="material-icons">download</i>
+          Télécharger le template
         </button>
-      }
-      @if (showPreview()) {
-        <button class="btn-primary" (click)="confirmImport()" [disabled]="isLoading()">
-          @if (isLoading()) {
-            <span>Import en cours...</span>
-          } @else {
-            <span>Confirmer l'import</span>
-          }
-        </button>
-      }
+      </div>
     </div>
+  }
+
+  <!-- Actions -->
+  <div class="import-actions">
+    <button 
+      class="btn btn-secondary"
+      (click)="onCancel()">
+      <i class="material-icons">close</i>
+      Annuler
+    </button>
   </div>
 </div>

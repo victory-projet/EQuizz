@@ -46,6 +46,11 @@ db.ReponseEtudiant = ReponseEtudiant;
 db.Notification = Notification;
 db.AnalyseReponse = AnalyseReponse;
 db.PasswordResetToken = PasswordResetToken;
+<<<<<<< Updated upstream
+=======
+db.DeviceToken = DeviceToken;
+db.NotificationPreference = NotificationPreference;
+>>>>>>> Stashed changes
 
 // --- Définition de toutes les Relations (Associations) ---
 

@@ -1,0 +1,261 @@
+<div class="question-management-container">
+  
+  <!-- En-tête amélioré -->
+  <div class="management-header">
+    <div class="header-content">
+      <h1 class="page-title">Questions créées</h1>
+      <p class="page-subtitle">Gérez les questions de votre évaluation</p>
+    </div>
+    
+    <!-- Actions principales avec design amélioré -->
+    <div class="header-actions">
+      <button 
+        class="btn btn-primary"
+        (click)="onShowCreateForm()"
+        [disabled]="showCreateForm() || showImportForm()">
+        <i class="material-icons">add</i>
+        Nouvelle question
+      </button>
+      
+      <button 
+        class="btn btn-secondary"
+        (click)="onShowImportForm()"
+        [disabled]="showCreateForm() || showImportForm()">
+        <i class="material-icons">upload_file</i>
+        Importer depuis Excel
+      </button>
+    </div>
+  </div>
+
+  <!-- Message d'erreur global avec design amélioré -->
+  @if (errorMessage()) {
+    <div class="alert alert-danger">
+      <i class="material-icons">error_outline</i>
+      <div class="alert-content">
+        <strong>Erreur</strong>
+        <p>{{ errorMessage() }}</p>
+      </div>
+    </div>
+  }
+
+  <!-- Message de succès -->
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      <i class="material-icons">check_circle_outline</i>
+      <div class="alert-content">
+        <strong>Succès</strong>
+        <p>{{ successMessage() }}</p>
+      </div>
+    </div>
+  }
+
+  <!-- Formulaire de création -->
+  @if (showCreateForm()) {
+    <div class="form-section">
+      <app-question-form
+        [quizzId]="quizzId"
+        (questionCreated)="onQuestionCreated($event)"
+        (cancelled)="onFormCancelled()">
+      </app-question-form>
+    </div>
+  }
+
+  <!-- Formulaire d'import -->
+  @if (showImportForm()) {
+    <div class="form-section">
+      <app-question-import
+        [evaluationId]="evaluationId"
+        [quizzId]="quizzId"
+        (imported)="onQuestionsImported($event)"
+        (cancelled)="onFormCancelled()">
+      </app-question-import>
+    </div>
+  }
+
+  <!-- État de chargement amélioré -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="loading-spinner">
+        <i class="material-icons spinning">refresh</i>
+      </div>
+      <p class="loading-text">Chargement des questions...</p>
+    </div>
+  }
+
+  <!-- Liste des questions -->
+  @if (!isLoading() && !showCreateForm() && !showImportForm()) {
+    
+    <!-- État vide amélioré -->
+    @if (questions().length === 0) {
+      <div class="empty-state">
+        <div class="empty-illustration">
+          <i class="material-icons">quiz</i>
+        </div>
+        <h3 class="empty-title">Aucune question créée</h3>
+        <p class="empty-description">
+          Commencez par créer votre première question pour construire votre évaluation.
+        </p>
+        <div class="empty-suggestions">
+          <div class="suggestion-item">
+            <i class="material-icons">lightbulb_outline</i>
+            <span>Créez différents types de questions : choix multiples, réponses ouvertes</span>
+          </div>
+          <div class="suggestion-item">
+            <i class="material-icons">file_upload</i>
+            <span>Importez vos questions depuis un fichier Excel</span>
+          </div>
+        </div>
+        <div class="empty-actions">
+          <button 
+            class="btn btn-primary btn-lg"
+            (click)="onShowCreateForm()">
+            <i class="material-icons">add</i>
+            Créer ma première question
+          </button>
+          <button 
+            class="btn btn-outline btn-lg"
+            (click)="onShowImportForm()">
+            <i class="material-icons">upload_file</i>
+            Importer depuis Excel
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Liste des questions existantes avec design amélioré -->
+    @if (questions().length > 0) {
+      <div class="questions-section">
+        <div class="section-header">
+          <div class="section-info">
+            <h2 class="section-title">
+              Questions du questionnaire
+            </h2>
+            <div class="questions-stats">
+              <div class="stat-item">
+                <i class="material-icons">quiz</i>
+                <span class="stat-number">{{ questions().length }}</span>
+                <span class="stat-label">question{{ questions().length > 1 ? 's' : '' }}</span>
+              </div>
+              <div class="stat-item">
+                <i class="material-icons">checklist</i>
+                <span class="stat-number">{{ getMultipleChoiceCount() }}</span>
+                <span class="stat-label">choix multiple{{ getMultipleChoiceCount() > 1 ? 's' : '' }}</span>
+              </div>
+              <div class="stat-item">
+                <i class="material-icons">edit_note</i>
+                <span class="stat-number">{{ getOpenResponseCount() }}</span>
+                <span class="stat-label">réponse{{ getOpenResponseCount() > 1 ? 's' : '' }} ouverte{{ getOpenResponseCount() > 1 ? 's' : '' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="questions-list">
+          @for (question of questions(); track question.id; let i = $index) {
+            <div class="question-card" [class.editing]="editingQuestionId() === question.id">
+              <div class="question-header">
+                <div class="question-info">
+                  <div class="question-number">
+                    <span class="number">#{{ i + 1 }}</span>
+                  </div>
+                  <div class="question-type">
+                    <div class="type-badge" [class]="'type-' + question.typeQuestion?.toLowerCase()">
+                      <i class="material-icons">{{ getQuestionTypeIcon(question.typeQuestion) }}</i>
+                      <span>{{ getQuestionTypeLabel(question.typeQuestion) }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="question-actions">
+                  <button 
+                    class="btn-action btn-duplicate"
+                    (click)="onDuplicateQuestion(question)"
+                    title="Dupliquer la question">
+                    <i class="material-icons">content_copy</i>
+                  </button>
+                  <button 
+                    class="btn-action btn-edit"
+                    (click)="onEditQuestion(question)"
+                    title="Modifier la question">
+                    <i class="material-icons">edit</i>
+                  </button>
+                  <button 
+                    class="btn-action btn-delete"
+                    (click)="onDeleteQuestion(question.id)"
+                    title="Supprimer la question">
+                    <i class="material-icons">delete_outline</i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="question-content">
+                <div class="question-text">
+                  {{ question.enonce }}
+                </div>
+
+                <!-- Métadonnées de la question améliorées -->
+                <div class="question-meta">
+                  <div class="meta-badge meta-type">
+                    <i class="material-icons">info_outline</i>
+                    <span>{{ getQuestionTypeDescription(question.typeQuestion) }}</span>
+                  </div>
+                  @if (question.typeQuestion === 'CHOIX_MULTIPLE') {
+                    <div class="meta-badge meta-options" [class.warning]="!hasValidOptions(question)">
+                      <i class="material-icons">{{ hasValidOptions(question) ? 'checklist' : 'warning' }}</i>
+                      <span>{{ getOptionsCount(question) }} option{{ getOptionsCount(question) > 1 ? 's' : '' }}</span>
+                    </div>
+                  }
+                </div>
+
+                <!-- Options pour choix multiples avec design amélioré -->
+                @if (question.typeQuestion === 'CHOIX_MULTIPLE' && hasValidOptions(question)) {
+                  <div class="question-options">
+                    <div class="options-header">
+                      <i class="material-icons">checklist</i>
+                      <span>Options de réponse</span>
+                    </div>
+                    <div class="options-grid">
+                      @for (option of question.options; track $index; let optIndex = $index) {
+                        <div class="option-item">
+                          <div class="option-marker">
+                            <span class="option-letter">{{ getCharFromIndex(optIndex) }}</span>
+                          </div>
+                          <div class="option-content">
+                            <span class="option-text">{{ option }}</span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- Message si pas d'options pour choix multiple -->
+                @if (question.typeQuestion === 'CHOIX_MULTIPLE' && !hasValidOptions(question)) {
+                  <div class="alert alert-warning">
+                    <i class="material-icons">warning</i>
+                    <div class="alert-content">
+                      <strong>Configuration incomplète</strong>
+                      <p>Cette question à choix multiple n'a pas d'options définies.</p>
+                    </div>
+                  </div>
+                }
+
+                <!-- Indication pour réponse ouverte améliorée -->
+                @if (question.typeQuestion === 'REPONSE_OUVERTE') {
+                  <div class="open-response-indicator">
+                    <div class="indicator-content">
+                      <i class="material-icons">edit_note</i>
+                      <div class="indicator-text">
+                        <span class="indicator-title">Réponse libre</span>
+                        <span class="indicator-description">Les étudiants peuvent saisir leur réponse en texte libre</span>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>

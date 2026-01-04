@@ -95,13 +95,17 @@
           <div class="form-group">
             <label class="form-label">Cours / Unité d'Enseignement *</label>
             <select class="form-select" [(ngModel)]="formData.coursId">
+<<<<<<< Updated upstream
               <option [value]="0">Sélectionnez un cours</option>
               @for (c of validCours(); track c.id) {
+=======
+              <option value="">Sélectionnez un cours</option>
+              @for (c of cours(); track c.id) {
+>>>>>>> Stashed changes
                 <option [value]="c.id">{{ c.nom }}</option>
               }
             </select>
           </div>
-
         </div>
 
         <div class="form-group">
@@ -131,7 +135,7 @@
           <span class="material-icons">info</span>
           <div>
             <strong>Note :</strong> L'évaluation sera créée en mode brouillon. 
-            Vous pourrez ajouter des questions avant de la publier.
+            Vous pourrez ajouter des questions à l'étape suivante.
           </div>
         </div>
       </div>
@@ -152,8 +156,8 @@
       </div>
     </div>
   }
-</div>
 
+<<<<<<< Updated upstream
 <!-- Method Selection Modal -->
 @if (showMethodModal()) {
   <div class="modal-overlay" (click)="closeMethodModal()">
@@ -218,6 +222,269 @@
           <button class="btn-method btn-method-import">
             <span class="material-icons">file_upload</span> 
             Importer depuis Excel
+=======
+  <!-- Step 2: Questions Management -->
+  @if (currentStep() === 2) {
+    <div class="form-container">
+      <div class="form-card">
+        <h2 class="form-title">Gestion des questions</h2>
+        <p class="form-subtitle">Ajoutez des questions à votre évaluation</p>
+
+        <!-- Actions principales -->
+        @if (!showCreateForm() && !showImportForm()) {
+          <div class="question-actions">
+            <button 
+              class="btn-primary"
+              (click)="onShowCreateForm()">
+              <span class="material-icons">add</span>
+              Nouvelle question
+            </button>
+            
+            <button 
+              class="btn-secondary"
+              (click)="onShowImportForm()">
+              <span class="material-icons">upload_file</span>
+              Importer depuis Excel
+            </button>
+          </div>
+        }
+
+        <!-- Formulaire de création -->
+        @if (showCreateForm()) {
+          <div class="form-section">
+            <app-question-form
+              [quizzId]="quizzId()!"
+              (questionCreated)="onQuestionCreated($event)"
+              (cancelled)="onFormCancelled()">
+            </app-question-form>
+          </div>
+        }
+
+        <!-- Formulaire d'import -->
+        @if (showImportForm()) {
+          <div class="form-section">
+            <app-question-import
+              [evaluationId]="draftEvaluationId()!"
+              [quizzId]="quizzId()!"
+              (imported)="onQuestionsImported($event)"
+              (cancelled)="onFormCancelled()">
+            </app-question-import>
+          </div>
+        }
+
+        <!-- Liste des questions -->
+        @if (!showCreateForm() && !showImportForm()) {
+          @if (questions().length === 0) {
+            <div class="empty-state">
+              <div class="empty-icon">
+                <span class="material-icons">quiz</span>
+              </div>
+              <h3 class="empty-title">Aucune question créée</h3>
+              <p class="empty-description">
+                Commencez par créer votre première question pour cette évaluation.
+              </p>
+              <button 
+                class="btn-primary btn-large"
+                (click)="onShowCreateForm()">
+                <span class="material-icons">add</span>
+                Créer ma première question
+              </button>
+            </div>
+          } @else {
+            <div class="questions-section">
+              <div class="section-header">
+                <h3 class="section-title">
+                  Questions créées ({{ questions().length }})
+                </h3>
+              </div>
+
+              <div class="questions-list">
+                @for (question of questions(); track question.id; let i = $index) {
+                  <div class="question-card">
+                    <div class="question-header">
+                      <div class="question-info">
+                        <span class="question-number">#{{ i + 1 }}</span>
+                        <div class="question-type">
+                          <span class="material-icons">{{ getQuestionTypeIcon(question.typeQuestion) }}</span>
+                          <span>{{ getQuestionTypeLabel(question.typeQuestion) }}</span>
+                        </div>
+                      </div>
+                      <button 
+                        class="btn-delete"
+                        (click)="onDeleteQuestion(question.id)"
+                        title="Supprimer la question">
+                        <span class="material-icons">delete</span>
+                      </button>
+                    </div>
+
+                    <div class="question-content">
+                      <div class="question-text">
+                        {{ question.enonce }}
+                      </div>
+
+                      <!-- Options pour choix multiples -->
+                      @if (question.typeQuestion === 'CHOIX_MULTIPLE' && hasValidOptions(question)) {
+                        <div class="question-options">
+                          @for (option of question.options; track $index; let optIndex = $index) {
+                            <div class="option-item">
+                              <span class="option-letter">{{ getCharFromIndex(optIndex) }}.</span>
+                              <span class="option-text">{{ option }}</span>
+                            </div>
+                          }
+                        </div>
+                      }
+
+                      <!-- Indication pour réponse ouverte -->
+                      @if (question.typeQuestion === 'REPONSE_OUVERTE') {
+                        <div class="open-response-indicator">
+                          <span class="material-icons">edit</span>
+                          <span>Réponse libre attendue</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="previousStep()">
+          <span class="material-icons">arrow_back</span>
+          Précédent
+        </button>
+        <button class="btn-primary" (click)="nextStep()">
+          <span>Révision</span>
+          <span class="material-icons">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Step 3: Review and Publish -->
+  @if (currentStep() === 3) {
+    <div class="form-container">
+      <div class="form-card">
+        <h2 class="form-title">Révision et publication</h2>
+        <p class="form-subtitle">Vérifiez les informations avant de publier votre évaluation</p>
+
+        <!-- Résumé de l'évaluation -->
+        <div class="review-section">
+          <h3 class="review-title">Informations générales</h3>
+          <div class="review-grid">
+            <div class="review-item">
+              <label>Titre</label>
+              <span>{{ formData.titre }}</span>
+            </div>
+            <div class="review-item">
+              <label>Description</label>
+              <span>{{ formData.description || 'Aucune description' }}</span>
+            </div>
+            <div class="review-item">
+              <label>Cours</label>
+              <span>{{ getCoursName(formData.coursId) }}</span>
+            </div>
+            <div class="review-item">
+              <label>Classes</label>
+              <span>
+                @for (classeId of formData.classeIds; track classeId; let last = $last) {
+                  {{ getClassName(classeId.toString()) }}{{ !last ? ', ' : '' }}
+                }
+              </span>
+            </div>
+            <div class="review-item">
+              <label>Période</label>
+              <span>
+                Du {{ formData.dateDebut | date:'dd/MM/yyyy à HH:mm' }} 
+                au {{ formData.dateFin | date:'dd/MM/yyyy à HH:mm' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Résumé des questions -->
+        <div class="review-section">
+          <h3 class="review-title">Questions ({{ questions().length }})</h3>
+          @if (questions().length === 0) {
+            <div class="warning-box">
+              <span class="material-icons">warning</span>
+              <div>
+                <strong>Attention :</strong> Aucune question n'a été ajoutée. 
+                Vous devez ajouter au moins une question pour publier l'évaluation.
+              </div>
+            </div>
+          } @else {
+            <div class="questions-summary">
+              @for (question of questions(); track question.id; let i = $index) {
+                <div class="question-summary-item">
+                  <span class="question-number">{{ i + 1 }}.</span>
+                  <div class="question-details">
+                    <div class="question-text">{{ question.enonce }}</div>
+                    <div class="question-meta">
+                      <span class="question-type-badge">{{ getQuestionTypeLabel(question.typeQuestion) }}</span>
+                      @if (question.typeQuestion === 'CHOIX_MULTIPLE' && hasValidOptions(question)) {
+                        <span class="options-count">{{ question.options?.length || 0 }} options</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Status de publication -->
+        <div class="publish-section">
+          @if (canPublish()) {
+            <div class="success-box">
+              <span class="material-icons">check_circle</span>
+              <div>
+                <strong>Prêt à publier !</strong> Votre évaluation contient toutes les informations nécessaires.
+              </div>
+            </div>
+          } @else {
+            <div class="warning-box">
+              <span class="material-icons">warning</span>
+              <div>
+                <strong>Publication impossible :</strong> 
+                @if (questions().length === 0) {
+                  Ajoutez au moins une question.
+                } @else {
+                  Vérifiez les informations de base.
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="previousStep()">
+          <span class="material-icons">arrow_back</span>
+          Précédent
+        </button>
+        
+        <div class="action-group">
+          <button class="btn-outline" (click)="saveDraft()">
+            <span class="material-icons">save</span>
+            Sauvegarder en brouillon
+          </button>
+          
+          <button 
+            class="btn-primary" 
+            (click)="publishEvaluation()" 
+            [disabled]="!canPublish() || isLoading()">
+            @if (isLoading()) {
+              <span>Publication...</span>
+            } @else {
+              <span class="material-icons">publish</span>
+              <span>Publier l'évaluation</span>
+            }
+>>>>>>> Stashed changes
           </button>
         </div>
       </div>
@@ -229,5 +496,5 @@
         </p>
       </div>
     </div>
-  </div>
-}
+  }
+</div>

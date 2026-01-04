@@ -44,9 +44,10 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
     const mapped = {
       ...data,
       // Le backend retourne "Cour" (singulier) ou "Cours" (pluriel) selon la relation
-      cours: data.Cour || data.Cours || data.cours,
+      // Gérer le cas où Cours peut être null
+      cours: data.Cour || data.Cours || data.cours || null,
       // Le backend retourne "Classes" (array) - on prend la première
-      classe: data.Classes?.[0] || data.Classe || data.classe,
+      classe: data.Classes?.[0] || data.Classe || data.classe || null,
       // Le backend retourne "Quizz" (majuscule)
       quizz: data.Quizz ? {
         ...data.Quizz,
@@ -57,9 +58,9 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
           // Mapper typeQuestion vers type pour compatibilité
           type: q.typeQuestion || q.type
         })) || []
-      } : undefined,
+      } : null,
       // S'assurer que quizzId est bien défini
-      quizzId: data.Quizz?.id || data.quizzId
+      quizzId: data.Quizz?.id || data.quizzId || null
     };
 
     console.log('✅ Mapped evaluation:', {
@@ -97,12 +98,21 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
     return this.api.post<Question>(`/evaluations/quizz/${quizzId}/questions`, question);
   }
 
+<<<<<<< Updated upstream
   updateQuestion(questionId: string | number, question: QuestionFormData): Observable<Question> {
     return this.api.put<Question>(`/evaluations/questions/${questionId}`, question);
+=======
+  getQuestionsByQuizz(quizzId: string | number): Observable<Question[]> {
+    return this.api.get<Question[]>(`/evaluations/quizz/${quizzId}/questions`);
+  }
+
+  updateQuestion(questionId: string | number, question: Partial<Question>): Observable<Question> {
+    return this.api.put<Question>(`/questions/${questionId}`, question);
+>>>>>>> Stashed changes
   }
 
   deleteQuestion(questionId: string | number): Observable<void> {
-    return this.api.delete<void>(`/evaluations/questions/${questionId}`);
+    return this.api.delete<void>(`/questions/${questionId}`);
   }
 
   importQuestions(quizzId: string | number, file: File): Observable<QuestionImportData> {
@@ -123,5 +133,9 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
     return this.api.post<any>(`/evaluations/${id}/duplicate`, {}).pipe(
       map((response: any) => this.mapEvaluationFromBackend(response.evaluation))
     );
+  }
+
+  debugDelete(id: string | number): Observable<any> {
+    return this.api.get<any>(`/evaluations/${id}/debug-delete`);
   }
 }

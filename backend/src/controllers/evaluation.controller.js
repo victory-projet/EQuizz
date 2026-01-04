@@ -31,7 +31,11 @@ class EvaluationController {
   });
 
   delete = asyncHandler(async (req, res) => {
+    console.log('🗑️ Controller - Requête DELETE reçue pour l\'évaluation:', req.params.id);
+    console.log('👤 Controller - Utilisateur:', req.user?.id, req.user?.email);
+    
     const result = await evaluationService.delete(req.params.id);
+    console.log('✅ Controller - Suppression réussie, envoi de la réponse');
     res.status(200).json(result);
   });
 
@@ -53,8 +57,19 @@ class EvaluationController {
     res.status(200).json(result);
   });
 
+  getQuestionsByQuizz = asyncHandler(async (req, res) => {
+    const { quizzId } = req.params;
+    const questions = await evaluationService.getQuestionsByQuizz(quizzId);
+    res.status(200).json(questions);
+  });
+
   importQuestions = asyncHandler(async (req, res) => {
     const { quizzId } = req.params;
+    
+    // Validation du paramètre quizzId
+    if (!quizzId || quizzId === 'null' || quizzId === 'undefined') {
+      throw ErrorHandler.createError('ID du quiz requis et valide.', 400, 'QUIZZ_ID_REQUIRED');
+    }
     
     if (!req.file) {
       throw ErrorHandler.createError('Aucun fichier fourni.', 400, 'FILE_REQUIRED');
@@ -79,10 +94,22 @@ class EvaluationController {
 
   close = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const evaluation = await evaluationService.close(id);
-    res.status(200).json({
-      message: 'Évaluation clôturée avec succès.',
-      evaluation
+    const result = await evaluationService.close(id);
+    
+    // Gérer le cas où l'évaluation est déjà clôturée
+    if (result.message) {
+      res.status(200).json({
+        message: result.message,
+        evaluation: result,
+        alreadyClosed: true
+      });
+    } else {
+      res.status(200).json({
+        message: 'Évaluation clôturée avec succès.',
+        evaluation: result
+      });
+    }
+  });
     });
   });
 

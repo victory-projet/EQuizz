@@ -1,50 +1,120 @@
-<div class="page-container">
-  <!-- Loading -->
-  @if (isLoading()) {
-    <div class="loading">
-      <mat-spinner diameter="40"></mat-spinner>
-      <p>Chargement...</p>
+<!-- Exemple d'intégration du composant de gestion des questions -->
+<div class="evaluation-detail-container">
+  
+  <!-- En-tête de l'évaluation -->
+  <div class="evaluation-header">
+    <div class="evaluation-info">
+      <h1 class="evaluation-title">{{ evaluation()?.titre }}</h1>
+      <div class="evaluation-meta">
+        <span class="meta-item">
+          <i class="icon-book"></i>
+          {{ evaluation()?.cours?.nom }}
+        </span>
+        <span class="meta-item">
+          <i class="icon-users"></i>
+          {{ evaluation()?.classe?.nom }}
+        </span>
+        <span class="meta-item">
+          <i class="icon-calendar"></i>
+          {{ evaluation()?.dateCreation | date:'dd/MM/yyyy' }}
+        </span>
+      </div>
     </div>
-  }
+    
+    <div class="evaluation-actions">
+      <button class="btn btn-secondary" (click)="goBack()">
+        <i class="icon-arrow-left"></i>
+        Retour
+      </button>
+    </div>
+  </div>
 
-  <!-- Content -->
-  @if (!isLoading() && evaluation()) {
-    <!-- Header -->
-    <div class="page-header">
-      <div class="header-content">
-        <button mat-icon-button class="btn-back" (click)="goBack()">
-          <mat-icon>arrow_back</mat-icon>
+  <!-- Onglets de navigation -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <button 
+        class="tab-button"
+        [class.active]="activeTab() === 'info'"
+        (click)="setActiveTab('info')">
+        <i class="icon-info"></i>
+        Informations
+      </button>
+      <button 
+        class="tab-button"
+        [class.active]="activeTab() === 'questions'"
+        (click)="setActiveTab('questions')">
+        <i class="icon-help-circle"></i>
+        Questions
+      </button>
+      @if (evaluation()?.statut === 'PUBLIEE' || evaluation()?.statut === 'CLOTUREE') {
+        <button 
+          class="tab-button tab-external"
+          (click)="goToReport()">
+          <i class="icon-bar-chart"></i>
+          Voir le rapport complet
+          <i class="icon-external-link"></i>
         </button>
-        <div class="title-section">
-          <h1 class="page-title">{{ evaluation()!.titre }}</h1>
-          <div class="evaluation-meta">
-            <span class="badge" [ngClass]="getStatusBadgeClass(evaluation()!.statut)">
-              {{ getStatusLabel(evaluation()!.statut) }}
-            </span>
-            <span class="meta-item">
-              <mat-icon>book</mat-icon>
-              {{ evaluation()!.cours?.nom || 'Cours non défini' }}
-            </span>
-            <span class="meta-item">
-              <mat-icon>calendar_today</mat-icon>
-              {{ formatDate(evaluation()!.dateDebut) }} - {{ formatDate(evaluation()!.dateFin) }}
-            </span>
+      }
+    </div>
+  </div>
+
+  <!-- Contenu des onglets -->
+  <div class="tab-content">
+    
+    <!-- Onglet Informations -->
+    @if (activeTab() === 'info') {
+      <div class="info-section">
+        <div class="info-card">
+          <h3>Détails de l'évaluation</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Titre</label>
+              <span>{{ evaluation()?.titre }}</span>
+            </div>
+            <div class="info-item">
+              <label>Cours</label>
+              <span>{{ evaluation()?.cours?.nom }}</span>
+            </div>
+            <div class="info-item">
+              <label>Classe</label>
+              <span>{{ evaluation()?.classe?.nom }}</span>
+            </div>
+            <div class="info-item">
+              <label>Statut</label>
+              <span class="status-badge" [class]="'status-' + evaluation()?.statut?.toLowerCase()">
+                {{ evaluation()?.statut }}
+              </span>
+            </div>
+            <div class="info-item">
+              <label>Date de création</label>
+              <span>{{ evaluation()?.dateCreation | date:'dd/MM/yyyy à HH:mm' }}</span>
+            </div>
+            <div class="info-item">
+              <label>Instructions</label>
+              <span>{{ evaluation()?.quizz?.instructions || 'Aucune instruction spécifique' }}</span>
+            </div>
           </div>
         </div>
       </div>
-      <div class="header-actions">
-        @if (evaluation()!.statut === 'BROUILLON') {
-          <button mat-raised-button color="primary" (click)="publishEvaluation()">
-            <mat-icon>send</mat-icon> Publier
-          </button>
+    }
+
+    <!-- Onglet Questions -->
+    @if (activeTab() === 'questions') {
+      <div class="questions-section">
+        @if (evaluation()?.quizz?.id) {
+          <app-question-management
+            [quizzId]="evaluation()!.quizz!.id"
+            [evaluationId]="evaluation()!.id">
+          </app-question-management>
+        } @else {
+          <div class="error-state">
+            <i class="icon-alert-circle"></i>
+            <p>Impossible de charger les questions. Quiz non trouvé.</p>
+          </div>
         }
       </div>
-    </div>
-
-    <!-- Messages -->
-    @if (successMessage()) {
-      <div class="alert alert-success">{{ successMessage() }}</div>
     }
+<<<<<<< Updated upstream
     @if (errorMessage()) {
       <div class="alert alert-error">{{ errorMessage() }}</div>
     }
@@ -257,4 +327,7 @@
       (cancelled)="closeQuestionImport()"
     />
   }
+=======
+  </div>
+>>>>>>> Stashed changes
 </div>

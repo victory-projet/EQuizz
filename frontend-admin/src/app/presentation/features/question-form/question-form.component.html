@@ -1,16 +1,12 @@
-<div class="question-form">
-  @if (errorMessage()) {
-    <div class="alert alert-error">{{ errorMessage() }}</div>
-  }
-
-  <div class="form-group">
-    <label class="form-label">Type de question *</label>
-    <select class="form-select" [(ngModel)]="formData.type" (change)="onTypeChange()">
-      <option value="CHOIX_MULTIPLE">QCM (Choix multiples)</option>
-      <option value="REPONSE_OUVERTE">Réponse Ouverte</option>
-    </select>
+<div class="question-form-container">
+  <div class="form-header">
+    <h2 class="form-title">Créer une nouvelle question</h2>
+    <p class="form-subtitle">
+      Remplissez les informations ci-dessous pour créer votre question
+    </p>
   </div>
 
+<<<<<<< Updated upstream
   <div class="form-group">
     <label class="form-label">Énoncé de la question *</label>
     <textarea 
@@ -41,11 +37,157 @@
             }
           </div>
         }
+=======
+  <form [formGroup]="questionForm" (ngSubmit)="onSubmit()" class="question-form">
+    
+    <!-- Message d'erreur global -->
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <i class="icon-alert-circle"></i>
+        {{ errorMessage() }}
+>>>>>>> Stashed changes
       </div>
-      <button class="btn-add-option" (click)="addOption()" type="button">
-        <span class="material-icons">add</span> Ajouter une option
+    }
+
+    <!-- Type de question -->
+    <div class="form-group">
+      <label for="typeQuestion" class="form-label required">
+        Type de question
+      </label>
+      <select 
+        id="typeQuestion" 
+        formControlName="typeQuestion" 
+        class="form-select"
+        [class.error]="questionForm.get('typeQuestion')?.errors && questionForm.get('typeQuestion')?.touched">
+        <option value="">Sélectionnez un type de question</option>
+        @for (type of questionTypes; track type.value) {
+          <option [value]="type.value">{{ type.label }}</option>
+        }
+      </select>
+      @if (getFieldError('typeQuestion')) {
+        <div class="field-error">{{ getFieldError('typeQuestion') }}</div>
+      }
+    </div>
+
+    <!-- Énoncé de la question -->
+    <div class="form-group">
+      <label for="enonce" class="form-label required">
+        Énoncé de la question
+      </label>
+      <textarea 
+        id="enonce" 
+        formControlName="enonce" 
+        class="form-textarea"
+        [class.error]="questionForm.get('enonce')?.errors && questionForm.get('enonce')?.touched"
+        placeholder="Saisissez l'énoncé de votre question..."
+        rows="4">
+      </textarea>
+      @if (getFieldError('enonce')) {
+        <div class="field-error">{{ getFieldError('enonce') }}</div>
+      }
+      <div class="field-hint">
+        Minimum 10 caractères requis
+      </div>
+    </div>
+
+    <!-- Options pour choix multiples -->
+    @if (isChoixMultiple) {
+      <div class="form-group">
+        <label class="form-label required">
+          Options de réponse
+        </label>
+        <div class="options-container">
+          @for (option of options.controls; track $index; let i = $index) {
+            <div class="option-item">
+              <div class="option-input-group">
+                <span class="option-number">{{ i + 1 }}.</span>
+                <input 
+                  type="text" 
+                  [formControl]="$any(option)"
+                  class="form-input option-input"
+                  [class.error]="option.errors && option.touched"
+                  [placeholder]="'Option ' + (i + 1)">
+                @if (options.length > 2) {
+                  <button 
+                    type="button" 
+                    class="btn-remove-option"
+                    (click)="removeOption(i)"
+                    title="Supprimer cette option">
+                    <i class="icon-trash"></i>
+                  </button>
+                }
+              </div>
+              @if (getOptionError(i)) {
+                <div class="field-error">{{ getOptionError(i) }}</div>
+              }
+            </div>
+          }
+          
+          <button 
+            type="button" 
+            class="btn-add-option"
+            (click)="addOption()">
+            <i class="icon-plus"></i>
+            Ajouter une option
+          </button>
+        </div>
+        <div class="field-hint">
+          Minimum 2 options requises pour les questions à choix multiples
+        </div>
+      </div>
+    }
+
+    <!-- Aperçu de la question -->
+    @if (questionForm.get('enonce')?.value && questionForm.get('typeQuestion')?.value) {
+      <div class="question-preview">
+        <h4 class="preview-title">Aperçu de la question</h4>
+        <div class="preview-content">
+          <div class="preview-question">
+            <strong>{{ questionForm.get('enonce')?.value }}</strong>
+          </div>
+          
+          @if (isChoixMultiple && options.length > 0) {
+            <div class="preview-options">
+              @for (option of options.controls; track $index; let i = $index) {
+                @if (option.value) {
+                  <div class="preview-option">
+                    <input type="radio" disabled> {{ option.value }}
+                  </div>
+                }
+              }
+            </div>
+          } @else if (questionForm.get('typeQuestion')?.value === 'REPONSE_OUVERTE') {
+            <div class="preview-open-response">
+              <textarea placeholder="Zone de réponse libre..." disabled rows="3"></textarea>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button 
+        type="button" 
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        [disabled]="isLoading()">
+        Annuler
+      </button>
+      <button 
+        type="submit" 
+        class="btn btn-primary"
+        [disabled]="!questionForm.valid || isLoading()">
+        @if (isLoading()) {
+          <i class="icon-loader spinning"></i>
+          Création...
+        } @else {
+          <i class="icon-plus"></i>
+          Créer la question
+        }
       </button>
     </div>
+<<<<<<< Updated upstream
   }
 
   @if (formData.type === 'TEXTE_LIBRE') {
@@ -68,3 +210,7 @@
     </button>
   </div>
 </div>
+=======
+  </form>
+</div>
+>>>>>>> Stashed changes

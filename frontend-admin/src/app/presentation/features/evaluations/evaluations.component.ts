@@ -116,19 +116,42 @@ export class EvaluationsComponent implements OnInit {
 
   // Actions avec confirmation
   async publishEvaluation(evaluation: Evaluation): Promise<void> {
+    console.log('🚀 Tentative de publication de l\'évaluation:', evaluation.id, evaluation.titre);
+    console.log('📊 Nombre de questions:', this.getQuestionCount(evaluation));
+    
     const confirmed = await this.confirmationService.confirmPublish(evaluation.titre);
-    if (!confirmed) return;
+    if (!confirmed) {
+      console.log('❌ Publication annulée par l\'utilisateur');
+      return;
+    }
 
     this.isLoading.set(true);
+    console.log('📡 Envoi de la requête de publication...');
+    
     this.evaluationUseCase.publishEvaluation(evaluation.id as any).subscribe({
-      next: () => {
+      next: (result) => {
+        console.log('✅ Publication réussie:', result);
         this.successMessage.set('Évaluation publiée avec succès');
         this.loadEvaluations();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la publication');
+        console.error('❌ Erreur lors de la publication:', error);
+        console.error('❌ Status:', error.status);
+        console.error('❌ Error details:', error.error);
+        
+        let errorMsg = 'Erreur lors de la publication';
+        if (error.error?.message) {
+          errorMsg = error.error.message;
+        } else if (error.status === 400) {
+          errorMsg = 'Impossible de publier cette évaluation. Vérifiez qu\'elle contient au moins une question.';
+        } else if (error.status === 404) {
+          errorMsg = 'Évaluation non trouvée.';
+        }
+        
+        this.errorMessage.set(errorMsg);
         this.isLoading.set(false);
+        setTimeout(() => this.errorMessage.set(''), 5000);
       }
     });
   }
@@ -151,32 +174,70 @@ export class EvaluationsComponent implements OnInit {
     });
   }
 
+  async debugDelete(evaluation: Evaluation): Promise<void> {
+    console.log('🔍 Debug - Test de suppression pour:', evaluation.id, evaluation.titre);
+    
+    this.evaluationUseCase.debugDelete(evaluation.id as any).subscribe({
+      next: (debugInfo) => {
+        console.log('🔍 Debug - Informations de suppression:', debugInfo);
+        
+        let message = `Debug pour "${evaluation.titre}":\n`;
+        message += `- ID: ${debugInfo.evaluation.id}\n`;
+        message += `- Statut: ${debugInfo.evaluation.statut}\n`;
+        message += `- A un quizz: ${debugInfo.evaluation.hasQuizz ? 'Oui' : 'Non'}\n`;
+        message += `- Nombre de questions: ${debugInfo.evaluation.questionsCount}\n`;
+        message += `- Soumissions: ${debugInfo.submissionsCount}\n`;
+        message += `- Peut être supprimé: ${debugInfo.canDelete ? 'Oui' : 'Non'}\n`;
+        message += `- Message: ${debugInfo.message}`;
+        
+        alert(message);
+      },
+      error: (error) => {
+        console.error('❌ Debug - Erreur:', error);
+        alert(`Erreur de debug: ${error.error?.message || error.message}`);
+      }
+    });
+  }
+
   async deleteEvaluation(evaluation: Evaluation): Promise<void> {
     const confirmed = await this.confirmationService.confirmDelete(evaluation.titre);
     if (!confirmed) return;
 
+    console.log('🗑️ Tentative de suppression de l\'évaluation:', evaluation.id, evaluation.titre);
     this.isLoading.set(true);
+    
     this.evaluationUseCase.deleteEvaluation(evaluation.id as any).subscribe({
-      next: () => {
+      next: (response) => {
+        console.log('✅ Suppression réussie:', response);
         this.successMessage.set('Évaluation supprimée avec succès');
         this.loadEvaluations();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
-        console.error('❌ Erreur suppression:', error);
+        console.error('❌ Erreur suppression complète:', error);
+        console.error('❌ Status:', error.status);
+        console.error('❌ Error object:', error.error);
+        console.error('❌ Message:', error.message);
+        
         let errorMsg = 'Erreur lors de la suppression';
         
-        if (error.error?.message) {
+        // Gestion des erreurs spécifiques
+        if (error.status === 404) {
+          errorMsg = 'Cette évaluation n\'existe plus ou a déjà été supprimée.';
+        } else if (error.status === 400) {
+          if (error.error?.message) {
+            errorMsg = error.error.message;
+          } else if (error.error?.code === 'HAS_SUBMISSIONS') {
+            errorMsg = 'Impossible de supprimer une évaluation qui a des soumissions d\'étudiants.';
+          }
+        } else if (error.status === 403) {
+          errorMsg = 'Vous n\'avez pas les permissions pour supprimer cette évaluation.';
+        } else if (error.status === 500) {
+          errorMsg = 'Erreur serveur lors de la suppression. Veuillez réessayer.';
+        } else if (error.error?.message) {
           errorMsg = error.error.message;
         } else if (error.message) {
           errorMsg = error.message;
-        }
-        
-        // Messages d'erreur spécifiques
-        if (errorMsg.includes('non trouvée')) {
-          errorMsg = 'Cette évaluation n\'existe plus ou a déjà été supprimée.';
-        } else if (errorMsg.includes('soumissions')) {
-          errorMsg = 'Impossible de supprimer une évaluation qui a des soumissions d\'étudiants.';
         }
         
         this.errorMessage.set(errorMsg);
@@ -227,6 +288,7 @@ export class EvaluationsComponent implements OnInit {
     this.showCardMenu.set(null);
   }
 
+<<<<<<< Updated upstream
   showDuplicateMenu(evaluationId: number | string): void {
     this.showDuplicateMenuId.set(evaluationId);
   }
@@ -255,6 +317,8 @@ export class EvaluationsComponent implements OnInit {
     this.router.navigate(['/evaluations', evaluation.id, 'submissions']);
   }
 
+=======
+>>>>>>> Stashed changes
   viewResults(evaluation: Evaluation): void {
     // Rediriger vers la section Rapports au lieu de evaluation-results
     this.router.navigate(['/rapports'], { 
@@ -266,11 +330,6 @@ export class EvaluationsComponent implements OnInit {
     // TODO: Implémenter l'export des résultats
     this.successMessage.set('Export des résultats en cours de développement...');
     setTimeout(() => this.successMessage.set(''), 3000);
-  }
-
-  getSubmissionsCount(evaluation: Evaluation): number {
-    // TODO: Récupérer le nombre réel de soumissions depuis l'API
-    return (evaluation as any).submissionsCount || 0;
   }
 
   getStatusBadgeClass(status: string): string {

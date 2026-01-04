@@ -198,6 +198,15 @@
                       <span class="material-icons">delete</span>
                       Supprimer
                     </button>
+                    <button class="menu-item" (click)="debugDelete(evaluation); hideCardMenu()" title="Debug suppression">
+                      <div class="menu-icon">
+                        <span class="material-icons">bug_report</span>
+                      </div>
+                      <div class="menu-content">
+                        <span class="menu-title">Debug</span>
+                        <span class="menu-subtitle">Tester suppression</span>
+                      </div>
+                    </button>
                   }
                   @if (evaluation.statut === 'PUBLIEE') {
                     <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
@@ -237,6 +246,13 @@
                 <span class="material-icons">help_outline</span>
                 <span>{{ getQuestionCount(evaluation) }} questions • {{ getClassesCount(evaluation) }} classe(s)</span>
               </div>
+<<<<<<< Updated upstream
+=======
+              <div class="stat-item">
+                <span class="material-icons">people</span>
+                <span>{{ getClassesCount(evaluation) }} classe(s)</span>
+              </div>
+>>>>>>> Stashed changes
             </div>
           </div>
 
@@ -251,21 +267,41 @@
                   <span class="material-icons">send</span>
                   Publier
                 </button>
+<<<<<<< Updated upstream
               } @else {
                 <button class="btn-primary card-btn disabled" disabled>
                   <span class="material-icons">send</span>
                   Publier
                 </button>
               }
+=======
+                @if (getQuestionCount(evaluation) > 0) {
+                  <button class="btn-action btn-publish" (click)="publishEvaluation(evaluation); $event.stopPropagation()" title="Publier cette évaluation">
+                    <span class="material-icons">send</span>
+                    <span class="btn-text">Publier</span>
+                  </button>
+                } @else {
+                  <button class="btn-action btn-publish disabled" disabled title="Ajoutez des questions avant de publier">
+                    <span class="material-icons">send</span>
+                    <span class="btn-text">Publier</span>
+                  </button>
+                }
+              </div>
+>>>>>>> Stashed changes
             }
             @if (evaluation.statut === 'PUBLIEE') {
               <button class="btn-view" (click)="viewSubmissions(evaluation); $event.stopPropagation()">
                 <span class="material-icons">people</span>
                 Soumissions
               </button>
+<<<<<<< Updated upstream
               <button class="btn-close" (click)="closeEvaluation(evaluation); $event.stopPropagation()">
                 <span class="material-icons">lock</span>
                 Fermer
+=======
+              <button class="btn-primary" (click)="closeEvaluation(evaluation); $event.stopPropagation()">
+                <span class="material-icons">lock</span> Fermer
+>>>>>>> Stashed changes
               </button>
             }
             @if (evaluation.statut === 'CLOTUREE') {
@@ -273,9 +309,14 @@
                 <span class="material-icons">bar_chart</span>
                 Résultats
               </button>
+<<<<<<< Updated upstream
               <button class="btn-export" (click)="exportResults(evaluation); $event.stopPropagation()">
                 <span class="material-icons">download</span>
                 Exporter
+=======
+              <button class="btn-primary" (click)="viewResults(evaluation); $event.stopPropagation()">
+                <span class="material-icons">bar_chart</span> Rapport
+>>>>>>> Stashed changes
               </button>
             }
           </div>

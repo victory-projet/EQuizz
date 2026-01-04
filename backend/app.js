@@ -66,6 +66,66 @@ app.use('/api/cours', coursRoutes);
 app.use('/api/classes', classeRoutes);
 app.use('/api', questionRoutes);
 
+// Route de test temporaire pour debug de suppression (sans authentification)
+app.get('/api/test/evaluations/:id/debug-delete', async (req, res) => {
+  const { id } = req.params;
+  console.log('🔍 Test Debug - Test de suppression pour l\'évaluation:', id);
+  
+  try {
+    const db = require('./src/models');
+    
+    // Vérifier que l'évaluation existe
+    const evaluation = await db.Evaluation.findByPk(id, {
+      include: [
+        { model: db.Cours, required: false },
+        { model: db.Quizz, include: [db.Question], required: false }
+      ]
+    });
+
+    if (!evaluation) {
+      return res.status(404).json({ error: 'Évaluation non trouvée' });
+    }
+
+    console.log('✅ Test Debug - Évaluation trouvée:', {
+      id: evaluation.id,
+      titre: evaluation.titre,
+      statut: evaluation.statut,
+      hasQuizz: !!evaluation.Quizz,
+      quizzId: evaluation.Quizz?.id
+    });
+
+    // Vérifier les soumissions
+    let submissionsCount = 0;
+    if (evaluation.Quizz) {
+      submissionsCount = await db.SessionReponse.count({
+        where: { quizz_id: evaluation.Quizz.id }
+      });
+      console.log('📊 Test Debug - Nombre de soumissions:', submissionsCount);
+    }
+
+    res.json({
+      evaluation: {
+        id: evaluation.id,
+        titre: evaluation.titre,
+        statut: evaluation.statut,
+        hasQuizz: !!evaluation.Quizz,
+        quizzId: evaluation.Quizz?.id,
+        questionsCount: evaluation.Quizz?.Questions?.length || 0
+      },
+      submissionsCount,
+      canDelete: submissionsCount === 0,
+      message: submissionsCount > 0 ? 'Suppression bloquée par les soumissions' : 'Suppression possible'
+    });
+
+  } catch (error) {
+    console.error('❌ Test Debug - Erreur:', error);
+    res.status(500).json({ 
+      error: error.message,
+      stack: error.stack 
+    });
+  }
+});
+
 // --- Route 404 pour les endpoints non trouvés ---
 app.use((req, res, next) => {
   const error = new Error(`Route non trouvée: ${req.method} ${req.originalUrl}`);

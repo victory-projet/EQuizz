@@ -14,8 +14,14 @@ export abstract class EvaluationRepositoryInterface {
   abstract close(id: string | number): Observable<Evaluation>;
 
   // Questions
+<<<<<<< Updated upstream
   abstract addQuestion(quizzId: string | number, question: QuestionFormData): Observable<Question>;
   abstract updateQuestion(questionId: string | number, question: QuestionFormData): Observable<Question>;
+=======
+  abstract addQuestion(quizzId: string | number, question: Partial<Question>): Observable<Question>;
+  abstract getQuestionsByQuizz(quizzId: string | number): Observable<Question[]>;
+  abstract updateQuestion(questionId: string | number, question: Partial<Question>): Observable<Question>;
+>>>>>>> Stashed changes
   abstract deleteQuestion(questionId: string | number): Observable<void>;
   abstract importQuestions(quizzId: string | number, file: File): Observable<QuestionImportData>;
 
@@ -25,4 +31,7 @@ export abstract class EvaluationRepositoryInterface {
 
   // Duplication
   abstract duplicateEvaluation(id: string | number): Observable<Evaluation>;
+
+  // Debug
+  abstract debugDelete(id: string | number): Observable<any>;
 }

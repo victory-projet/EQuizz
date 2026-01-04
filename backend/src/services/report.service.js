@@ -18,7 +18,10 @@ class ReportService {
     const evaluation = await db.Evaluation.findByPk(evaluationId, {
       include: [
         { model: db.Cours, required: false },
-        { model: db.Classe },
+        { 
+          model: db.Classe,
+          through: { attributes: [] } // Exclure les attributs de la table de jonction
+        },
         {
           model: db.Quizz,
           include: [
@@ -30,7 +33,19 @@ class ReportService {
                   include: [
                     { 
                       model: db.SessionReponse,
-                      attributes: ['id', 'dateDebut', 'dateFin', 'statut'],  // Seulement les infos de session
+                      attributes: ['id', 'dateDebut', 'dateFin', 'statut'],
+                      include: [
+                        {
+                          model: db.Etudiant,
+                          attributes: ['id'],
+                          include: [
+                            {
+                              model: db.Classe,
+                              attributes: ['id', 'nom']
+                            }
+                          ]
+                        }
+                      ]
                     },
                     { model: db.AnalyseReponse }
                   ]
@@ -48,15 +63,19 @@ class ReportService {
 
     // Filtrer par classe si nécessaire
     let reponses = [];
-    evaluation.Quizz.Questions.forEach(question => {
-      question.ReponseEtudiants.forEach(reponse => {
-        // L'étudiant est accessible via SessionReponse
-        const etudiant = reponse.SessionReponse?.Etudiant;
-        if (etudiant && (!classeId || etudiant.Classe?.id === classeId)) {
-          reponses.push(reponse);
+    if (evaluation.Quizz && evaluation.Quizz.Questions) {
+      evaluation.Quizz.Questions.forEach(question => {
+        if (question.ReponseEtudiants) {
+          question.ReponseEtudiants.forEach(reponse => {
+            // L'étudiant est accessible via SessionReponse
+            const etudiant = reponse.SessionReponse?.Etudiant;
+            if (etudiant && (!classeId || etudiant.Classe?.id === classeId)) {
+              reponses.push(reponse);
+            }
+          });
         }
       });
-    });
+    }
 
     // Calculer les statistiques
     const stats = await this.calculateStatistics(evaluation, classeId);
@@ -71,7 +90,7 @@ class ReportService {
       evaluation: {
         id: evaluation.id,
         titre: evaluation.titre,
-        cours: evaluation.Cour?.nom || evaluation.Cours?.nom || 'Non défini',
+        cours: evaluation.Cours?.nom || 'Non défini',
         dateDebut: evaluation.dateDebut,
         dateFin: evaluation.dateFin,
         statut: evaluation.statut,
@@ -98,45 +117,54 @@ class ReportService {
       });
       totalEtudiants = classe ? classe.Etudiants.length : 0;
     } else {
-      for (const classe of evaluation.Classes) {
-        const classeWithEtudiants = await db.Classe.findByPk(classe.id, {
-          include: [{ model: db.Etudiant }]
-        });
-        totalEtudiants += classeWithEtudiants.Etudiants.length;
+      // Utiliser les classes associées à l'évaluation
+      if (evaluation.Classes && evaluation.Classes.length > 0) {
+        for (const classe of evaluation.Classes) {
+          const classeWithEtudiants = await db.Classe.findByPk(classe.id, {
+            include: [{ model: db.Etudiant }]
+          });
+          if (classeWithEtudiants && classeWithEtudiants.Etudiants) {
+            totalEtudiants += classeWithEtudiants.Etudiants.length;
+          }
+        }
       }
     }
 
-   // Nombre d'étudiants ayant répondu (anonymat complet - on compte les sessions uniques)
-const whereClause = { quizz_id: evaluation.Quizz.id };
+    // Nombre d'étudiants ayant répondu
+    const whereClause = { quizz_id: evaluation.Quizz.id };
 
-if (classeId) {
-  whereClause['$Etudiant.classe_id$'] = classeId;
-}
+    try {
+      const nombreRepondants = await db.SessionReponse.count({
+        where: whereClause,
+        include: classeId ? [
+          {
+            model: db.Etudiant,
+            attributes: [],
+            where: { classe_id: classeId },
+            required: true
+          }
+        ] : [],
+        distinct: true,
+        col: 'id'
+      });
 
-// Utiliser COUNT DISTINCT pour éviter les problèmes de GROUP BY
-const nombreRepondants = await db.SessionReponse.count({
-  where: whereClause,
-  include: classeId ? [
-    {
-      model: db.Etudiant,
-      attributes: [],  // Pas d'attributs pour respecter l'anonymat
-      where: { classe_id: classeId },
-      required: true
+      const tauxParticipation = totalEtudiants > 0 
+        ? ((nombreRepondants / totalEtudiants) * 100).toFixed(2)
+        : 0;
+
+      return {
+        totalEtudiants,
+        nombreRepondants,
+        tauxParticipation: parseFloat(tauxParticipation)
+      };
+    } catch (error) {
+      console.error('Erreur calcul statistiques:', error);
+      return {
+        totalEtudiants,
+        nombreRepondants: 0,
+        tauxParticipation: 0
+      };
     }
-  ] : [],
-  distinct: true,
-  col: 'id'
-});
-
-    const tauxParticipation = totalEtudiants > 0 
-      ? ((nombreRepondants / totalEtudiants) * 100).toFixed(2)
-      : 0;
-
-    return {
-      totalEtudiants,
-      nombreRepondants,
-      tauxParticipation: parseFloat(tauxParticipation)
-    };
   }
 
   /**
@@ -252,11 +280,17 @@ const nombreRepondants = await db.SessionReponse.count({
   async getQuestionDetails(evaluation, classeId = null) {
     const questions = [];
 
+    if (!evaluation.Quizz || !evaluation.Quizz.Questions) {
+      return questions;
+    }
+
     for (const question of evaluation.Quizz.Questions) {
-      let reponses = question.ReponseEtudiants;
+      let reponses = question.ReponseEtudiants || [];
       
-      if (classeId) {
-        reponses = reponses.filter(r => r.Etudiant.Classe.id === classeId);
+      if (classeId && reponses.length > 0) {
+        reponses = reponses.filter(r => 
+          r.SessionReponse?.Etudiant?.Classe?.id === classeId
+        );
       }
 
       const questionData = {
@@ -268,10 +302,30 @@ const nombreRepondants = await db.SessionReponse.count({
 
       if (question.typeQuestion === 'CHOIX_MULTIPLE') {
         // Calculer la répartition des réponses
+        let options = question.options || [];
+        
+        // Si options est une string JSON, la parser
+        if (typeof options === 'string') {
+          try {
+            options = JSON.parse(options);
+          } catch (e) {
+            console.warn('Erreur parsing options JSON:', e);
+            options = [];
+          }
+        }
+        
+        // S'assurer que options est un array
+        if (!Array.isArray(options)) {
+          options = [];
+        }
+
+        // Vérifier que options n'est pas vide avant d'utiliser forEach
         const distribution = {};
-        question.options.forEach(option => {
-          distribution[option] = 0;
-        });
+        if (options.length > 0) {
+          options.forEach(option => {
+            distribution[option] = 0;
+          });
+        }
 
         reponses.forEach(reponse => {
           if (reponse.contenu && Object.prototype.hasOwnProperty.call(distribution, reponse.contenu)) {
@@ -279,7 +333,7 @@ const nombreRepondants = await db.SessionReponse.count({
           }
         });
 
-        questionData.options = question.options;
+        questionData.options = options;
         questionData.distribution = distribution;
         questionData.distributionPct = {};
         

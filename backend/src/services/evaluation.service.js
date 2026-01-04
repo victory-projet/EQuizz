@@ -17,6 +17,7 @@ class EvaluationService {
    * @param {string} adminId - ID de l'administrateur qui crée l'évaluation.
    */
   async create(data, adminId) {
+<<<<<<< Updated upstream
     const { classeIds, coursId, ...evaluationData } = data;
     
     // Mapper coursId vers cours_id pour la compatibilité backend
@@ -24,8 +25,17 @@ class EvaluationService {
       evaluationData.cours_id = coursId;
     }
     
+=======
+    const { classeIds, ...evaluationData } = data;
+    
+    // Validation des données d'entrée
+>>>>>>> Stashed changes
     if (!classeIds || !Array.isArray(classeIds) || classeIds.length === 0) {
       throw AppError.badRequest('Au moins une classe doit être ciblée.', 'CLASSES_REQUIRED');
+    }
+
+    if (!evaluationData.cours_id) {
+      throw AppError.badRequest('Un cours doit être sélectionné pour créer l\'évaluation.', 'COURS_REQUIRED');
     }
 
     const transaction = await db.sequelize.transaction();
@@ -121,19 +131,33 @@ class EvaluationService {
   }
 
   async delete(id) {
+    console.log('🗑️ Service - Tentative de suppression de l\'évaluation ID:', id);
+    
     // Vérifier d'abord que l'évaluation existe
     const evaluation = await evaluationRepository.findById(id);
     if (!evaluation) {
+      console.log('❌ Service - Évaluation non trouvée:', id);
       throw AppError.notFound('Évaluation non trouvée.', 'EVALUATION_NOT_FOUND');
     }
 
+    console.log('✅ Service - Évaluation trouvée:', {
+      id: evaluation.id,
+      titre: evaluation.titre,
+      statut: evaluation.statut,
+      hasQuizz: !!evaluation.Quizz
+    });
+
     // Vérifier que l'évaluation peut être supprimée (pas de soumissions)
     if (evaluation.Quizz) {
+      console.log('🔍 Service - Vérification des soumissions pour le quizz:', evaluation.Quizz.id);
       const submissionsCount = await db.SessionReponse.count({
         where: { quizz_id: evaluation.Quizz.id }
       });
       
+      console.log('📊 Service - Nombre de soumissions trouvées:', submissionsCount);
+      
       if (submissionsCount > 0) {
+        console.log('❌ Service - Suppression bloquée: évaluation avec soumissions');
         throw AppError.badRequest(
           'Impossible de supprimer une évaluation qui a des soumissions d\'étudiants.', 
           'HAS_SUBMISSIONS'
@@ -141,10 +165,16 @@ class EvaluationService {
       }
     }
 
+    console.log('🗑️ Service - Procédure de suppression...');
     const result = await evaluationRepository.delete(id);
+    console.log('✅ Service - Résultat de la suppression:', result);
+    
     if (result === 0) {
+      console.log('❌ Service - Aucune ligne supprimée');
       throw AppError.notFound('Évaluation non trouvée.', 'EVALUATION_NOT_FOUND');
     }
+    
+    console.log('✅ Service - Suppression réussie');
     return { message: 'Évaluation supprimée avec succès.' };
   }
 
@@ -181,7 +211,44 @@ class EvaluationService {
     return { message: 'Question supprimée avec succès.' };
   }
 
+  /**
+   * Récupère toutes les questions d'un quizz.
+   * @param {string} quizzId - L'ID du quizz.
+   */
+  async getQuestionsByQuizz(quizzId) {
+    // Vérifier que le quizz existe
+    const quizz = await db.Quizz.findByPk(quizzId);
+    if (!quizz) {
+      throw AppError.notFound('Quizz non trouvé.', 'QUIZZ_NOT_FOUND');
+    }
+
+    // Récupérer les questions du quizz
+    const questions = await db.Question.findAll({
+      where: { quizz_id: quizzId },
+      order: [['createdAt', 'ASC']]
+    });
+
+    return questions;
+  }
+
   async importQuestionsFromExcel(quizzId, fileBuffer) {
+    // Validation de l'ID du quiz
+    if (!quizzId || quizzId === 'null' || quizzId === 'undefined') {
+      throw AppError.badRequest('ID du quiz requis et valide.', 'QUIZZ_ID_REQUIRED');
+    }
+
+    // Vérifier que le quiz existe
+    const quizz = await db.Quizz.findByPk(quizzId);
+    if (!quizz) {
+      throw AppError.notFound('Quiz non trouvé.', 'QUIZZ_NOT_FOUND');
+    }
+
+    // Vérifier que l'évaluation n'est pas clôturée
+    const evaluation = await evaluationRepository.findById(quizz.evaluation_id);
+    if (evaluation && evaluation.statut === 'CLOTUREE') {
+      throw AppError.badRequest('Impossible d\'importer des questions dans une évaluation clôturée.', 'EVALUATION_CLOSED');
+    }
+
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(fileBuffer);
 
@@ -215,7 +282,7 @@ class EvaluationService {
         enonce,
         typeQuestion,
         options,
-        quizz_id: quizzId
+        quizz_id: parseInt(quizzId) // S'assurer que c'est un entier valide
       });
     });
 
@@ -234,7 +301,11 @@ class EvaluationService {
     }
 
     if (evaluation.statut === 'CLOTUREE') {
-      throw AppError.badRequest('Cette évaluation est déjà clôturée.', 'ALREADY_CLOSED');
+      // Retourner l'évaluation existante au lieu de lancer une erreur
+      return {
+        ...evaluation,
+        message: 'Cette évaluation est déjà clôturée.'
+      };
     }
 
     // Mettre à jour le statut
