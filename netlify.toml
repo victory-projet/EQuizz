@@ -3,7 +3,7 @@
   base = "frontend-admin/"
   
   # Commande de build avec gestion des conflits de dépendances
-  command = "npm ci --legacy-peer-deps && npm run build"
+  command = "npm install --legacy-peer-deps && npm run build"
   
   # Répertoire de publication (où se trouvent les fichiers buildés)
   publish = "dist/frontend-admin/browser/"
