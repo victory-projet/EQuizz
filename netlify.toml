@@ -9,8 +9,8 @@
   publish = "dist/frontend-admin/browser/"
 
 [build.environment]
-  # Version de Node.js à utiliser
-  NODE_VERSION = "18"
+  # Version de Node.js à utiliser (Angular CLI 20.2.0 nécessite Node 20.19+ ou 22.12+)
+  NODE_VERSION = "20"
   
   # Variables d'environnement pour le build
   NG_CLI_ANALYTICS = "false"
