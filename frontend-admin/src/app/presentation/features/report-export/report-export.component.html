@@ -1,0 +1,432 @@
+<div class="report-container">
+  <!-- En-tête -->
+  <div class="report-header">
+    <div class="header-content">
+      <h1 class="report-title">Rapport d'Évaluation Avancé</h1>
+      @if (reportData()) {
+        <div class="evaluation-info">
+          <h2 class="evaluation-title">{{ reportData()!.evaluation.titre }}</h2>
+          <p class="evaluation-details">
+            <span class="course">{{ reportData()!.evaluation.cours }}</span>
+            <span class="separator">•</span>
+            <span class="status">{{ reportData()!.evaluation.statut }}</span>
+          </p>
+        </div>
+      }
+    </div>
+    <div class="header-actions">
+      <button 
+        class="btn btn-primary"
+        (click)="onExport()"
+        [disabled]="isExporting()">
+        @if (isExporting()) {
+          <i class="material-icons spinning">refresh</i>
+          Export en cours...
+        } @else {
+          <i class="material-icons">download</i>
+          Exporter
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      <i class="material-icons">check_circle</i>
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      <i class="material-icons">error</i>
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Filtres -->
+  <div class="filters-section">
+    <h3 class="filters-title">Filtres d'analyse</h3>
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label for="classe-filter">Classe</label>
+        <select 
+          id="classe-filter"
+          [(ngModel)]="filterClasseId"
+          (change)="onFilterChange()"
+          class="filter-select">
+          <option value="">Toutes les classes</option>
+          @for (classe of classes(); track classe.id) {
+            <option [value]="classe.id">{{ classe.nom }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="enseignant-filter">Enseignant</label>
+        <select 
+          id="enseignant-filter"
+          [(ngModel)]="filterEnseignantId"
+          (change)="onFilterChange()"
+          class="filter-select">
+          <option value="">Tous les enseignants</option>
+          @for (enseignant of enseignants(); track enseignant.id) {
+            <option [value]="enseignant.id">{{ enseignant.nom }} {{ enseignant.prenom }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- État de chargement -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="loading-spinner">
+        <i class="material-icons spinning">refresh</i>
+      </div>
+      <p class="loading-text">Génération du rapport en cours...</p>
+    </div>
+  } @else if (reportData()) {
+    <!-- Navigation par onglets -->
+    <div class="tabs-navigation">
+      <button 
+        class="tab-button"
+        [class.active]="activeTab() === 'overview'"
+        (click)="onTabChange('overview')">
+        <i class="material-icons">dashboard</i>
+        Vue d'ensemble
+      </button>
+      <button 
+        class="tab-button"
+        [class.active]="activeTab() === 'questions'"
+        (click)="onTabChange('questions')">
+        <i class="material-icons">quiz</i>
+        Questions
+      </button>
+      <button 
+        class="tab-button"
+        [class.active]="activeTab() === 'sentiment'"
+        (click)="onTabChange('sentiment')">
+        <i class="material-icons">sentiment_satisfied</i>
+        Sentiments
+      </button>
+      <button 
+        class="tab-button"
+        [class.active]="activeTab() === 'responses'"
+        (click)="onTabChange('responses')">
+        <i class="material-icons">forum</i>
+        Réponses
+      </button>
+    </div>
+
+    <!-- Contenu des onglets -->
+    <div class="tab-content">
+      <!-- Vue d'ensemble -->
+      @if (activeTab() === 'overview') {
+        <div class="overview-section">
+          <!-- Statistiques principales -->
+          <div class="stats-grid">
+            <div class="stat-card participation">
+              <div class="stat-icon">
+                <i class="material-icons">people</i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-number">{{ reportData()!.statistics.tauxParticipation }}%</div>
+                <div class="stat-label">Taux de participation</div>
+                <div class="stat-detail">
+                  {{ reportData()!.statistics.nombreRepondants }} / {{ reportData()!.statistics.totalEtudiants }} étudiants
+                </div>
+              </div>
+              <div class="stat-indicator" [style.background-color]="getParticipationColor(reportData()!.statistics.tauxParticipation)"></div>
+            </div>
+
+            <div class="stat-card questions">
+              <div class="stat-icon">
+                <i class="material-icons">quiz</i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-number">{{ reportData()!.questions.length }}</div>
+                <div class="stat-label">Questions</div>
+                <div class="stat-detail">
+                  {{ getMultipleChoiceCount() }} QCM, 
+                  {{ getOpenQuestionCount() }} ouvertes
+                </div>
+              </div>
+            </div>
+
+            @if (reportData()!.sentimentAnalysis.total > 0) {
+              <div class="stat-card sentiment">
+                <div class="stat-icon">
+                  <i class="material-icons">sentiment_satisfied</i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-number">{{ reportData()!.sentimentAnalysis.sentiments.positifPct }}%</div>
+                  <div class="stat-label">Sentiment positif</div>
+                  <div class="stat-detail">
+                    {{ reportData()!.sentimentAnalysis.total }} réponses analysées
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Graphiques de synthèse -->
+          @if (chartData()['participation']) {
+            <div class="chart-section">
+              <h4 class="chart-title">Répartition de la participation</h4>
+              <div class="chart-container">
+                <!-- Ici on intégrerait Chart.js ou une autre librairie -->
+                <div class="chart-placeholder">
+                  <i class="material-icons">bar_chart</i>
+                  <p>Graphique de participation</p>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Questions détaillées -->
+      @if (activeTab() === 'questions') {
+        <div class="questions-section">
+          <div class="questions-list">
+            @for (question of reportData()!.questions; track question.id) {
+              <div class="question-card">
+                <div class="question-header">
+                  <div class="question-info">
+                    <h4 class="question-title">{{ question.enonce }}</h4>
+                    <div class="question-meta">
+                      <span class="question-type" [class]="'type-' + question.typeQuestion.toLowerCase()">
+                        {{ question.typeQuestion === 'CHOIX_MULTIPLE' ? 'QCM' : 'Réponse ouverte' }}
+                      </span>
+                      <span class="question-responses">{{ question.totalReponses }} réponses</span>
+                    </div>
+                  </div>
+                  @if (question.typeQuestion === 'REPONSE_OUVERTE') {
+                    <button 
+                      class="btn btn-secondary btn-sm"
+                      (click)="onQuestionSelect(question.id)">
+                      <i class="material-icons">visibility</i>
+                      Voir les réponses
+                    </button>
+                  }
+                </div>
+
+                @if (question.typeQuestion === 'CHOIX_MULTIPLE' && question.distribution) {
+                  <div class="question-chart">
+                    <h5 class="chart-subtitle">Répartition des réponses</h5>
+                    <div class="distribution-bars">
+                      @for (option of question.options || []; track option) {
+                        <div class="distribution-item">
+                          <div class="option-label">{{ option }}</div>
+                          <div class="option-bar">
+                            <div 
+                              class="option-fill"
+                              [style.width.%]="question.distributionPct![option]">
+                            </div>
+                            <span class="option-value">
+                              {{ question.distribution![option] }} ({{ question.distributionPct![option] }}%)
+                            </span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Analyse des sentiments -->
+      @if (activeTab() === 'sentiment') {
+        <div class="sentiment-section">
+          @if (reportData()!.sentimentAnalysis.total > 0) {
+            <!-- Répartition des sentiments -->
+            <div class="sentiment-overview">
+              <h4 class="section-title">Répartition des sentiments</h4>
+              <div class="sentiment-stats">
+                <div class="sentiment-item positif">
+                  <div class="sentiment-icon">
+                    <i class="material-icons">sentiment_satisfied</i>
+                  </div>
+                  <div class="sentiment-data">
+                    <div class="sentiment-count">{{ reportData()!.sentimentAnalysis.sentiments.positif }}</div>
+                    <div class="sentiment-percentage">{{ reportData()!.sentimentAnalysis.sentiments.positifPct }}%</div>
+                    <div class="sentiment-label">Positif</div>
+                  </div>
+                </div>
+
+                <div class="sentiment-item neutre">
+                  <div class="sentiment-icon">
+                    <i class="material-icons">sentiment_neutral</i>
+                  </div>
+                  <div class="sentiment-data">
+                    <div class="sentiment-count">{{ reportData()!.sentimentAnalysis.sentiments.neutre }}</div>
+                    <div class="sentiment-percentage">{{ reportData()!.sentimentAnalysis.sentiments.neutrePct }}%</div>
+                    <div class="sentiment-label">Neutre</div>
+                  </div>
+                </div>
+
+                <div class="sentiment-item negatif">
+                  <div class="sentiment-icon">
+                    <i class="material-icons">sentiment_dissatisfied</i>
+                  </div>
+                  <div class="sentiment-data">
+                    <div class="sentiment-count">{{ reportData()!.sentimentAnalysis.sentiments.negatif }}</div>
+                    <div class="sentiment-percentage">{{ reportData()!.sentimentAnalysis.sentiments.negatifPct }}%</div>
+                    <div class="sentiment-label">Négatif</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Résumé IA -->
+            @if (reportData()!.sentimentAnalysis.summary) {
+              <div class="ai-summary">
+                <h4 class="section-title">
+                  <i class="material-icons">psychology</i>
+                  Résumé par IA
+                </h4>
+                <div class="summary-content">
+                  {{ reportData()!.sentimentAnalysis.summary }}
+                </div>
+              </div>
+            }
+
+            <!-- Mots-clés -->
+            @if (reportData()!.sentimentAnalysis.keywords.length > 0) {
+              <div class="keywords-section">
+                <h4 class="section-title">Mots-clés principaux</h4>
+                <div class="keywords-cloud">
+                  @for (keyword of reportData()!.sentimentAnalysis.keywords.slice(0, 20); track keyword.word) {
+                    <span 
+                      class="keyword-tag"
+                      [style.font-size.px]="12 + (keyword.count * 2)">
+                      {{ keyword.word }} ({{ keyword.count }})
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="no-sentiment">
+              <i class="material-icons">sentiment_neutral</i>
+              <h4>Aucune donnée de sentiment</h4>
+              <p>Cette évaluation ne contient pas de questions ouvertes ou aucune réponse n'a été analysée.</p>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Réponses anonymes -->
+      @if (activeTab() === 'responses') {
+        <div class="responses-section">
+          @if (anonymousResponses().length > 0) {
+            <div class="responses-header">
+              <h4 class="section-title">Réponses anonymes aux questions ouvertes</h4>
+              @if (selectedQuestionId()) {
+                <button 
+                  class="btn btn-secondary"
+                  (click)="selectedQuestionId.set(null); loadAnonymousResponses()">
+                  <i class="material-icons">clear</i>
+                  Voir toutes les questions
+                </button>
+              }
+            </div>
+
+            @for (questionGroup of anonymousResponses(); track questionGroup.questionId) {
+              <div class="question-responses">
+                <div class="question-header">
+                  <h5 class="question-text">{{ questionGroup.questionText }}</h5>
+                  <span class="responses-count">{{ questionGroup.responses.length }} réponses</span>
+                </div>
+
+                <div class="responses-list">
+                  @for (response of questionGroup.responses; track response.id) {
+                    <div class="response-item">
+                      <div class="response-content">
+                        <p class="response-text">{{ response.contenu }}</p>
+                        <div class="response-meta">
+                          @if (response.sentiment) {
+                            <span 
+                              class="sentiment-badge"
+                              [style.color]="getSentimentColor(response.sentiment)">
+                              <i class="material-icons">{{ getSentimentIcon(response.sentiment) }}</i>
+                              {{ response.sentiment }}
+                            </span>
+                          }
+                          <span class="response-date">{{ response.dateReponse | date:'dd/MM/yyyy HH:mm' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="no-responses">
+              <i class="material-icons">forum</i>
+              <h4>Aucune réponse disponible</h4>
+              <p>Aucune réponse ouverte n'a été trouvée pour les filtres sélectionnés.</p>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Options d'export -->
+    <div class="export-section">
+      <h4 class="section-title">Options d'export</h4>
+      <div class="export-options">
+        <div class="option-group">
+          <label class="option-label">Format</label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input 
+                type="radio" 
+                name="format" 
+                value="excel"
+                [(ngModel)]="exportFormat">
+              <span class="radio-text">Excel (.xlsx)</span>
+            </label>
+            <label class="radio-option">
+              <input 
+                type="radio" 
+                name="format" 
+                value="pdf"
+                [(ngModel)]="exportFormat">
+              <span class="radio-text">PDF</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <label class="option-label">Contenu</label>
+          <div class="checkbox-group">
+            <label class="checkbox-option">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="includeSentimentAnalysis">
+              <span class="checkbox-text">Inclure l'analyse de sentiment</span>
+            </label>
+            <label class="checkbox-option">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="includeChartData">
+              <span class="checkbox-text">Inclure les données de graphiques</span>
+            </label>
+            <label class="checkbox-option">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="includeDetailedResponses">
+              <span class="checkbox-text">Inclure les réponses détaillées</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

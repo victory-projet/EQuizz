@@ -1,24 +1,81 @@
 // backend/src/services/etudiant.service.js
 
 const db = require('../models');
+const { Op } = require('sequelize');
 const etudiantRepository = require('../repositories/etudiant.repository');
 const AppError = require('../utils/AppError');
 
 class EtudiantService {
-  async findAll() {
-    return db.Etudiant.findAll({
+  async findAll(options = {}) {
+    const {
+      page = 1,
+      limit = 50,
+      search = '',
+      classeId = null,
+      estActif = null,
+      orderBy = 'createdAt',
+      orderDirection = 'DESC'
+    } = options;
+
+    const offset = (page - 1) * limit;
+    
+    // Construire les conditions WHERE
+    const whereConditions = {};
+    const userWhereConditions = {};
+    
+    if (classeId) {
+      whereConditions.classe_id = classeId;
+    }
+    
+    if (estActif !== null) {
+      userWhereConditions.estActif = estActif;
+    }
+    
+    // Recherche textuelle
+    if (search) {
+      userWhereConditions[Op.or] = [
+        { nom: { [Op.iLike]: `%${search}%` } },
+        { prenom: { [Op.iLike]: `%${search}%` } },
+        { email: { [Op.iLike]: `%${search}%` } }
+      ];
+      
+      // Ajouter la recherche par matricule
+      whereConditions[Op.or] = [
+        { matricule: { [Op.iLike]: `%${search}%` } }
+      ];
+    }
+
+    const { count, rows } = await db.Etudiant.findAndCountAll({
+      where: whereConditions,
       include: [
         {
           model: db.Utilisateur,
-          attributes: ['nom', 'prenom', 'email', 'estActif']
+          attributes: ['nom', 'prenom', 'email', 'estActif'],
+          where: Object.keys(userWhereConditions).length > 0 ? userWhereConditions : undefined
         },
         {
           model: db.Classe,
-          attributes: ['nom', 'niveau']
+          attributes: ['id', 'nom', 'niveau'],
+          required: false
         }
       ],
-      order: [['createdAt', 'DESC']]
+      order: [[db.Utilisateur, orderBy, orderDirection]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      distinct: true // Important pour le count avec les includes
     });
+
+    return {
+      etudiants: rows,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: parseInt(limit),
+        hasNextPage: page * limit < count,
+        hasPrevPage: page > 1
+      }
+    };
   }
 
   async findOne(id) {
@@ -137,6 +194,58 @@ class EtudiantService {
       await transaction.rollback();
       throw error;
     }
+  }
+
+  async toggleStatus(id) {
+    const etudiant = await db.Etudiant.findByPk(id, {
+      include: [{ model: db.Utilisateur }]
+    });
+    
+    if (!etudiant) {
+      throw AppError.notFound('Étudiant non trouvé', 'STUDENT_NOT_FOUND');
+    }
+
+    const newStatus = !etudiant.Utilisateur.estActif;
+    await etudiant.Utilisateur.update({ estActif: newStatus });
+
+    return this.findOne(id);
+  }
+
+  async changeClasse(id, classeId) {
+    const etudiant = await db.Etudiant.findByPk(id);
+    if (!etudiant) {
+      throw AppError.notFound('Étudiant non trouvé', 'STUDENT_NOT_FOUND');
+    }
+
+    // Vérifier que la classe existe si classeId est fourni
+    if (classeId) {
+      const classe = await db.Classe.findByPk(classeId);
+      if (!classe) {
+        throw AppError.notFound('Classe non trouvée', 'CLASS_NOT_FOUND');
+      }
+    }
+
+    await etudiant.update({ classe_id: classeId });
+    return this.findOne(id);
+  }
+
+  async findByClasse(classeId) {
+    const etudiants = await db.Etudiant.findAll({
+      where: { classe_id: classeId },
+      include: [
+        {
+          model: db.Utilisateur,
+          attributes: ['nom', 'prenom', 'email', 'estActif']
+        },
+        {
+          model: db.Classe,
+          attributes: ['nom', 'niveau']
+        }
+      ],
+      order: [[db.Utilisateur, 'nom', 'ASC']]
+    });
+
+    return etudiants;
   }
 }
 

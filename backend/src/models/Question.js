@@ -22,6 +22,33 @@ const Question = sequelize.define('Question', {
     type: DataTypes.JSON,
     allowNull: true,
     defaultValue: [],
+    get() {
+      const rawValue = this.getDataValue('options');
+      if (typeof rawValue === 'string') {
+        try {
+          return JSON.parse(rawValue);
+        } catch (e) {
+          console.warn('Erreur parsing JSON options:', e);
+          return [];
+        }
+      }
+      return rawValue || [];
+    },
+    set(value) {
+      if (Array.isArray(value)) {
+        this.setDataValue('options', value);
+      } else if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          this.setDataValue('options', parsed);
+        } catch (e) {
+          console.warn('Erreur parsing JSON options:', e);
+          this.setDataValue('options', []);
+        }
+      } else {
+        this.setDataValue('options', []);
+      }
+    }
   },
 
   ordre: {

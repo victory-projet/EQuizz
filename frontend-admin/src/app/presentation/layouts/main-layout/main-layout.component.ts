@@ -36,7 +36,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     '/classes': 'Classes',
     '/associations': 'Associations',
     '/academic-years': 'Année académique',
-    '/reports': 'Rapports',
+    '/rapports': 'Rapports',
     '/users': 'Utilisateurs',
     '/students': 'Étudiants',
     '/teachers': 'Enseignants',

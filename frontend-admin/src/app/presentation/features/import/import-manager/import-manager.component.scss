@@ -1,0 +1,148 @@
+.import-manager {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin: 0 0 8px 0;
+    }
+
+    p {
+      font-size: 1.1rem;
+      color: #666;
+      margin: 0;
+    }
+  }
+
+  .import-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-top: 32px;
+
+    .import-card {
+      background: white;
+      border: 1px solid #e1e5e9;
+      border-radius: 12px;
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      &:hover {
+        border-color: #007bff;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+        transform: translateY(-2px);
+      }
+
+      .card-icon {
+        flex-shrink: 0;
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .material-icons {
+          color: white;
+          font-size: 24px;
+        }
+      }
+
+      .card-content {
+        flex: 1;
+
+        h3 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #1a1a1a;
+          margin: 0 0 4px 0;
+        }
+
+        p {
+          font-size: 0.9rem;
+          color: #666;
+          margin: 0;
+        }
+      }
+
+      .card-arrow {
+        flex-shrink: 0;
+        opacity: 0.5;
+        transition: opacity 0.2s ease;
+
+        .material-icons {
+          color: #666;
+          font-size: 20px;
+        }
+      }
+
+      &:hover .card-arrow {
+        opacity: 1;
+
+        .material-icons {
+          color: #007bff;
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .import-manager {
+    padding: 16px;
+
+    .header {
+      margin-bottom: 24px;
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      p {
+        font-size: 1rem;
+      }
+    }
+
+    .import-cards {
+      grid-template-columns: 1fr;
+      gap: 16px;
+
+      .import-card {
+        padding: 20px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .import-manager {
+    .import-cards {
+      .import-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+
+        .card-content {
+          text-align: center;
+        }
+
+        .card-arrow {
+          transform: rotate(90deg);
+        }
+      }
+    }
+  }
+}

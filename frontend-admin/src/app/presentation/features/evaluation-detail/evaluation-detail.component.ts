@@ -2,6 +2,8 @@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+
+// Angular Material imports
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,47 +11,44 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
+// Domain entities and services
+import { Evaluation } from '../../../core/domain/entities/evaluation.entity';
+import { Question } from '../../../core/domain/entities/question.entity';
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
-import { Evaluation, Question } from '../../../core/domain/entities/evaluation.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
-import { QuestionFormComponent } from '../question-form/question-form.component';
-import { QuestionImportComponent } from '../question-import/question-import.component';
-import { SentimentAnalysisComponent } from '../../shared/components/sentiment-analysis/sentiment-analysis.component';
-import { ReportExportComponent } from '../../shared/components/report-export/report-export.component';
+
+// Custom components - removed unused imports
 
 @Component({
   selector: 'app-evaluation-detail',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
+    CommonModule,
+    FormsModule,
     MatTabsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule,
-    QuestionFormComponent, 
-    QuestionImportComponent,
-    SentimentAnalysisComponent,
-    ReportExportComponent
+    MatSnackBarModule
   ],
   templateUrl: './evaluation-detail.component.html',
   styleUrls: ['./evaluation-detail.component.scss']
 })
 export class EvaluationDetailComponent implements OnInit {
   evaluation = signal<Evaluation | null>(null);
-  questions = signal<Question[]>([]);
   isLoading = signal(false);
-  showQuestionForm = signal(false);
-  showQuestionImport = signal(false);
-  editingQuestion = signal<Question | null>(null);
-  
   errorMessage = signal('');
   successMessage = signal('');
+  activeTab = signal<'info' | 'questions'>('questions');
+  
+  // États pour le formulaire de question
+  editingQuestion = signal<Question | null>(null);
+  questions = signal<Question[]>([]);
+  showQuestionForm = signal(false);
+  showQuestionImport = signal(false);
 
   private confirmationService = inject(ConfirmationService);
-  private snackBar = inject(MatSnackBar);
 
   constructor(
     private route: ActivatedRoute,
@@ -58,20 +57,26 @@ export class EvaluationDetailComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.loadEvaluation(id);
+    const evaluationId = this.route.snapshot.paramMap.get('id');
+    if (evaluationId) {
+      this.loadEvaluation(evaluationId);
     }
   }
 
   loadEvaluation(id: string): void {
     this.isLoading.set(true);
+    this.errorMessage.set('');
+
     this.evaluationUseCase.getEvaluation(id).subscribe({
       next: (evaluation) => {
         console.log('📥 Évaluation chargée:', evaluation);
         this.evaluation.set(evaluation);
-        this.questions.set(evaluation.quizz?.questions || []);
+        // Get questions from quizz or Quizz property
+        const questions = evaluation.quizz?.questions || evaluation.quizz?.Questions || 
+                         evaluation.Quizz?.questions || evaluation.Quizz?.Questions || [];
+        this.questions.set(questions);
         this.isLoading.set(false);
+        console.log('✅ Évaluation chargée:', evaluation);
       },
       error: (error) => {
         console.error('❌ Erreur lors du chargement de l\'évaluation:', error);
@@ -81,13 +86,19 @@ export class EvaluationDetailComponent implements OnInit {
     });
   }
 
-  openQuestionForm(): void {
-    this.editingQuestion.set(null);
-    this.showQuestionForm.set(true);
+  setActiveTab(tab: 'info' | 'questions'): void {
+    this.activeTab.set(tab);
   }
 
-  editQuestion(question: Question): void {
-    this.editingQuestion.set(question);
+  goToReport(): void {
+    const evaluationId = this.evaluation()?.id;
+    if (evaluationId) {
+      this.router.navigate(['/rapports', evaluationId]);
+    }
+  }
+
+  openQuestionForm(): void {
+    this.editingQuestion.set(null);
     this.showQuestionForm.set(true);
   }
 
@@ -96,20 +107,17 @@ export class EvaluationDetailComponent implements OnInit {
     this.editingQuestion.set(null);
   }
 
+  editQuestion(question: Question): void {
+    this.editingQuestion.set(question);
+    this.showQuestionForm.set(true);
+  }
+
   openQuestionImport(): void {
     this.showQuestionImport.set(true);
   }
 
   closeQuestionImport(): void {
     this.showQuestionImport.set(false);
-  }
-
-  onQuestionsImported(questions: Question[]): void {
-    const currentQuestions = this.questions();
-    this.questions.set([...currentQuestions, ...questions]);
-    this.closeQuestionImport();
-    this.successMessage.set(`${questions.length} questions importées avec succès`);
-    setTimeout(() => this.successMessage.set(''), 3000);
   }
 
   onQuestionSaved(question: Question): void {
@@ -125,8 +133,17 @@ export class EvaluationDetailComponent implements OnInit {
     }
     
     this.questions.set([...currentQuestions]);
-    this.closeQuestionForm();
+    this.editingQuestion.set(null);
+    this.showQuestionForm.set(false);
     this.successMessage.set('Question sauvegardée avec succès');
+    setTimeout(() => this.successMessage.set(''), 3000);
+  }
+
+  onQuestionsImported(questions: Question[]): void {
+    const currentQuestions = this.questions();
+    this.questions.set([...currentQuestions, ...questions]);
+    this.showQuestionImport.set(false);
+    this.successMessage.set(`${questions.length} question(s) importée(s) avec succès`);
     setTimeout(() => this.successMessage.set(''), 3000);
   }
 
@@ -135,7 +152,7 @@ export class EvaluationDetailComponent implements OnInit {
     if (!confirmed) return;
 
     this.isLoading.set(true);
-    this.evaluationUseCase.deleteQuestion(question.id).subscribe({
+    this.evaluationUseCase.deleteQuestion(question.id!).subscribe({
       next: () => {
         const currentQuestions = this.questions();
         this.questions.set(currentQuestions.filter(q => q.id !== question.id));
@@ -181,6 +198,42 @@ export class EvaluationDetailComponent implements OnInit {
     this.router.navigate(['/evaluations']);
   }
 
+  editEvaluation(): void {
+    const evaluationId = this.evaluation()?.id;
+    if (evaluationId) {
+      this.router.navigate(['/evaluations', evaluationId, 'edit']);
+    }
+  }
+
+  viewResults(): void {
+    const evaluationId = this.evaluation()?.id;
+    if (evaluationId) {
+      this.router.navigate(['/evaluations', evaluationId, 'results']);
+    }
+  }
+
+  formatDate(dateStr: string | Date | undefined): string {
+    if (!dateStr) return 'Non définie';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  getCharFromIndex(index: number): string {
+    return String.fromCharCode(65 + index); // A, B, C, D...
+  }
+
+  stats = signal<{
+    totalParticipants: number;
+    moyenneGenerale: number;
+    tauxCompletion: number;
+  } | null>(null);
+
   getQuestionTypeLabel(type: string): string {
     switch (type) {
       case 'CHOIX_MULTIPLE': return 'QCM';
@@ -207,8 +260,13 @@ export class EvaluationDetailComponent implements OnInit {
     }
   }
 
-  formatDate(date: Date | string): string {
-    return new Date(date).toLocaleDateString('fr-FR');
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case 'BROUILLON': return 'edit';
+      case 'PUBLIEE': return 'play_circle';
+      case 'CLOTUREE': return 'check_circle';
+      default: return 'help';
+    }
   }
 
   getOptionText(option: any): string {

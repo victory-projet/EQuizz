@@ -5,8 +5,23 @@ const asyncHandler = require('../utils/asyncHandler');
 
 class EtudiantController {
   findAll = asyncHandler(async (req, res) => {
-    const etudiants = await etudiantService.findAll();
-    res.status(200).json(etudiants);
+    const options = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 50,
+      search: req.query.search || '',
+      classeId: req.query.classeId || null,
+      estActif: req.query.estActif !== undefined ? req.query.estActif === 'true' : null,
+      orderBy: req.query.orderBy || 'createdAt',
+      orderDirection: req.query.orderDirection || 'DESC'
+    };
+
+    const result = await etudiantService.findAll(options);
+    
+    res.status(200).json({
+      success: true,
+      data: result.etudiants,
+      pagination: result.pagination
+    });
   });
 
   findOne = asyncHandler(async (req, res) => {
@@ -27,6 +42,32 @@ class EtudiantController {
   delete = asyncHandler(async (req, res) => {
     await etudiantService.delete(req.params.id);
     res.status(200).json({ message: 'Étudiant supprimé avec succès' });
+  });
+
+  toggleStatus = asyncHandler(async (req, res) => {
+    const etudiant = await etudiantService.toggleStatus(req.params.id);
+    res.status(200).json({
+      message: `Étudiant ${etudiant.estActif ? 'activé' : 'désactivé'} avec succès`,
+      etudiant
+    });
+  });
+
+  changeClasse = asyncHandler(async (req, res) => {
+    const { classeId } = req.body;
+    const etudiant = await etudiantService.changeClasse(req.params.id, classeId);
+    res.status(200).json({
+      message: 'Classe de l\'étudiant modifiée avec succès',
+      etudiant
+    });
+  });
+
+  findByClasse = asyncHandler(async (req, res) => {
+    const { classeId } = req.params;
+    const etudiants = await etudiantService.findByClasse(classeId);
+    res.status(200).json({
+      success: true,
+      data: etudiants
+    });
   });
 }
 

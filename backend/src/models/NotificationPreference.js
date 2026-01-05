@@ -92,7 +92,8 @@ const NotificationPreference = sequelize.define('NotificationPreference', {
   },
 
 }, {
-  freezeTableName: true
+  freezeTableName: true,
+  paranoid: false // Désactiver le soft delete pour éviter l'erreur deleted_at
 });
 
 module.exports = NotificationPreference;

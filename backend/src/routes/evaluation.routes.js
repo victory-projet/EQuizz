@@ -5,6 +5,8 @@ const router = express.Router();
 const { authenticate, isAdmin } = require('../middlewares/auth.middleware');
 const evaluationController = require('../controllers/evaluation.controller');
 const upload = require('../middlewares/upload.middleware');
+const asyncHandler = require('../utils/asyncHandler');
+const db = require('../models');
 
 // Sécuriser toutes les routes de ce fichier
 router.use(authenticate, isAdmin);
@@ -34,6 +36,9 @@ router.delete('/:id', evaluationController.delete);
 
 // POST /api/evaluations/quizz/:quizzId/questions - Ajouter une question à un quizz
 router.post('/quizz/:quizzId/questions', evaluationController.addQuestionToQuizz);
+
+// GET /api/evaluations/quizz/:quizzId/questions - Récupérer les questions d'un quizz
+router.get('/quizz/:quizzId/questions', evaluationController.getQuestionsByQuizz);
 
 // PUT /api/evaluations/questions/:questionId - Modifier une question
 router.put('/questions/:questionId', evaluationController.updateQuestion);

@@ -1,260 +1,134 @@
-<div class="page-container">
-  <!-- Loading -->
-  @if (isLoading()) {
-    <div class="loading">
-      <mat-spinner diameter="40"></mat-spinner>
-      <p>Chargement...</p>
-    </div>
-  }
-
-  <!-- Content -->
-  @if (!isLoading() && evaluation()) {
-    <!-- Header -->
-    <div class="page-header">
-      <div class="header-content">
-        <button mat-icon-button class="btn-back" (click)="goBack()">
-          <mat-icon>arrow_back</mat-icon>
+<div class="evaluation-detail-container">
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <button class="btn-back" (click)="goBack()">
+          <span class="material-icons">arrow_back</span>
+          Retour
         </button>
-        <div class="title-section">
-          <h1 class="page-title">{{ evaluation()!.titre }}</h1>
+        <div class="header-info">
+          <h1 class="page-title">{{ evaluation()?.titre || 'Évaluation' }}</h1>
           <div class="evaluation-meta">
-            <span class="badge" [ngClass]="getStatusBadgeClass(evaluation()!.statut)">
-              {{ getStatusLabel(evaluation()!.statut) }}
+            <span class="status-badge" [class]="'status-' + (evaluation()?.statut || '').toLowerCase()">
+              {{ evaluation()?.statut }}
             </span>
-            <span class="meta-item">
-              <mat-icon>book</mat-icon>
-              {{ evaluation()!.cours?.nom || 'Cours non défini' }}
-            </span>
-            <span class="meta-item">
-              <mat-icon>calendar_today</mat-icon>
-              {{ formatDate(evaluation()!.dateDebut) }} - {{ formatDate(evaluation()!.dateFin) }}
-            </span>
+            <span class="course-info">{{ evaluation()?.cours?.nom }}</span>
           </div>
         </div>
       </div>
       <div class="header-actions">
-        @if (evaluation()!.statut === 'BROUILLON') {
-          <button mat-raised-button color="primary" (click)="publishEvaluation()">
-            <mat-icon>send</mat-icon> Publier
+        @if (evaluation()?.statut === 'BROUILLON') {
+          <button class="btn-primary" (click)="editEvaluation()">
+            <span class="material-icons">edit</span>
+            Modifier
+          </button>
+        }
+        @if (evaluation()?.statut === 'PUBLIEE') {
+          <button class="btn-secondary" (click)="viewResults()">
+            <span class="material-icons">analytics</span>
+            Résultats
           </button>
         }
       </div>
     </div>
+  </div>
 
-    <!-- Messages -->
-    @if (successMessage()) {
-      <div class="alert alert-success">{{ successMessage() }}</div>
-    }
-    @if (errorMessage()) {
-      <div class="alert alert-error">{{ errorMessage() }}</div>
-    }
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Chargement de l'évaluation...</p>
+    </div>
+  } @else if (evaluation()) {
+    <div class="evaluation-content">
+      <!-- Informations générales -->
+      <div class="info-section">
+        <h2>Informations générales</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Description</label>
+            <p>{{ evaluation()?.description || 'Aucune description' }}</p>
+          </div>
+          <div class="info-item">
+            <label>Date de début</label>
+            <p>{{ formatDate(evaluation()?.dateDebut) }}</p>
+          </div>
+          <div class="info-item">
+            <label>Date de fin</label>
+            <p>{{ formatDate(evaluation()?.dateFin) }}</p>
+          </div>
+          <div class="info-item">
+            <label>Classes concernées</label>
+            <div class="classes-list">
+              @for (classe of evaluation()?.Classes || evaluation()?.classes; track classe.id) {
+                <span class="class-badge">{{ classe.nom }}</span>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <!-- Description -->
-    @if (evaluation()!.description) {
-      <mat-card class="description-card">
-        <mat-card-header>
-          <mat-card-title>Description</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p>{{ evaluation()!.description }}</p>
-        </mat-card-content>
-      </mat-card>
-    }
-
-    <!-- Tabs -->
-    <mat-tab-group class="evaluation-tabs" animationDuration="300ms">
-      <!-- Questions Tab -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>quiz</mat-icon>
-          Questions ({{ questions().length }})
-        </ng-template>
-        
-        <div class="tab-content">
-          <div class="section-header">
-            <h2>Gestion des Questions</h2>
-            @if (evaluation()!.statut === 'BROUILLON') {
-              <div class="section-actions">
-                <button mat-stroked-button (click)="openQuestionImport()">
-                  <mat-icon>upload_file</mat-icon> Importer Excel
-                </button>
-                <button mat-raised-button color="primary" (click)="openQuestionForm()">
-                  <mat-icon>add</mat-icon> Ajouter une question
-                </button>
+      <!-- Questions -->
+      <div class="questions-section">
+        <h2>Questions ({{ questions().length }})</h2>
+        @if (questions().length > 0) {
+          <div class="questions-list">
+            @for (question of questions(); track question.id; let i = $index) {
+              <div class="question-card">
+                <div class="question-header">
+                  <span class="question-number">{{ i + 1 }}</span>
+                  <span class="question-type">{{ getQuestionTypeLabel(question.typeQuestion) }}</span>
+                  <span class="question-points">{{ question.points || 1 }} pts</span>
+                </div>
+                <div class="question-content">
+                  <p class="question-text">{{ question.enonce }}</p>
+                  @if (question.typeQuestion === 'QCM' && question.options) {
+                    <div class="question-options">
+                      @for (option of question.options; track $index; let optIndex = $index) {
+                        <div class="option-item">
+                          <span class="option-letter">{{ getCharFromIndex(optIndex) }}.</span>
+                          <span class="option-text">{{ option }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
               </div>
             }
           </div>
-
-          <!-- Questions List -->
-          @if (questions().length > 0) {
-            <div class="questions-list">
-              @for (question of questions(); track question.id; let i = $index) {
-                <mat-card class="question-card">
-                  <mat-card-header>
-                    <div class="question-header-content">
-                      <span class="question-number">{{ i + 1 }}</span>
-                      <span class="question-type">{{ getQuestionTypeLabel(getQuestionType(question)) }}</span>
-                    </div>
-                    @if (evaluation()!.statut === 'BROUILLON') {
-                      <div class="question-actions">
-                        <button mat-icon-button (click)="editQuestion(question)" matTooltip="Modifier">
-                          <mat-icon>edit</mat-icon>
-                        </button>
-                        <button mat-icon-button color="warn" (click)="deleteQuestion(question)" matTooltip="Supprimer">
-                          <mat-icon>delete</mat-icon>
-                        </button>
-                      </div>
-                    }
-                  </mat-card-header>
-                  
-                  <mat-card-content>
-                    <h4>{{ question.enonce }}</h4>
-                    
-                    @if (isMultipleChoice(question) && question.options) {
-                      <div class="question-options">
-                        @for (option of question.options; track option + '_' + $index; let j = $index) {
-                          <div class="option">
-                            <span class="option-letter">{{ getStringFromCharCode(65 + j) }}</span>
-                            <span class="option-text">{{ getOptionText(option) }}</span>
-                          </div>
-                        }
-                      </div>
-                    }
-                  </mat-card-content>
-                </mat-card>
-              }
-            </div>
-          } @else {
-            <div class="empty-state">
-              <mat-icon class="empty-icon">help_outline</mat-icon>
-              <h3>Aucune question</h3>
-              <p>Commencez par ajouter votre première question</p>
-              @if (evaluation()!.statut === 'BROUILLON') {
-                <div class="empty-actions">
-                  <button mat-stroked-button (click)="openQuestionImport()">
-                    <mat-icon>upload_file</mat-icon> Importer Excel
-                  </button>
-                  <button mat-raised-button color="primary" (click)="openQuestionForm()">
-                    <mat-icon>add</mat-icon> Ajouter une question
-                  </button>
-                </div>
-              }
-            </div>
-          }
-        </div>
-      </mat-tab>
-
-      <!-- Sentiment Analysis Tab -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>psychology</mat-icon>
-          Analyse des Sentiments
-        </ng-template>
-        
-        <div class="tab-content">
-          <app-sentiment-analysis 
-            [evaluationId]="evaluation()!.id.toString()"
-            [autoLoad]="true">
-          </app-sentiment-analysis>
-        </div>
-      </mat-tab>
-
-      <!-- Report Export Tab -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>assessment</mat-icon>
-          Rapports & Export
-        </ng-template>
-        
-        <div class="tab-content">
-          <app-report-export 
-            [evaluationId]="evaluation()!.id.toString()">
-          </app-report-export>
-        </div>
-      </mat-tab>
-
-      <!-- Statistics Tab -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>analytics</mat-icon>
-          Statistiques
-        </ng-template>
-        
-        <div class="tab-content">
-          <mat-card>
-            <mat-card-header>
-              <mat-card-title>Statistiques de l'Évaluation</mat-card-title>
-              <mat-card-subtitle>Métriques et indicateurs de performance</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="stats-grid">
-                <div class="stat-item">
-                  <mat-icon>quiz</mat-icon>
-                  <div class="stat-content">
-                    <span class="stat-value">{{ questions().length }}</span>
-                    <span class="stat-label">Questions</span>
-                  </div>
-                </div>
-                
-                <div class="stat-item">
-                  <mat-icon>schedule</mat-icon>
-                  <div class="stat-content">
-                    <span class="stat-value">{{ formatDate(evaluation()!.dateCreation) }}</span>
-                    <span class="stat-label">Date de création</span>
-                  </div>
-                </div>
-                
-                <div class="stat-item">
-                  <mat-icon>visibility</mat-icon>
-                  <div class="stat-content">
-                    <span class="stat-value">{{ getStatusLabel(evaluation()!.statut) }}</span>
-                    <span class="stat-label">Statut</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="stats-note">
-                <mat-icon>info</mat-icon>
-                <p>Les statistiques détaillées seront disponibles après la publication de l'évaluation et la collecte des réponses des étudiants.</p>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
-      </mat-tab>
-    </mat-tab-group>
-  }
-
-  <!-- Question Form Modal -->
-  @if (showQuestionForm()) {
-    <div class="modal-overlay" (click)="closeQuestionForm()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>{{ editingQuestion() ? 'Modifier la question' : 'Nouvelle question' }}</h3>
-          <button mat-icon-button class="btn-close" (click)="closeQuestionForm()">
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
-        <div class="modal-body">
-          <app-question-form
-            [evaluationId]="evaluation()!.id"
-            [quizzId]="getQuizzId(evaluation()!)"
-            [question]="editingQuestion()"
-            [questionNumber]="questions().length + 1"
-            (saved)="onQuestionSaved($event)"
-            (cancelled)="closeQuestionForm()"
-          />
-        </div>
+        } @else {
+          <div class="empty-state">
+            <span class="material-icons">quiz</span>
+            <p>Aucune question n'a été ajoutée à cette évaluation.</p>
+          </div>
+        }
       </div>
-    </div>
-  }
 
-  <!-- Question Import Modal -->
-  @if (showQuestionImport()) {
-    <app-question-import
-      [evaluationId]="evaluation()!.id"
-      [quizzId]="getQuizzId(evaluation()!)"
-      (imported)="onQuestionsImported($event)"
-      (cancelled)="closeQuestionImport()"
-    />
+      <!-- Statistiques (si publiée) -->
+      @if (evaluation()?.statut === 'PUBLIEE') {
+        <div class="stats-section">
+          <h2>Statistiques</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value">{{ stats()?.totalParticipants || 0 }}</div>
+              <div class="stat-label">Participants</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">{{ stats()?.moyenneGenerale || 0 }}%</div>
+              <div class="stat-label">Moyenne générale</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">{{ stats()?.tauxCompletion || 0 }}%</div>
+              <div class="stat-label">Taux de complétion</div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="error-state">
+      <span class="material-icons">error</span>
+      <p>Évaluation non trouvée</p>
+      <button class="btn-primary" (click)="goBack()">Retour</button>
+    </div>
   }
 </div>

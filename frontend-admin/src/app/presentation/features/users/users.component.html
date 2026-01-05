@@ -221,7 +221,7 @@
                 <span class="material-icons">chevron_left</span>
               </button>
 
-              @for (page of [].constructor(totalPages()); track $index) {
+              @for (page of Array(totalPages()).fill(0); track $index) {
                 @if ($index + 1 === 1 || $index + 1 === totalPages() || 
                      ($index + 1 >= currentPage() - 1 && $index + 1 <= currentPage() + 1)) {
                   <button 

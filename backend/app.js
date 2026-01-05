@@ -3,6 +3,7 @@
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
+const http = require('http');
 
 // Charger .env seulement s'il existe (développement local)
 const envPath = path.resolve(__dirname, '.env');
@@ -11,9 +12,14 @@ if (fs.existsSync(envPath)) {
 }
 
 const app = express();
+const server = http.createServer(app);
 const db = require('./src/models'); // Importer db pour la connexion
 const { initializeFirebase } = require('./src/config/firebase');
 const schedulerService = require('./src/services/scheduler.service');
+
+// Initialiser Socket.IO
+const socketManager = require('./src/config/socket');
+socketManager.initialize(server);
 
 // --- Importation des Routeurs ---
 const authRoutes = require('./src/routes/auth.routes');
@@ -27,7 +33,12 @@ const notificationRoutes = require('./src/routes/notification.routes');
 const pushNotificationRoutes = require('./src/routes/push-notification.routes');
 const dashboardRoutes = require('./src/routes/dashboard.routes');
 const utilisateurRoutes = require('./src/routes/utilisateur.routes');
+const etudiantRoutes = require('./src/routes/etudiant.routes');
+const archivageRoutes = require('./src/routes/archivage.routes');
+const coursEnseignantRoutes = require('./src/routes/cours-enseignant.routes');
 const questionRoutes = require('./src/routes/question.routes');
+const coursRoutes = require('./src/routes/cours.routes');
+const classeRoutes = require('./src/routes/classe.routes');
 
 // --- Middlewares Globaux ---
 // Configuration CORS pour autoriser les requêtes depuis le frontend
@@ -58,7 +69,72 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/push-notifications', pushNotificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/utilisateurs', utilisateurRoutes);
+app.use('/api/etudiants', etudiantRoutes);
+app.use('/api/archivage', archivageRoutes);
+app.use('/api/cours-enseignant', coursEnseignantRoutes);
+app.use('/api/cours', coursRoutes);
+app.use('/api/classes', classeRoutes);
 app.use('/api', questionRoutes);
+
+// Route de test temporaire pour debug de suppression (sans authentification)
+app.get('/api/test/evaluations/:id/debug-delete', async (req, res) => {
+  const { id } = req.params;
+  console.log('🔍 Test Debug - Test de suppression pour l\'évaluation:', id);
+  
+  try {
+    const db = require('./src/models');
+    
+    // Vérifier que l'évaluation existe
+    const evaluation = await db.Evaluation.findByPk(id, {
+      include: [
+        { model: db.Cours, required: false },
+        { model: db.Quizz, include: [db.Question], required: false }
+      ]
+    });
+
+    if (!evaluation) {
+      return res.status(404).json({ error: 'Évaluation non trouvée' });
+    }
+
+    console.log('✅ Test Debug - Évaluation trouvée:', {
+      id: evaluation.id,
+      titre: evaluation.titre,
+      statut: evaluation.statut,
+      hasQuizz: !!evaluation.Quizz,
+      quizzId: evaluation.Quizz?.id
+    });
+
+    // Vérifier les soumissions
+    let submissionsCount = 0;
+    if (evaluation.Quizz) {
+      submissionsCount = await db.SessionReponse.count({
+        where: { quizz_id: evaluation.Quizz.id }
+      });
+      console.log('📊 Test Debug - Nombre de soumissions:', submissionsCount);
+    }
+
+    res.json({
+      evaluation: {
+        id: evaluation.id,
+        titre: evaluation.titre,
+        statut: evaluation.statut,
+        hasQuizz: !!evaluation.Quizz,
+        quizzId: evaluation.Quizz?.id,
+        questionsCount: evaluation.Quizz?.Questions?.length || 0
+      },
+      submissionsCount,
+      canDelete: submissionsCount === 0,
+      message: submissionsCount > 0 ? 'Suppression bloquée par les soumissions' : 'Suppression possible'
+    });
+
+  } catch (error) {
+    console.error('❌ Test Debug - Erreur:', error);
+    res.status(500).json({ 
+      error: error.message,
+      stack: error.stack 
+    });
+  }
+});
 
 // --- Route 404 pour les endpoints non trouvés ---
 app.use((req, res, next) => {
@@ -112,8 +188,9 @@ if (process.env.NODE_ENV !== 'test') {
       // Démarrer les tâches programmées
       schedulerService.startAllJobs();
       
-      app.listen(PORT, () => {
+      server.listen(PORT, () => {
         console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+        console.log(`🔌 WebSocket disponible sur ws://localhost:${PORT}`);
       });
     })
     .catch(err => {

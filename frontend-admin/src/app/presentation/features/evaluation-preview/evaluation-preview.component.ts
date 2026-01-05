@@ -2,7 +2,8 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
-import { Evaluation, Question } from '../../../core/domain/entities/evaluation.entity';
+import { Evaluation } from '../../../core/domain/entities/evaluation.entity';
+import { Question } from '../../../core/domain/entities/question.entity';
 
 @Component({
   selector: 'app-evaluation-preview',

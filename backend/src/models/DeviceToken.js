@@ -49,7 +49,8 @@ const DeviceToken = sequelize.define('DeviceToken', {
   },
 
 }, {
-  freezeTableName: true
+  freezeTableName: true,
+  paranoid: false // Désactiver le soft delete pour éviter l'erreur deleted_at
 });
 
 module.exports = DeviceToken;

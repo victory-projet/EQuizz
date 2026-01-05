@@ -1,6 +1,7 @@
 // Use Case - Academic
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AcademicRepositoryInterface } from '../domain/repositories/academic.repository.interface';
 import { AnneeAcademique, Semestre, Cours, Classe, Ecole } from '../domain/entities/academic.entity';
 
@@ -99,8 +100,15 @@ export class AcademicUseCase {
     return this.academicRepository.createClasse(classe);
   }
 
-  getClasses(): Observable<Classe[]> {
-    return this.academicRepository.getClasses();
+  getClasses(page: number = 1, limit: number = 10, search?: string): Observable<{classes: Classe[], pagination: any}> {
+    return this.academicRepository.getClasses(page, limit, search);
+  }
+
+  getAllClasses(): Observable<Classe[]> {
+    // Method to get all classes without pagination
+    return this.academicRepository.getClasses(1, 1000).pipe(
+      map(response => response.classes)
+    );
   }
 
   getClasse(id: string | number): Observable<Classe> {

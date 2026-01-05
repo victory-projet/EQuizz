@@ -12,6 +12,7 @@ const Ecole = require('./Ecole');
 const AnneeAcademique = require('./AnneeAcademique');
 const Semestre = require('./Semestre');
 const Cours = require('./Cours');
+const CoursEnseignant = require('./CoursEnseignant');
 const Classe = require('./Classe');
 const Evaluation = require('./Evaluation');
 const Quizz = require('./Quizz');
@@ -38,6 +39,7 @@ db.Ecole = Ecole;
 db.AnneeAcademique = AnneeAcademique;
 db.Semestre = Semestre;
 db.Cours = Cours;
+db.CoursEnseignant = CoursEnseignant;
 db.Classe = Classe;
 db.Evaluation = Evaluation;
 db.Quizz = Quizz;
@@ -48,8 +50,6 @@ db.ReponseEtudiant = ReponseEtudiant;
 db.Notification = Notification;
 db.AnalyseReponse = AnalyseReponse;
 db.PasswordResetToken = PasswordResetToken;
-db.DeviceToken = DeviceToken;
-db.NotificationPreference = NotificationPreference;
 db.DeviceToken = DeviceToken;
 db.NotificationPreference = NotificationPreference;
 
@@ -78,20 +78,26 @@ Semestre.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id' });
 AnneeAcademique.hasMany(Cours, { foreignKey: { name: 'annee_academique_id', allowNull: true } });
 Cours.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id' });
 
-Semestre.hasMany(Cours, { foreignKey: { name: 'semestre_id', allowNull: false } });
+Semestre.hasMany(Cours, { foreignKey: { name: 'semestre_id', allowNull: true } });
 Cours.belongsTo(Semestre, { foreignKey: 'semestre_id' });
 
-Enseignant.hasMany(Cours, { foreignKey: { name: 'enseignant_id', allowNull: false } });
-Cours.belongsTo(Enseignant, { foreignKey: 'enseignant_id' });
+// Relation Plusieurs-à-Plusieurs entre Enseignant et Cours via CoursEnseignant
+Enseignant.belongsToMany(Cours, { through: CoursEnseignant, foreignKey: 'enseignant_id' });
+Cours.belongsToMany(Enseignant, { through: CoursEnseignant, foreignKey: 'cours_id' });
+
+// Relations directes avec CoursEnseignant pour accéder aux détails de l'association
+CoursEnseignant.belongsTo(Cours, { foreignKey: 'cours_id' });
+CoursEnseignant.belongsTo(Enseignant, { foreignKey: 'enseignant_id' });
+Cours.hasMany(CoursEnseignant, { foreignKey: 'cours_id' });
+Enseignant.hasMany(CoursEnseignant, { foreignKey: 'enseignant_id' });
 
 Classe.hasMany(Etudiant, { foreignKey: 'classe_id' });
 Etudiant.belongsTo(Classe, { foreignKey: 'classe_id' });
 
 // Relation Plusieurs-à-Plusieurs entre Cours et Classe
-const CoursClasse = sequelize.define('CoursClasse', {}, { freezeTableName: true, paranoid: false, underscored: true }); // Table de jonction simple
+const CoursClasse = sequelize.define('CoursClasse', {}, { freezeTableName: true, paranoid: false, underscored: true });
 Cours.belongsToMany(Classe, { through: CoursClasse });
 Classe.belongsToMany(Cours, { through: CoursClasse });
-
 
 // --- 3. Processus d'Évaluation (Composition) ---
 Administrateur.hasMany(Evaluation, { foreignKey: { name: 'administrateur_id', allowNull: false } });
@@ -105,7 +111,6 @@ Quizz.belongsTo(Evaluation, { foreignKey: 'evaluation_id' });
 
 Quizz.hasMany(Question, { foreignKey: { name: 'quizz_id', allowNull: false }, onDelete: 'CASCADE' });
 Question.belongsTo(Quizz, { foreignKey: 'quizz_id' });
-
 
 // --- 4. Processus de Réponse (Anonyme) ---
 Quizz.hasMany(SessionReponse, { foreignKey: { name: 'quizz_id', allowNull: false } });
@@ -124,7 +129,6 @@ ReponseEtudiant.belongsTo(Question, { foreignKey: 'question_id' });
 Etudiant.hasMany(SessionToken, { foreignKey: { name: 'etudiant_id', allowNull: false } });
 SessionToken.belongsTo(Etudiant, { foreignKey: 'etudiant_id' });
 
-
 // --- 5. Modules Annexes (Notification, Analyse) ---
 ReponseEtudiant.hasOne(AnalyseReponse, { foreignKey: { name: 'reponse_etudiant_id', allowNull: false, unique: true }, onDelete: 'CASCADE' });
 AnalyseReponse.belongsTo(ReponseEtudiant, { foreignKey: 'reponse_etudiant_id' });
@@ -139,8 +143,7 @@ const NotificationEtudiant = sequelize.define('NotificationEtudiant', {
 Etudiant.belongsToMany(Notification, { through: NotificationEtudiant });
 Notification.belongsToMany(Etudiant, { through: NotificationEtudiant });
 
-//  Nouvelle Relation Plusieurs-à-Plusieurs entre Evaluation et Classe 
-
+// Nouvelle Relation Plusieurs-à-Plusieurs entre Evaluation et Classe 
 const EvaluationClasse = sequelize.define('EvaluationClasse', {}, { freezeTableName: true, paranoid: false, underscored: true });
 Evaluation.belongsToMany(Classe, { through: EvaluationClasse });
 Classe.belongsToMany(Evaluation, { through: EvaluationClasse });

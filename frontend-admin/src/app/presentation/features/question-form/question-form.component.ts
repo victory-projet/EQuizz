@@ -1,140 +1,210 @@
-import { Component, Input, Output, EventEmitter, OnInit, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
-import { Question } from '../../../core/domain/entities/evaluation.entity';
+import { Question } from '../../../core/domain/entities/question.entity';
 
 @Component({
   selector: 'app-question-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './question-form.component.html',
   styleUrls: ['./question-form.component.scss']
 })
 export class QuestionFormComponent implements OnInit {
-  @Input() evaluationId!: string | number;
-  @Input() quizzId!: string | number;
-  @Input() question: Question | null = null;
-  @Input() questionNumber: number = 1;
-  
+  @Input() quizzId?: string | number;
+  @Input() evaluationId?: string | number;
+  @Input() question?: Question | null;
+  @Input() questionNumber?: number;
+  @Output() questionCreated = new EventEmitter<Question>();
   @Output() saved = new EventEmitter<Question>();
   @Output() cancelled = new EventEmitter<void>();
 
+  questionForm: FormGroup;
   isLoading = signal(false);
   errorMessage = signal('');
 
-  formData = {
-    enonce: '',
-    type: 'CHOIX_MULTIPLE' as 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE',  // Types backend
-    options: ['', '', '', ''],
-    ordre: 1
-  };
+  questionTypes = [
+    { value: 'CHOIX_MULTIPLE', label: 'Choix multiples' },
+    { value: 'REPONSE_OUVERTE', label: 'Réponse ouverte' },
+    { value: 'VRAI_FAUX', label: 'Vrai/Faux' },
+    { value: 'NUMERIQUE', label: 'Numérique' }
+  ];
 
-  constructor(private evaluationUseCase: EvaluationUseCase) {}
+  constructor(private fb: FormBuilder, private evaluationUseCase: EvaluationUseCase) {
+    this.questionForm = this.fb.group({
+      enonce: ['', [Validators.required, Validators.minLength(10)]],
+      typeQuestion: ['CHOIX_MULTIPLE', Validators.required],
+      options: this.fb.array([]),
+      bonneReponse: [''],
+      points: [1, [Validators.required, Validators.min(0.5), Validators.max(10)]],
+      ordre: [1]
+    });
+
+    // Écouter les changements de type de question
+    this.questionForm.get('typeQuestion')?.valueChanges.subscribe(type => {
+      this.onTypeChange(type);
+    });
+  }
 
   ngOnInit(): void {
     if (this.question) {
-      this.formData = {
+      // Mode édition - pré-remplir le formulaire
+      this.questionForm.patchValue({
         enonce: this.question.enonce,
-        type: (this.question as any).typeQuestion || this.question.type,  // Backend utilise 'typeQuestion'
-        options: this.question.options || ['', '', '', ''],
+        typeQuestion: this.question.typeQuestion || this.question.type,
+        bonneReponse: this.question.bonneReponse,
+        points: this.question.points || 1,
         ordre: this.question.ordre
-      };
+      });
+
+      // Charger les options si c'est un choix multiple
+      if (this.isChoixMultiple && this.question.options) {
+        this.question.options.forEach(option => {
+          this.options.push(new FormControl(option, [Validators.required]));
+        });
+      }
     } else {
-      this.formData.ordre = this.questionNumber;
+      // Mode création - initialiser avec des valeurs par défaut
+      this.questionForm.patchValue({
+        ordre: this.questionNumber || 1
+      });
+      
+      // Ajouter des options par défaut pour choix multiple
+      this.onTypeChange('CHOIX_MULTIPLE');
+    }
+  }
+
+  get options(): FormArray {
+    return this.questionForm.get('options') as FormArray;
+  }
+
+  get isChoixMultiple(): boolean {
+    return this.questionForm.get('typeQuestion')?.value === 'CHOIX_MULTIPLE';
+  }
+
+  get isVraiFaux(): boolean {
+    return this.questionForm.get('typeQuestion')?.value === 'VRAI_FAUX';
+  }
+
+  onTypeChange(type: string): void {
+    const optionsArray = this.options;
+    
+    // Vider les options existantes
+    while (optionsArray.length !== 0) {
+      optionsArray.removeAt(0);
+    }
+
+    // Si c'est un choix multiple, ajouter 2 options par défaut
+    if (type === 'CHOIX_MULTIPLE') {
+      this.addOption();
+      this.addOption();
     }
   }
 
   addOption(): void {
-    this.formData.options.push('');
+    const optionControl = new FormControl('', [Validators.required, Validators.minLength(1)]);
+    this.options.push(optionControl);
   }
 
   removeOption(index: number): void {
-    if (this.formData.options.length > 2) {
-      this.formData.options.splice(index, 1);
+    if (this.options.length > 2) {
+      this.options.removeAt(index);
     }
   }
 
-  onTypeChange(): void {
-    if (this.formData.type === 'CHOIX_MULTIPLE' && this.formData.options.length === 0) {
-      this.formData.options = ['', '', '', ''];
-    }
-  }
-
-  validate(): boolean {
-    if (!this.formData.enonce.trim()) {
-      this.errorMessage.set('L\'énoncé est requis');
-      return false;
+  onSubmit(): void {
+    if (this.questionForm.invalid) {
+      this.errorMessage.set('Veuillez corriger les erreurs dans le formulaire');
+      return;
     }
 
-    if (this.formData.type === 'CHOIX_MULTIPLE') {
-      const validOptions = this.formData.options.filter(o => o.trim());
-      if (validOptions.length < 2) {
-        this.errorMessage.set('Au moins 2 options sont requises pour un QCM');
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  save(): void {
-    this.errorMessage.set('');
-    
     if (!this.validate()) {
       return;
     }
 
     this.isLoading.set(true);
+    this.errorMessage.set('');
 
+    const formValue = this.questionForm.value;
+    
+    // Préparer les données selon le type de question
     const questionData: any = {
-      enonce: this.formData.enonce,
-      typeQuestion: this.formData.type,  // Backend attend 'typeQuestion'
-      ordre: this.formData.ordre
+      enonce: formValue.enonce.trim(),
+      typeQuestion: formValue.typeQuestion,
+      points: formValue.points,
+      ordre: formValue.ordre
     };
 
-    if (this.formData.type === 'CHOIX_MULTIPLE') {
-      questionData.options = this.formData.options.filter(o => o.trim());
+    // Ajouter les options pour les choix multiples
+    if (formValue.typeQuestion === 'CHOIX_MULTIPLE') {
+      questionData.options = formValue.options.filter((opt: string) => opt.trim());
+      questionData.bonneReponse = formValue.bonneReponse;
+    } else if (formValue.typeQuestion === 'VRAI_FAUX') {
+      questionData.options = ['Vrai', 'Faux'];
+      questionData.bonneReponse = formValue.bonneReponse;
+    } else {
+      questionData.bonneReponse = formValue.bonneReponse;
     }
 
-    if (this.question) {
-      // Update existing question
-      this.evaluationUseCase.updateQuestion(this.question.id, questionData).subscribe({
-        next: (question) => {
-          this.isLoading.set(false);
-          this.saved.emit(question);
-        },
-        error: (error) => {
-          this.errorMessage.set(error.error?.message || 'Erreur lors de la mise à jour');
-          this.isLoading.set(false);
-        }
-      });
-    } else {
-      // Create new question
-      console.log('📤 Adding question:', {
-        quizzId: this.quizzId,
-        questionData
-      });
-      
-      this.evaluationUseCase.addQuestion(this.quizzId, questionData).subscribe({
-        next: (question) => {
-          console.log('✅ Question created:', question);
-          this.isLoading.set(false);
-          this.saved.emit(question);
-        },
-        error: (error) => {
-          console.error('❌ Error creating question:', error);
-          this.errorMessage.set(error.error?.message || error.message || 'Erreur lors de la création');
-          this.isLoading.set(false);
-        }
-      });
+    // Ajouter l'ID du quiz
+    if (this.quizzId) {
+      questionData.quizz_id = this.quizzId;
     }
+
+    // Appeler le service pour créer/modifier la question
+    const request = this.question?.id 
+      ? this.evaluationUseCase.updateQuestion(this.question.id, questionData)
+      : this.evaluationUseCase.createQuestion(this.quizzId!, questionData);
+
+    request.subscribe({
+      next: (question: Question) => {
+        this.isLoading.set(false);
+        this.saved.emit(question);
+        this.questionCreated.emit(question);
+      },
+      error: (error) => {
+        console.error('Erreur lors de la sauvegarde:', error);
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la sauvegarde');
+        this.isLoading.set(false);
+      }
+    });
   }
 
-  cancel(): void {
+  validate(): boolean {
+    const formValue = this.questionForm.value;
+
+    if (!formValue.enonce?.trim()) {
+      this.errorMessage.set('L\'énoncé est requis');
+      return false;
+    }
+
+    if (formValue.typeQuestion === 'CHOIX_MULTIPLE') {
+      const validOptions = formValue.options.filter((opt: string) => opt?.trim());
+      if (validOptions.length < 2) {
+        this.errorMessage.set('Au moins 2 options sont requises pour un choix multiple');
+        return false;
+      }
+      if (!formValue.bonneReponse?.trim()) {
+        this.errorMessage.set('La bonne réponse est requise');
+        return false;
+      }
+    }
+
+    if (formValue.typeQuestion === 'VRAI_FAUX' && !formValue.bonneReponse) {
+      this.errorMessage.set('Veuillez sélectionner la bonne réponse (Vrai ou Faux)');
+      return false;
+    }
+
+    return true;
+  }
+
+  onCancel(): void {
     this.cancelled.emit();
   }
 
-  // Expose String for template
-  String = String;
+  // Méthodes utilitaires pour le template
+  getCharFromIndex(index: number): string {
+    return String.fromCharCode(65 + index); // A, B, C, D...
+  }
 }

@@ -34,7 +34,7 @@ describe('cacheInterceptor', () => {
   });
 
   it('should cache GET requests', (done) => {
-    const url = '/api/test';
+    const url = '/users';
     const mockData = { data: 'test' };
 
     // First request - should hit the server
@@ -54,7 +54,7 @@ describe('cacheInterceptor', () => {
   });
 
   it('should not cache POST requests', () => {
-    const url = '/api/test';
+    const url = '/users';
     const mockData = { data: 'test' };
 
     httpClient.post(url, {}).subscribe();
@@ -65,7 +65,7 @@ describe('cacheInterceptor', () => {
   });
 
   it('should not cache auth endpoints', () => {
-    const url = '/api/auth/login';
+    const url = '/auth/login';
     const mockData = { token: 'test' };
 
     httpClient.get(url).subscribe();
@@ -75,7 +75,7 @@ describe('cacheInterceptor', () => {
   });
 
   it('should clear cache on demand', (done) => {
-    const url = '/api/test';
+    const url = '/users';
     const mockData = { data: 'test' };
 
     // First request

@@ -117,7 +117,9 @@ export class AssociationsComponent implements OnInit {
     // Charger les cours avec leurs enseignants et classes
     this.academicUseCase.getCours().subscribe({
       next: (cours) => {
-        const associations: Association[] = cours
+        // Ensure cours is always an array
+        const coursArray = Array.isArray(cours) ? cours : [];
+        const associations: Association[] = coursArray
           .filter(c => c.Enseignant) // Seulement les cours avec enseignant
           .map(c => ({
             cours: c,
@@ -130,6 +132,7 @@ export class AssociationsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Erreur lors du chargement des associations:', error);
+        this.associations.set([]); // Set empty array on error
       }
     });
   }
@@ -157,10 +160,16 @@ export class AssociationsComponent implements OnInit {
     return new Promise((resolve, reject) => {
       this.academicUseCase.getCours().subscribe({
         next: (cours) => {
-          this.cours.set(cours.filter(c => !c.estArchive));
+          // Ensure cours is always an array
+          const coursArray = Array.isArray(cours) ? cours : [];
+          this.cours.set(coursArray.filter(c => !c.estArchive));
           resolve();
         },
-        error: reject
+        error: (error) => {
+          console.error('Erreur lors du chargement des cours:', error);
+          this.cours.set([]); // Set empty array on error
+          reject(error);
+        }
       });
     });
   }
@@ -180,12 +189,17 @@ export class AssociationsComponent implements OnInit {
 
   loadClasses(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.academicUseCase.getClasses().subscribe({
+      this.academicUseCase.getAllClasses().subscribe({
         next: (classes) => {
+          // Now we get the classes array directly
           this.classes.set(classes);
           resolve();
         },
-        error: reject
+        error: (error) => {
+          console.error('Erreur lors du chargement des classes:', error);
+          this.classes.set([]); // Set empty array on error
+          reject(error);
+        }
       });
     });
   }

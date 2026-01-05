@@ -271,6 +271,11 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
   };
   
   ngOnInit(): void {
+    // Ensure visibleErrors is properly initialized
+    if (!this.visibleErrors()) {
+      this.visibleErrors.set([]);
+    }
+    
     // Écouter les changements d'erreurs
     // Note: Les signaux Angular n'ont pas de méthode pipe, on utilise effect() à la place
     this.setupErrorSubscription();
@@ -281,11 +286,11 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
     timer(0, 1000).pipe(
       takeUntil(this.destroy$)
     ).subscribe(() => {
-      const errors = this.errorHandler.errors();
+      const errors = this.errorHandler.errors() || [];
       
       // Afficher seulement les N dernières erreurs
       const visibleErrors = errors.slice(0, this.MAX_VISIBLE_ERRORS);
-      const currentVisible = this.visibleErrors();
+      const currentVisible = this.visibleErrors() || [];
       
       // Mettre à jour seulement si les erreurs ont changé
       if (JSON.stringify(visibleErrors) !== JSON.stringify(currentVisible)) {

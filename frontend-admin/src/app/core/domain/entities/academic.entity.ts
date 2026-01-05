@@ -28,6 +28,7 @@ export interface Cours {
   description?: string;
   estArchive: boolean;
   enseignantId?: string | number;
+  anneeAcademiqueId?: string | number;
   enseignant?: {
     id: string | number;
     Utilisateur?: {
@@ -45,20 +46,30 @@ export interface Cours {
       email: string;
     };
   };
-  dateCreation: Date;
-  dateModification: Date;
+  Enseignants?: {
+    id: string | number;
+    specialite?: string;
+    Utilisateur?: {
+      nom: string;
+      prenom: string;
+      email: string;
+    };
+  }[];
+  dateCreation?: Date;
+  dateModification?: Date;
 }
 
 export interface Classe {
   id: string | number;
   nom: string;
   niveau?: string;
+  effectif?: number; // Nombre d'étudiants dans la classe
   anneeAcademiqueId?: string | number;
   anneeAcademique?: AnneeAcademique;
   cours?: Cours[];
   etudiants?: any[];
-  dateCreation: Date;
-  dateModification: Date;
+  dateCreation?: Date;
+  dateModification?: Date;
 }
 
 export interface Ecole {

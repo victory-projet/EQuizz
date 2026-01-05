@@ -599,3 +599,225 @@
   color: #999 !important;
   font-style: italic;
 }
+// Pagination Controls
+.pagination-controls {
+  margin-top: 32px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  .pagination-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    span {
+      font-size: 14px;
+      color: #374151;
+      font-weight: 500;
+    }
+
+    .total-items {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 400;
+    }
+  }
+
+  .pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .btn {
+      padding: 8px 16px;
+      font-size: 13px;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .material-icons {
+        font-size: 18px;
+      }
+    }
+
+    .page-numbers {
+      display: flex;
+      gap: 4px;
+
+      .page-btn {
+        width: 36px;
+        height: 36px;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        color: #374151;
+        transition: all 0.2s;
+
+        &:hover {
+          background: #f3f4f6;
+          border-color: #9ca3af;
+        }
+
+        &.active {
+          background: #3A5689;
+          color: white;
+          border-color: #3A5689;
+        }
+      }
+    }
+  }
+}
+
+// Enseignants Selection
+.enseignants-selection {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+
+  .selected-summary {
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e5e7eb;
+
+    .selected-count {
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .selected-names {
+      font-size: 12px;
+      color: #6b7280;
+      display: block;
+      line-height: 1.4;
+    }
+
+    .no-selection {
+      font-size: 14px;
+      color: #9ca3af;
+      font-style: italic;
+    }
+  }
+
+  .enseignants-list {
+    max-height: 200px;
+    overflow-y: auto;
+
+    .enseignant-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f3f4f6;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background: #f8f9fa;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      input[type="checkbox"] {
+        margin-top: 2px;
+        width: 16px;
+        height: 16px;
+        accent-color: #3A5689;
+        cursor: pointer;
+      }
+
+      label {
+        flex: 1;
+        cursor: pointer;
+        margin: 0;
+        font-size: 14px;
+        color: #374151;
+        line-height: 1.4;
+
+        small {
+          display: block;
+          font-size: 12px;
+          color: #6b7280;
+          margin-top: 2px;
+        }
+      }
+    }
+  }
+
+  .no-enseignants {
+    padding: 32px 16px;
+    text-align: center;
+    color: #9ca3af;
+
+    .material-icons {
+      font-size: 48px;
+      color: #d1d5db;
+      margin-bottom: 12px;
+    }
+
+    p {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    small {
+      font-size: 12px;
+      color: #6b7280;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .pagination-controls {
+    flex-direction: column;
+    align-items: stretch;
+
+    .pagination-info {
+      text-align: center;
+    }
+
+    .pagination-buttons {
+      justify-content: center;
+      flex-wrap: wrap;
+
+      .page-numbers {
+        order: -1;
+        margin-bottom: 12px;
+      }
+    }
+  }
+
+  .courses-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-section {
+    flex-direction: column;
+
+    .search-box {
+      min-width: auto;
+    }
+
+    .filter-buttons {
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  }
+}

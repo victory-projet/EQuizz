@@ -1,0 +1,277 @@
+<div class="sentiment-analysis-container">
+  <!-- En-tête -->
+  <div class="analysis-header">
+    <div class="header-content">
+      <h2 class="analysis-title">
+        <i class="material-icons">psychology</i>
+        Analyse de Sentiment
+      </h2>
+      <p class="analysis-subtitle">
+        Analyse automatique des sentiments exprimés dans les réponses ouvertes
+      </p>
+    </div>
+  </div>
+
+  <!-- Messages d'erreur -->
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      <i class="material-icons">error</i>
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- État de chargement -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="loading-spinner">
+        <i class="material-icons spinning">refresh</i>
+      </div>
+      <p class="loading-text">Analyse des sentiments en cours...</p>
+    </div>
+  } @else if (sentimentData()) {
+    <!-- Contenu de l'analyse -->
+    @if (sentimentData()!.total > 0) {
+      <!-- Vue d'ensemble des sentiments -->
+      <div class="sentiment-overview">
+        <div class="overview-header">
+          <h3 class="section-title">Répartition des sentiments</h3>
+          <div class="total-responses">
+            <span class="total-number">{{ sentimentData()!.total }}</span>
+            <span class="total-label">réponses analysées</span>
+          </div>
+        </div>
+
+        <!-- Graphique circulaire des sentiments -->
+        <div class="sentiment-chart">
+          <div class="chart-container">
+            <!-- Ici on intégrerait un vrai graphique circulaire -->
+            <div class="pie-chart-placeholder">
+              <div class="chart-center">
+                <div class="center-number">{{ sentimentData()!.total }}</div>
+                <div class="center-label">Réponses</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Légende du graphique -->
+          <div class="chart-legend">
+            <div class="legend-item positif">
+              <div class="legend-color" [style.background-color]="getSentimentColor('positif')"></div>
+              <div class="legend-content">
+                <div class="legend-label">Positif</div>
+                <div class="legend-stats">
+                  <span class="legend-count">{{ sentimentData()!.sentiments.positif }}</span>
+                  <span class="legend-percentage">({{ sentimentData()!.sentiments.positifPct }}%)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="legend-item neutre">
+              <div class="legend-color" [style.background-color]="getSentimentColor('neutre')"></div>
+              <div class="legend-content">
+                <div class="legend-label">Neutre</div>
+                <div class="legend-stats">
+                  <span class="legend-count">{{ sentimentData()!.sentiments.neutre }}</span>
+                  <span class="legend-percentage">({{ sentimentData()!.sentiments.neutrePct }}%)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="legend-item negatif">
+              <div class="legend-color" [style.background-color]="getSentimentColor('negatif')"></div>
+              <div class="legend-content">
+                <div class="legend-label">Négatif</div>
+                <div class="legend-stats">
+                  <span class="legend-count">{{ sentimentData()!.sentiments.negatif }}</span>
+                  <span class="legend-percentage">({{ sentimentData()!.sentiments.negatifPct }}%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cartes de sentiment détaillées -->
+      <div class="sentiment-cards">
+        <div class="sentiment-card positif">
+          <div class="card-header">
+            <div class="card-icon">
+              <i class="material-icons">sentiment_satisfied</i>
+            </div>
+            <div class="card-title">Sentiment Positif</div>
+          </div>
+          <div class="card-content">
+            <div class="card-number">{{ sentimentData()!.sentiments.positif }}</div>
+            <div class="card-percentage">{{ sentimentData()!.sentiments.positifPct }}%</div>
+            <div class="card-description">
+              Réponses exprimant de la satisfaction, de l'enthousiasme ou des émotions positives
+            </div>
+          </div>
+        </div>
+
+        <div class="sentiment-card neutre">
+          <div class="card-header">
+            <div class="card-icon">
+              <i class="material-icons">sentiment_neutral</i>
+            </div>
+            <div class="card-title">Sentiment Neutre</div>
+          </div>
+          <div class="card-content">
+            <div class="card-number">{{ sentimentData()!.sentiments.neutre }}</div>
+            <div class="card-percentage">{{ sentimentData()!.sentiments.neutrePct }}%</div>
+            <div class="card-description">
+              Réponses factuelles ou neutres, sans émotion particulière exprimée
+            </div>
+          </div>
+        </div>
+
+        <div class="sentiment-card negatif">
+          <div class="card-header">
+            <div class="card-icon">
+              <i class="material-icons">sentiment_dissatisfied</i>
+            </div>
+            <div class="card-title">Sentiment Négatif</div>
+          </div>
+          <div class="card-content">
+            <div class="card-number">{{ sentimentData()!.sentiments.negatif }}</div>
+            <div class="card-percentage">{{ sentimentData()!.sentiments.negatifPct }}%</div>
+            <div class="card-description">
+              Réponses exprimant de la frustration, de l'insatisfaction ou des émotions négatives
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Résumé IA -->
+      @if (sentimentData()!.summary) {
+        <div class="ai-summary-section">
+          <div class="summary-header">
+            <h3 class="section-title">
+              <i class="material-icons">auto_awesome</i>
+              Résumé par Intelligence Artificielle
+            </h3>
+          </div>
+          <div class="summary-content">
+            <div class="summary-text">
+              {{ sentimentData()!.summary }}
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Mots-clés principaux -->
+      @if (sentimentData()!.keywords.length > 0) {
+        <div class="keywords-section">
+          <div class="keywords-header">
+            <h3 class="section-title">
+              <i class="material-icons">label</i>
+              Mots-clés les plus fréquents
+            </h3>
+            <p class="keywords-description">
+              Les termes les plus utilisés dans les réponses, avec leur fréquence d'apparition
+            </p>
+          </div>
+
+          <div class="keywords-grid">
+            @for (keyword of sentimentData()!.keywords.slice(0, 20); track keyword.word) {
+              <div class="keyword-item">
+                <div class="keyword-word">{{ keyword.word }}</div>
+                <div class="keyword-count">{{ keyword.count }}</div>
+                <div class="keyword-bar">
+                  <div 
+                    class="keyword-fill"
+                    [style.width.%]="(keyword.count / sentimentData()!.keywords[0].count) * 100">
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Insights et recommandations -->
+      <div class="insights-section">
+        <div class="insights-header">
+          <h3 class="section-title">
+            <i class="material-icons">lightbulb</i>
+            Insights et Recommandations
+          </h3>
+        </div>
+
+        <div class="insights-grid">
+          <!-- Insight sur la participation -->
+          <div class="insight-card">
+            <div class="insight-icon participation">
+              <i class="material-icons">trending_up</i>
+            </div>
+            <div class="insight-content">
+              <h4 class="insight-title">Niveau d'engagement</h4>
+              <p class="insight-description">
+                @if (getPositivePercentage() > 60) {
+                  Excellent niveau d'engagement avec {{ sentimentData()!.sentiments.positifPct }}% de sentiments positifs.
+                } @else if (getPositivePercentage() > 40) {
+                  Niveau d'engagement modéré. Considérez des améliorations pour augmenter la satisfaction.
+                } @else {
+                  Niveau d'engagement faible. Une révision du contenu ou de la méthode pourrait être bénéfique.
+                }
+              </p>
+            </div>
+          </div>
+
+          <!-- Insight sur les points d'amélioration -->
+          @if (getNegativePercentage() > 20) {
+            <div class="insight-card">
+              <div class="insight-icon warning">
+                <i class="material-icons">warning</i>
+              </div>
+              <div class="insight-content">
+                <h4 class="insight-title">Points d'attention</h4>
+                <p class="insight-description">
+                  {{ sentimentData()!.sentiments.negatifPct }}% de sentiments négatifs détectés. 
+                  Analysez les réponses pour identifier les sources d'insatisfaction.
+                </p>
+              </div>
+            </div>
+          }
+
+          <!-- Insight sur la neutralité -->
+          @if (getNeutralPercentage() > 50) {
+            <div class="insight-card">
+              <div class="insight-icon neutral">
+                <i class="material-icons">balance</i>
+              </div>
+              <div class="insight-content">
+                <h4 class="insight-title">Réponses factuelles</h4>
+                <p class="insight-description">
+                  {{ sentimentData()!.sentiments.neutrePct }}% de réponses neutres. 
+                  Les étudiants fournissent des réponses factuelles sans exprimer d'émotion particulière.
+                </p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    } @else {
+      <!-- Aucune donnée disponible -->
+      <div class="no-data-state">
+        <div class="no-data-illustration">
+          <i class="material-icons">sentiment_neutral</i>
+        </div>
+        <h3 class="no-data-title">Aucune donnée d'analyse disponible</h3>
+        <p class="no-data-description">
+          Cette évaluation ne contient pas de questions ouvertes ou aucune réponse n'a encore été soumise pour l'analyse de sentiment.
+        </p>
+        <div class="no-data-suggestions">
+          <div class="suggestion-item">
+            <i class="material-icons">quiz</i>
+            <span>Ajoutez des questions ouvertes à votre évaluation</span>
+          </div>
+          <div class="suggestion-item">
+            <i class="material-icons">schedule</i>
+            <span>Attendez que les étudiants soumettent leurs réponses</span>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

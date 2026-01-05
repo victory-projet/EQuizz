@@ -659,7 +659,8 @@ export class UsersComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Expose Math for template
+  // Expose Math and Array for template
   Math = Math;
+  Array = Array;
 }
 

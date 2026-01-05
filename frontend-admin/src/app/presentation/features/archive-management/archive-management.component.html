@@ -1,0 +1,267 @@
+<div class="archive-management">
+  <div class="header">
+    <h1>Gestion des Archives</h1>
+    <p>Gérez les éléments archivés et les suppressions définitives</p>
+  </div>
+
+  <!-- Navigation par onglets -->
+  <div class="tabs">
+    <button 
+      class="tab-button"
+      [class.active]="activeTab === 'overview'"
+      (click)="onTabChange('overview')">
+      <i class="fas fa-chart-pie"></i>
+      Aperçu
+    </button>
+    <button 
+      class="tab-button"
+      [class.active]="activeTab === 'evaluations'"
+      (click)="onTabChange('evaluations')">
+      <i class="fas fa-clipboard-list"></i>
+      Évaluations
+    </button>
+    <button 
+      class="tab-button"
+      [class.active]="activeTab === 'questions'"
+      (click)="onTabChange('questions')">
+      <i class="fas fa-question-circle"></i>
+      Questions
+    </button>
+    <button 
+      class="tab-button"
+      [class.active]="activeTab === 'cours'"
+      (click)="onTabChange('cours')">
+      <i class="fas fa-book"></i>
+      Cours
+    </button>
+    <button 
+      class="tab-button"
+      [class.active]="activeTab === 'etudiants'"
+      (click)="onTabChange('etudiants')">
+      <i class="fas fa-user-graduate"></i>
+      Étudiants
+    </button>
+    <button 
+      class="tab-button"
+      [class.active]="activeTab === 'classes'"
+      (click)="onTabChange('classes')">
+      <i class="fas fa-users"></i>
+      Classes
+    </button>
+  </div>
+
+  <!-- Contenu des onglets -->
+  <div class="tab-content">
+    <!-- Onglet Aperçu -->
+    <div *ngIf="activeTab === 'overview'" class="overview-tab">
+      <div class="stats-grid">
+        <div class="stat-card" *ngFor="let key of getStatsKeys()">
+          <div class="stat-header">
+            <h3>{{ key }}</h3>
+            <i class="fas fa-archive"></i>
+          </div>
+          <div class="stat-numbers">
+            <div class="stat-item">
+              <span class="label">Total:</span>
+              <span class="value">{{ stats[key].total }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="label">Actifs:</span>
+              <span class="value active">{{ stats[key].active }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="label">Archivés:</span>
+              <span class="value archived">{{ stats[key].archived }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="label">Taux d'archivage:</span>
+              <span class="value rate">{{ stats[key].archiveRate }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recent-activity">
+        <div class="section-header">
+          <h2>Activité Récente</h2>
+          <button class="btn btn-secondary" (click)="loadOverviewData()">
+            <i class="fas fa-refresh"></i>
+            Actualiser
+          </button>
+        </div>
+        
+        <div class="activity-list" *ngIf="recentActivity.length > 0">
+          <div class="activity-item" *ngFor="let activity of recentActivity">
+            <div class="activity-icon">
+              <i class="fas fa-archive"></i>
+            </div>
+            <div class="activity-content">
+              <div class="activity-title">{{ activity.title }}</div>
+              <div class="activity-meta">
+                <span class="type">{{ activity.type }}</span>
+                <span class="date">{{ formatDate(activity.dateArchivage) }}</span>
+                <span class="user" *ngIf="activity.archivedBy">
+                  par {{ activity.archivedBy.prenom }} {{ activity.archivedBy.nom }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="empty-state" *ngIf="recentActivity.length === 0">
+          <i class="fas fa-inbox"></i>
+          <p>Aucune activité récente</p>
+        </div>
+      </div>
+
+      <div class="cleanup-section">
+        <div class="section-header">
+          <h2>Nettoyage Automatique</h2>
+        </div>
+        <div class="cleanup-controls">
+          <p>Supprimer définitivement les éléments archivés depuis plus de:</p>
+          <div class="cleanup-buttons">
+            <button class="btn btn-warning" (click)="cleanup(90)">90 jours</button>
+            <button class="btn btn-warning" (click)="cleanup(180)">6 mois</button>
+            <button class="btn btn-danger" (click)="cleanup(365)">1 an</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Onglets pour les entités archivées -->
+    <div *ngIf="activeTab !== 'overview'" class="entities-tab">
+      <div class="controls-bar">
+        <div class="search-filters">
+          <input 
+            type="text" 
+            placeholder="Rechercher..." 
+            [(ngModel)]="searchTerm"
+            class="search-input">
+          
+          <input 
+            type="date" 
+            [(ngModel)]="dateFilter"
+            class="date-filter">
+          
+          <input 
+            type="text" 
+            placeholder="Filtrer par utilisateur..." 
+            [(ngModel)]="userFilter"
+            class="user-filter">
+        </div>
+
+        <div class="bulk-actions" *ngIf="selectedEntities.size > 0">
+          <span class="selection-count">{{ selectedEntities.size }} sélectionné(s)</span>
+          <button class="btn btn-success" (click)="bulkRestore()">
+            <i class="fas fa-undo"></i>
+            Restaurer
+          </button>
+          <button class="btn btn-danger" (click)="bulkPermanentDelete()">
+            <i class="fas fa-trash"></i>
+            Supprimer définitivement
+          </button>
+          <button class="btn btn-secondary" (click)="deselectAll()">
+            Désélectionner tout
+          </button>
+        </div>
+      </div>
+
+      <!-- Liste des évaluations archivées -->
+      <div *ngIf="activeTab === 'evaluations'" class="entities-list">
+        <div class="list-header">
+          <input 
+            type="checkbox" 
+            (change)="$event.target.checked ? selectAll(getFilteredEntities(archivedEvaluations), 'Evaluation') : deselectAll()">
+          <span>Titre</span>
+          <span>Cours</span>
+          <span>Statut</span>
+          <span>Date d'archivage</span>
+          <span>Archivé par</span>
+          <span>Actions</span>
+        </div>
+        
+        <div class="list-item" *ngFor="let evaluation of getFilteredEntities(archivedEvaluations)">
+          <input 
+            type="checkbox" 
+            [checked]="isEntitySelected('Evaluation', evaluation.id)"
+            (change)="toggleEntitySelection('Evaluation', evaluation.id)">
+          <span class="title">{{ evaluation.titre }}</span>
+          <span>{{ evaluation.Cours?.nom || 'N/A' }}</span>
+          <span class="status">{{ evaluation.statut }}</span>
+          <span>{{ formatDate(evaluation.dateArchivage) }}</span>
+          <span>
+            {{ evaluation.ArchivedByUser ? 
+               evaluation.ArchivedByUser.prenom + ' ' + evaluation.ArchivedByUser.nom : 
+               'N/A' }}
+          </span>
+          <div class="actions">
+            <button 
+              class="btn btn-sm btn-success" 
+              (click)="restoreEntity('Evaluation', evaluation.id)"
+              title="Restaurer">
+              <i class="fas fa-undo"></i>
+            </button>
+            <button 
+              class="btn btn-sm btn-danger" 
+              (click)="permanentDelete('Evaluation', evaluation.id)"
+              title="Supprimer définitivement">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Liste des questions archivées -->
+      <div *ngIf="activeTab === 'questions'" class="entities-list">
+        <div class="list-header">
+          <input 
+            type="checkbox" 
+            (change)="$event.target.checked ? selectAll(getFilteredEntities(archivedQuestions), 'Question') : deselectAll()">
+          <span>Énoncé</span>
+          <span>Type</span>
+          <span>Date d'archivage</span>
+          <span>Archivé par</span>
+          <span>Actions</span>
+        </div>
+        
+        <div class="list-item" *ngFor="let question of getFilteredEntities(archivedQuestions)">
+          <input 
+            type="checkbox" 
+            [checked]="isEntitySelected('Question', question.id)"
+            (change)="toggleEntitySelection('Question', question.id)">
+          <span class="title">{{ question.enonce | slice:0:100 }}{{ question.enonce.length > 100 ? '...' : '' }}</span>
+          <span>{{ question.typeQuestion }}</span>
+          <span>{{ formatDate(question.dateArchivage) }}</span>
+          <span>
+            {{ question.ArchivedByUser ? 
+               question.ArchivedByUser.prenom + ' ' + question.ArchivedByUser.nom : 
+               'N/A' }}
+          </span>
+          <div class="actions">
+            <button 
+              class="btn btn-sm btn-success" 
+              (click)="restoreEntity('Question', question.id)"
+              title="Restaurer">
+              <i class="fas fa-undo"></i>
+            </button>
+            <button 
+              class="btn btn-sm btn-danger" 
+              (click)="permanentDelete('Question', question.id)"
+              title="Supprimer définitivement">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Autres listes similaires pour cours, étudiants, classes... -->
+      <!-- (Structure similaire, adaptée aux champs spécifiques de chaque entité) -->
+      
+      <div class="empty-state" *ngIf="loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Chargement...</p>
+      </div>
+    </div>
+  </div>
+</div>

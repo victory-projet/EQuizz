@@ -1,0 +1,4 @@
+Enonce,typeQuestion,options
+"Quelle est la capitale de la France ?","CHOIX_MULTIPLE","Paris;Lyon;Marseille;Toulouse"
+"Expliquez le concept de programmation orientée objet","REPONSE_OUVERTE",""
+"Qu'est-ce qu'une base de données relationnelle ?","CHOIX_MULTIPLE","Un système de gestion de fichiers;Un système de stockage de données structurées;Un logiciel de traitement de texte;Un navigateur web"

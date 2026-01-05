@@ -1,64 +1,87 @@
-// Use Case - Evaluation
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { EvaluationApiData, Evaluation } from '../domain/entities/evaluation.entity';
+import { Question, QuestionFormData, QuestionImportData } from '../domain/entities/question.entity';
 import { EvaluationRepositoryInterface } from '../domain/repositories/evaluation.repository.interface';
-import { Evaluation, Question, SessionReponse } from '../domain/entities/evaluation.entity';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EvaluationUseCase {
+  
   constructor(private evaluationRepository: EvaluationRepositoryInterface) {}
 
-  createEvaluation(evaluation: Partial<Evaluation>): Observable<Evaluation> {
-    return this.evaluationRepository.createEvaluation(evaluation);
+  createEvaluation(data: EvaluationApiData): Observable<Evaluation> {
+    return this.evaluationRepository.create(data);
   }
 
-  getEvaluations(): Observable<Evaluation[]> {
-    return this.evaluationRepository.getEvaluations();
+  updateEvaluation(id: string | number, data: Partial<EvaluationApiData>): Observable<Evaluation> {
+    return this.evaluationRepository.update(id, data);
   }
 
   getEvaluation(id: string | number): Observable<Evaluation> {
-    return this.evaluationRepository.getEvaluation(id);
+    return this.evaluationRepository.findById(id);
   }
 
-  updateEvaluation(id: string | number, evaluation: Partial<Evaluation>): Observable<Evaluation> {
-    return this.evaluationRepository.updateEvaluation(id, evaluation);
+  getEvaluations(): Observable<Evaluation[]> {
+    return this.evaluationRepository.findAll();
   }
 
   deleteEvaluation(id: string | number): Observable<void> {
-    return this.evaluationRepository.deleteEvaluation(id);
+    return this.evaluationRepository.delete(id);
   }
 
   publishEvaluation(id: string | number): Observable<Evaluation> {
-    return this.evaluationRepository.publishEvaluation(id);
+    return this.evaluationRepository.publish(id);
   }
 
   closeEvaluation(id: string | number): Observable<Evaluation> {
-    return this.evaluationRepository.closeEvaluation(id);
+    return this.evaluationRepository.close(id);
   }
 
-  addQuestion(quizzId: string | number, question: Partial<Question>): Observable<Question> {
+  duplicateEvaluation(id: string | number): Observable<Evaluation> {
+    return this.evaluationRepository.duplicateEvaluation(id);
+  }
+
+  // Méthodes pour les questions
+  createQuestion(quizzId: string | number, question: Partial<Question>): Observable<Question> {
     return this.evaluationRepository.addQuestion(quizzId, question);
   }
 
-  updateQuestion(questionId: string | number, question: Partial<Question>): Observable<Question> {
-    return this.evaluationRepository.updateQuestion(questionId, question);
+  getQuestionsByQuizz(quizzId: string | number): Observable<Question[]> {
+    return this.evaluationRepository.getQuestionsByQuizz(quizzId);
+  }
+
+  addQuestion(quizzId: string | number, questionData: QuestionFormData): Observable<Question> {
+    return this.evaluationRepository.addQuestion(quizzId, questionData);
+  }
+
+  updateQuestion(questionId: string | number, questionData: Partial<Question>): Observable<Question> {
+    return this.evaluationRepository.updateQuestion(questionId, questionData);
   }
 
   deleteQuestion(questionId: string | number): Observable<void> {
     return this.evaluationRepository.deleteQuestion(questionId);
   }
 
-  importQuestions(quizzId: string | number, file: File): Observable<Question[]> {
+  importQuestions(quizzId: string | number, file: File): Observable<QuestionImportData> {
     return this.evaluationRepository.importQuestions(quizzId, file);
   }
 
-  getSubmissions(evaluationId: string | number): Observable<SessionReponse[]> {
+  importQuestionsFromExcel(quizzId: string | number, file: File): Observable<QuestionImportData> {
+    return this.evaluationRepository.importQuestions(quizzId, file);
+  }
+
+  // Méthodes pour les soumissions et résultats
+  getSubmissions(evaluationId: string | number): Observable<any[]> {
     return this.evaluationRepository.getSubmissions(evaluationId);
   }
 
-  duplicateEvaluation(id: string | number): Observable<Evaluation> {
-    return this.evaluationRepository.duplicateEvaluation(id);
+  getResults(evaluationId: string | number): Observable<any> {
+    return this.evaluationRepository.getResults(evaluationId);
+  }
+
+  debugDelete(id: string | number): Observable<any> {
+    return this.evaluationRepository.debugDelete(id);
   }
 }

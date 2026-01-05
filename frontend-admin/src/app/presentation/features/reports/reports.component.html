@@ -2,45 +2,141 @@
   <!-- Header -->
   <div class="page-header">
     <div class="header-content">
-      <h1 class="page-title">
-        <span class="material-icons">assessment</span>
-        Rapports et Analyses
-      </h1>
-      <p class="page-subtitle">Vue d'ensemble des performances et analyses</p>
+      <div class="header-main">
+        <h1 class="page-title">
+          <span class="title-icon">
+            <span class="material-icons">assessment</span>
+          </span>
+          Rapports d'Évaluation
+        </h1>
+        <p class="page-subtitle">Analysez les résultats et générez des rapports détaillés</p>
+      </div>
+      <div class="header-stats">
+        <div class="quick-stat">
+          <span class="stat-number">{{ totalReports() }}</span>
+          <span class="stat-label">Rapports</span>
+        </div>
+        <div class="quick-stat">
+          <span class="stat-number">{{ totalResponses() }}</span>
+          <span class="stat-label">Réponses</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary" (click)="exportAllReports()" [disabled]="!hasReports()">
+        <span class="btn-icon">
+          <span class="material-icons">download</span>
+        </span>
+        <span class="btn-text">Exporter Tout</span>
+        <div class="btn-shine"></div>
+      </button>
     </div>
   </div>
 
-  <!-- Filters -->
+  <!-- Messages -->
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      <span class="material-icons">check_circle</span>
+      {{ successMessage() }}
+      <button class="alert-close" (click)="successMessage.set('')">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+  }
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      <span class="material-icons">error</span>
+      {{ errorMessage() }}
+      <button class="alert-close" (click)="errorMessage.set('')">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+  }
+
+  <!-- Filtres -->
   <div class="filters-section">
     <div class="search-box">
       <span class="material-icons">search</span>
-      <input
-        type="text"
+      <input 
+        type="text" 
         placeholder="Rechercher une évaluation..."
-        [value]="searchTerm()"
-        (input)="onSearchChange($event)"
+        (input)="onSearch($event)"
+        [value]="searchQuery()"
       />
+      @if (searchQuery()) {
+        <button class="clear-search" (click)="clearSearch()">
+          <span class="material-icons">close</span>
+        </button>
+      }
     </div>
+    
+    <div class="filter-buttons">
+      <!-- Filtres Dropdown -->
+      <div class="dropdown-container">
+        <button class="btn-filter" (click)="toggleFilters()" [class.active]="showFilters()">
+          <span class="material-icons">filter_list</span> 
+          Filtres
+          @if (hasActiveFilters()) {
+            <span class="filter-count">{{ getActiveFiltersCount() }}</span>
+          }
+        </button>
+        
+        @if (showFilters()) {
+          <div class="dropdown-menu filters-menu">
+            <div class="dropdown-header">
+              <h4>Filtrer les rapports</h4>
+              <button class="btn-text" (click)="resetFilters()">Réinitialiser</button>
+            </div>
+            
+            <!-- Filtre par Classes -->
+            <div class="filter-group">
+              <label class="filter-label">Classes</label>
+              <select [(ngModel)]="selectedClass" (change)="applyFilters()">
+                <option value="">Toutes les classes</option>
+                @for (classe of classes(); track classe.id) {
+                  <option [value]="classe.id">{{ classe.nom }}</option>
+                }
+              </select>
+            </div>
 
-    <div class="status-filters">
-      <button
-        class="filter-btn"
-        [class.active]="selectedStatus() === 'all'"
-        (click)="onStatusChange('all')">
-        Toutes
-      </button>
-      <button
-        class="filter-btn"
-        [class.active]="selectedStatus() === 'PUBLIEE'"
-        (click)="onStatusChange('PUBLIEE')">
-        Publiées
-      </button>
-      <button
-        class="filter-btn"
-        [class.active]="selectedStatus() === 'CLOTUREE'"
-        (click)="onStatusChange('CLOTUREE')">
-        Clôturées
-      </button>
+            <!-- Filtre par Enseignants -->
+            <div class="filter-group">
+              <label class="filter-label">Enseignants</label>
+              <select [(ngModel)]="selectedTeacher" (change)="applyFilters()">
+                <option value="">Tous les enseignants</option>
+                @for (teacher of teachers(); track teacher.id) {
+                  <option [value]="teacher.id">{{ teacher.nom }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Filtre par Période -->
+            <div class="filter-group">
+              <label class="filter-label">Période</label>
+              <div class="filter-options">
+                <label class="checkbox-option">
+                  <input type="radio" name="period" value="ALL"
+                         [checked]="filterPeriod() === 'ALL'"
+                         (change)="onFilterPeriod('ALL')">
+                  <span>Toutes les périodes</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="radio" name="period" value="WEEK"
+                         [checked]="filterPeriod() === 'WEEK'"
+                         (change)="onFilterPeriod('WEEK')">
+                  <span>Cette semaine</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="radio" name="period" value="MONTH"
+                         [checked]="filterPeriod() === 'MONTH'"
+                         (change)="onFilterPeriod('MONTH')">
+                  <span>Ce mois</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
     </div>
   </div>
 
@@ -52,61 +148,282 @@
     </div>
   }
 
-  <!-- Empty State -->
-  @if (!isLoading() && filteredEvaluations().length === 0) {
-    <div class="empty-state">
-      <span class="material-icons">folder_open</span>
-      <h3>Aucun rapport disponible</h3>
-      <p>Les rapports seront disponibles une fois les évaluations publiées</p>
+  <!-- Sélection d'évaluation si aucune n'est spécifiée -->
+  @if (!isLoading() && !selectedEvaluationId() && availableEvaluations().length > 0) {
+    <div class="evaluation-selector">
+      <h3>Sélectionnez une évaluation pour voir son rapport</h3>
+      <div class="evaluations-grid">
+        @for (evaluation of filteredEvaluations(); track evaluation.id) {
+          <div class="evaluation-card" (click)="selectEvaluation(evaluation.id)">
+            <div class="card-header">
+              <span class="status-badge badge-closed">
+                <span class="material-icons">lock</span>
+                Clôturée
+              </span>
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">{{ evaluation.titre }}</h3>
+              <p class="card-description">{{ evaluation.description || 'Évaluation de satisfaction' }}</p>
+              <div class="card-meta">
+                <div class="meta-item">
+                  <span class="material-icons">book</span>
+                  <span>{{ getCoursName(evaluation) }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="material-icons">calendar_today</span>
+                  <span>{{ formatDate(evaluation.dateDebut) }} - {{ formatDate(evaluation.dateFin) }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="material-icons">people</span>
+                  <span>{{ getResponseCount(evaluation) }} réponses</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
     </div>
   }
 
-  <!-- Evaluations List -->
-  @if (!isLoading() && filteredEvaluations().length > 0) {
-    <div class="evaluations-grid">
-      @for (evaluation of filteredEvaluations(); track evaluation.id) {
-        <div class="evaluation-card" (click)="viewReport(evaluation)">
-          <div class="card-header">
-            <div class="card-icon">
-              <span class="material-icons">quiz</span>
+  <!-- Rapport détaillé -->
+  @if (!isLoading() && selectedEvaluationId() && reportData()) {
+    <div class="report-container">
+      <!-- Header du rapport -->
+      <div class="report-header">
+        <div class="report-title-section">
+          <button class="btn-back" (click)="goBackToSelection()">
+            <span class="material-icons">arrow_back</span>
+            Retour à la sélection
+          </button>
+          <div class="report-title">
+            <h2>{{ reportData()!.evaluation.titre }}</h2>
+            <div class="report-meta">
+              <span class="meta-item">
+                <span class="material-icons">book</span>
+                {{ reportData()!.evaluation.cours?.nom || 'Cours non défini' }}
+              </span>
+              <span class="meta-item">
+                <span class="material-icons">calendar_today</span>
+                {{ formatDate(reportData()!.evaluation.dateDebut) }} - {{ formatDate(reportData()!.evaluation.dateFin) }}
+              </span>
             </div>
-            <span class="badge" [ngClass]="getStatusBadgeClass(evaluation.statut)">
-              {{ evaluation.statut }}
-            </span>
-          </div>
-
-          <div class="card-body">
-            <h3 class="card-title">{{ evaluation.titre }}</h3>
-            
-            <div class="card-meta">
-              <div class="meta-item">
-                <span class="material-icons">school</span>
-                <span>{{ evaluation.cours?.nom || 'Non défini' }}</span>
-              </div>
-              <div class="meta-item">
-                <span class="material-icons">group</span>
-                <span>{{ evaluation.classe?.nom || 'Non définie' }}</span>
-              </div>
-              <div class="meta-item">
-                <span class="material-icons">quiz</span>
-                <span>{{ getQuestionCount(evaluation) }} questions</span>
-              </div>
-            </div>
-
-            <div class="card-dates">
-              <span class="material-icons">event</span>
-              <span>{{ formatDate(evaluation.dateDebut) }} - {{ formatDate(evaluation.dateFin) }}</span>
-            </div>
-          </div>
-
-          <div class="card-footer">
-            <button class="btn-view">
-              <span class="material-icons">visibility</span>
-              Voir le rapport
-            </button>
           </div>
         </div>
-      }
+        <div class="report-actions">
+          <button class="btn-export" (click)="exportToPDF()">
+            <span class="material-icons">picture_as_pdf</span>
+            Exporter PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Onglets de navigation -->
+      <div class="tabs-navigation">
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab() === 'overview'"
+          (click)="setActiveTab('overview')">
+          <span class="material-icons">dashboard</span> Vue d'ensemble
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab() === 'questions'"
+          (click)="setActiveTab('questions')">
+          <span class="material-icons">quiz</span> Questions détaillées
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab() === 'sentiments'"
+          (click)="setActiveTab('sentiments')">
+          <span class="material-icons">psychology</span> Analyse des sentiments
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab() === 'performances'"
+          (click)="setActiveTab('performances')">
+          <span class="material-icons">analytics</span> Performances
+        </button>
+      </div>
+
+      <!-- Contenu des onglets -->
+      <div class="tab-content">
+        <!-- Vue d'ensemble -->
+        @if (activeTab() === 'overview') {
+          <div class="overview-section">
+            <!-- Métriques principales -->
+            <div class="metrics-grid">
+              <div class="metric-card students">
+                <div class="metric-icon">
+                  <span class="material-icons">groups</span>
+                </div>
+                <div class="metric-content">
+                  <div class="metric-label">ÉTUDIANTS CIBLÉS</div>
+                  <div class="metric-value">{{ reportData()!.statistics.totalStudents }}</div>
+                </div>
+              </div>
+              
+              <div class="metric-card respondents">
+                <div class="metric-icon">
+                  <span class="material-icons">how_to_reg</span>
+                </div>
+                <div class="metric-content">
+                  <div class="metric-label">RÉPONDANTS</div>
+                  <div class="metric-value">{{ reportData()!.statistics.totalRespondents }}</div>
+                </div>
+              </div>
+              
+              <div class="metric-card participation">
+                <div class="metric-icon">
+                  <span class="material-icons">trending_up</span>
+                </div>
+                <div class="metric-content">
+                  <div class="metric-label">TAUX DE PARTICIPATION</div>
+                  <div class="metric-value">{{ reportData()!.statistics.participationRate }}%</div>
+                </div>
+              </div>
+              
+              <div class="metric-card questions">
+                <div class="metric-icon">
+                  <span class="material-icons">help_outline</span>
+                </div>
+                <div class="metric-content">
+                  <div class="metric-label">QUESTIONS</div>
+                  <div class="metric-value">{{ reportData()!.statistics.totalQuestions }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Progression de la participation -->
+            <div class="participation-section">
+              <h3><span class="material-icons">trending_up</span> Progression de la participation</h3>
+              <div class="progress-container">
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="reportData()!.statistics.participationRate"></div>
+                </div>
+                <p class="progress-text">
+                  {{ reportData()!.statistics.totalRespondents }} / {{ reportData()!.statistics.totalStudents }} étudiants ont répondu
+                </p>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Questions détaillées -->
+        @if (activeTab() === 'questions') {
+          <div class="questions-section">
+            <h3>Analyse par question</h3>
+            
+            <!-- Questions QCM avec graphiques -->
+            @for (question of reportData()!.mcqQuestions; track question.id) {
+              <div class="question-analysis">
+                <div class="question-header">
+                  <h4>{{ question.titre }}</h4>
+                  <span class="question-type">QCM</span>
+                </div>
+                
+                <div class="mcq-chart">
+                  <div class="chart-container">
+                    @for (option of question.options; track option.texte) {
+                      <div class="chart-bar">
+                        <div class="bar-label">{{ option.texte }}</div>
+                        <div class="bar-container">
+                          <div class="bar-fill" [style.width.%]="option.percentage"></div>
+                          <span class="bar-value">{{ option.count }} ({{ option.percentage }}%)</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- Questions ouvertes -->
+            @for (question of reportData()!.openQuestions; track question.id) {
+              <div class="question-analysis">
+                <div class="question-header">
+                  <h4>{{ question.titre }}</h4>
+                  <span class="question-type">Question ouverte</span>
+                </div>
+                
+                <div class="open-responses">
+                  <h5>Réponses anonymes ({{ question.responses.length }})</h5>
+                  <div class="responses-list">
+                    @for (response of question.responses; track response.texte) {
+                      <div class="response-item">
+                        <div class="response-text">{{ response.texte }}</div>
+                        <div class="response-meta">
+                          <span class="response-date">{{ formatDate(response.dateReponse) }}</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Analyse des sentiments -->
+        @if (activeTab() === 'sentiments') {
+          <div class="sentiment-section">
+            <h3>Analyse des sentiments</h3>
+            <p>Analyse automatique des réponses textuelles pour identifier les sentiments exprimés.</p>
+            
+            <div class="sentiment-overview">
+              <div class="sentiment-card positive">
+                <div class="sentiment-icon">😊</div>
+                <div class="sentiment-label">Positif</div>
+                <div class="sentiment-value">{{ reportData()!.sentimentData.positive }}%</div>
+              </div>
+              <div class="sentiment-card neutral">
+                <div class="sentiment-icon">😐</div>
+                <div class="sentiment-label">Neutre</div>
+                <div class="sentiment-value">{{ reportData()!.sentimentData.neutral }}%</div>
+              </div>
+              <div class="sentiment-card negative">
+                <div class="sentiment-icon">😞</div>
+                <div class="sentiment-label">Négatif</div>
+                <div class="sentiment-value">{{ reportData()!.sentimentData.negative }}%</div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Performances -->
+        @if (activeTab() === 'performances') {
+          <div class="performance-section">
+            <h3>Analyse des performances</h3>
+            <p>Métriques détaillées sur les performances des étudiants.</p>
+            
+            <div class="performance-metrics">
+              <div class="metric-item">
+                <span class="label">Score moyen:</span>
+                <span class="value">{{ reportData()!.statistics.averageScore }}%</span>
+              </div>
+              <div class="metric-item">
+                <span class="label">Temps moyen de réponse:</span>
+                <span class="value">{{ reportData()!.statistics.averageTime }} min</span>
+              </div>
+              <div class="metric-item">
+                <span class="label">Taux de réussite:</span>
+                <span class="value">{{ reportData()!.statistics.successRate }}%</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- État vide -->
+  @if (!isLoading() && availableEvaluations().length === 0) {
+    <div class="empty-state">
+      <span class="material-icons empty-icon">assessment</span>
+      <h3>Aucune évaluation clôturée</h3>
+      <p>Les rapports ne sont disponibles que pour les évaluations clôturées</p>
+      <button class="btn-primary" (click)="goToEvaluations()">
+        <span class="material-icons">assignment</span> Voir les évaluations
+      </button>
     </div>
   }
 </div>

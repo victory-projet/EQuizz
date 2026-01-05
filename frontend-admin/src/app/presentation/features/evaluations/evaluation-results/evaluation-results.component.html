@@ -1,0 +1,231 @@
+<div class="evaluation-results">
+  <!-- Header avec titre et export -->
+  <div class="header">
+    <div class="header-left">
+      <button class="back-btn" (click)="goBack()">
+        <i class="fas fa-arrow-left"></i> Retour
+      </button>
+      <div class="title-section">
+        <h1>{{ evaluationTitle || 'Évaluation' }}</h1>
+        <div class="subtitle">
+          <span class="course-info">{{ courseInfo }}</span>
+          <span class="date-range">{{ dateRange }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="export-btn" (click)="exportToPDF()">
+        <i class="fas fa-file-pdf"></i> Exporter PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters-section">
+    <button class="filter-btn" (click)="toggleFilters()">
+      <i class="fas fa-filter"></i> Filtres
+    </button>
+    <div class="filters-panel" [class.open]="showFilters">
+      <div class="filter-group">
+        <label>Classes:</label>
+        <select [(ngModel)]="selectedClass" (change)="applyFilters()">
+          <option value="">Toutes les classes</option>
+          <option *ngFor="let classe of classes" [value]="classe.id">{{ classe.nom }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Enseignants:</label>
+        <select [(ngModel)]="selectedTeacher" (change)="applyFilters()">
+          <option value="">Tous les enseignants</option>
+          <option *ngFor="let teacher of teachers" [value]="teacher.id">{{ teacher.nom }}</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Onglets de navigation -->
+  <div class="tabs-navigation">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'overview'"
+      (click)="setActiveTab('overview')">
+      <i class="fas fa-chart-bar"></i> Vue d'ensemble
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'questions'"
+      (click)="setActiveTab('questions')">
+      <i class="fas fa-list"></i> Questions détaillées
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'sentiments'"
+      (click)="setActiveTab('sentiments')">
+      <i class="fas fa-heart"></i> Analyse des sentiments
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'performances'"
+      (click)="setActiveTab('performances')">
+      <i class="fas fa-trophy"></i> Performances
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement des résultats...</p>
+  </div>
+
+  <div *ngIf="!loading" class="content">
+    <!-- Vue d'ensemble -->
+    <div *ngIf="activeTab === 'overview'" class="tab-content">
+      <!-- Métriques principales -->
+      <div class="metrics-grid">
+        <div class="metric-card students">
+          <div class="metric-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-label">ÉTUDIANTS CIBLÉS</div>
+            <div class="metric-value">{{ statistics.totalStudents }}</div>
+          </div>
+        </div>
+        
+        <div class="metric-card respondents">
+          <div class="metric-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-label">RÉPONDANTS</div>
+            <div class="metric-value">{{ statistics.totalRespondents }}</div>
+          </div>
+        </div>
+        
+        <div class="metric-card participation">
+          <div class="metric-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-label">TAUX DE PARTICIPATION</div>
+            <div class="metric-value">{{ statistics.participationRate }}%</div>
+          </div>
+        </div>
+        
+        <div class="metric-card questions">
+          <div class="metric-icon">
+            <i class="fas fa-question-circle"></i>
+          </div>
+          <div class="metric-content">
+            <div class="metric-label">QUESTIONS</div>
+            <div class="metric-value">{{ statistics.totalQuestions }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progression de la participation -->
+      <div class="participation-section">
+        <h3><i class="fas fa-chart-line"></i> Progression de la participation</h3>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="statistics.participationRate"></div>
+        </div>
+        <p class="progress-text">{{ statistics.totalRespondents }} / {{ statistics.totalStudents }} étudiants ont répondu</p>
+      </div>
+    </div>
+
+    <!-- Questions détaillées -->
+    <div *ngIf="activeTab === 'questions'" class="tab-content">
+      <div class="questions-analysis">
+        <h3>Analyse par question</h3>
+        
+        <!-- Questions QCM avec graphiques -->
+        <div *ngFor="let question of mcqQuestions" class="question-analysis">
+          <div class="question-header">
+            <h4>{{ question.titre }}</h4>
+            <span class="question-type">QCM</span>
+          </div>
+          
+          <div class="mcq-chart">
+            <div class="chart-container">
+              <div *ngFor="let option of question.options" class="chart-bar">
+                <div class="bar-label">{{ option.texte }}</div>
+                <div class="bar-container">
+                  <div class="bar-fill" [style.width.%]="option.percentage"></div>
+                  <span class="bar-value">{{ option.count }} ({{ option.percentage }}%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Questions ouvertes -->
+        <div *ngFor="let question of openQuestions" class="question-analysis">
+          <div class="question-header">
+            <h4>{{ question.titre }}</h4>
+            <span class="question-type">Question ouverte</span>
+          </div>
+          
+          <div class="open-responses">
+            <h5>Réponses anonymes ({{ question.responses.length }})</h5>
+            <div class="responses-list">
+              <div *ngFor="let response of question.responses" class="response-item">
+                <div class="response-text">{{ response.texte }}</div>
+                <div class="response-meta">
+                  <span class="response-date">{{ response.dateReponse | date:'short' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analyse des sentiments -->
+    <div *ngIf="activeTab === 'sentiments'" class="tab-content">
+      <div class="sentiment-analysis">
+        <h3>Analyse des sentiments</h3>
+        <p>Analyse automatique des réponses textuelles pour identifier les sentiments exprimés.</p>
+        
+        <div class="sentiment-overview">
+          <div class="sentiment-card positive">
+            <div class="sentiment-icon">😊</div>
+            <div class="sentiment-label">Positif</div>
+            <div class="sentiment-value">{{ sentimentData.positive }}%</div>
+          </div>
+          <div class="sentiment-card neutral">
+            <div class="sentiment-icon">😐</div>
+            <div class="sentiment-label">Neutre</div>
+            <div class="sentiment-value">{{ sentimentData.neutral }}%</div>
+          </div>
+          <div class="sentiment-card negative">
+            <div class="sentiment-icon">😞</div>
+            <div class="sentiment-label">Négatif</div>
+            <div class="sentiment-value">{{ sentimentData.negative }}%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performances -->
+    <div *ngIf="activeTab === 'performances'" class="tab-content">
+      <div class="performance-analysis">
+        <h3>Analyse des performances</h3>
+        <p>Métriques détaillées sur les performances des étudiants.</p>
+        
+        <div class="performance-metrics">
+          <div class="metric-item">
+            <span class="label">Score moyen:</span>
+            <span class="value">{{ statistics.averageScore }}%</span>
+          </div>
+          <div class="metric-item">
+            <span class="label">Temps moyen de réponse:</span>
+            <span class="value">{{ statistics.averageTime }} min</span>
+          </div>
+          <div class="metric-item">
+            <span class="label">Taux de réussite:</span>
+            <span class="value">{{ statistics.successRate }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div class="modal-overlay" (click)="cancel()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -146,5 +147,117 @@
         </button>
       }
     </div>
+=======
+<div class="question-import-container">
+  <div class="import-header">
+    <h3 class="import-title">
+      <i class="material-icons">upload_file</i>
+      Import de questions depuis Excel
+    </h3>
+    <p class="import-description">
+      Importez vos questions en masse depuis un fichier Excel (.xlsx ou .xls)
+    </p>
+    
+    <!-- Validation du quizzId -->
+    @if (!quizzId || quizzId === 'null' || quizzId === 'undefined') {
+      <div class="alert alert-error">
+        <i class="material-icons">error</i>
+        Erreur: ID du quiz manquant. Veuillez rafraîchir la page ou créer d'abord un quiz.
+      </div>
+    }
+>>>>>>> frontend_admin_2
+  </div>
+
+  <!-- Messages d'état -->
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      <i class="material-icons">error</i>
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      <i class="material-icons">check_circle</i>
+      {{ successMessage() }}
+    </div>
+  }
+
+  <!-- Section d'upload (seulement si quizzId valide) -->
+  @if (quizzId && quizzId !== 'null' && quizzId !== 'undefined') {
+    <div class="upload-section">
+      <div class="upload-area">
+        <div class="upload-content">
+          <i class="material-icons upload-icon">cloud_upload</i>
+          <h4>Sélectionnez votre fichier Excel</h4>
+          <p>Formats acceptés: .xlsx, .xls</p>
+          
+          <input 
+            type="file" 
+            id="excel-file" 
+            accept=".xlsx,.xls"
+            (change)="onFileSelected($event)"
+            class="file-input">
+          
+          <label for="excel-file" class="btn btn-primary">
+            <i class="material-icons">folder_open</i>
+            Choisir un fichier
+          </label>
+        </div>
+      </div>
+
+      @if (selectedFile()) {
+        <div class="file-info">
+          <div class="file-details">
+            <i class="material-icons">description</i>
+            <div class="file-meta">
+              <span class="file-name">{{ selectedFile()?.name }}</span>
+              <span class="file-size">{{ (selectedFile()?.size || 0) / 1024 | number:'1.0-1' }} KB</span>
+            </div>
+          </div>
+          
+          <button 
+            class="btn btn-success"
+            (click)="onImportQuestions()"
+            [disabled]="isLoading()">
+            @if (isLoading()) {
+              <i class="material-icons spinning">refresh</i>
+              Import en cours...
+            } @else {
+              <i class="material-icons">file_upload</i>
+              Importer les questions
+            }
+          </button>
+        </div>
+      }
+
+      <!-- Template de téléchargement -->
+      <div class="template-section">
+        <div class="template-info">
+          <i class="material-icons">info</i>
+          <div>
+            <h5>Besoin d'un modèle ?</h5>
+            <p>Téléchargez notre template pour formater correctement vos questions</p>
+            <p><strong>Format attendu :</strong> Énoncé | Type de question | Options (séparées par ;)</p>
+          </div>
+        </div>
+        <button 
+          class="btn btn-outline"
+          (click)="downloadTemplate()">
+          <i class="material-icons">download</i>
+          Télécharger le template
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Actions -->
+  <div class="import-actions">
+    <button 
+      class="btn btn-secondary"
+      (click)="onCancel()">
+      <i class="material-icons">close</i>
+      Annuler
+    </button>
   </div>
 </div>

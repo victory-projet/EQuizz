@@ -18,19 +18,19 @@ router.use(authenticate, isAdmin);
 //  Routes pour la gestion des Écoles (CRUD) 
 
 // POST /api/academic/ecoles - Créer une nouvelle école
-router.post('/ecoles', ecoleController.create);
+// router.post('/ecoles', ecoleController.create);
 
 // GET /api/academic/ecoles - Obtenir la liste de toutes les écoles
-router.get('/ecoles', ecoleController.findAll);
+// router.get('/ecoles', ecoleController.findAll);
 
 // GET /api/academic/ecoles/:id - Obtenir une école par son ID
-router.get('/ecoles/:id', ecoleController.findOne);
+// router.get('/ecoles/:id', ecoleController.findOne);
 
 // PUT /api/academic/ecoles/:id - Mettre à jour une école par son ID
-router.put('/ecoles/:id', ecoleController.update);
+// router.put('/ecoles/:id', ecoleController.update);
 
 // DELETE /api/academic/ecoles/:id - Supprimer une école par son ID
-router.delete('/ecoles/:id', ecoleController.delete);
+// router.delete('/ecoles/:id', ecoleController.delete);
 
 
 // --- Routes pour la gestion des Années Académiques (CRUD) ---
@@ -75,29 +75,29 @@ router.delete('/classes/:id', classeController.delete);
 
 // --- Routes pour la relation Classe <-> Cours ---
 // POST /api/academic/classes/:classeId/cours/:coursId - Associer un cours à une classe
-router.post('/classes/:classeId/cours/:coursId', classeController.addCoursToClasse);
+// router.post('/classes/:classeId/cours/:coursId', classeController.addCoursToClasse);
 // DELETE /api/academic/classes/:classeId/cours/:coursId - Dissocier un cours d'une classe
-router.delete('/classes/:classeId/cours/:coursId', classeController.removeCoursFromClasse);
+// router.delete('/classes/:classeId/cours/:coursId', classeController.removeCoursFromClasse);
 
 // --- Routes pour la relation Classe <-> Étudiant ---
 // POST /api/academic/classes/:classeId/etudiants/:etudiantId - Assigner un étudiant à une classe
-router.post('/classes/:classeId/etudiants/:etudiantId', classeController.addEtudiantToClasse);
+// router.post('/classes/:classeId/etudiants/:etudiantId', classeController.addEtudiantToClasse);
 // DELETE /api/academic/classes/:classeId/etudiants/:etudiantId - Retirer un étudiant d'une classe
-router.delete('/classes/:classeId/etudiants/:etudiantId', classeController.removeEtudiantFromClasse);
+// router.delete('/classes/:classeId/etudiants/:etudiantId', classeController.removeEtudiantFromClasse);
 
 // --- Routes pour la gestion des Étudiants (CRUD) ---
-router.post('/etudiants', etudiantController.create);
-router.get('/etudiants', etudiantController.findAll);
-router.get('/etudiants/:id', etudiantController.findOne);
-router.put('/etudiants/:id', etudiantController.update);
-router.delete('/etudiants/:id', etudiantController.delete);
+// router.post('/etudiants', etudiantController.create);
+// router.get('/etudiants', etudiantController.findAll);
+// router.get('/etudiants/:id', etudiantController.findOne);
+// router.put('/etudiants/:id', etudiantController.update);
+// router.delete('/etudiants/:id', etudiantController.delete);
 
 // --- Routes pour la gestion des Enseignants (CRUD) ---
-router.post('/enseignants', enseignantController.create);
-router.get('/enseignants', enseignantController.findAll);
-router.get('/enseignants/:id', enseignantController.findOne);
-router.put('/enseignants/:id', enseignantController.update);
-router.delete('/enseignants/:id', enseignantController.delete);
+// router.post('/enseignants', enseignantController.create);
+// router.get('/enseignants', enseignantController.findAll);
+// router.get('/enseignants/:id', enseignantController.findOne);
+// router.put('/enseignants/:id', enseignantController.update);
+// router.delete('/enseignants/:id', enseignantController.delete);
 
 
 module.exports = router;

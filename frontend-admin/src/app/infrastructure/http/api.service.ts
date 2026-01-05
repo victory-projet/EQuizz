@@ -10,10 +10,14 @@ import { environment } from '../../../environments/environment';
 export class ApiService {
   private baseUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    console.log('🔧 ApiService initialized with baseUrl:', this.baseUrl);
+  }
 
   get<T>(endpoint: string, options?: any): Observable<T> {
-    return this.http.get<T>(`${this.baseUrl}${endpoint}`, {
+    const fullUrl = `${this.baseUrl}${endpoint}`;
+    console.log('🌐 API GET Request:', fullUrl);
+    return this.http.get<T>(fullUrl, {
       ...options,
       observe: 'body' as const
     }) as Observable<T>;

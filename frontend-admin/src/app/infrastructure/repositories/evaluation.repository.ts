@@ -3,7 +3,8 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { EvaluationRepositoryInterface } from '../../core/domain/repositories/evaluation.repository.interface';
-import { Evaluation, Question, SessionReponse } from '../../core/domain/entities/evaluation.entity';
+import { Evaluation, EvaluationApiData } from '../../core/domain/entities/evaluation.entity';
+import { Question, QuestionFormData, QuestionImportData } from '../../core/domain/entities/question.entity';
 import { ApiService } from '../http/api.service';
 
 @Injectable({
@@ -12,18 +13,20 @@ import { ApiService } from '../http/api.service';
 export class EvaluationRepository implements EvaluationRepositoryInterface {
   constructor(private api: ApiService) {}
 
-  createEvaluation(evaluation: Partial<Evaluation>): Observable<Evaluation> {
+  create(evaluation: EvaluationApiData): Observable<Evaluation> {
     console.log('📡 Repository - Envoi de la requête POST /evaluations:', evaluation);
-    return this.api.post<Evaluation>('/evaluations', evaluation);
+    return this.api.post<any>('/evaluations', evaluation).pipe(
+      map((response: any) => this.mapEvaluationFromBackend(response.evaluation || response))
+    );
   }
 
-  getEvaluations(): Observable<Evaluation[]> {
+  findAll(): Observable<Evaluation[]> {
     return this.api.get<any[]>('/evaluations').pipe(
       map((data: any[]) => data.map(item => this.mapEvaluationFromBackend(item)))
     );
   }
 
-  getEvaluation(id: string | number): Observable<Evaluation> {
+  findById(id: string | number): Observable<Evaluation> {
     return this.api.get<any>(`/evaluations/${id}`).pipe(
       map((data: any) => this.mapEvaluationFromBackend(data))
     );
@@ -35,15 +38,20 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
       hasCours: !!data.Cours,
       hasCour: !!data.Cour,
       hasClasses: !!data.Classes,
-      classesLength: data.Classes?.length
+      classesLength: data.Classes?.length,
+      hasQuizz: !!data.Quizz,
+      quizzId: data.Quizz?.id
     });
 
     const mapped = {
       ...data,
       // Le backend retourne "Cour" (singulier) ou "Cours" (pluriel) selon la relation
-      cours: data.Cour || data.Cours || data.cours,
+      // Gérer le cas où Cours peut être null
+      cours: data.Cour || data.Cours || data.cours || null,
       // Le backend retourne "Classes" (array) - on prend la première
-      classe: data.Classes?.[0] || data.Classe || data.classe,
+      classe: data.Classes?.[0] || data.Classe || data.classe || null,
+      classes: data.Classes || data.classes || [],
+      Classes: data.Classes || [],
       // Le backend retourne "Quizz" (majuscule)
       quizz: data.Quizz ? {
         ...data.Quizz,
@@ -54,61 +62,81 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
           // Mapper typeQuestion vers type pour compatibilité
           type: q.typeQuestion || q.type
         })) || []
-      } : undefined,
+      } : null,
       // S'assurer que quizzId est bien défini
-      quizzId: data.Quizz?.id || data.quizzId
+      quizzId: data.Quizz?.id || data.quizzId || null
     };
 
     console.log('✅ Mapped evaluation:', {
       cours: mapped.cours,
       classe: mapped.classe,
-      quizzId: mapped.quizzId
+      quizzId: mapped.quizzId,
+      hasQuizz: !!mapped.quizz,
+      quizzFromData: mapped.quizz?.id
     });
 
     return mapped;
   }
 
-  updateEvaluation(id: string | number, evaluation: Partial<Evaluation>): Observable<Evaluation> {
-    return this.api.put<Evaluation>(`/evaluations/${id}`, evaluation);
+  update(id: string | number, evaluation: Partial<EvaluationApiData>): Observable<Evaluation> {
+    return this.api.put<any>(`/evaluations/${id}`, evaluation).pipe(
+      map((response: any) => this.mapEvaluationFromBackend(response.evaluation || response))
+    );
   }
 
-  deleteEvaluation(id: string | number): Observable<void> {
+  delete(id: string | number): Observable<void> {
     return this.api.delete<void>(`/evaluations/${id}`);
   }
 
-  publishEvaluation(id: string | number): Observable<Evaluation> {
-    return this.api.post<Evaluation>(`/evaluations/${id}/publish`, {});
+  publish(id: string | number): Observable<Evaluation> {
+    return this.api.post<any>(`/evaluations/${id}/publish`, {}).pipe(
+      map((response: any) => this.mapEvaluationFromBackend(response.evaluation || response))
+    );
   }
 
-  closeEvaluation(id: string | number): Observable<Evaluation> {
-    return this.api.post<Evaluation>(`/evaluations/${id}/close`, {});
+  close(id: string | number): Observable<Evaluation> {
+    return this.api.post<any>(`/evaluations/${id}/close`, {}).pipe(
+      map((response: any) => this.mapEvaluationFromBackend(response.evaluation || response))
+    );
   }
 
-  addQuestion(quizzId: string | number, question: Partial<Question>): Observable<Question> {
+  addQuestion(quizzId: string | number, question: QuestionFormData): Observable<Question> {
     return this.api.post<Question>(`/evaluations/quizz/${quizzId}/questions`, question);
   }
 
-  updateQuestion(questionId: string | number, question: Partial<Question>): Observable<Question> {
+  getQuestionsByQuizz(quizzId: string | number): Observable<Question[]> {
+    return this.api.get<Question[]>(`/evaluations/quizz/${quizzId}/questions`);
+  }
+
+  updateQuestion(questionId: string | number, question: QuestionFormData): Observable<Question> {
     return this.api.put<Question>(`/evaluations/questions/${questionId}`, question);
   }
 
   deleteQuestion(questionId: string | number): Observable<void> {
-    return this.api.delete<void>(`/evaluations/questions/${questionId}`);
+    return this.api.delete<void>(`/questions/${questionId}`);
   }
 
-  importQuestions(quizzId: string | number, file: File): Observable<Question[]> {
+  importQuestions(quizzId: string | number, file: File): Observable<QuestionImportData> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.api.upload<Question[]>(`/evaluations/quizz/${quizzId}/import`, formData);
+    return this.api.upload<QuestionImportData>(`/evaluations/quizz/${quizzId}/import`, formData);
   }
 
-  getSubmissions(evaluationId: string | number): Observable<SessionReponse[]> {
-    return this.api.get<SessionReponse[]>(`/evaluations/${evaluationId}/submissions`);
+  getSubmissions(evaluationId: string | number): Observable<any[]> {
+    return this.api.get<any[]>(`/evaluations/${evaluationId}/submissions`);
+  }
+
+  getResults(evaluationId: string | number): Observable<any> {
+    return this.api.get<any>(`/evaluations/${evaluationId}/results`);
   }
 
   duplicateEvaluation(id: string | number): Observable<Evaluation> {
     return this.api.post<any>(`/evaluations/${id}/duplicate`, {}).pipe(
       map((response: any) => this.mapEvaluationFromBackend(response.evaluation))
     );
+  }
+
+  debugDelete(id: string | number): Observable<any> {
+    return this.api.get<any>(`/evaluations/${id}/debug-delete`);
   }
 }

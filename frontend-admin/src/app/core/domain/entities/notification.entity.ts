@@ -16,8 +16,15 @@ export interface Notification {
   userId?: string;
   relatedEntityId?: string;
   relatedEntityType?: string;
+  persistent?: boolean;
+  actions?: NotificationAction[];
 }
 
+export interface NotificationAction {
+  label: string;
+  action: () => void;
+  style?: 'primary' | 'secondary';
+}
 export type NotificationType = 
   | 'info' 
   | 'success' 

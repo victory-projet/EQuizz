@@ -1,78 +1,109 @@
-// Domain Entity - Evaluation
-export interface Evaluation {
-  id: number | string;  // Peut être un nombre ou un UUID
-  titre: string;
-  description?: string;
-  dateDebut: Date;
-  dateFin: Date;
-  statut: 'BROUILLON' | 'PUBLIEE' | 'CLOTUREE';
-  coursId: number | string;  // Peut être un nombre ou un UUID
-  cours?: any;
-  classeId: number | string;  // Peut être un nombre ou un UUID
-  classe?: any;
-  quizzId?: number | string;  // Peut être un nombre ou un UUID
-  quizz?: Quizz;
-  dateCreation: Date;
-  dateModification: Date;
-}
+import { Question } from './question.entity';
 
-// Interface pour les données d'API (avec dates en string)
+// Re-export Question for backward compatibility
+export type { Question } from './question.entity';
+
 export interface EvaluationApiData {
-  id?: number | string;
+  id?: string | number;
   titre: string;
   description?: string;
   dateDebut: string | Date;
   dateFin: string | Date;
-  statut: 'BROUILLON' | 'PUBLIEE' | 'CLOTUREE';
-  cours_id?: number | string;
-  coursId?: number | string;
-  classeIds?: (number | string)[];
+  coursId?: string | number;
+  cours_id?: string | number;
+  classeIds?: (string | number)[];
+  classeId?: string | number;
+  statut: 'BROUILLON' | 'PUBLIEE' | 'CLOTUREE' | 'ACTIVE' | 'TERMINEE' | 'ARCHIVEE';
   dateCreation?: string | Date;
   dateModification?: string | Date;
+  createdAt?: string;
+  updatedAt?: string;
+  administrateur_id?: string | number;
+  quizzId?: string | number;
+}
+
+export interface Evaluation extends EvaluationApiData {
+  id: string | number;
+  createdAt?: string;
+  updatedAt?: string;
+  dateCreation?: string;
+  
+  // Relations
+  cours?: {
+    id: string | number;
+    nom: string;
+  };
+  classe?: {
+    id: string | number;
+    nom: string;
+  };
+  classes?: Array<{
+    id: string | number;
+    nom: string;
+  }>;
+  Classes?: Array<{
+    id: string | number;
+    nom: string;
+  }>;
+  Cour?: {
+    id: string | number;
+    nom: string;
+  };
+  Cours?: {
+    id: string | number;
+    nom: string;
+  };
+  quizz?: Quizz;
+  Quizz?: Quizz;
 }
 
 export interface Quizz {
-  id: number | string;  // Peut être un nombre ou un UUID
+  id: number | string;
   titre: string;
   description?: string;
-  evaluationId?: number | string;  // Peut être un nombre ou un UUID
+  instructions?: string;
+  evaluationId?: number | string;
   questions?: Question[];
-  dateCreation: Date;
-  dateModification: Date;
+  Questions?: Question[];
+  dateCreation?: Date;
+  dateModification?: Date;
 }
 
-export interface Question {
-  id: number | string;  // Peut être un nombre ou un UUID
-  enonce: string;
-  type: 'QCM' | 'ECHELLE' | 'OUI_NON' | 'TEXTE_LIBRE' | 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE';  // Support des deux formats
-  typeQuestion?: 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE';  // Format backend
+export interface EvaluationQuestion {
+  id?: string;
+  evaluationId: string;
+  question: string;
+  type: 'QCM' | 'VRAI_FAUX' | 'TEXTE_LIBRE' | 'NUMERIQUE';
   options?: string[];
+  bonneReponse?: string | number;
+  points: number;
   ordre: number;
-  quizzId: number | string;  // Peut être un nombre ou un UUID
-  dateCreation: Date;
-  dateModification: Date;
 }
 
-export interface ReponseEtudiant {
-  id: number | string;  // Peut être un nombre ou un UUID
-  reponse: string;
-  questionId: number | string;  // Peut être un nombre ou un UUID
-  question?: Question;
-  etudiantId: number | string;  // Peut être un nombre ou un UUID
-  etudiant?: any;
-  sessionReponseId: number | string;  // Peut être un nombre ou un UUID
-  dateCreation: Date;
+export interface EvaluationSubmission {
+  id?: string;
+  evaluationId: string;
+  userId: string;
+  reponses: { [questionId: string]: any };
+  score?: number;
+  dateSubmission: string;
+  dureeReponse?: number; // en secondes
 }
 
-export interface SessionReponse {
-  id: number | string;  // Peut être un nombre ou un UUID
-  evaluationId: number | string;  // Peut être un nombre ou un UUID
-  evaluation?: Evaluation;
-  etudiantId: number | string;  // Peut être un nombre ou un UUID
-  etudiant?: any;
-  dateDebut: Date;
-  dateFin?: Date;
-  estTerminee: boolean;
-  reponses?: ReponseEtudiant[];
-  dateCreation: Date;
+export interface EvaluationResult {
+  id?: string;
+  evaluationId: string;
+  userId: string;
+  score: number;
+  maxScore: number;
+  pourcentage: number;
+  dateEvaluation: string;
+  dureeReponse: number;
+  details: {
+    questionId: string;
+    reponseUtilisateur: any;
+    bonneReponse: any;
+    points: number;
+    pointsObtenus: number;
+  }[];
 }

@@ -1,5 +1,7 @@
 /* Global Styles */
 @use 'styles/themes.scss';
+@use 'styles/design-system';
+@use 'styles/components';
 
 * {
   margin: 0;

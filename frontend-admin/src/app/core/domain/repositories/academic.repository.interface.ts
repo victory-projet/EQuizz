@@ -26,14 +26,14 @@ export abstract class AcademicRepositoryInterface {
 
   // Cours
   abstract createCours(cours: Partial<Cours>): Observable<Cours>;
-  abstract getCours(): Observable<Cours[]>;
+  abstract getCours(): Observable<Cours[]>; // Returns array after extracting from paginated response
   abstract getCoursById(id: string | number): Observable<Cours>;
   abstract updateCours(id: string | number, cours: Partial<Cours>): Observable<Cours>;
   abstract deleteCours(id: string | number): Observable<void>;
 
   // Classes
   abstract createClasse(classe: Partial<Classe>): Observable<Classe>;
-  abstract getClasses(): Observable<Classe[]>;
+  abstract getClasses(page: number, limit: number, search?: string): Observable<{classes: Classe[], pagination: any}>;
   abstract getClasse(id: string | number): Observable<Classe>;
   abstract updateClasse(id: string | number, classe: Partial<Classe>): Observable<Classe>;
   abstract deleteClasse(id: string | number): Observable<void>;

@@ -4,19 +4,26 @@ import { of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { CacheService } from '../services/cache.service';
 
+// Global cache service instance for testing purposes
+let globalCacheService: CacheService | null = null;
+
 /**
  * Intercepteur fonctionnel pour la mise en cache HTTP
  */
 export const cacheInterceptor: HttpInterceptorFn = (req, next) => {
   const cacheService = inject(CacheService);
+  
+  // Store reference for testing
+  if (!globalCacheService) {
+    globalCacheService = cacheService;
+  }
 
   // URLs qui doivent être mises en cache
   const cacheableUrls = [
-    '/api/users',
-    '/api/classes',
-    '/api/teachers',
-    '/api/students',
-    '/api/evaluations'
+    '/users',
+    '/academic/classes',
+    '/academic/cours',
+    '/evaluations'
   ];
 
   // Méthodes HTTP qui peuvent être mises en cache
@@ -84,8 +91,8 @@ function getTtlForUrl(url: string): number {
     return 10 * 60 * 1000; // 10 minutes pour les utilisateurs
   }
   
-  if (url.includes('/classes')) {
-    return 30 * 60 * 1000; // 30 minutes pour les classes
+  if (url.includes('/academic/classes') || url.includes('/academic/cours')) {
+    return 30 * 60 * 1000; // 30 minutes pour les données académiques
   }
   
   if (url.includes('/evaluations')) {
@@ -94,4 +101,13 @@ function getTtlForUrl(url: string): number {
   
   // TTL par défaut
   return 15 * 60 * 1000; // 15 minutes
+}
+
+/**
+ * Fonction utilitaire pour vider le cache (utilisée principalement pour les tests)
+ */
+export function clearCache(): void {
+  if (globalCacheService) {
+    globalCacheService.clear();
+  }
 }

@@ -1,10 +1,10 @@
-﻿import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { UserUseCase } from '../../../core/usecases/user.usecase';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
-import { User, Etudiant } from '../../../core/domain/entities/user.entity';
+import { Etudiant } from '../../../core/domain/entities/user.entity';
 import { Classe } from '../../../core/domain/entities/academic.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { UserCacheService } from '../../../core/services/user-cache.service';
@@ -25,6 +25,16 @@ export class StudentsComponent implements OnInit, OnDestroy {
   showModal = signal(false);
   showDeleteModal = signal(false);
   selectedStudent = signal<Etudiant | null>(null);
+  errorMessage = signal('');
+  successMessage = signal('');
+  
+  // Pagination
+  currentPage = signal(1);
+  pageSize = signal(20);
+  totalItems = signal(0);
+  totalPages = signal(0);
+  hasNextPage = signal(false);
+  hasPrevPage = signal(false);
   
   // Cache management
   cacheEnabled = signal(true);
@@ -40,21 +50,16 @@ export class StudentsComponent implements OnInit, OnDestroy {
   filterClasse = signal<string>('ALL');
   filterStatus = signal<string>('ALL');
 
+  // Form data
   formData = {
     nom: '',
     prenom: '',
     email: '',
-    matricule: '',
+    numeroEtudiant: '',
+    matricule: '', // Add matricule for template compatibility
     classeId: '',
-    numeroCarteEtudiant: ''
+    statut: 'ACTIF' as 'ACTIF' | 'INACTIF' | 'SUSPENDU'
   };
-
-  errorMessage = signal('');
-  successMessage = signal('');
-
-  totalStudents = computed(() => this.students().length);
-  activeStudents = computed(() => this.students().filter(s => s.estActif).length);
-  inactiveStudents = computed(() => this.students().filter(s => !s.estActif).length);
 
   constructor(
     private userUseCase: UserUseCase,
@@ -62,9 +67,8 @@ export class StudentsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadStudents();
     this.loadClasses();
-    this.setupCacheObservation();
+    this.loadStudents();
   }
 
   ngOnDestroy(): void {
@@ -72,55 +76,25 @@ export class StudentsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  setupCacheObservation(): void {
-    // Observer les changements des étudiants en temps réel
-    this.userCacheService.observeStudents()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(students => {
-        if (students.length > 0) {
-          this.students.set(students as Etudiant[]);
-          this.applyFilters();
-          this.lastRefresh.set(new Date());
-        }
-      });
-  }
-
   loadStudents(): void {
     this.isLoading.set(true);
-    
-    if (this.cacheEnabled()) {
-      // Utiliser le cache service
-      this.userCacheService.getStudents({
-        ttl: 10 * 60 * 1000, // 10 minutes
-        persistToStorage: true
-      }).pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (students) => {
-          this.students.set(students as Etudiant[]);
-          this.applyFilters();
-          this.isLoading.set(false);
-          this.lastRefresh.set(new Date());
-        },
-        error: (error) => {
-          console.error('Erreur lors du chargement des étudiants:', error);
-          this.errorMessage.set('Erreur lors du chargement des étudiants');
-          this.isLoading.set(false);
-          // Fallback vers l'API directe
-          this.loadStudentsDirectly();
-        }
-      });
-    } else {
-      this.loadStudentsDirectly();
-    }
-  }
+    this.errorMessage.set('');
 
-  loadStudentsDirectly(): void {
-    this.userUseCase.getAllUsers().subscribe({
-      next: (users: User[]) => {
-        const students = users.filter((u: User) => u.role === 'ETUDIANT') as Etudiant[];
-        console.log('📚 Étudiants chargés:', students);
-        this.students.set(students);
-        this.applyFilters();
+    const params = {
+      page: this.currentPage(),
+      limit: this.pageSize(),
+      search: this.searchQuery(),
+      classeId: this.filterClasse() !== 'ALL' ? this.filterClasse() : undefined,
+      statut: this.filterStatus() !== 'ALL' ? this.filterStatus() : undefined
+    };
+
+    // Load from server
+    this.userUseCase.getStudentsPaginated(params).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (response: { students: Etudiant[]; pagination: any }) => {
+        this.students.set(response.students);
+        this.updatePagination(response.pagination);
         this.isLoading.set(false);
         this.lastRefresh.set(new Date());
       },
@@ -132,46 +106,42 @@ export class StudentsComponent implements OnInit, OnDestroy {
     });
   }
 
+  private updatePagination(pagination: any): void {
+    this.currentPage.set(pagination.currentPage);
+    this.totalItems.set(pagination.totalItems);
+    this.totalPages.set(pagination.totalPages);
+    this.hasNextPage.set(pagination.hasNextPage);
+    this.hasPrevPage.set(pagination.hasPrevPage);
+  }
+
   loadClasses(): void {
-    this.academicUseCase.getClasses().subscribe({
+    this.academicUseCase.getAllClasses().subscribe({
       next: (classes) => {
-        this.classes.set(classes);
+        if (Array.isArray(classes)) {
+          this.classes.set(classes);
+        } else {
+          console.warn('Classes response is not an array:', classes);
+          this.classes.set([]);
+        }
       },
       error: (error) => {
         console.error('Erreur lors du chargement des classes:', error);
+        this.classes.set([]);
       }
     });
   }
 
   applyFilters(): void {
-    let filtered = this.students();
-
-    if (this.filterClasse() !== 'ALL') {
-      filtered = filtered.filter(s => s.classeId?.toString() === this.filterClasse());
-    }
-
-    if (this.filterStatus() !== 'ALL') {
-      const isActive = this.filterStatus() === 'ACTIVE';
-      filtered = filtered.filter(s => s.estActif === isActive);
-    }
-
-    if (this.searchQuery()) {
-      const query = this.searchQuery().toLowerCase();
-      filtered = filtered.filter(s =>
-        s.nom.toLowerCase().includes(query) ||
-        s.prenom.toLowerCase().includes(query) ||
-        s.email.toLowerCase().includes(query) ||
-        (s.matricule && s.matricule.toLowerCase().includes(query))
-      );
-    }
-
-    this.filteredStudents.set(filtered);
+    this.currentPage.set(1);
+    this.loadStudents();
   }
 
   onSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchQuery.set(input.value);
-    this.applyFilters();
+    setTimeout(() => {
+      this.applyFilters();
+    }, 300);
   }
 
   onFilterClasse(classeId: string): void {
@@ -184,6 +154,31 @@ export class StudentsComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+      this.loadStudents();
+    }
+  }
+
+  nextPage(): void {
+    if (this.hasNextPage()) {
+      this.goToPage(this.currentPage() + 1);
+    }
+  }
+
+  prevPage(): void {
+    if (this.hasPrevPage()) {
+      this.goToPage(this.currentPage() - 1);
+    }
+  }
+
+  changePageSize(newSize: number): void {
+    this.pageSize.set(newSize);
+    this.currentPage.set(1);
+    this.loadStudents();
+  }
+
   openCreateModal(): void {
     this.selectedStudent.set(null);
     this.resetForm();
@@ -192,14 +187,13 @@ export class StudentsComponent implements OnInit, OnDestroy {
 
   openEditModal(student: Etudiant): void {
     this.selectedStudent.set(student);
-    this.formData = {
-      nom: student.nom,
-      prenom: student.prenom,
-      email: student.email,
-      matricule: student.matricule || '',
-      classeId: student.classeId?.toString() || '',
-      numeroCarteEtudiant: student.numeroCarteEtudiant || ''
-    };
+    this.formData.nom = student.nom;
+    this.formData.prenom = student.prenom;
+    this.formData.email = student.email;
+    this.formData.numeroEtudiant = student.numeroEtudiant || '';
+    this.formData.matricule = student.numeroEtudiant || ''; // Use numeroEtudiant as matricule
+    this.formData.classeId = student.classeId?.toString() || '';
+    this.formData.statut = student.statut as 'ACTIF' | 'INACTIF' | 'SUSPENDU' || 'ACTIF';
     this.showModal.set(true);
   }
 
@@ -211,7 +205,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
   closeModal(): void {
     this.showModal.set(false);
     this.showDeleteModal.set(false);
-    this.errorMessage.set('');
+    this.resetForm();
   }
 
   resetForm(): void {
@@ -219,15 +213,14 @@ export class StudentsComponent implements OnInit, OnDestroy {
       nom: '',
       prenom: '',
       email: '',
+      numeroEtudiant: '',
       matricule: '',
       classeId: '',
-      numeroCarteEtudiant: ''
+      statut: 'ACTIF'
     };
   }
 
   onSubmit(): void {
-    this.errorMessage.set('');
-    
     if (this.selectedStudent()) {
       this.updateStudent();
     } else {
@@ -236,32 +229,21 @@ export class StudentsComponent implements OnInit, OnDestroy {
   }
 
   createStudent(): void {
-    this.isLoading.set(true);
     const data = {
-      nom: this.formData.nom,
-      prenom: this.formData.prenom,
-      email: this.formData.email,
-      role: 'ETUDIANT' as const,
-      matricule: this.formData.matricule || undefined
+      ...this.formData,
+      classeId: this.formData.classeId ? parseInt(this.formData.classeId) : null
     };
 
-    this.userUseCase.createUser(data).subscribe({
-      next: (newStudent) => {
+    this.userUseCase.createStudent(data).subscribe({
+      next: (newStudent: Etudiant) => {
         this.successMessage.set('Étudiant créé avec succès');
         this.closeModal();
-        
-        // Mettre à jour le cache
-        if (this.cacheEnabled()) {
-          this.userCacheService.updateCacheAfterOperation('create', newStudent);
-        } else {
-          this.loadStudents();
-        }
-        
-        setTimeout(() => this.successMessage.set(''), 3000);
+        const currentStudents = this.students();
+        this.students.set([...currentStudents, newStudent]);
       },
       error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la création');
-        this.isLoading.set(false);
+        console.error('Erreur lors de la création:', error);
+        this.errorMessage.set('Erreur lors de la création de l\'étudiant');
       }
     });
   }
@@ -270,146 +252,128 @@ export class StudentsComponent implements OnInit, OnDestroy {
     const student = this.selectedStudent();
     if (!student) return;
 
-    this.isLoading.set(true);
     const data = {
-      nom: this.formData.nom,
-      prenom: this.formData.prenom,
-      email: this.formData.email
+      ...this.formData,
+      classeId: this.formData.classeId ? parseInt(this.formData.classeId) : null
     };
 
-    this.userUseCase.updateUser(student.id.toString(), data).subscribe({
-      next: (updatedStudent) => {
-        this.successMessage.set('Étudiant mis à jour avec succès');
+    this.userUseCase.updateStudent(student.id, data).subscribe({
+      next: (updatedStudent: Etudiant) => {
+        this.successMessage.set('Étudiant modifié avec succès');
         this.closeModal();
-        
-        // Mettre à jour le cache
-        if (this.cacheEnabled()) {
-          this.userCacheService.updateCacheAfterOperation('update', updatedStudent);
-        } else {
-          this.loadStudents();
+        const currentStudents = this.students();
+        const index = currentStudents.findIndex(s => s.id === student.id);
+        if (index !== -1) {
+          currentStudents[index] = updatedStudent;
+          this.students.set([...currentStudents]);
         }
-        
-        setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la mise à jour');
-        this.isLoading.set(false);
+        console.error('Erreur lors de la modification:', error);
+        this.errorMessage.set('Erreur lors de la modification de l\'étudiant');
       }
     });
   }
 
   async deleteStudent(student: Etudiant): Promise<void> {
-    const confirmed = await this.confirmationService.confirmDelete(`${student.prenom} ${student.nom}`);
-    if (!confirmed) return;
-
-    this.isLoading.set(true);
-    this.userUseCase.deleteUser(student.id.toString()).subscribe({
-      next: () => {
-        this.successMessage.set('Étudiant supprimé avec succès');
-        this.loadStudents();
-        setTimeout(() => this.successMessage.set(''), 3000);
-      },
-      error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
-        this.isLoading.set(false);
-      }
-    });
-  }
-
-  async toggleStatus(student: Etudiant): Promise<void> {
-    const action = student.estActif ? 'désactiver' : 'activer';
     const confirmed = await this.confirmationService.confirm({
-      title: `Confirmer ${action === 'désactiver' ? 'la désactivation' : 'l\'activation'}`,
-      message: `Êtes-vous sûr de vouloir ${action} l'étudiant "${student.prenom} ${student.nom}" ?`,
-      confirmText: action === 'désactiver' ? 'Désactiver' : 'Activer',
-      cancelText: 'Annuler',
-      type: action === 'désactiver' ? 'warning' : 'success',
-      icon: action === 'désactiver' ? 'person_off' : 'person'
+      title: 'Supprimer l\'étudiant',
+      message: `Êtes-vous sûr de vouloir supprimer ${student.prenom} ${student.nom} ?`,
+      type: 'danger'
     });
-    
-    if (!confirmed) return;
 
-    this.userUseCase.updateUser(student.id.toString(), { estActif: !student.estActif }).subscribe({
-      next: () => {
-        this.successMessage.set(`Étudiant ${student.estActif ? 'désactivé' : 'activé'} avec succès`);
-        this.loadStudents();
-        setTimeout(() => this.successMessage.set(''), 3000);
-      },
-      error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors du changement de statut');
-      }
-    });
+    if (confirmed) {
+      this.userUseCase.deleteStudent(student.id).subscribe({
+        next: () => {
+          this.successMessage.set('Étudiant supprimé avec succès');
+          this.closeModal();
+          const currentStudents = this.students();
+          this.students.set(currentStudents.filter(s => s.id !== student.id));
+        },
+        error: (error: any) => {
+          console.error('Erreur lors de la suppression:', error);
+          this.errorMessage.set('Erreur lors de la suppression de l\'étudiant');
+        }
+      });
+    }
   }
 
-  getClasseNom(classeId?: number | string): string {
-    if (!classeId) return 'Non assignée';
+  getClasseNom(classeId: number | string | undefined): string {
+    if (!classeId) return 'Non assigné';
     const classe = this.classes().find(c => c.id.toString() === classeId.toString());
-    return classe ? classe.nom : 'Non assignée';
+    return classe ? classe.nom : 'Classe inconnue';
   }
 
-  // === MÉTHODES DE GESTION DU CACHE ===
-
-  /**
-   * Active ou désactive le cache
-   */
   toggleCache(): void {
     this.cacheEnabled.set(!this.cacheEnabled());
-    if (this.cacheEnabled()) {
+    if (!this.cacheEnabled()) {
+      this.clearCache();
+    } else {
       this.loadStudents();
-    } else {
-      this.userCacheService.invalidateAllUsers();
-      this.loadStudentsDirectly();
     }
   }
 
-  /**
-   * Actualise manuellement les données
-   */
   refreshData(): void {
-    if (this.cacheEnabled()) {
-      this.userCacheService.refreshByRole('ETUDIANT');
-    } else {
-      this.loadStudentsDirectly();
-    }
+    this.clearCache();
+    this.loadStudents();
   }
 
-  /**
-   * Vide le cache des étudiants
-   */
   clearCache(): void {
-    this.userCacheService.refreshByRole('ETUDIANT');
-    this.lastRefresh.set(null);
-    this.successMessage.set('Cache des étudiants vidé avec succès');
-    setTimeout(() => this.successMessage.set(''), 3000);
+    this.userCacheService.clearStudentsCache();
+    setTimeout(() => {
+      this.loadStudents();
+    }, 100);
   }
 
-  /**
-   * Vérifie si les données sont récentes
-   */
   isDataFresh(): boolean {
     const lastRefresh = this.lastRefresh();
     if (!lastRefresh) return false;
     
     const now = new Date();
     const diffMinutes = (now.getTime() - lastRefresh.getTime()) / (1000 * 60);
-    return diffMinutes < 5; // Considéré comme frais si moins de 5 minutes
+    return diffMinutes < 5;
   }
 
-  /**
-   * Obtient le statut du cache pour l'affichage
-   */
   getCacheStatus(): string {
     if (!this.cacheEnabled()) return 'Désactivé';
-    if (this.isDataFresh()) return 'Actuel';
-    return 'Expiré';
+    return this.isDataFresh() ? 'Frais' : 'Périmé';
   }
 
-  /**
-   * Obtient la classe CSS pour le statut du cache
-   */
   getCacheStatusClass(): string {
     if (!this.cacheEnabled()) return 'cache-disabled';
-    if (this.isDataFresh()) return 'cache-fresh';
-    return 'cache-expired';
+    return this.isDataFresh() ? 'cache-fresh' : 'cache-stale';
+  }
+
+  totalStudents(): number {
+    return this.totalItems();
+  }
+
+  activeStudents(): number {
+    return this.students().filter(s => s.statut === 'ACTIF').length;
+  }
+
+  inactiveStudents(): number {
+    return this.students().filter(s => s.statut === 'INACTIF' || s.statut === 'SUSPENDU').length;
+  }
+
+  toggleStatus(student: Etudiant): void {
+    const newStatus = student.statut === 'ACTIF' ? 'INACTIF' : 'ACTIF';
+    const data = { statut: newStatus };
+
+    this.userUseCase.updateStudent(student.id, data).subscribe({
+      next: (updatedStudent: Etudiant) => {
+        this.successMessage.set(`Statut de l'étudiant modifié: ${newStatus}`);
+        const currentStudents = this.students();
+        const index = currentStudents.findIndex(s => s.id === student.id);
+        if (index !== -1) {
+          currentStudents[index] = updatedStudent;
+          this.students.set([...currentStudents]);
+        }
+      },
+      error: (error: any) => {
+        console.error('Erreur lors de la modification du statut:', error);
+        this.errorMessage.set('Erreur lors de la modification du statut');
+      }
+    });
   }
 }

@@ -70,7 +70,7 @@ export class GlobalSearchService {
         suggestions: ['2024-2025', 'Semestre 1', 'Semestre 2', 'actif'],
         onSearch: (query) => this.searchSubject.next(query)
       },
-      '/reports': {
+      '/rapports': {
         placeholder: 'Rechercher dans les rapports...',
         suggestions: ['évaluation', 'participation', 'mensuel', 'annuel'],
         onSearch: (query) => this.searchSubject.next(query)

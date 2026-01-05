@@ -3,6 +3,7 @@
 const db = require('../models');
 const emailService = require('./email.service');
 const firebasePushService = require('./firebase-push.service');
+const webSocketService = require('./websocket.service');
 
 class NotificationService {
   /**
@@ -279,7 +280,7 @@ class NotificationService {
     return await this.sendCompleteNotification(etudiantIds, {
       titre,
       message,
-      type: 'EVALUATION_BIENTOT_FERMEE',
+      type: 'EVALUATION_FERMEE',
       evaluationId: evaluation.id,
       pushData: {
         action: 'view_results',
@@ -467,6 +468,69 @@ class NotificationService {
       unread: unreadCount,
       recent: recentNotifications.notifications
     };
+  }
+
+  /**
+   * Met à jour le token FCM d'un utilisateur
+   * @param {string} userId - L'ID de l'utilisateur
+   * @param {string} fcmToken - Le token FCM
+   */
+  async updateFCMToken(userId, fcmToken) {
+    await db.Utilisateur.update(
+      { fcmToken },
+      { where: { id: userId } }
+    );
+    return { success: true };
+  }
+
+  /**
+   * Supprime le token FCM d'un utilisateur (déconnexion)
+   * @param {string} userId - L'ID de l'utilisateur
+   */
+  async removeFCMToken(userId) {
+    await db.Utilisateur.update(
+      { fcmToken: null },
+      { where: { id: userId } }
+    );
+    return { success: true };
+  }
+
+  /**
+   * Notifie les administrateurs d'une nouvelle réponse
+   * @param {string} evaluationId - L'ID de l'évaluation
+   * @param {string} etudiantNom - Nom de l'étudiant
+   */
+  async notifyNewResponse(evaluationId, etudiantNom) {
+    try {
+      await webSocketService.notifyNewResponse(evaluationId, etudiantNom);
+      return { success: true };
+    } catch (error) {
+      console.error('Erreur notification nouvelle réponse:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Envoie une notification système
+   * @param {string} message - Message de la notification
+   * @param {string} type - Type de notification
+   * @param {string} targetRole - Rôle cible (optionnel)
+   */
+  async sendSystemNotification(message, type = 'SYSTEM', targetRole = null) {
+    try {
+      await webSocketService.sendSystemNotification(message, type, targetRole);
+      return { success: true };
+    } catch (error) {
+      console.error('Erreur notification système:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Obtient les statistiques des connexions
+   */
+  getConnectionStats() {
+    return webSocketService.getConnectionStats();
   }
 }
 

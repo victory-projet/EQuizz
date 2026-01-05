@@ -1,0 +1,172 @@
+<div class="excel-import-container">
+  <div class="import-header">
+    <h3>{{ config.title }}</h3>
+    <p class="description">{{ config.description }}</p>
+  </div>
+
+  <!-- Étape 1: Télécharger le modèle -->
+  <div class="step-card">
+    <div class="step-header">
+      <span class="step-number">1</span>
+      <h4>Télécharger le modèle Excel</h4>
+    </div>
+    <p>Téléchargez le modèle Excel avec les colonnes requises et des exemples.</p>
+    <button 
+      type="button" 
+      class="btn btn-outline-primary"
+      (click)="downloadTemplate()">
+      <i class="fas fa-download"></i>
+      Télécharger le modèle
+    </button>
+  </div>
+
+  <!-- Étape 2: Sélectionner le fichier -->
+  <div class="step-card">
+    <div class="step-header">
+      <span class="step-number">2</span>
+      <h4>Sélectionner le fichier Excel</h4>
+    </div>
+    <div class="file-input-container">
+      <input 
+        type="file" 
+        id="excel-file"
+        accept=".xlsx,.xls"
+        (change)="onFileSelected($event)"
+        class="file-input">
+      <label for="excel-file" class="file-input-label">
+        <i class="fas fa-file-excel"></i>
+        <span *ngIf="!selectedFile()">Choisir un fichier Excel</span>
+        <span *ngIf="selectedFile()">{{ selectedFile()?.name }}</span>
+      </label>
+    </div>
+    
+    <div *ngIf="selectedFile()" class="file-info">
+      <small class="text-muted">
+        Taille: {{ (selectedFile()!.size / 1024 / 1024).toFixed(2) }} MB
+      </small>
+    </div>
+  </div>
+
+  <!-- Étape 3: Prévisualiser -->
+  <div class="step-card" *ngIf="selectedFile()">
+    <div class="step-header">
+      <span class="step-number">3</span>
+      <h4>Prévisualiser les données</h4>
+    </div>
+    <p>Vérifiez les données avant l'import final.</p>
+    <button 
+      type="button" 
+      class="btn btn-primary"
+      [disabled]="isLoading()"
+      (click)="validateAndPreview()">
+      <i class="fas fa-eye" *ngIf="!isLoading()"></i>
+      <i class="fas fa-spinner fa-spin" *ngIf="isLoading()"></i>
+      {{ isLoading() ? 'Analyse en cours...' : 'Prévisualiser' }}
+    </button>
+  </div>
+
+  <!-- Prévisualisation des données -->
+  <div class="preview-section" *ngIf="showPreview() && previewData()">
+    <div class="preview-header">
+      <h4>Prévisualisation des données</h4>
+      <div class="preview-stats">
+        <span class="stat success">
+          <i class="fas fa-check-circle"></i>
+          {{ previewData()!.validRows }} lignes valides
+        </span>
+        <span class="stat total">
+          <i class="fas fa-list"></i>
+          {{ previewData()!.totalRows }} lignes total
+        </span>
+        <span class="stat error" *ngIf="previewData()!.errors.length > 0">
+          <i class="fas fa-exclamation-triangle"></i>
+          {{ previewData()!.errors.length }} erreurs
+        </span>
+      </div>
+    </div>
+
+    <!-- Erreurs -->
+    <div class="errors-section" *ngIf="previewData()!.errors.length > 0">
+      <h5 class="text-danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        Erreurs détectées
+      </h5>
+      <ul class="error-list">
+        <li *ngFor="let error of previewData()!.errors" class="error-item">
+          {{ error }}
+        </li>
+      </ul>
+    </div>
+
+    <!-- Avertissements -->
+    <div class="warnings-section" *ngIf="previewData()!.warnings.length > 0">
+      <h5 class="text-warning">
+        <i class="fas fa-exclamation-circle"></i>
+        Avertissements
+      </h5>
+      <ul class="warning-list">
+        <li *ngFor="let warning of previewData()!.warnings" class="warning-item">
+          {{ warning }}
+        </li>
+      </ul>
+    </div>
+
+    <!-- Aperçu des données -->
+    <div class="data-preview" *ngIf="previewData()!.data.length > 0">
+      <h5>Aperçu des données (5 premières lignes)</h5>
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr>
+              <th *ngFor="let col of config.templateColumns">{{ col.header }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of previewData()!.data.slice(0, 5)">
+              <td *ngFor="let col of config.templateColumns">
+                {{ row[col.key] || '-' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Actions de prévisualisation -->
+    <div class="preview-actions">
+      <button 
+        type="button" 
+        class="btn btn-success"
+        [disabled]="isLoading() || previewData()!.validRows === 0"
+        (click)="confirmImport()">
+        <i class="fas fa-upload" *ngIf="!isLoading()"></i>
+        <i class="fas fa-spinner fa-spin" *ngIf="isLoading()"></i>
+        {{ isLoading() ? 'Import en cours...' : 'Confirmer l\'import' }}
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-secondary"
+        (click)="resetImport()">
+        <i class="fas fa-redo"></i>
+        Recommencer
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages d'erreur -->
+  <div class="alert alert-danger" *ngIf="errorMessage()">
+    <i class="fas fa-exclamation-triangle"></i>
+    {{ errorMessage() }}
+  </div>
+
+  <!-- Actions principales -->
+  <div class="main-actions">
+    <button 
+      type="button" 
+      class="btn btn-secondary"
+      (click)="cancel()">
+      <i class="fas fa-times"></i>
+      Annuler
+    </button>
+  </div>
+</div>
