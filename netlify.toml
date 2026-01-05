@@ -6,7 +6,7 @@
   command = "npm install --legacy-peer-deps && npm run build"
   
   # Répertoire de publication (où se trouvent les fichiers buildés)
-  publish = "dist/frontend-admin/browser/"
+  publish = "dist/frontend-admin/"
 
 [build.environment]
   # Version de Node.js à utiliser (Angular 19.2.x compatible avec Node.js ^18.19.1)

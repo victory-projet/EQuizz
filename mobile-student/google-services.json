@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "70167966214",
+    "project_id": "equizz-cab71",
+    "storage_bucket": "equizz-cab71.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:70167966214:android:adac751ee9655558848987",
+        "android_client_info": {
+          "package_name": "com.equizz.mobilestudent"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTwd1lCk4mzyG9gASHRUD6GJP9hxf1ySI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

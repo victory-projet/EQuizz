@@ -459,7 +459,7 @@ export class ExcelPreviewService {
    * Génère un rapport d'analyse détaillé
    */
   generateAnalysisReport(previewData: ExcelPreviewData, statistics: ExcelDataStatistics): string {
-    const report = [];
+    const report: string[] = [];
     
     report.push('=== RAPPORT D\'ANALYSE EXCEL ===');
     report.push(`Fichier: ${previewData.fileName}`);
