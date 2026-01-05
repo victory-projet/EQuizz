@@ -33,6 +33,20 @@ const Cours = sequelize.define('Cours', {
     type: DataTypes.UUID,
     allowNull: true,
     field: 'annee_academique_id'
+  },
+
+  // Ajout du champ semestreId pour lier un cours à un semestre
+  semestreId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    field: 'semestre_id'
+  },
+
+  // Ajout du champ enseignantId pour lier un cours à un enseignant
+  enseignantId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    field: 'enseignant_id'
   }
 
 }, {
