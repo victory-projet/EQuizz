@@ -2,11 +2,11 @@
   # Répertoire de base pour le build
   base = "frontend-admin/"
   
-  # Commande de build
-  command = "npm ci && npm run build"
+  # Commande de build avec gestion des conflits de dépendances
+  command = "npm ci --legacy-peer-deps && npm run build"
   
   # Répertoire de publication (où se trouvent les fichiers buildés)
-  publish = "dist/frontend-admin/"
+  publish = "dist/frontend-admin/browser/"
 
 [build.environment]
   # Version de Node.js à utiliser

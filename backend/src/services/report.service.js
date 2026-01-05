@@ -106,27 +106,27 @@ class ReportService {
       }
     }
 
-   // Nombre d'étudiants ayant répondu (anonymat complet - on compte les sessions uniques)
-const whereClause = { quizz_id: evaluation.Quizz.id };
+    // Nombre d'étudiants ayant répondu (anonymat complet - on compte les sessions uniques)
+    const whereClause = { quizz_id: evaluation.Quizz.id };
 
-if (classeId) {
-  whereClause['$Etudiant.classe_id$'] = classeId;
-}
-
-// Utiliser COUNT DISTINCT pour éviter les problèmes de GROUP BY
-const nombreRepondants = await db.SessionReponse.count({
-  where: whereClause,
-  include: classeId ? [
-    {
-      model: db.Etudiant,
-      attributes: [],  // Pas d'attributs pour respecter l'anonymat
-      where: { classe_id: classeId },
-      required: true
+    if (classeId) {
+      whereClause['$Etudiant.classe_id$'] = classeId;
     }
-  ] : [],
-  distinct: true,
-  col: 'id'
-});
+
+    // Utiliser COUNT DISTINCT pour éviter les problèmes de GROUP BY
+    const nombreRepondants = await db.SessionReponse.count({
+      where: whereClause,
+      include: classeId ? [
+        {
+          model: db.Etudiant,
+          attributes: [],  // Pas d'attributs pour respecter l'anonymat
+          where: { classe_id: classeId },
+          required: true
+        }
+      ] : [],
+      distinct: true,
+      col: 'id'
+    });
 
     const tauxParticipation = totalEtudiants > 0 
       ? ((nombreRepondants / totalEtudiants) * 100).toFixed(2)
@@ -144,107 +144,107 @@ const nombreRepondants = await db.SessionReponse.count({
    */
   async getSentimentAnalysis(evaluationId, classeId = null) {
   // Récupérer l'évaluation avec les questions de type REPONSE_OUVERTE
-  const evaluation = await db.Evaluation.findByPk(evaluationId, {
-    include: [
-      {
-        model: db.Quizz,
-        include: [
-          {
-            model: db.Question,
-            where: { typeQuestion: 'REPONSE_OUVERTE' },
-            required: false,
-            include: [
-              {
-                model: db.ReponseEtudiant,
-                attributes: ['id', 'contenu'],
-                include: [
-                  { 
-                    model: db.SessionReponse,
-                    attributes: ['id']
-                  },
-                  { model: db.AnalyseReponse }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  });
+    const evaluation = await db.Evaluation.findByPk(evaluationId, {
+      include: [
+        {
+          model: db.Quizz,
+          include: [
+            {
+              model: db.Question,
+              where: { typeQuestion: 'REPONSE_OUVERTE' },
+              required: false,
+              include: [
+                {
+                  model: db.ReponseEtudiant,
+                  attributes: ['id', 'contenu'],
+                  include: [
+                    { 
+                      model: db.SessionReponse,
+                      attributes: ['id']
+                    },
+                    { model: db.AnalyseReponse }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
 
-  if (!evaluation || !evaluation.Quizz) {
-    return {
-      total: 0,
-      sentiments: {
-        positif: 0,
-        neutre: 0,
-        negatif: 0,
-        positifPct: '0',
-        neutrePct: '0',
-        negatifPct: '0'
-      },
-      keywords: [],
-      summary: null
+    if (!evaluation || !evaluation.Quizz) {
+      return {
+        total: 0,
+        sentiments: {
+          positif: 0,
+          neutre: 0,
+          negatif: 0,
+          positifPct: '0',
+          neutrePct: '0',
+          negatifPct: '0'
+        },
+        keywords: [],
+        summary: null
+      };
+    }
+
+    // Collecter toutes les réponses ouvertes
+    const reponses = [];
+    if (evaluation.Quizz.Questions) {
+      evaluation.Quizz.Questions.forEach(question => {
+        if (question.ReponseEtudiants) {
+          question.ReponseEtudiants.forEach(reponse => {
+            reponses.push(reponse);
+          });
+        }
+      });
+    }
+
+    // Compter les sentiments
+    const sentimentCounts = {
+      POSITIF: 0,
+      NEUTRE: 0,
+      NEGATIF: 0
     };
-  }
 
-  // Collecter toutes les réponses ouvertes
-  const reponses = [];
-  if (evaluation.Quizz.Questions) {
-    evaluation.Quizz.Questions.forEach(question => {
-      if (question.ReponseEtudiants) {
-        question.ReponseEtudiants.forEach(reponse => {
-          reponses.push(reponse);
-        });
+    const textes = [];
+    reponses.forEach(reponse => {
+      if (reponse.AnalyseReponse) {
+        sentimentCounts[reponse.AnalyseReponse.sentiment]++;
+      }
+      if (reponse.contenu) {
+        textes.push(reponse.contenu);
       }
     });
+
+    // Extraire les mots-clés
+    const keywords = await sentimentService.extractKeywords(textes, 20);
+
+    // Générer un résumé avec Gemini (si disponible)
+    let summary = null;
+    if (sentimentService.generateSummary && textes.length > 0) {
+      try {
+        summary = await sentimentService.generateSummary(textes);
+      } catch (error) {
+        console.error('Erreur génération résumé:', error);
+      }
+    }
+
+    const total = reponses.length;
+    return {
+      total,
+      sentiments: {
+        positif: sentimentCounts.POSITIF,
+        neutre: sentimentCounts.NEUTRE,
+        negatif: sentimentCounts.NEGATIF,
+        positifPct: total > 0 ? ((sentimentCounts.POSITIF / total) * 100).toFixed(2) : '0',
+        neutrePct: total > 0 ? ((sentimentCounts.NEUTRE / total) * 100).toFixed(2) : '0',
+        negatifPct: total > 0 ? ((sentimentCounts.NEGATIF / total) * 100).toFixed(2) : '0'
+      },
+      keywords,
+      summary
+    };
   }
-
-  // Compter les sentiments
-  const sentimentCounts = {
-    POSITIF: 0,
-    NEUTRE: 0,
-    NEGATIF: 0
-  };
-
-  const textes = [];
-  reponses.forEach(reponse => {
-    if (reponse.AnalyseReponse) {
-      sentimentCounts[reponse.AnalyseReponse.sentiment]++;
-    }
-    if (reponse.contenu) {
-      textes.push(reponse.contenu);
-    }
-  });
-
-  // Extraire les mots-clés
-  const keywords = await sentimentService.extractKeywords(textes, 20);
-
-  // Générer un résumé avec Gemini (si disponible)
-  let summary = null;
-  if (sentimentService.generateSummary && textes.length > 0) {
-    try {
-      summary = await sentimentService.generateSummary(textes);
-    } catch (error) {
-      console.error('Erreur génération résumé:', error);
-    }
-  }
-
-  const total = reponses.length;
-  return {
-    total,
-    sentiments: {
-      positif: sentimentCounts.POSITIF,
-      neutre: sentimentCounts.NEUTRE,
-      negatif: sentimentCounts.NEGATIF,
-      positifPct: total > 0 ? ((sentimentCounts.POSITIF / total) * 100).toFixed(2) : '0',
-      neutrePct: total > 0 ? ((sentimentCounts.NEUTRE / total) * 100).toFixed(2) : '0',
-      negatifPct: total > 0 ? ((sentimentCounts.NEGATIF / total) * 100).toFixed(2) : '0'
-    },
-    keywords,
-    summary
-  };
-}
 
   /**
    * Récupère les détails des questions avec répartition des réponses

@@ -377,12 +377,12 @@ class EvaluationService {
     const submissions = await this.getSubmissions(id);
 
     switch (format.toLowerCase()) {
-      case 'excel':
-        return await reportExportService.exportEvaluationToExcel(evaluation, submissions, options);
-      case 'pdf':
-        return await reportExportService.exportEvaluationToPDF(evaluation, submissions, options);
-      default:
-        throw AppError.badRequest('Format d\'export non supporté. Utilisez "excel" ou "pdf".', 'INVALID_FORMAT');
+    case 'excel':
+      return await reportExportService.exportEvaluationToExcel(evaluation, submissions, options);
+    case 'pdf':
+      return await reportExportService.exportEvaluationToPDF(evaluation, submissions, options);
+    default:
+      throw AppError.badRequest('Format d\'export non supporté. Utilisez "excel" ou "pdf".', 'INVALID_FORMAT');
     }
   }
 

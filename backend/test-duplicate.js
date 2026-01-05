@@ -16,7 +16,7 @@ async function testDuplicate() {
     }
     
     // Prendre la première évaluation en brouillon
-    const draftEvaluation = evaluations.find(eval => eval.statut === 'BROUILLON');
+    const draftEvaluation = evaluations.find(evaluation => evaluation.statut === 'BROUILLON');
     
     if (!draftEvaluation) {
       console.log('❌ Aucune évaluation en brouillon trouvée');

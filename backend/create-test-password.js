@@ -25,9 +25,9 @@ async function createTestPassword() {
     console.log('✅ Test du nouveau mot de passe:', isMatch ? 'Réussi' : 'Échoué');
 
     if (isMatch) {
-      console.log(`\n🎉 Utilisateur: celestin.simo@saintjeaningenieur.org`);
+      console.log('\n🎉 Utilisateur: celestin.simo@saintjeaningenieur.org');
       console.log(`🔑 Mot de passe: ${newPassword}`);
-      console.log(`📱 Matricule: 2223i032`);
+      console.log('📱 Matricule: 2223i032');
     }
 
   } catch (error) {

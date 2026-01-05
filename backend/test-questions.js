@@ -52,13 +52,13 @@ async function createQuestion() {
 
   try {
     const questionData = {
-      enonce: "Quelle est la capitale de la France ?",
-      typeQuestion: "CHOIX_MULTIPLE",
+      enonce: 'Quelle est la capitale de la France ?',
+      typeQuestion: 'CHOIX_MULTIPLE',
       options: [
-        { texte: "Paris", estCorrecte: true },
-        { texte: "Lyon", estCorrecte: false },
-        { texte: "Marseille", estCorrecte: false },
-        { texte: "Toulouse", estCorrecte: false }
+        { texte: 'Paris', estCorrecte: true },
+        { texte: 'Lyon', estCorrecte: false },
+        { texte: 'Marseille', estCorrecte: false },
+        { texte: 'Toulouse', estCorrecte: false }
       ]
     };
 

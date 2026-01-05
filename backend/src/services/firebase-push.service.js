@@ -255,7 +255,7 @@ class FirebasePushService {
           }
         };
 
-        console.log(`🔄 Tentative sendMulticast...`);
+        console.log('🔄 Tentative sendMulticast...');
         const response = await this.messaging.sendMulticast(message);
         
         // Identifier les tokens invalides

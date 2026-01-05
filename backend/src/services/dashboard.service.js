@@ -377,21 +377,21 @@ class DashboardService {
         }
       });
 
-    // Mots à exclure (stop words français)
-    const stopWords = new Set([
-      'dans', 'pour', 'avec', 'sans', 'plus', 'très', 'bien', 'être',
-      'avoir', 'faire', 'cette', 'cette', 'tous', 'tout', 'leur', 'leurs',
-      'elle', 'elles', 'nous', 'vous', 'mais', 'donc', 'alors', 'aussi'
-    ]);
+      // Mots à exclure (stop words français)
+      const stopWords = new Set([
+        'dans', 'pour', 'avec', 'sans', 'plus', 'très', 'bien', 'être',
+        'avoir', 'faire', 'cette', 'cette', 'tous', 'tout', 'leur', 'leurs',
+        'elle', 'elles', 'nous', 'vous', 'mais', 'donc', 'alors', 'aussi'
+      ]);
 
-    // Convertir en tableau, filtrer et trier
-    const keywords = Array.from(wordFrequency.entries())
-      .filter(([word]) => !stopWords.has(word))
-      .map(([mot, frequence]) => ({ mot, frequence }))
-      .sort((a, b) => b.frequence - a.frequence)
-      .slice(0, limit);
+      // Convertir en tableau, filtrer et trier
+      const keywords = Array.from(wordFrequency.entries())
+        .filter(([word]) => !stopWords.has(word))
+        .map(([mot, frequence]) => ({ mot, frequence }))
+        .sort((a, b) => b.frequence - a.frequence)
+        .slice(0, limit);
 
-    return keywords;
+      return keywords;
     } catch (error) {
       console.error('Erreur getTopKeywords:', error);
       return [];
