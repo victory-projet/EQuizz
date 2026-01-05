@@ -7,12 +7,19 @@ import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
 import { Cours, Classe } from '../../../core/domain/entities/academic.entity';
 import { EvaluationApiData, Question } from '../../../core/domain/entities/evaluation.entity';
 import { QuestionFormComponent } from '../question-form/question-form.component';
+<<<<<<< Updated upstream
 import { QuestionImportComponent } from '../question-import/question-import.component';
+=======
+>>>>>>> Stashed changes
 
 @Component({
   selector: 'app-evaluation-create',
   standalone: true,
+<<<<<<< Updated upstream
   imports: [CommonModule, FormsModule, QuestionFormComponent, QuestionImportComponent],
+=======
+  imports: [CommonModule, FormsModule, QuestionFormComponent],
+>>>>>>> Stashed changes
   templateUrl: './evaluation-create.component.html',
   styleUrls: ['./evaluation-create.component.scss']
 })
@@ -43,12 +50,18 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   autoSaveEnabled = signal(true);
   lastSaved = signal<Date | null>(null);
   
+  // Questions management
+  questions = signal<Question[]>([]);
+  showQuestionForm = signal(false);
+  editingQuestion = signal<Question | null>(null);
+  
   // Form data
   formData = {
     titre: '',
     description: '',
     dateDebut: '',
     dateFin: '',
+<<<<<<< Updated upstream
     coursId: '', // Changé pour gérer les UUIDs
     classeIds: [] as (number | string)[]
   };
@@ -60,6 +73,14 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
 
   // Step 3 - Review
   canPublish = signal(false);
+=======
+    coursId: '' as string | number, // Peut être string (UUID) ou number
+    classeIds: [] as (number | string)[]
+  };
+
+  // Modal
+  createdEvaluationId = signal<string | number | null>(null);
+>>>>>>> Stashed changes
 
   errorMessage = signal('');
   successMessage = signal('');
@@ -106,8 +127,18 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
     if (!this.hasMinimalData()) return;
 
     // Ne pas sauvegarder automatiquement si les données essentielles manquent
+<<<<<<< Updated upstream
     if (!this.formData.coursId.trim() || this.formData.classeIds.length === 0) {
       console.log('⚠️ Sauvegarde automatique ignorée: cours ou classes manquants');
+=======
+    if (!this.formData.coursId || this.formData.coursId === '' || this.formData.coursId === 0) {
+      console.log('⚠️ Sauvegarde automatique ignorée - cours manquant');
+      return;
+    }
+
+    if (!this.formData.classeIds || this.formData.classeIds.length === 0) {
+      console.log('⚠️ Sauvegarde automatique ignorée - classes manquantes');
+>>>>>>> Stashed changes
       return;
     }
 
@@ -117,9 +148,14 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
       dateDebut: this.formData.dateDebut ? new Date(this.formData.dateDebut).toISOString() : new Date().toISOString(),
       dateFin: this.formData.dateFin ? new Date(this.formData.dateFin).toISOString() : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
       coursId: this.formData.coursId || 1, // Add required coursId
       cours_id: this.formData.coursId || undefined,
       classeIds: this.formData.classeIds.length > 0 ? this.formData.classeIds : [1], // Classe par défaut
+=======
+      cours_id: this.formData.coursId,
+      classeIds: this.formData.classeIds,
+>>>>>>> Stashed changes
 =======
       cours_id: this.formData.coursId,
       classeIds: this.formData.classeIds,
@@ -229,7 +265,11 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
       this.errorMessage.set('La date de fin doit être après la date de début');
       return false;
     }
+<<<<<<< Updated upstream
     if (!this.formData.coursId.trim()) {
+=======
+    if (!this.formData.coursId || this.formData.coursId === '' || this.formData.coursId === 0) {
+>>>>>>> Stashed changes
       this.errorMessage.set('Le cours est requis');
       return false;
     }
@@ -254,6 +294,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
         this.createDraftEvaluation();
       }
     } else if (this.currentStep() === 2) {
+<<<<<<< Updated upstream
       this.currentStep.set(3);
       this.checkCanPublish();
     }
@@ -262,6 +303,10 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   previousStep(): void {
     if (this.currentStep() > 1) {
       this.currentStep.set(this.currentStep() - 1);
+=======
+      // Passer à l'étape 3 (Publication)
+      this.currentStep.set(3);
+>>>>>>> Stashed changes
     }
   }
 
@@ -285,11 +330,44 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
     this.evaluationUseCase.updateEvaluation(draftId.toString(), evaluationData as any).subscribe({
       next: (evaluation) => {
         console.log('✅ Brouillon mis à jour:', evaluation);
+<<<<<<< Updated upstream
         this.successMessage.set('Évaluation sauvegardée');
         this.isLoading.set(false);
         
         this.currentStep.set(2);
         this.loadQuestions();
+=======
+        console.log('🔍 Structure complète de l\'évaluation:', JSON.stringify(evaluation, null, 2));
+        
+        this.createdEvaluationId.set(evaluation.id);
+        this.draftEvaluationId.set(evaluation.id);
+        
+        // Récupérer l'ID du quizz - maintenant mappé par le repository
+        let quizzId = null;
+        if ((evaluation as any).quizzId) {
+          quizzId = (evaluation as any).quizzId;
+          console.log('📋 Quizz ID trouvé via evaluation.quizzId:', quizzId);
+        } else if (evaluation.quizz?.id) {
+          quizzId = evaluation.quizz.id;
+          console.log('📋 Quizz ID trouvé via evaluation.quizz.id:', quizzId);
+        } else if ((evaluation as any).Quizz?.id) {
+          quizzId = (evaluation as any).Quizz.id;
+          console.log('📋 Quizz ID trouvé via evaluation.Quizz.id:', quizzId);
+        } else {
+          console.warn('⚠️ Aucun quizz ID trouvé dans la réponse');
+          console.log('🔍 Propriétés disponibles:', Object.keys(evaluation));
+          // Essayer de récupérer l'évaluation complète
+          this.fetchEvaluationWithQuizz(evaluation.id);
+          return;
+        }
+        
+        this.quizzId.set(quizzId);
+        this.loadQuestions();
+        this.successMessage.set('Quiz sauvegardé');
+        this.isLoading.set(false);
+        // Passer à l'étape 2
+        this.currentStep.set(2);
+>>>>>>> Stashed changes
       },
       error: (error) => {
         console.error('❌ Erreur lors de la mise à jour:', error);
@@ -320,6 +398,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
     this.evaluationUseCase.createEvaluation(evaluationData as any).subscribe({
       next: (evaluation) => {
         console.log('✅ Évaluation créée avec succès:', evaluation);
+<<<<<<< Updated upstream
         this.draftEvaluationId.set(evaluation.id);
         this.quizzId.set(evaluation.quizz?.id || null);
         this.successMessage.set('Évaluation créée en mode brouillon');
@@ -327,12 +406,66 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
         
         this.currentStep.set(2);
         this.loadQuestions();
+=======
+        console.log('🔍 Structure complète de l\'évaluation:', JSON.stringify(evaluation, null, 2));
+        
+        this.createdEvaluationId.set(evaluation.id);
+        this.draftEvaluationId.set(evaluation.id);
+        
+        // Récupérer l'ID du quizz - maintenant mappé par le repository
+        let quizzId = null;
+        if ((evaluation as any).quizzId) {
+          quizzId = (evaluation as any).quizzId;
+          console.log('📋 Quizz ID trouvé via evaluation.quizzId:', quizzId);
+        } else if (evaluation.quizz?.id) {
+          quizzId = evaluation.quizz.id;
+          console.log('📋 Quizz ID trouvé via evaluation.quizz.id:', quizzId);
+        } else if ((evaluation as any).Quizz?.id) {
+          quizzId = (evaluation as any).Quizz.id;
+          console.log('📋 Quizz ID trouvé via evaluation.Quizz.id:', quizzId);
+        } else {
+          console.warn('⚠️ Aucun quizz ID trouvé dans la réponse');
+          console.log('🔍 Propriétés disponibles:', Object.keys(evaluation));
+          // Essayer de récupérer l'évaluation complète
+          this.fetchEvaluationWithQuizz(evaluation.id);
+          return;
+        }
+        
+        this.quizzId.set(quizzId);
+        this.loadQuestions();
+        this.successMessage.set('Quiz créé en mode brouillon');
+        this.isLoading.set(false);
+        // Passer à l'étape 2
+        this.currentStep.set(2);
+>>>>>>> Stashed changes
       },
       error: (error) => {
         console.error('❌ Erreur lors de la création:', error);
-        const errorMsg = error.error?.errors 
-          ? `Erreur de validation: ${error.error.errors.map((e: any) => e.message || e.msg || JSON.stringify(e)).join(', ')}`
-          : error.error?.message || 'Erreur lors de la création';
+        
+        let errorMsg = 'Erreur lors de la création';
+        
+        if (error.error?.errors) {
+          // Erreurs de validation Sequelize
+          errorMsg = `Erreur de validation: ${error.error.errors.map((e: any) => e.message || e.msg || JSON.stringify(e)).join(', ')}`;
+        } else if (error.error?.message) {
+          // Message d'erreur du backend
+          errorMsg = error.error.message;
+        } else if (error.message) {
+          // Message d'erreur générique
+          errorMsg = error.message;
+        }
+
+        // Messages d'erreur spécifiques
+        if (errorMsg.includes('Cours non trouvé')) {
+          errorMsg = 'Le cours sélectionné n\'existe pas. Veuillez en choisir un autre.';
+        } else if (errorMsg.includes('CLASSES_REQUIRED')) {
+          errorMsg = 'Au moins une classe doit être sélectionnée.';
+        } else if (errorMsg.includes('ADMIN_REQUIRED')) {
+          errorMsg = 'Vous devez être administrateur pour créer une évaluation.';
+        } else if (errorMsg.includes('USER_NOT_FOUND')) {
+          errorMsg = 'Utilisateur non trouvé. Veuillez vous reconnecter.';
+        }
+
         this.errorMessage.set(errorMsg);
         this.isLoading.set(false);
       }
@@ -477,6 +610,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
     }
   }
 
+<<<<<<< Updated upstream
   // Utility methods
   getQuestionTypeLabel(type: string | undefined): string {
     if (!type) return 'Type inconnu';
@@ -488,17 +622,24 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   }
 
 <<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
   selectManualCreation(): void {
-    this.showMethodModal.set(false);
     const evalId = this.createdEvaluationId();
     if (evalId) {
+<<<<<<< Updated upstream
       // Navigate to manual creation interface
       this.router.navigate(['/evaluations', evalId, 'questions'], { 
+=======
+      // Rediriger directement vers l'éditeur de questions sans modal
+      this.router.navigate(['/evaluations', evalId], { 
+>>>>>>> Stashed changes
         queryParams: { mode: 'manual' } 
       });
     }
   }
 
+<<<<<<< Updated upstream
   selectExcelImport(): void {
     this.showMethodModal.set(false);
     const evalId = this.createdEvaluationId();
@@ -543,6 +684,19 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   getClassName(classeId: string): string {
     const classe = this.classes().find(c => c.id === classeId);
 >>>>>>> Stashed changes
+=======
+  getProgressPercentage(): number {
+    return (this.currentStep() / 3) * 100;
+  }
+
+  getCoursName(coursId: string | number): string {
+    const cours = this.cours().find(c => String(c.id) === String(coursId));
+    return cours?.nom || '';
+  }
+
+  getClassName(classeId: string | number): string {
+    const classe = this.classes().find(c => String(c.id) === String(classeId));
+>>>>>>> Stashed changes
     return classe?.nom || '';
   }
 
@@ -563,4 +717,184 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
       String(id) === String(classeId)
     );
   }
+<<<<<<< Updated upstream
+=======
+
+  continueEditing(): void {
+    const evalId = this.createdEvaluationId();
+    if (evalId) {
+      this.router.navigate(['/evaluations', evalId], { 
+        queryParams: { mode: 'edit' } 
+      });
+    }
+  }
+
+  previewQuiz(): void {
+    const evalId = this.createdEvaluationId();
+    if (evalId) {
+      this.router.navigate(['/evaluations', evalId], { 
+        queryParams: { mode: 'preview' } 
+      });
+    }
+  }
+
+  publishQuiz(): void {
+    const evalId = this.createdEvaluationId();
+    if (!evalId) {
+      this.errorMessage.set('Aucune évaluation à publier');
+      return;
+    }
+
+    this.isLoading.set(true);
+
+    // Mettre à jour le statut à PUBLIE
+    const publishData = {
+      statut: 'PUBLIE' as const
+    };
+
+    this.evaluationUseCase.updateEvaluation(evalId.toString(), publishData as any).subscribe({
+      next: (evaluation) => {
+        console.log('✅ Quiz publié:', evaluation);
+        this.successMessage.set('Quiz publié avec succès !');
+        this.isLoading.set(false);
+        
+        // Rediriger vers la liste des évaluations après 2 secondes
+        setTimeout(() => {
+          this.router.navigate(['/evaluations']);
+        }, 2000);
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors de la publication:', error);
+        this.errorMessage.set('Erreur lors de la publication');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  // Méthodes pour la gestion des questions
+  fetchEvaluationWithQuizz(evaluationId: string | number): void {
+    console.log('🔄 Récupération de l\'évaluation complète avec quizz...');
+    this.evaluationUseCase.getEvaluation(evaluationId).subscribe({
+      next: (evaluation) => {
+        console.log('✅ Évaluation complète récupérée:', evaluation);
+        console.log('🔍 Structure complète:', JSON.stringify(evaluation, null, 2));
+        
+        let quizzId = null;
+        if (evaluation.quizz?.id) {
+          quizzId = evaluation.quizz.id;
+          console.log('📋 Quizz ID trouvé via evaluation.quizz.id:', quizzId);
+        } else if ((evaluation as any).Quizz?.id) {
+          quizzId = (evaluation as any).Quizz.id;
+          console.log('📋 Quizz ID trouvé via evaluation.Quizz.id:', quizzId);
+        } else {
+          console.error('❌ Impossible de trouver l\'ID du quizz même après récupération complète');
+          this.errorMessage.set('Erreur: Impossible de récupérer l\'ID du quizz');
+          this.isLoading.set(false);
+          return;
+        }
+        
+        this.quizzId.set(quizzId);
+        this.loadQuestions();
+        this.successMessage.set('Quiz créé en mode brouillon');
+        this.isLoading.set(false);
+        // Passer à l'étape 2
+        this.currentStep.set(2);
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors de la récupération de l\'évaluation complète:', error);
+        this.errorMessage.set('Erreur lors de la récupération des détails du quiz');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  loadQuestions(): void {
+    const evalId = this.draftEvaluationId();
+    if (!evalId) return;
+
+    this.evaluationUseCase.getEvaluation(evalId).subscribe({
+      next: (evaluation) => {
+        if (evaluation.quizz?.questions) {
+          this.questions.set(evaluation.quizz.questions);
+        } else if ((evaluation as any).Quizz?.Questions) {
+          this.questions.set((evaluation as any).Quizz.Questions);
+        }
+        console.log('📋 Questions chargées:', this.questions());
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors du chargement des questions:', error);
+      }
+    });
+  }
+
+  addQuestion(): void {
+    if (!this.quizzId()) {
+      console.error('❌ Impossible d\'ajouter une question : quizzId est null');
+      this.errorMessage.set('Erreur: Impossible d\'ajouter une question. L\'ID du quiz n\'est pas disponible.');
+      
+      // Essayer de récupérer l'évaluation complète
+      const evalId = this.draftEvaluationId();
+      if (evalId) {
+        console.log('🔄 Tentative de récupération de l\'ID du quizz...');
+        this.fetchEvaluationWithQuizz(evalId);
+      }
+      return;
+    }
+    
+    this.editingQuestion.set(null);
+    this.showQuestionForm.set(true);
+  }
+
+  editQuestion(question: Question): void {
+    this.editingQuestion.set(question);
+    this.showQuestionForm.set(true);
+  }
+
+  onQuestionSaved(question: Question): void {
+    this.showQuestionForm.set(false);
+    this.editingQuestion.set(null);
+    this.loadQuestions(); // Recharger la liste des questions
+    this.successMessage.set('Question sauvegardée avec succès');
+    setTimeout(() => this.successMessage.set(''), 3000);
+  }
+
+  onQuestionCancelled(): void {
+    this.showQuestionForm.set(false);
+    this.editingQuestion.set(null);
+  }
+
+  deleteQuestion(question: Question): void {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer cette question ?`)) {
+      return;
+    }
+
+    this.evaluationUseCase.deleteQuestion(question.id).subscribe({
+      next: () => {
+        this.loadQuestions();
+        this.successMessage.set('Question supprimée avec succès');
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors de la suppression:', error);
+        this.errorMessage.set('Erreur lors de la suppression de la question');
+        setTimeout(() => this.errorMessage.set(''), 5000);
+      }
+    });
+  }
+
+  getQuestionTypeLabel(type: string): string {
+    switch (type) {
+      case 'CHOIX_MULTIPLE': return 'QCM';
+      case 'REPONSE_OUVERTE': return 'Réponse ouverte';
+      default: return type;
+    }
+  }
+
+  getQuestionType(question: Question): string {
+    return question.type || (question as any).typeQuestion || 'INCONNU';
+  }
+
+  // Expose String for template
+  String = String;
+>>>>>>> Stashed changes
 }

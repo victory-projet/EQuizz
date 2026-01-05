@@ -1,34 +1,36 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-<<<<<<< Updated upstream
+
+// Angular Material imports
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
-import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
+// Domain entities and services
 import { Evaluation } from '../../../core/domain/entities/evaluation.entity';
 import { Question } from '../../../core/domain/entities/question.entity';
+import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
+
+// Custom components
 import { QuestionFormComponent } from '../question-form/question-form.component';
 import { QuestionImportComponent } from '../question-import/question-import.component';
-import { SentimentAnalysisComponent } from '../../shared/components/sentiment-analysis/sentiment-analysis.component';
-import { ReportExportComponent } from '../../shared/components/report-export/report-export.component';
-=======
-import { QuestionManagementComponent } from '../question-management/question-management.component';
-import { Evaluation, Question } from '../../../core/domain/entities/evaluation.entity';
-import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
->>>>>>> Stashed changes
 
 @Component({
   selector: 'app-evaluation-detail',
   standalone: true,
   imports: [
-    CommonModule, 
-    QuestionManagementComponent
+    CommonModule,
+    MatTabsModule,
+    MatIconModule,
+    MatCardModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    QuestionFormComponent,
+    QuestionImportComponent
   ],
   templateUrl: './evaluation-detail.component.html',
   styleUrls: ['./evaluation-detail.component.scss']
@@ -37,16 +39,20 @@ export class EvaluationDetailComponent implements OnInit {
   evaluation = signal<Evaluation | null>(null);
   isLoading = signal(false);
   errorMessage = signal('');
+  successMessage = signal('');
   activeTab = signal<'info' | 'questions'>('questions');
   
   // États pour le formulaire de question
   editingQuestion = signal<Question | null>(null);
   questions = signal<Question[]>([]);
+  showQuestionForm = signal(false);
+  showQuestionImport = signal(false);
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private evaluationUseCase: EvaluationUseCase
+    private evaluationUseCase: EvaluationUseCase,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -63,6 +69,10 @@ export class EvaluationDetailComponent implements OnInit {
     this.evaluationUseCase.getEvaluation(id).subscribe({
       next: (evaluation) => {
         this.evaluation.set(evaluation);
+        // Get questions from quizz or Quizz property
+        const questions = evaluation.quizz?.questions || evaluation.quizz?.Questions || 
+                         evaluation.Quizz?.questions || evaluation.Quizz?.Questions || [];
+        this.questions.set(questions);
         this.isLoading.set(false);
         console.log('✅ Évaluation chargée:', evaluation);
       },
@@ -86,7 +96,6 @@ export class EvaluationDetailComponent implements OnInit {
   }
 
   onQuestionSaved(question: Question): void {
-<<<<<<< Updated upstream
     const currentQuestions = this.questions();
     const existingIndex = currentQuestions.findIndex(q => q.id === question.id);
     
@@ -99,7 +108,8 @@ export class EvaluationDetailComponent implements OnInit {
     }
     
     this.questions.set([...currentQuestions]);
-    this.closeQuestionForm();
+    this.editingQuestion.set(null);
+    this.showQuestionForm.set(false);
     this.successMessage.set('Question sauvegardée avec succès');
     setTimeout(() => this.successMessage.set(''), 3000);
   }
@@ -149,14 +159,106 @@ export class EvaluationDetailComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
-=======
-    // Gérer la sauvegarde de la question
-    console.log('Question sauvegardée:', question);
-    this.editingQuestion.set(null);
->>>>>>> Stashed changes
   }
 
   goBack(): void {
     this.router.navigate(['/evaluations']);
+  }
+
+  getQuestionTypeLabel(type: string): string {
+    switch (type) {
+      case 'CHOIX_MULTIPLE': return 'QCM';
+      case 'REPONSE_OUVERTE': return 'Réponse libre';
+      default: return type;
+    }
+  }
+
+  getStatusBadgeClass(status: string): string {
+    switch (status) {
+      case 'BROUILLON': return 'badge-draft';
+      case 'PUBLIEE': return 'badge-active';
+      case 'CLOTUREE': return 'badge-closed';
+      default: return '';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'BROUILLON': return 'Brouillon';
+      case 'PUBLIEE': return 'En cours';
+      case 'CLOTUREE': return 'Clôturée';
+      default: return status;
+    }
+  }
+
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case 'BROUILLON': return 'edit';
+      case 'PUBLIEE': return 'play_circle';
+      case 'CLOTUREE': return 'check_circle';
+      default: return 'help';
+    }
+  }
+
+  formatDate(date: Date | string): string {
+    return new Date(date).toLocaleDateString('fr-FR');
+  }
+
+  getOptionText(option: any): string {
+    if (typeof option === 'string') {
+      return option;
+    }
+    if (option && typeof option === 'object') {
+      return option.texte || option.text || String(option);
+    }
+    return String(option || '');
+  }
+
+  getStringFromCharCode(code: number): string {
+    return String.fromCharCode(code);
+  }
+
+  getQuestionType(question: Question): string {
+    return question.type || (question as any).typeQuestion || '';
+  }
+
+  isMultipleChoice(question: Question): boolean {
+    const type = this.getQuestionType(question);
+    return type === 'CHOIX_MULTIPLE';
+  }
+
+  getQuizzId(evaluation: Evaluation): string | number {
+    return evaluation.quizz?.id || evaluation.quizzId || '';
+  }
+
+  openQuestionForm(): void {
+    this.editingQuestion.set(null);
+    this.showQuestionForm.set(true);
+  }
+
+  closeQuestionForm(): void {
+    this.showQuestionForm.set(false);
+    this.editingQuestion.set(null);
+  }
+
+  editQuestion(question: Question): void {
+    this.editingQuestion.set(question);
+    this.showQuestionForm.set(true);
+  }
+
+  openQuestionImport(): void {
+    this.showQuestionImport.set(true);
+  }
+
+  closeQuestionImport(): void {
+    this.showQuestionImport.set(false);
+  }
+
+  onQuestionsImported(questions: Question[]): void {
+    const currentQuestions = this.questions();
+    this.questions.set([...currentQuestions, ...questions]);
+    this.showQuestionImport.set(false);
+    this.successMessage.set(`${questions.length} question(s) importée(s) avec succès`);
+    setTimeout(() => this.successMessage.set(''), 3000);
   }
 }

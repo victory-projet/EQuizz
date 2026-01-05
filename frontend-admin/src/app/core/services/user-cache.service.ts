@@ -272,6 +272,15 @@ export class UserCacheService {
     this.getAllUsers().subscribe();
   }
 
+  /**
+   * Récupère les étudiants avec pagination et cache
+   */
+  getStudentsPaginated(params: any): Observable<{ data: any[]; pagination: any }> {
+    // Pour l'instant, on délègue au service étudiant
+    // Plus tard, on pourra ajouter une logique de cache spécifique
+    return this.userUseCase.getStudentsPaginated(params);
+  }
+
   private initializeCache(): void {
     // Charger les données existantes du cache
     const cachedUsers = this.cacheService.get<User[]>(this.CACHE_KEYS.ALL_USERS);

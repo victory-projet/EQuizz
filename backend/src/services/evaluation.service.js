@@ -1,6 +1,7 @@
 // backend/src/services/evaluation.service.js
 
 const db = require('../models');
+const { Op } = require('sequelize');
 const evaluationRepository = require('../repositories/evaluation.repository');
 const coursRepository = require('../repositories/cours.repository');
 const questionRepository = require('../repositories/question.repository');
@@ -79,8 +80,103 @@ class EvaluationService {
     }
   }
 
-  async findAll() {
-    return evaluationRepository.findAll();
+  async findAll(options = {}) {
+    const {
+      page = 1,
+      limit = 20,
+      search = '',
+      statut = null,
+      coursId = null,
+      orderBy = 'dateCreation',
+      orderDirection = 'DESC'
+    } = options;
+
+    const offset = (page - 1) * limit;
+    
+    // Construire les conditions WHERE
+    const whereConditions = {};
+    
+    if (statut && statut !== 'ALL') {
+      whereConditions.statut = statut;
+    }
+    
+    if (coursId) {
+      whereConditions.cours_id = coursId;
+    }
+    
+    // Recherche textuelle
+    if (search) {
+      whereConditions[Op.or] = [
+        { titre: { [Op.iLike]: `%${search}%` } },
+        { description: { [Op.iLike]: `%${search}%` } }
+      ];
+    }
+
+    const { count, rows } = await db.Evaluation.findAndCountAll({
+      where: whereConditions,
+      include: [
+        {
+          model: db.Cours,
+          attributes: ['id', 'nom', 'code'],
+          required: false
+        },
+        {
+          model: db.Classe,
+          attributes: ['id', 'nom'],
+          through: { attributes: [] }, // Exclure les attributs de la table de liaison
+          required: false
+        },
+        {
+          model: db.Quizz,
+          attributes: ['id'],
+          include: [
+            {
+              model: db.Question,
+              attributes: ['id'],
+              required: false
+            }
+          ],
+          required: false
+        }
+      ],
+      order: [[orderBy, orderDirection]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      distinct: true
+    });
+
+    // Optimiser les données retournées
+    const evaluations = rows.map(evaluation => ({
+      id: evaluation.id,
+      titre: evaluation.titre,
+      description: evaluation.description,
+      statut: evaluation.statut,
+      dateDebut: evaluation.dateDebut,
+      dateFin: evaluation.dateFin,
+      dateCreation: evaluation.createdAt,
+      cours: evaluation.Cours ? {
+        id: evaluation.Cours.id,
+        nom: evaluation.Cours.nom,
+        code: evaluation.Cours.code
+      } : null,
+      classes: evaluation.Classes?.map(classe => ({
+        id: classe.id,
+        nom: classe.nom
+      })) || [],
+      questionCount: evaluation.Quizz?.Questions?.length || 0
+    }));
+
+    return {
+      evaluations,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: parseInt(limit),
+        hasNextPage: page * limit < count,
+        hasPrevPage: page > 1
+      }
+    };
   }
 
   async findOne(id) {

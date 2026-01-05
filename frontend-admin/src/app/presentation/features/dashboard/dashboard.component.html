@@ -285,10 +285,16 @@
         </div>
 
         <div class="alerts-list">
-          @if (getDisplayedAlerts().length > 0) {
-            @for (alert of getDisplayedAlerts(); track alert.id) {
+          @if (displayedAlerts().length > 0) {
+            @for (alert of displayedAlerts(); track alert.id || $index) {
               <div class="alert-item" 
-                   [class]="getAlertClass(alert.type) + ' ' + getPriorityClass(alert.priority)"
+                   [class.alert-info]="alert.type === 'info'"
+                   [class.alert-warning]="alert.type === 'warning'"
+                   [class.alert-error]="alert.type === 'error'"
+                   [class.alert-success]="alert.type === 'success'"
+                   [class.priority-low]="alert.priority === 'low'"
+                   [class.priority-medium]="alert.priority === 'medium'"
+                   [class.priority-high]="alert.priority === 'high'"
                    [class.unread]="!alert.isRead">
                 <div class="alert-icon">
                   <span class="material-icons">{{ getAlertIcon(alert.type) }}</span>
@@ -351,8 +357,8 @@
         </div>
 
         <div class="activities-list">
-          @if (getDisplayedActivities().length > 0) {
-            @for (activity of getDisplayedActivities(); track activity.id) {
+          @if (displayedActivities().length > 0) {
+            @for (activity of displayedActivities(); track activity.id || $index) {
               <div class="activity-item">
                 <div class="activity-icon" [style.background-color]="activity.color">
                   <span class="material-icons">{{ getActivityIcon(activity.type) }}</span>

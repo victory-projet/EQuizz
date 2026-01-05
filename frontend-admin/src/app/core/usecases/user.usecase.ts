@@ -1,13 +1,18 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { UserRepositoryInterface, CreateUserDto, UpdateUserDto } from '../domain/repositories/user.repository.interface';
 import { User } from '../domain/entities/user.entity';
+import { StudentService } from '../services/student.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserUseCase {
-  constructor(private userRepository: UserRepositoryInterface) {}
+  constructor(
+    private userRepository: UserRepositoryInterface,
+    private studentService: StudentService
+  ) {}
 
   getAllUsers(): Observable<User[]> {
     return this.userRepository.getAll();
@@ -35,5 +40,9 @@ export class UserUseCase {
 
   importUsers(users: any[]): Observable<{ imported: number; errors: any[] }> {
     return this.userRepository.importUsers(users);
+  }
+
+  getStudentsPaginated(params: any): Observable<{ data: any[]; pagination: any }> {
+    return this.studentService.getStudentsPaginated(params);
   }
 }

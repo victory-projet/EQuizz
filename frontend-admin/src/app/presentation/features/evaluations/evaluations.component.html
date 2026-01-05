@@ -209,12 +209,44 @@
                     </button>
                   }
                   @if (evaluation.statut === 'PUBLIEE') {
+<<<<<<< Updated upstream
                     <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
                       <span class="material-icons">content_copy</span>
                       Dupliquer
                     </button>
                   }
                   @if (evaluation.statut === 'CLOTUREE') {
+=======
+                    <button class="menu-item edit-copy-item" (click)="editCopyEvaluation(evaluation); hideCardMenu()" title="Créer une copie modifiable de cette évaluation">
+                      <div class="menu-icon edit-icon">
+                        <span class="material-icons">edit</span>
+                      </div>
+                      <div class="menu-content">
+                        <span class="menu-title">Modifier (copie)</span>
+                        <span class="menu-subtitle">Créer une version modifiable</span>
+                      </div>
+                    </button>
+                    <button class="menu-item duplicate-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()" title="Créer une copie de cette évaluation">
+                      <div class="menu-icon duplicate-icon">
+                        <span class="material-icons">content_copy</span>
+                      </div>
+                      <div class="menu-content">
+                        <span class="menu-title">Dupliquer</span>
+                        <span class="menu-subtitle">Créer une copie</span>
+                      </div>
+                    </button>
+                  }
+                  @if (evaluation.statut === 'CLOTUREE') {
+                    <button class="menu-item edit-copy-item" (click)="editCopyEvaluation(evaluation); hideCardMenu()" title="Créer une copie modifiable de cette évaluation">
+                      <div class="menu-icon edit-icon">
+                        <span class="material-icons">edit</span>
+                      </div>
+                      <div class="menu-content">
+                        <span class="menu-title">Modifier (copie)</span>
+                        <span class="menu-subtitle">Créer une version modifiable</span>
+                      </div>
+                    </button>
+>>>>>>> Stashed changes
                     <button class="menu-item" (click)="exportResults(evaluation); hideCardMenu()">
                       <span class="material-icons">download</span>
                       Exporter les résultats
@@ -287,6 +319,7 @@
                   </button>
                 }
               </div>
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes
             }
             @if (evaluation.statut === 'PUBLIEE') {
@@ -318,6 +351,48 @@
                 <span class="material-icons">bar_chart</span> Rapport
 >>>>>>> Stashed changes
               </button>
+=======
+            }
+            @if (evaluation.statut === 'PUBLIEE') {
+              <div class="footer-actions">
+                <button class="btn-action btn-edit-copy" 
+                        (click)="editCopyEvaluation(evaluation); $event.stopPropagation()" 
+                        title="Créer une copie modifiable de ce quiz">
+                  <span class="material-icons">edit</span>
+                  <span class="btn-text">Modifier</span>
+                  <span class="btn-subtitle">(copie)</span>
+                </button>
+                <button class="btn-primary" (click)="closeEvaluation(evaluation); $event.stopPropagation()">
+                  <span class="material-icons">lock</span> Fermer
+                </button>
+              </div>
+              <div class="footer-info">
+                <div class="info-indicator published-info">
+                  <span class="material-icons">info</span>
+                  <span class="info-text">Quiz actif - Modification limitée</span>
+                </div>
+              </div>
+            }
+            @if (evaluation.statut === 'CLOTUREE') {
+              <div class="footer-actions">
+                <button class="btn-action btn-edit-copy" 
+                        (click)="editCopyEvaluation(evaluation); $event.stopPropagation()" 
+                        title="Créer une copie modifiable de ce quiz">
+                  <span class="material-icons">edit</span>
+                  <span class="btn-text">Modifier</span>
+                  <span class="btn-subtitle">(copie)</span>
+                </button>
+                <button class="btn-primary" (click)="viewResults(evaluation); $event.stopPropagation()">
+                  <span class="material-icons">bar_chart</span> Rapport
+                </button>
+              </div>
+              <div class="footer-info">
+                <div class="info-indicator closed-info">
+                  <span class="material-icons">lock</span>
+                  <span class="info-text">Quiz clôturé - Données préservées</span>
+                </div>
+              </div>
+>>>>>>> Stashed changes
             }
           </div>
         </div>

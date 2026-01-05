@@ -52,10 +52,15 @@ export class EvaluationsComponent implements OnInit {
         if (evaluations.length > 0) {
           console.log('🔍 Détail première évaluation:', JSON.stringify(evaluations[0], null, 2));
         }
-        this.evaluations.set(evaluations);
+        
+        // Forcer la mise à jour des signaux
+        this.evaluations.set([...evaluations]); // Créer un nouveau tableau pour déclencher la détection de changement
         this.updateStats();
         this.applyFilters();
         this.isLoading.set(false);
+        
+        // Log pour vérifier la mise à jour
+        console.log('📊 Stats mises à jour - Total:', this.totalQuiz(), 'Actifs:', this.activeQuiz(), 'Brouillons:', this.draftQuiz());
       },
       error: (error) => {
         console.error('❌ Erreur lors du chargement des évaluations:', error);
@@ -210,6 +215,7 @@ export class EvaluationsComponent implements OnInit {
       next: (response) => {
         console.log('✅ Suppression réussie:', response);
         this.successMessage.set('Évaluation supprimée avec succès');
+        // Forcer le rechargement complet des données
         this.loadEvaluations();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
@@ -240,6 +246,18 @@ export class EvaluationsComponent implements OnInit {
           errorMsg = error.message;
         }
         
+<<<<<<< Updated upstream
+=======
+        // Messages d'erreur spécifiques
+        if (errorMsg.includes('non trouvée')) {
+          errorMsg = 'Cette évaluation n\'existe plus ou a déjà été supprimée.';
+          // Recharger la liste pour synchroniser
+          this.loadEvaluations();
+        } else if (errorMsg.includes('soumissions')) {
+          errorMsg = 'Impossible de supprimer une évaluation qui a des soumissions d\'étudiants.';
+        }
+        
+>>>>>>> Stashed changes
         this.errorMessage.set(errorMsg);
         this.isLoading.set(false);
         setTimeout(() => this.errorMessage.set(''), 5000);
@@ -253,7 +271,7 @@ export class EvaluationsComponent implements OnInit {
 
     this.isLoading.set(true);
     this.evaluationUseCase.duplicateEvaluation(evaluation.id as any).subscribe({
-      next: () => {
+      next: (duplicatedEvaluation) => {
         this.successMessage.set('Évaluation dupliquée avec succès');
         this.loadEvaluations();
         setTimeout(() => this.successMessage.set(''), 3000);
@@ -261,6 +279,44 @@ export class EvaluationsComponent implements OnInit {
       error: (error) => {
         console.error('❌ Erreur duplication:', error);
         let errorMsg = 'Erreur lors de la duplication';
+        
+        if (error.error?.message) {
+          errorMsg = error.error.message;
+        } else if (error.message) {
+          errorMsg = error.message;
+        }
+        
+        this.errorMessage.set(errorMsg);
+        this.isLoading.set(false);
+        setTimeout(() => this.errorMessage.set(''), 5000);
+      }
+    });
+  }
+
+  // Nouvelle méthode pour "Modifier (copie)" - duplique ET redirige vers l'édition
+  async editCopyEvaluation(evaluation: Evaluation): Promise<void> {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Créer une copie modifiable',
+      message: `Voulez-vous créer une copie modifiable de "${evaluation.titre}" ? Vous serez redirigé vers l'éditeur.`,
+      confirmText: 'Créer et modifier',
+      cancelText: 'Annuler',
+      type: 'info',
+      icon: 'edit'
+    });
+    if (!confirmed) return;
+
+    this.isLoading.set(true);
+    this.evaluationUseCase.duplicateEvaluation(evaluation.id as any).subscribe({
+      next: (duplicatedEvaluation) => {
+        this.successMessage.set('Copie créée avec succès, redirection vers l\'éditeur...');
+        // Rediriger vers l'édition de la nouvelle copie
+        setTimeout(() => {
+          this.router.navigate(['/evaluations', duplicatedEvaluation.id]);
+        }, 1000);
+      },
+      error: (error) => {
+        console.error('❌ Erreur création copie:', error);
+        let errorMsg = 'Erreur lors de la création de la copie';
         
         if (error.error?.message) {
           errorMsg = error.error.message;

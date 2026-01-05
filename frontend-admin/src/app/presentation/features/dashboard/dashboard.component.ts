@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -124,6 +124,42 @@ export class DashboardComponent implements OnInit, OnDestroy {
   selectedSemester = signal<string>('all');
   showYearDropdown = signal<boolean>(false);
   showSemesterDropdown = signal<boolean>(false);
+
+  // Computed signals for stable data
+  displayedAlerts = computed(() => {
+    const data = this.dashboardData();
+    if (!data || !data.alerts) return [];
+    
+    const alerts = [...data.alerts].sort((a, b) => {
+      // Trier par priorité puis par date
+      const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+      const priorityDiff = (priorityOrder[b.priority] || 2) - (priorityOrder[a.priority] || 2);
+      if (priorityDiff !== 0) return priorityDiff;
+      
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    }).map((alert, index) => ({
+      ...alert,
+      // Ensure each alert has a unique ID
+      id: alert.id || `alert-${index}-${Date.now()}`
+    }));
+
+    return this.showAllAlerts() ? alerts : alerts.slice(0, 3);
+  });
+
+  displayedActivities = computed(() => {
+    const data = this.dashboardData();
+    if (!data || !data.activitesRecentes) return [];
+    
+    const activities = [...data.activitesRecentes].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    ).map((activity, index) => ({
+      ...activity,
+      // Ensure each activity has a unique ID
+      id: activity.id || `activity-${index}-${Date.now()}`
+    }));
+
+    return this.showAllActivities() ? activities : activities.slice(0, 4);
+  });
 
   years = ['2025-2026', '2024-2025', '2023-2024', '2022-2023', '2021-2022'];
   semesters = [
@@ -671,33 +707,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   toggleShowAllActivities(): void {
     this.showAllActivities.set(!this.showAllActivities());
-  }
-
-  getDisplayedAlerts() {
-    const data = this.dashboardData();
-    if (!data || !data.alerts) return [];
-    
-    const alerts = [...data.alerts].sort((a, b) => {
-      // Trier par priorité puis par date
-      const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
-      const priorityDiff = (priorityOrder[b.priority] || 2) - (priorityOrder[a.priority] || 2);
-      if (priorityDiff !== 0) return priorityDiff;
-      
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-
-    return this.showAllAlerts() ? alerts : alerts.slice(0, 3);
-  }
-
-  getDisplayedActivities() {
-    const data = this.dashboardData();
-    if (!data || !data.activitesRecentes) return [];
-    
-    const activities = [...data.activitesRecentes].sort((a, b) => 
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    return this.showAllActivities() ? activities : activities.slice(0, 4);
   }
 
   getActivityIcon(type: string): string {

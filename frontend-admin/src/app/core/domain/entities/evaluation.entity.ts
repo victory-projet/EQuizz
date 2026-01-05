@@ -18,7 +18,6 @@ export interface EvaluationApiData {
   quizzId?: string | number;
 }
 
-<<<<<<< Updated upstream
 export interface Evaluation extends EvaluationApiData {
   id: string | number;
   createdAt?: string;
@@ -46,29 +45,20 @@ export interface Evaluation extends EvaluationApiData {
     id: string | number;
     nom: string;
   };
-  quizz?: {
-    id: string | number;
-    titre: string;
-    description?: string;
-    questions?: Question[];
-  };
-  Quizz?: {
-    id: string | number;
-    titre: string;
-    description?: string;
-    Questions?: Question[];
-  };
-=======
+  quizz?: Quizz;
+  Quizz?: Quizz;
+}
+
 export interface Quizz {
-  id: number | string;  // Peut être un nombre ou un UUID
+  id: number | string;
   titre: string;
   description?: string;
-  instructions?: string;  // Ajout de la propriété instructions
-  evaluationId?: number | string;  // Peut être un nombre ou un UUID
+  instructions?: string;
+  evaluationId?: number | string;
   questions?: Question[];
-  dateCreation: Date;
-  dateModification: Date;
->>>>>>> Stashed changes
+  Questions?: Question[];
+  dateCreation?: Date;
+  dateModification?: Date;
 }
 
 export interface EvaluationQuestion {

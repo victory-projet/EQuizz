@@ -26,6 +26,14 @@ export class StudentsComponent implements OnInit, OnDestroy {
   showDeleteModal = signal(false);
   selectedStudent = signal<Etudiant | null>(null);
   
+  // Pagination
+  currentPage = signal(1);
+  pageSize = signal(20);
+  totalItems = signal(0);
+  totalPages = signal(0);
+  hasNextPage = signal(false);
+  hasPrevPage = signal(false);
+  
   // Cache management
   cacheEnabled = signal(true);
   lastRefresh = signal<Date | null>(null);
@@ -88,39 +96,54 @@ export class StudentsComponent implements OnInit, OnDestroy {
   loadStudents(): void {
     this.isLoading.set(true);
     
+    const params = {
+      page: this.currentPage(),
+      limit: this.pageSize(),
+      search: this.searchQuery(),
+      classeId: this.filterClasse() !== 'ALL' ? this.filterClasse() : undefined,
+      estActif: this.filterStatus() !== 'ALL' ? this.filterStatus() === 'ACTIVE' : undefined
+    };
+    
     if (this.cacheEnabled()) {
-      // Utiliser le cache service
-      this.userCacheService.getStudents({
-        ttl: 10 * 60 * 1000, // 10 minutes
-        persistToStorage: true
-      }).pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (students) => {
-          this.students.set(students as Etudiant[]);
-          this.applyFilters();
-          this.isLoading.set(false);
-          this.lastRefresh.set(new Date());
-        },
-        error: (error) => {
-          console.error('Erreur lors du chargement des étudiants:', error);
-          this.errorMessage.set('Erreur lors du chargement des étudiants');
-          this.isLoading.set(false);
-          // Fallback vers l'API directe
-          this.loadStudentsDirectly();
-        }
-      });
+      // Utiliser le cache service avec pagination
+      this.userCacheService.getStudentsPaginated(params)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (result: any) => {
+            this.students.set(result.data as Etudiant[]);
+            this.updatePagination(result.pagination);
+            this.filteredStudents.set(result.data as Etudiant[]);
+            this.isLoading.set(false);
+            this.lastRefresh.set(new Date());
+          },
+          error: (error: any) => {
+            console.error('Erreur lors du chargement des étudiants:', error);
+            this.errorMessage.set('Erreur lors du chargement des étudiants');
+            this.isLoading.set(false);
+            // Fallback vers l'API directe
+            this.loadStudentsDirectly();
+          }
+        });
     } else {
       this.loadStudentsDirectly();
     }
   }
 
   loadStudentsDirectly(): void {
-    this.userUseCase.getAllUsers().subscribe({
-      next: (users: User[]) => {
-        const students = users.filter((u: User) => u.role === 'ETUDIANT') as Etudiant[];
-        console.log('📚 Étudiants chargés:', students);
-        this.students.set(students);
-        this.applyFilters();
+    const params = {
+      page: this.currentPage(),
+      limit: this.pageSize(),
+      search: this.searchQuery(),
+      classeId: this.filterClasse() !== 'ALL' ? this.filterClasse() : undefined,
+      estActif: this.filterStatus() !== 'ALL' ? this.filterStatus() === 'ACTIVE' : undefined
+    };
+
+    this.userUseCase.getStudentsPaginated(params).subscribe({
+      next: (result: any) => {
+        console.log('📚 Étudiants chargés:', result);
+        this.students.set(result.data);
+        this.updatePagination(result.pagination);
+        this.filteredStudents.set(result.data);
         this.isLoading.set(false);
         this.lastRefresh.set(new Date());
       },
@@ -130,6 +153,14 @@ export class StudentsComponent implements OnInit, OnDestroy {
         this.isLoading.set(false);
       }
     });
+  }
+
+  private updatePagination(pagination: any): void {
+    this.currentPage.set(pagination.currentPage);
+    this.totalItems.set(pagination.totalItems);
+    this.totalPages.set(pagination.totalPages);
+    this.hasNextPage.set(pagination.hasNextPage);
+    this.hasPrevPage.set(pagination.hasPrevPage);
   }
 
   loadClasses(): void {
@@ -151,34 +182,18 @@ export class StudentsComponent implements OnInit, OnDestroy {
   }
 
   applyFilters(): void {
-    let filtered = this.students();
-
-    if (this.filterClasse() !== 'ALL') {
-      filtered = filtered.filter(s => s.classeId?.toString() === this.filterClasse());
-    }
-
-    if (this.filterStatus() !== 'ALL') {
-      const isActive = this.filterStatus() === 'ACTIVE';
-      filtered = filtered.filter(s => s.estActif === isActive);
-    }
-
-    if (this.searchQuery()) {
-      const query = this.searchQuery().toLowerCase();
-      filtered = filtered.filter(s =>
-        s.nom.toLowerCase().includes(query) ||
-        s.prenom.toLowerCase().includes(query) ||
-        s.email.toLowerCase().includes(query) ||
-        (s.matricule && s.matricule.toLowerCase().includes(query))
-      );
-    }
-
-    this.filteredStudents.set(filtered);
+    // Avec la pagination côté serveur, on recharge les données
+    this.currentPage.set(1); // Reset à la première page
+    this.loadStudents();
   }
 
   onSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchQuery.set(input.value);
-    this.applyFilters();
+    // Debounce la recherche pour éviter trop de requêtes
+    setTimeout(() => {
+      this.applyFilters();
+    }, 300);
   }
 
   onFilterClasse(classeId: string): void {
@@ -189,6 +204,32 @@ export class StudentsComponent implements OnInit, OnDestroy {
   onFilterStatus(status: string): void {
     this.filterStatus.set(status);
     this.applyFilters();
+  }
+
+  // Méthodes de pagination
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+      this.loadStudents();
+    }
+  }
+
+  nextPage(): void {
+    if (this.hasNextPage()) {
+      this.goToPage(this.currentPage() + 1);
+    }
+  }
+
+  prevPage(): void {
+    if (this.hasPrevPage()) {
+      this.goToPage(this.currentPage() - 1);
+    }
+  }
+
+  changePageSize(newSize: number): void {
+    this.pageSize.set(newSize);
+    this.currentPage.set(1);
+    this.loadStudents();
   }
 
   openCreateModal(): void {

@@ -77,10 +77,14 @@ class EvaluationRepository {
       throw new Error('Évaluation non trouvée');
     }
 
+<<<<<<< Updated upstream
     // On peut dupliquer une évaluation quel que soit son statut
     // La copie sera toujours créée en statut BROUILLON pour permettre les modifications
 
     // Créer la nouvelle évaluation (copie)
+=======
+    // Créer la nouvelle évaluation (copie) - toujours en brouillon
+>>>>>>> Stashed changes
     const evaluationData = {
       titre: `${originalEvaluation.titre} (Copie)`,
       description: originalEvaluation.description,
@@ -94,6 +98,12 @@ class EvaluationRepository {
     };
 
     const newEvaluation = await db.Evaluation.create(evaluationData, { transaction });
+
+    // Associer les mêmes classes que l'évaluation originale
+    if (originalEvaluation.Classes && originalEvaluation.Classes.length > 0) {
+      const classeIds = originalEvaluation.Classes.map(classe => classe.id);
+      await newEvaluation.addClasses(classeIds, { transaction });
+    }
 
     // Si l'évaluation originale a un quizz, le dupliquer aussi
     if (originalEvaluation.Quizz) {

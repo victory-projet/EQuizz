@@ -2,48 +2,102 @@
   <!-- Header -->
   <div class="page-header">
     <div class="header-content">
-      <h1 class="page-title">Créer une Évaluation</h1>
-      <p class="page-subtitle">Configurez les paramètres de base de votre quiz</p>
-      
-      <!-- Indicateur de sauvegarde -->
-      @if (lastSaved()) {
-        <div class="auto-save-indicator">
-          <span class="material-icons">cloud_done</span>
-          Sauvegardé automatiquement à {{ lastSaved()!.toLocaleTimeString('fr-FR') }}
-        </div>
-      }
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <div class="title-section">
+        <h1 class="page-title">Créer un Quiz</h1>
+        <p class="page-subtitle">Assistant de création étape par étape</p>
+        
+        <!-- Indicateur de sauvegarde -->
+        @if (lastSaved()) {
+          <div class="auto-save-indicator">
+            <span class="material-icons">cloud_done</span>
+            Sauvegardé automatiquement à {{ lastSaved()!.toLocaleTimeString('fr-FR') }}
+          </div>
+        }
+      </div>
     </div>
-    <button class="btn-cancel" (click)="cancel()">
-      <span class="material-icons">close</span> Annuler
-    </button>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="cancel()">
+        <span class="material-icons">close</span> Annuler
+      </button>
+    </div>
   </div>
 
   <!-- Messages -->
   @if (successMessage()) {
-    <div class="alert alert-success">{{ successMessage() }}</div>
+    <div class="alert alert-success">
+      <span class="material-icons">check_circle</span>
+      {{ successMessage() }}
+      <button class="alert-close" (click)="successMessage.set('')">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
   }
   @if (errorMessage()) {
-    <div class="alert alert-error">{{ errorMessage() }}</div>
+    <div class="alert alert-error">
+      <span class="material-icons">error</span>
+      {{ errorMessage() }}
+      <button class="alert-close" (click)="errorMessage.set('')">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
   }
 
-  <!-- Progress Steps -->
-  <div class="steps-container">
-    <div class="step" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1">
-      <div class="step-number">1</div>
-      <div class="step-label">Informations de base</div>
-    </div>
-    <div class="step-line" [class.completed]="currentStep() > 1"></div>
-    <div class="step" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2">
-      <div class="step-number">2</div>
-      <div class="step-label">Ajout de questions</div>
-    </div>
-    <div class="step-line" [class.completed]="currentStep() > 2"></div>
-    <div class="step" [class.active]="currentStep() === 3">
-      <div class="step-number">3</div>
-      <div class="step-label">Révision et publication</div>
+  <!-- Progress Wizard -->
+  <div class="wizard-container">
+    <div class="wizard-progress">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+      </div>
+      <div class="progress-steps">
+        <div class="step" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1">
+          <div class="step-connector" [class.completed]="currentStep() > 1"></div>
+          <div class="step-circle">
+            @if (currentStep() > 1) {
+              <span class="material-icons">check</span>
+            } @else {
+              <span>1</span>
+            }
+          </div>
+          <div class="step-content">
+            <span class="step-label">Configuration</span>
+            <span class="step-description">Paramètres de base</span>
+          </div>
+        </div>
+        <div class="step" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2">
+          <div class="step-connector" [class.completed]="currentStep() > 2"></div>
+          <div class="step-circle">
+            @if (currentStep() > 2) {
+              <span class="material-icons">check</span>
+            } @else {
+              <span>2</span>
+            }
+          </div>
+          <div class="step-content">
+            <span class="step-label">Questions</span>
+            <span class="step-description">Création du contenu</span>
+          </div>
+        </div>
+        <div class="step" [class.active]="currentStep() === 3" [class.completed]="currentStep() > 3">
+          <div class="step-circle">
+            @if (currentStep() > 3) {
+              <span class="material-icons">check</span>
+            } @else {
+              <span>3</span>
+            }
+          </div>
+          <div class="step-content">
+            <span class="step-label">Publication</span>
+            <span class="step-description">Finalisation</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
+<<<<<<< Updated upstream
   <!-- Step 1: Basic Information -->
   @if (currentStep() === 1) {
     <div class="form-container">
@@ -79,18 +133,24 @@
               class="form-input"
               [(ngModel)]="formData.dateDebut"
             />
+=======
+  <!-- Step Content -->
+  <div class="wizard-content">
+    <!-- Step 1: Configuration -->
+    @if (currentStep() === 1) {
+      <div class="step-container">
+        <div class="step-header">
+          <div class="step-icon">
+            <span class="material-icons">settings</span>
+>>>>>>> Stashed changes
           </div>
-
-          <div class="form-group">
-            <label class="form-label">Date de fin *</label>
-            <input 
-              type="datetime-local" 
-              class="form-input"
-              [(ngModel)]="formData.dateFin"
-            />
+          <div class="step-info">
+            <h2 class="step-title">Configuration du Quiz</h2>
+            <p class="step-description">Définissez les paramètres de base de votre évaluation</p>
           </div>
         </div>
 
+<<<<<<< Updated upstream
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Cours / Unité d'Enseignement *</label>
@@ -103,11 +163,113 @@
               @for (c of cours(); track c.id) {
 >>>>>>> Stashed changes
                 <option [value]="c.id">{{ c.nom }}</option>
+=======
+        <div class="form-grid">
+          <!-- Informations principales -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <span class="material-icons">info</span>
+              Informations générales
+            </h3>
+            
+            <div class="form-group">
+              <label class="form-label">Titre du quiz *</label>
+              <input 
+                type="text" 
+                class="form-input" 
+                placeholder="Ex: Évaluation Mi-parcours - Algorithmique"
+                [(ngModel)]="formData.titre"
+                (input)="onFormChange()"
+                required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea 
+                class="form-textarea" 
+                rows="3"
+                placeholder="Décrivez brièvement le contenu et les objectifs..."
+                [(ngModel)]="formData.description"
+                (input)="onFormChange()">
+              </textarea>
+            </div>
+          </div>
+
+          <!-- Planification -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <span class="material-icons">schedule</span>
+              Planification
+            </h3>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Date de début *</label>
+                <input 
+                  type="datetime-local" 
+                  class="form-input"
+                  [(ngModel)]="formData.dateDebut"
+                  (change)="onFormChange()"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Date de fin *</label>
+                <input 
+                  type="datetime-local" 
+                  class="form-input"
+                  [(ngModel)]="formData.dateFin"
+                  (change)="onFormChange()"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Cours et Classes -->
+          <div class="form-section full-width">
+            <h3 class="section-title">
+              <span class="material-icons">school</span>
+              Cours et Classes
+            </h3>
+            
+            <div class="form-group">
+              <label class="form-label">Cours / Unité d'Enseignement *</label>
+              <select class="form-select" [(ngModel)]="formData.coursId" (change)="onFormChange()">
+                <option [value]="''">Sélectionnez un cours</option>
+                @for (c of cours(); track c.id) {
+                  <option [value]="c.id">{{ c.nom }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Classes concernées * (sélection multiple)</label>
+              <div class="classes-selection">
+                @for (classe of classes(); track classe.id) {
+                  <div 
+                    class="class-chip" 
+                    [class.selected]="isClasseSelected(classe.id)"
+                    (click)="toggleClasse(classe.id)"
+                  >
+                    <span class="material-icons check-icon">
+                      {{ isClasseSelected(classe.id) ? 'check_circle' : 'radio_button_unchecked' }}
+                    </span>
+                    <span class="class-name">{{ classe.nom }}</span>
+                  </div>
+                }
+              </div>
+              @if (formData.classeIds.length > 0) {
+                <div class="selection-summary">
+                  <span class="material-icons">groups</span>
+                  {{ formData.classeIds.length }} classe(s) sélectionnée(s)
+                </div>
+>>>>>>> Stashed changes
               }
-            </select>
+            </div>
           </div>
         </div>
 
+<<<<<<< Updated upstream
         <div class="form-group">
           <label class="form-label">Classes * (sélection multiple)</label>
           <div class="classes-grid">
@@ -121,38 +283,278 @@
                   {{ isClasseSelected(classe.id) ? 'check_circle' : 'radio_button_unchecked' }}
                 </span>
                 <span class="class-name">{{ classe.nom }}</span>
+=======
+        <!-- Info Box -->
+        <div class="info-card">
+          <div class="info-icon">
+            <span class="material-icons">lightbulb</span>
+          </div>
+          <div class="info-content">
+            <h4>À propos de la création</h4>
+            <p>Votre quiz sera créé en mode brouillon. Vous pourrez ajouter des questions à l'étape suivante avant de le publier.</p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Questions -->
+    @if (currentStep() === 2) {
+      <div class="step-container">
+        <div class="step-header">
+          <div class="step-icon">
+            <span class="material-icons">quiz</span>
+          </div>
+          <div class="step-info">
+            <h2 class="step-title">Ajout des Questions</h2>
+            <p class="step-description">Créez vos questions une par une</p>
+          </div>
+        </div>
+
+        <!-- Questions existantes -->
+        @if (questions().length > 0) {
+          <div class="questions-list">
+            <div class="questions-header">
+              <h3>Questions créées ({{ questions().length }})</h3>
+              <button class="btn-primary" (click)="addQuestion()">
+                <span class="material-icons">add</span>
+                Ajouter une question
+              </button>
+            </div>
+
+            @for (question of questions(); track question.id) {
+              <div class="question-card">
+                <div class="question-header">
+                  <div class="question-number">Q{{ $index + 1 }}</div>
+                  <div class="question-type">{{ getQuestionTypeLabel(getQuestionType(question)) }}</div>
+                  <div class="question-actions">
+                    <button class="btn-icon" (click)="editQuestion(question)" title="Modifier">
+                      <span class="material-icons">edit</span>
+                    </button>
+                    <button class="btn-icon danger" (click)="deleteQuestion(question)" title="Supprimer">
+                      <span class="material-icons">delete</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="question-content">
+                  <p class="question-text">{{ question.enonce }}</p>
+                  @if (question.options && question.options.length > 0) {
+                    <div class="question-options">
+                      @for (option of question.options; track $index) {
+                        <div class="option-item">
+                          <span class="option-letter">{{ String.fromCharCode(65 + $index) }}</span>
+                          <span class="option-text">{{ option }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+>>>>>>> Stashed changes
               </div>
             }
           </div>
-          @if (formData.classeIds.length > 0) {
-            <div class="selected-info">
-              {{ formData.classeIds.length }} classe(s) sélectionnée(s)
+        } @else {
+          <!-- État vide -->
+          <div class="empty-questions">
+            <div class="empty-icon">
+              <span class="material-icons">quiz</span>
             </div>
-          }
+            <h3>Aucune question créée</h3>
+            <p>Commencez par ajouter votre première question</p>
+            <button class="btn-primary" (click)="addQuestion()">
+              <span class="material-icons">add</span>
+              Créer ma première question
+            </button>
+          </div>
+        }
+
+        <!-- Formulaire de question (modal/overlay) -->
+        @if (showQuestionForm() && quizzId()) {
+          <div class="question-form-overlay">
+            <div class="question-form-modal">
+              <div class="modal-header">
+                <h3>{{ editingQuestion() ? 'Modifier la question' : 'Nouvelle question' }}</h3>
+                <button class="btn-icon" (click)="onQuestionCancelled()">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+              <div class="modal-content">
+                <app-question-form
+                  [evaluationId]="draftEvaluationId()!"
+                  [quizzId]="quizzId()!"
+                  [question]="editingQuestion()"
+                  [questionNumber]="questions().length + 1"
+                  (saved)="onQuestionSaved($event)"
+                  (cancelled)="onQuestionCancelled()"
+                ></app-question-form>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Message d'erreur si quizzId manquant -->
+        @if (showQuestionForm() && !quizzId()) {
+          <div class="question-form-overlay">
+            <div class="question-form-modal">
+              <div class="modal-header">
+                <h3>Erreur</h3>
+                <button class="btn-icon" (click)="onQuestionCancelled()">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+              <div class="modal-content">
+                <div class="error-message">
+                  <span class="material-icons">error</span>
+                  <p>Impossible de créer une question : l'ID du quiz n'est pas disponible.</p>
+                  <p>Veuillez réessayer ou contacter le support technique.</p>
+                  <button class="btn-primary" (click)="onQuestionCancelled()">Fermer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Info sur l'étape suivante -->
+        @if (questions().length > 0) {
+          <div class="step-info-card">
+            <div class="info-icon">
+              <span class="material-icons">info</span>
+            </div>
+            <div class="info-content">
+              <h4>Prêt pour la publication ?</h4>
+              <p>Vous avez {{ questions().length }} question(s). Vous pouvez continuer vers l'étape de publication ou ajouter plus de questions.</p>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Step 3: Publication -->
+    @if (currentStep() === 3) {
+      <div class="step-container">
+        <div class="step-header">
+          <div class="step-icon">
+            <span class="material-icons">publish</span>
+          </div>
+          <div class="step-info">
+            <h2 class="step-title">Publication du Quiz</h2>
+            <p class="step-description">Finalisez et publiez votre évaluation</p>
+          </div>
         </div>
 
+<<<<<<< Updated upstream
         <div class="info-box">
           <span class="material-icons">info</span>
           <div>
             <strong>Note :</strong> L'évaluation sera créée en mode brouillon. 
             Vous pourrez ajouter des questions à l'étape suivante.
+=======
+        <div class="publication-content">
+          <div class="publication-summary">
+            <h3>Résumé de votre quiz</h3>
+            <div class="summary-grid">
+              <div class="summary-item">
+                <span class="summary-label">Titre :</span>
+                <span class="summary-value">{{ formData.titre }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Cours :</span>
+                <span class="summary-value">{{ getCoursName(formData.coursId) }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Classes :</span>
+                <span class="summary-value">{{ formData.classeIds.length }} classe(s) sélectionnée(s)</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Période :</span>
+                <span class="summary-value">
+                  Du {{ formData.dateDebut | date:'dd/MM/yyyy HH:mm' }} 
+                  au {{ formData.dateFin | date:'dd/MM/yyyy HH:mm' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="publication-actions">
+            <div class="action-card">
+              <div class="action-icon">
+                <span class="material-icons">edit</span>
+              </div>
+              <div class="action-content">
+                <h4>Continuer l'édition</h4>
+                <p>Ajouter plus de questions ou modifier les paramètres</p>
+                <button class="btn-outline" (click)="continueEditing()">
+                  <span class="material-icons">edit</span>
+                  Modifier
+                </button>
+              </div>
+            </div>
+
+            <div class="action-card">
+              <div class="action-icon">
+                <span class="material-icons">visibility</span>
+              </div>
+              <div class="action-content">
+                <h4>Aperçu</h4>
+                <p>Voir comment les étudiants verront le quiz</p>
+                <button class="btn-outline" (click)="previewQuiz()">
+                  <span class="material-icons">visibility</span>
+                  Aperçu
+                </button>
+              </div>
+            </div>
+
+            <div class="action-card primary">
+              <div class="action-icon">
+                <span class="material-icons">publish</span>
+              </div>
+              <div class="action-content">
+                <h4>Publier maintenant</h4>
+                <p>Rendre le quiz accessible aux étudiants</p>
+                <button class="btn-primary" (click)="publishQuiz()">
+                  <span class="material-icons">publish</span>
+                  Publier
+                </button>
+              </div>
+            </div>
+>>>>>>> Stashed changes
           </div>
         </div>
       </div>
+    }
+  </div>
 
-      <!-- Navigation Buttons -->
-      <div class="form-actions">
-        <button class="btn-secondary" (click)="cancel()">
-          Annuler
+  <!-- Navigation -->
+  <div class="wizard-navigation">
+    <div class="nav-left">
+      @if (currentStep() > 1) {
+        <button class="btn-secondary nav-btn" (click)="previousStep()">
+          <span class="material-icons">arrow_back</span>
+          Précédent
         </button>
-        <button class="btn-primary" (click)="nextStep()" [disabled]="isLoading()">
+      } @else {
+        <div class="nav-placeholder"></div>
+      }
+    </div>
+
+    <div class="nav-center">
+      <div class="step-indicator">
+        <span class="material-icons">timeline</span>
+        Étape {{ currentStep() }} sur 3
+      </div>
+    </div>
+
+    <div class="nav-right">
+      @if (currentStep() === 1) {
+        <button class="btn-primary nav-btn" (click)="nextStep()" [disabled]="isLoading()">
           @if (isLoading()) {
+            <span class="loading-spinner"></span>
             <span>Création...</span>
           } @else {
-            <span>Suivant</span>
+            <span>Continuer</span>
             <span class="material-icons">arrow_forward</span>
           }
         </button>
+<<<<<<< Updated upstream
       </div>
     </div>
   }
@@ -498,3 +900,30 @@
     </div>
   }
 </div>
+=======
+      }
+      @if (currentStep() === 2) {
+        <button class="btn-primary nav-btn" (click)="nextStep()" [disabled]="questions().length === 0">
+          @if (questions().length === 0) {
+            <span>Ajoutez au moins une question</span>
+          } @else {
+            <span>Finaliser</span>
+            <span class="material-icons">arrow_forward</span>
+          }
+        </button>
+      }
+      @if (currentStep() === 3) {
+        <button class="btn-success nav-btn" (click)="publishQuiz()" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="loading-spinner"></span>
+            <span>Publication...</span>
+          } @else {
+            <span class="material-icons">publish</span>
+            <span>Publier le Quiz</span>
+          }
+        </button>
+      }
+    </div>
+  </div>
+</div>
+>>>>>>> Stashed changes

@@ -194,6 +194,13 @@ export class NotificationService {
   }
 
   /**
+   * Supprime une notification (alias pour deleteNotification)
+   */
+  dismiss(notificationId: string): Observable<void> {
+    return this.deleteNotification(notificationId);
+  }
+
+  /**
    * Supprime une notification
    */
   deleteNotification(notificationId: string): Observable<void> {
@@ -408,6 +415,68 @@ export class NotificationService {
     if (filter.offset) params.offset = filter.offset.toString();
 
     return params;
+  }
+
+  // === MÉTHODES D'AFFICHAGE RAPIDE ===
+
+  /**
+   * Affiche une notification d'erreur
+   */
+  showError(message: string, title?: string): Observable<Notification> {
+    return this.createNotification({
+      type: 'error',
+      title: title || 'Erreur',
+      message,
+      priority: 'high',
+      category: 'system',
+      isRead: false,
+      isArchived: false
+    });
+  }
+
+  /**
+   * Affiche une notification de succès
+   */
+  showSuccess(message: string, title?: string): Observable<Notification> {
+    return this.createNotification({
+      type: 'success',
+      title: title || 'Succès',
+      message,
+      priority: 'medium',
+      category: 'system',
+      isRead: false,
+      isArchived: false
+    });
+  }
+
+  /**
+   * Affiche une notification d'avertissement
+   */
+  showWarning(message: string, title?: string): Observable<Notification> {
+    return this.createNotification({
+      type: 'warning',
+      title: title || 'Avertissement',
+      message,
+      priority: 'medium',
+      category: 'system',
+      isRead: false,
+      isArchived: false
+    });
+  }
+
+  /**
+   * Affiche une notification d'information
+   */
+  showInfo(message: string, title?: string): Observable<Notification> {
+    return this.createNotification({
+      type: 'info',
+      title: title || 'Information',
+      message,
+      priority: 'low',
+      category: 'system',
+      isRead: false,
+      isArchived: false
+    });
   }
 
   // === MÉTHODES D'AIDE POUR L'UI ===

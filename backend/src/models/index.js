@@ -12,6 +12,7 @@ const Ecole = require('./Ecole');
 const AnneeAcademique = require('./AnneeAcademique');
 const Semestre = require('./Semestre');
 const Cours = require('./Cours');
+const CoursEnseignant = require('./CoursEnseignant');
 const Classe = require('./Classe');
 const Evaluation = require('./Evaluation');
 const Quizz = require('./Quizz');
@@ -36,6 +37,7 @@ db.Ecole = Ecole;
 db.AnneeAcademique = AnneeAcademique;
 db.Semestre = Semestre;
 db.Cours = Cours;
+db.CoursEnseignant = CoursEnseignant;
 db.Classe = Classe;
 db.Evaluation = Evaluation;
 db.Quizz = Quizz;
@@ -50,6 +52,9 @@ db.PasswordResetToken = PasswordResetToken;
 =======
 db.DeviceToken = DeviceToken;
 db.NotificationPreference = NotificationPreference;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 // --- Définition de toutes les Relations (Associations) ---
@@ -77,13 +82,25 @@ Semestre.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id' });
 AnneeAcademique.hasMany(Cours, { foreignKey: { name: 'annee_academique_id', allowNull: true } });
 Cours.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id' });
 
-Semestre.hasMany(Cours, { foreignKey: { name: 'semestre_id', allowNull: false } });
+Semestre.hasMany(Cours, { foreignKey: { name: 'semestre_id', allowNull: true } });
 Cours.belongsTo(Semestre, { foreignKey: 'semestre_id' });
 
+<<<<<<< Updated upstream
 // Relation Plusieurs-à-Plusieurs entre Cours et Enseignant
 const CoursEnseignant = sequelize.define('CoursEnseignant', {}, { freezeTableName: true, paranoid: false, underscored: true });
 Cours.belongsToMany(Enseignant, { through: CoursEnseignant });
 Enseignant.belongsToMany(Cours, { through: CoursEnseignant });
+=======
+// Relation Plusieurs-à-Plusieurs entre Enseignant et Cours via CoursEnseignant
+Enseignant.belongsToMany(Cours, { through: CoursEnseignant, foreignKey: 'enseignant_id' });
+Cours.belongsToMany(Enseignant, { through: CoursEnseignant, foreignKey: 'cours_id' });
+
+// Relations directes avec CoursEnseignant pour accéder aux détails de l'association
+CoursEnseignant.belongsTo(Cours, { foreignKey: 'cours_id' });
+CoursEnseignant.belongsTo(Enseignant, { foreignKey: 'enseignant_id' });
+Cours.hasMany(CoursEnseignant, { foreignKey: 'cours_id' });
+Enseignant.hasMany(CoursEnseignant, { foreignKey: 'enseignant_id' });
+>>>>>>> Stashed changes
 
 Classe.hasMany(Etudiant, { foreignKey: 'classe_id' });
 Etudiant.belongsTo(Classe, { foreignKey: 'classe_id' });

@@ -5,8 +5,23 @@ const asyncHandler = require('../utils/asyncHandler');
 
 class EtudiantController {
   findAll = asyncHandler(async (req, res) => {
-    const etudiants = await etudiantService.findAll();
-    res.status(200).json(etudiants);
+    const options = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 50,
+      search: req.query.search || '',
+      classeId: req.query.classeId || null,
+      estActif: req.query.estActif !== undefined ? req.query.estActif === 'true' : null,
+      orderBy: req.query.orderBy || 'createdAt',
+      orderDirection: req.query.orderDirection || 'DESC'
+    };
+
+    const result = await etudiantService.findAll(options);
+    
+    res.status(200).json({
+      success: true,
+      data: result.etudiants,
+      pagination: result.pagination
+    });
   });
 
   findOne = asyncHandler(async (req, res) => {

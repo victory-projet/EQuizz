@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 <!-- Exemple d'intégration du composant de gestion des questions -->
 <div class="evaluation-detail-container">
   
@@ -19,6 +20,14 @@
           {{ evaluation()?.dateCreation | date:'dd/MM/yyyy' }}
         </span>
       </div>
+=======
+<div class="page-container">
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Chargement de l'évaluation...</p>
+>>>>>>> Stashed changes
     </div>
     
     <div class="evaluation-actions">
@@ -29,6 +38,7 @@
     </div>
   </div>
 
+<<<<<<< Updated upstream
   <!-- Onglets de navigation -->
   <div class="tabs-container">
     <div class="tabs">
@@ -92,10 +102,37 @@
             <div class="info-item">
               <label>Instructions</label>
               <span>{{ evaluation()?.quizz?.instructions || 'Aucune instruction spécifique' }}</span>
+=======
+  <!-- Content -->
+  @if (!isLoading() && evaluation()) {
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <button class="btn-back" (click)="goBack()">
+          <span class="material-icons">arrow_back</span>
+        </button>
+        <div class="title-section">
+          <h1 class="page-title">{{ evaluation()!.titre }}</h1>
+          <div class="header-meta">
+            <span class="modern-badge" [ngClass]="getStatusBadgeClass(evaluation()!.statut)">
+              <span class="badge-icon material-icons">{{ getStatusIcon(evaluation()!.statut) }}</span>
+              <span class="badge-text">{{ getStatusLabel(evaluation()!.statut) }}</span>
+            </span>
+            <div class="meta-items">
+              <div class="meta-item">
+                <span class="material-icons">book</span>
+                <span>{{ evaluation()!.cours?.nom || 'Cours non défini' }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="material-icons">calendar_today</span>
+                <span>{{ formatDate(evaluation()!.dateDebut) }} - {{ formatDate(evaluation()!.dateFin) }}</span>
+              </div>
+>>>>>>> Stashed changes
             </div>
           </div>
         </div>
       </div>
+<<<<<<< Updated upstream
     }
 
     <!-- Onglet Questions -->
@@ -113,185 +150,233 @@
           </div>
         }
       </div>
+=======
+      <div class="header-actions">
+        @if (evaluation()!.statut === 'BROUILLON') {
+          <button class="btn-primary" (click)="publishEvaluation()" [disabled]="questions().length === 0">
+            <span class="material-icons">send</span>
+            Publier
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Messages -->
+    @if (successMessage()) {
+      <div class="alert alert-success">
+        <span class="material-icons">check_circle</span>
+        {{ successMessage() }}
+        <button class="alert-close" (click)="successMessage.set('')">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+>>>>>>> Stashed changes
     }
 <<<<<<< Updated upstream
     @if (errorMessage()) {
-      <div class="alert alert-error">{{ errorMessage() }}</div>
+      <div class="alert alert-error">
+        <span class="material-icons">error</span>
+        {{ errorMessage() }}
+        <button class="alert-close" (click)="errorMessage.set('')">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
     }
 
-    <!-- Description -->
-    @if (evaluation()!.description) {
-      <mat-card class="description-card">
-        <mat-card-header>
-          <mat-card-title>Description</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p>{{ evaluation()!.description }}</p>
-        </mat-card-content>
-      </mat-card>
-    }
-
-    <!-- Tabs -->
-    <mat-tab-group class="evaluation-tabs" animationDuration="300ms">
-      <!-- Questions Tab -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>quiz</mat-icon>
-          Questions ({{ questions().length }})
-        </ng-template>
-        
-        <div class="tab-content">
-          <div class="section-header">
-            <h2>Gestion des Questions</h2>
-            @if (evaluation()!.statut === 'BROUILLON') {
-              <div class="section-actions">
-                <button mat-stroked-button (click)="openQuestionImport()">
-                  <mat-icon>upload_file</mat-icon> Importer Excel
-                </button>
-                <button mat-raised-button color="primary" (click)="openQuestionForm()">
-                  <mat-icon>add</mat-icon> Ajouter une question
-                </button>
+    <!-- Main Content - Two Column Layout -->
+    <div class="main-content">
+      <!-- Left Column - Evaluation Info -->
+      <div class="evaluation-info">
+        <div class="info-card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="material-icons">info</span>
+              Informations de l'évaluation
+            </h2>
+          </div>
+          
+          <div class="card-content">
+            <!-- Description -->
+            @if (evaluation()!.description) {
+              <div class="info-section">
+                <h3 class="section-title">Description</h3>
+                <p class="section-content">{{ evaluation()!.description }}</p>
               </div>
             }
-          </div>
 
-          <!-- Questions List -->
-          @if (questions().length > 0) {
-            <div class="questions-list">
-              @for (question of questions(); track question.id; let i = $index) {
-                <mat-card class="question-card">
-                  <mat-card-header>
-                    <div class="question-header-content">
-                      <span class="question-number">{{ i + 1 }}</span>
-                      <span class="question-type">{{ getQuestionTypeLabel(getQuestionType(question)) }}</span>
-                    </div>
-                    @if (evaluation()!.statut === 'BROUILLON') {
-                      <div class="question-actions">
-                        <button mat-icon-button (click)="editQuestion(question)" matTooltip="Modifier">
-                          <mat-icon>edit</mat-icon>
-                        </button>
-                        <button mat-icon-button color="warn" (click)="deleteQuestion(question)" matTooltip="Supprimer">
-                          <mat-icon>delete</mat-icon>
-                        </button>
-                      </div>
-                    }
-                  </mat-card-header>
-                  
-                  <mat-card-content>
-                    <h4>{{ question.enonce }}</h4>
-                    
-                    @if (isMultipleChoice(question) && question.options) {
-                      <div class="question-options">
-                        @for (option of question.options; track option + '_' + $index; let j = $index) {
-                          <div class="option">
-                            <span class="option-letter">{{ getStringFromCharCode(65 + j) }}</span>
-                            <span class="option-text">{{ getOptionText(option) }}</span>
-                          </div>
-                        }
-                      </div>
-                    }
-                  </mat-card-content>
-                </mat-card>
-              }
-            </div>
-          } @else {
-            <div class="empty-state">
-              <mat-icon class="empty-icon">help_outline</mat-icon>
-              <h3>Aucune question</h3>
-              <p>Commencez par ajouter votre première question</p>
-              @if (evaluation()!.statut === 'BROUILLON') {
-                <div class="empty-actions">
-                  <button mat-stroked-button (click)="openQuestionImport()">
-                    <mat-icon>upload_file</mat-icon> Importer Excel
-                  </button>
-                  <button mat-raised-button color="primary" (click)="openQuestionForm()">
-                    <mat-icon>add</mat-icon> Ajouter une question
-                  </button>
+            <!-- Details -->
+            <div class="info-section">
+              <h3 class="section-title">Détails</h3>
+              <div class="details-grid">
+                <div class="detail-item">
+                  <span class="detail-label">Statut</span>
+                  <span class="detail-value">
+                    <span class="status-indicator" [ngClass]="getStatusBadgeClass(evaluation()!.statut)">
+                      {{ getStatusLabel(evaluation()!.statut) }}
+                    </span>
+                  </span>
                 </div>
-              }
+                <div class="detail-item">
+                  <span class="detail-label">Cours</span>
+                  <span class="detail-value">{{ evaluation()!.cours?.nom || 'Non défini' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Date de début</span>
+                  <span class="detail-value">{{ formatDate(evaluation()!.dateDebut) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Date de fin</span>
+                  <span class="detail-value">{{ formatDate(evaluation()!.dateFin) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Créé le</span>
+                  <span class="detail-value">{{ formatDate(evaluation()!.dateCreation) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Questions</span>
+                  <span class="detail-value">{{ questions().length }}</span>
+                </div>
+              </div>
             </div>
-          }
-        </div>
-      </mat-tab>
 
-      <!-- Sentiment Analysis Tab -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>psychology</mat-icon>
-          Analyse des Sentiments
-        </ng-template>
-        
-        <div class="tab-content">
-          <app-sentiment-analysis 
-            [evaluationId]="evaluation()!.id.toString()"
-            [autoLoad]="true">
-          </app-sentiment-analysis>
-        </div>
-      </mat-tab>
-
-      <!-- Report Export Tab -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>assessment</mat-icon>
-          Rapports & Export
-        </ng-template>
-        
-        <div class="tab-content">
-          <app-report-export 
-            [evaluationId]="evaluation()!.id.toString()">
-          </app-report-export>
-        </div>
-      </mat-tab>
-
-      <!-- Statistics Tab -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>analytics</mat-icon>
-          Statistiques
-        </ng-template>
-        
-        <div class="tab-content">
-          <mat-card>
-            <mat-card-header>
-              <mat-card-title>Statistiques de l'Évaluation</mat-card-title>
-              <mat-card-subtitle>Métriques et indicateurs de performance</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
+            <!-- Statistics -->
+            <div class="info-section">
+              <h3 class="section-title">Statistiques</h3>
               <div class="stats-grid">
-                <div class="stat-item">
-                  <mat-icon>quiz</mat-icon>
+                <div class="stat-card">
+                  <div class="stat-icon">
+                    <span class="material-icons">quiz</span>
+                  </div>
                   <div class="stat-content">
                     <span class="stat-value">{{ questions().length }}</span>
                     <span class="stat-label">Questions</span>
                   </div>
                 </div>
-                
-                <div class="stat-item">
-                  <mat-icon>schedule</mat-icon>
+                <div class="stat-card">
+                  <div class="stat-icon">
+                    <span class="material-icons">groups</span>
+                  </div>
                   <div class="stat-content">
+<<<<<<< Updated upstream
                     <span class="stat-value">{{ formatDate(evaluation()!.dateCreation || evaluation()!.createdAt || '') }}</span>
                     <span class="stat-label">Date de création</span>
+=======
+                    <span class="stat-value">0</span>
+                    <span class="stat-label">Participants</span>
+>>>>>>> Stashed changes
                   </div>
                 </div>
-                
-                <div class="stat-item">
-                  <mat-icon>visibility</mat-icon>
+                <div class="stat-card">
+                  <div class="stat-icon">
+                    <span class="material-icons">assignment_turned_in</span>
+                  </div>
                   <div class="stat-content">
-                    <span class="stat-value">{{ getStatusLabel(evaluation()!.statut) }}</span>
-                    <span class="stat-label">Statut</span>
+                    <span class="stat-value">0</span>
+                    <span class="stat-label">Soumissions</span>
                   </div>
                 </div>
               </div>
-              
-              <div class="stats-note">
-                <mat-icon>info</mat-icon>
-                <p>Les statistiques détaillées seront disponibles après la publication de l'évaluation et la collecte des réponses des étudiants.</p>
+            </div>
+
+            <!-- Actions -->
+            @if (evaluation()!.statut !== 'BROUILLON') {
+              <div class="info-section">
+                <h3 class="section-title">Actions</h3>
+                <div class="action-buttons">
+                  <button class="btn-action">
+                    <span class="material-icons">psychology</span>
+                    <span>Analyse des sentiments</span>
+                  </button>
+                  <button class="btn-action">
+                    <span class="material-icons">assessment</span>
+                    <span>Rapports & Export</span>
+                  </button>
+                  <button class="btn-action">
+                    <span class="material-icons">analytics</span>
+                    <span>Statistiques avancées</span>
+                  </button>
+                </div>
               </div>
-            </mat-card-content>
-          </mat-card>
+            }
+          </div>
         </div>
-      </mat-tab>
-    </mat-tab-group>
+      </div>
+
+      <!-- Right Column - Questions -->
+      <div class="questions-section">
+        <div class="questions-card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="material-icons">quiz</span>
+              Questions ({{ questions().length }})
+            </h2>
+            @if (evaluation()!.statut === 'BROUILLON') {
+              <button class="btn-primary" (click)="openQuestionForm()">
+                <span class="material-icons">add</span>
+                Ajouter une question
+              </button>
+            }
+          </div>
+
+          <div class="card-content">
+            <!-- Questions List -->
+            @if (questions().length > 0) {
+              <div class="questions-list">
+                @for (question of questions(); track question.id; let i = $index) {
+                  <div class="question-item">
+                    <div class="question-header">
+                      <div class="question-info">
+                        <span class="question-number">{{ i + 1 }}</span>
+                        <span class="question-type-badge">{{ getQuestionTypeLabel(getQuestionType(question)) }}</span>
+                      </div>
+                      @if (evaluation()!.statut === 'BROUILLON') {
+                        <div class="question-actions">
+                          <button class="btn-icon" (click)="editQuestion(question)" title="Modifier">
+                            <span class="material-icons">edit</span>
+                          </button>
+                          <button class="btn-icon btn-danger" (click)="deleteQuestion(question)" title="Supprimer">
+                            <span class="material-icons">delete</span>
+                          </button>
+                        </div>
+                      }
+                    </div>
+                    
+                    <div class="question-content">
+                      <h4 class="question-title">{{ question.enonce }}</h4>
+                      
+                      @if (isMultipleChoice(question) && question.options) {
+                        <div class="question-options">
+                          @for (option of question.options; track option + '_' + $index; let j = $index) {
+                            <div class="option-item">
+                              <span class="option-letter">{{ getStringFromCharCode(65 + j) }}</span>
+                              <span class="option-text">{{ getOptionText(option) }}</span>
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="empty-questions">
+                <div class="empty-icon">
+                  <span class="material-icons">help_outline</span>
+                </div>
+                <h3>Aucune question</h3>
+                <p>Commencez par ajouter votre première question pour créer votre quiz</p>
+                @if (evaluation()!.statut === 'BROUILLON') {
+                  <button class="btn-primary" (click)="openQuestionForm()">
+                    <span class="material-icons">add</span>
+                    Ajouter une question
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
   }
 
   <!-- Question Form Modal -->
@@ -300,8 +385,8 @@
       <div class="modal-content" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h3>{{ editingQuestion() ? 'Modifier la question' : 'Nouvelle question' }}</h3>
-          <button mat-icon-button class="btn-close" (click)="closeQuestionForm()">
-            <mat-icon>close</mat-icon>
+          <button class="btn-close" (click)="closeQuestionForm()">
+            <span class="material-icons">close</span>
           </button>
         </div>
         <div class="modal-body">
@@ -317,6 +402,7 @@
       </div>
     </div>
   }
+<<<<<<< Updated upstream
 
   <!-- Question Import Modal -->
   @if (showQuestionImport()) {
@@ -329,5 +415,7 @@
   }
 =======
   </div>
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 </div>

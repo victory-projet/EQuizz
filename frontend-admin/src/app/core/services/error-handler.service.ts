@@ -24,6 +24,32 @@ export class ErrorHandlerService {
   errors = signal<AppError[]>([]);
   
   /**
+   * Méthode générique pour gérer les erreurs (compatibilité)
+   */
+  handleError<T>(operation = 'operation') {
+    return (error: any): Observable<T> => {
+      console.error(`${operation} failed:`, error);
+      
+      // Si c'est une HttpErrorResponse, utiliser handleHttpError
+      if (error.status !== undefined) {
+        return this.handleHttpError(error, operation);
+      }
+      
+      // Sinon, créer une erreur générique
+      const appError: AppError = {
+        id: this.generateErrorId(),
+        type: 'unknown',
+        message: error.message || 'Une erreur inattendue s\'est produite',
+        timestamp: new Date(),
+        isRetryable: false
+      };
+      
+      this.addError(appError);
+      return throwError(() => appError);
+    };
+  }
+
+  /**
    * Gère les erreurs HTTP et les transforme en erreurs applicatives
    */
   handleHttpError(error: HttpErrorResponse, context?: string): Observable<never> {

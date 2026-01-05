@@ -16,7 +16,11 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
   create(evaluation: EvaluationApiData): Observable<Evaluation> {
     console.log('📡 Repository - Envoi de la requête POST /evaluations:', evaluation);
     return this.api.post<any>('/evaluations', evaluation).pipe(
+<<<<<<< Updated upstream
       map((response: any) => this.mapEvaluationFromBackend(response.evaluation || response))
+=======
+      map((data: any) => this.mapEvaluationFromBackend(data))
+>>>>>>> Stashed changes
     );
   }
 
@@ -38,7 +42,9 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
       hasCours: !!data.Cours,
       hasCour: !!data.Cour,
       hasClasses: !!data.Classes,
-      classesLength: data.Classes?.length
+      classesLength: data.Classes?.length,
+      hasQuizz: !!data.Quizz,
+      quizzId: data.Quizz?.id
     });
 
     const mapped = {
@@ -66,15 +72,23 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
     console.log('✅ Mapped evaluation:', {
       cours: mapped.cours,
       classe: mapped.classe,
-      quizzId: mapped.quizzId
+      quizzId: mapped.quizzId,
+      hasQuizz: !!mapped.quizz,
+      quizzFromData: mapped.quizz?.id
     });
 
     return mapped;
   }
 
+<<<<<<< Updated upstream
   update(id: string | number, evaluation: Partial<EvaluationApiData>): Observable<Evaluation> {
     return this.api.put<any>(`/evaluations/${id}`, evaluation).pipe(
       map((response: any) => this.mapEvaluationFromBackend(response.evaluation || response))
+=======
+  updateEvaluation(id: string | number, evaluation: Partial<Evaluation>): Observable<Evaluation> {
+    return this.api.put<any>(`/evaluations/${id}`, evaluation).pipe(
+      map((data: any) => this.mapEvaluationFromBackend(data))
+>>>>>>> Stashed changes
     );
   }
 

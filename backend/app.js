@@ -30,6 +30,9 @@ const reportRoutes = require('./src/routes/report.routes');
 const notificationRoutes = require('./src/routes/notification.routes');
 const dashboardRoutes = require('./src/routes/dashboard.routes');
 const utilisateurRoutes = require('./src/routes/utilisateur.routes');
+const etudiantRoutes = require('./src/routes/etudiant.routes');
+const archivageRoutes = require('./src/routes/archivage.routes');
+const coursEnseignantRoutes = require('./src/routes/cours-enseignant.routes');
 const questionRoutes = require('./src/routes/question.routes');
 const coursRoutes = require('./src/routes/cours.routes');
 const classeRoutes = require('./src/routes/classe.routes');
@@ -62,8 +65,14 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/utilisateurs', utilisateurRoutes);
+<<<<<<< Updated upstream
 app.use('/api/cours', coursRoutes);
 app.use('/api/classes', classeRoutes);
+=======
+app.use('/api/etudiants', etudiantRoutes);
+app.use('/api/archivage', archivageRoutes);
+app.use('/api/cours-enseignant', coursEnseignantRoutes);
+>>>>>>> Stashed changes
 app.use('/api', questionRoutes);
 
 // Route de test temporaire pour debug de suppression (sans authentification)
