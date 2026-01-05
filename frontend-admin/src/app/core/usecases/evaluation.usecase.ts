@@ -57,4 +57,8 @@ export class EvaluationUseCase {
   getSubmissions(evaluationId: string | number): Observable<SessionReponse[]> {
     return this.evaluationRepository.getSubmissions(evaluationId);
   }
+
+  duplicateEvaluation(id: string | number): Observable<Evaluation> {
+    return this.evaluationRepository.duplicateEvaluation(id);
+  }
 }

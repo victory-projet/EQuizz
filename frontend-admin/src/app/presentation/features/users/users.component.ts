@@ -8,11 +8,13 @@ import { CreateUserDto, UpdateUserDto } from '../../../core/domain/repositories/
 import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { UserCacheService } from '../../../core/services/user-cache.service';
 import { CacheService } from '../../../core/services/cache.service';
+import { ExcelPreviewService, ExcelImportConfig, ExcelPreviewData } from '../../../core/services/excel-preview.service';
+import { ExcelUploadComponent, ExcelUploadResult } from '../../shared/components/excel-upload/excel-upload.component';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ExcelUploadComponent],
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss']
 })
@@ -31,6 +33,11 @@ export class UsersComponent implements OnInit, OnDestroy {
   cacheEnabled = signal(true);
   cacheStats = signal<any>(null);
   lastRefresh = signal<Date | null>(null);
+  
+  // Excel import
+  showImportDialog = signal(false);
+  showImportMenu = signal(false);
+  importConfig = signal<ExcelImportConfig | null>(null);
   
   // Pagination
   currentPage = signal(1);
@@ -62,6 +69,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   private confirmationService = inject(ConfirmationService);
   private userCacheService = inject(UserCacheService);
   private cacheService = inject(CacheService);
+  private excelPreviewService = inject(ExcelPreviewService);
 
   constructor(private userUseCase: UserUseCase) {}
 
@@ -557,6 +565,98 @@ export class UsersComponent implements OnInit, OnDestroy {
     if (!this.cacheEnabled()) return 'cache-disabled';
     if (this.isDataFresh()) return 'cache-fresh';
     return 'cache-expired';
+  }
+
+  // === IMPORT EXCEL ===
+  
+  toggleImportMenu(): void {
+    this.showImportMenu.set(!this.showImportMenu());
+  }
+
+  openImportDialog(): void {
+    this.showImportMenu.set(false);
+    // Configuration pour l'import d'utilisateurs
+    this.importConfig.set(this.excelPreviewService.getUserImportConfig());
+    this.showImportDialog.set(true);
+  }
+
+  closeImportDialog(): void {
+    this.showImportDialog.set(false);
+    this.importConfig.set(null);
+  }
+
+  exportUsers(): void {
+    this.showImportMenu.set(false);
+    // TODO: Implémenter l'export des utilisateurs
+    console.log('Export des utilisateurs vers Excel');
+  }
+
+  async onExcelFileUploaded(result: ExcelUploadResult): Promise<void> {
+    this.isLoading.set(true);
+    
+    try {
+      // Traiter les données Excel
+      const importedUsers = this.processExcelData(result.previewData);
+      
+      // Importer les utilisateurs via l'API
+      const response = await new Promise<{ imported: number; errors: any[] }>((resolve, reject) => {
+        this.userUseCase.importUsers(importedUsers).subscribe({
+          next: (result) => resolve(result),
+          error: (error) => reject(error)
+        });
+      });
+      
+      this.successMessage.set(`${response.imported} utilisateur(s) importé(s) avec succès`);
+      this.loadUsers(); // Recharger la liste
+      this.closeImportDialog();
+      
+      setTimeout(() => this.successMessage.set(''), 5000);
+      
+    } catch (error: any) {
+      this.errorMessage.set(error.error?.message || 'Erreur lors de l\'import');
+      setTimeout(() => this.errorMessage.set(''), 5000);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  private processExcelData(previewData: ExcelPreviewData): any[] {
+    const users: any[] = [];
+    
+    previewData.sheets.forEach(sheet => {
+      if (!sheet.hasData) return;
+      
+      const headers = sheet.headers;
+      const nomIndex = headers.findIndex(h => h.toLowerCase().includes('nom'));
+      const prenomIndex = headers.findIndex(h => h.toLowerCase().includes('prenom'));
+      const emailIndex = headers.findIndex(h => h.toLowerCase().includes('email'));
+      const typeIndex = headers.findIndex(h => h.toLowerCase().includes('type'));
+      
+      sheet.data.forEach(row => {
+        if (row.some(cell => cell !== null && cell !== undefined && cell !== '')) {
+          users.push({
+            nom: row[nomIndex] || '',
+            prenom: row[prenomIndex] || '',
+            email: row[emailIndex] || '',
+            type: row[typeIndex] || 'ETUDIANT',
+            motDePasseHash: null // Sera généré côté serveur
+          });
+        }
+      });
+    });
+    
+    return users;
+  }
+
+  onImportCancelled(): void {
+    this.closeImportDialog();
+  }
+
+  onValidationCompleted(result: { isValid: boolean; errors: string[] }): void {
+    if (!result.isValid) {
+      this.errorMessage.set(`Validation échouée: ${result.errors.join(', ')}`);
+      setTimeout(() => this.errorMessage.set(''), 5000);
+    }
   }
 
   // Expose Math for template

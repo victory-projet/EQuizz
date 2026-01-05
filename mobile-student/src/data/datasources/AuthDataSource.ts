@@ -7,7 +7,8 @@ import { ErrorHandlerService } from '../../core/services/errorHandler.service';
  */
 export interface AuthDataSource {
   claimAccount(matricule: string, email: string, classeId: string): Promise<void>;
-  login(matricule: string, motDePasse: string): Promise<{ token: string; utilisateur: Utilisateur }>;
+  login(matricule: string, motDePasse: string): Promise<{ token: string; refreshToken: string; utilisateur: Utilisateur }>;
+  refreshToken(refreshToken: string): Promise<{ token: string; refreshToken: string }>;
 }
 
 /**
@@ -33,7 +34,7 @@ export class AuthDataSourceImpl implements AuthDataSource {
   async login(
     matricule: string,
     motDePasse: string
-  ): Promise<{ token: string; utilisateur: Utilisateur }> {
+  ): Promise<{ token: string; refreshToken: string; utilisateur: Utilisateur }> {
     try {
       const response = await apiClient.post('/auth/login', {
         matricule,
@@ -42,10 +43,28 @@ export class AuthDataSourceImpl implements AuthDataSource {
 
       return {
         token: response.data.token,
+        refreshToken: response.data.refreshToken,
         utilisateur: response.data.utilisateur,
       };
     } catch (error) {
       ErrorHandlerService.logError(error, 'AuthDataSource.login');
+      const userError = ErrorHandlerService.handleError(error);
+      throw new Error(userError.message);
+    }
+  }
+
+  async refreshToken(refreshToken: string): Promise<{ token: string; refreshToken: string }> {
+    try {
+      const response = await apiClient.post('/auth/refresh', {
+        refreshToken,
+      });
+
+      return {
+        token: response.data.token,
+        refreshToken: response.data.refreshToken,
+      };
+    } catch (error) {
+      ErrorHandlerService.logError(error, 'AuthDataSource.refreshToken');
       const userError = ErrorHandlerService.handleError(error);
       throw new Error(userError.message);
     }

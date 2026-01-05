@@ -42,6 +42,10 @@ export class UserRepository implements UserRepositoryInterface {
     return this.api.post<void>(`/utilisateurs/${id}/reset-password`, { nouveauMotDePasse });
   }
 
+  importUsers(users: any[]): Observable<{ imported: number; errors: any[] }> {
+    return this.api.post<{ imported: number; errors: any[] }>('/utilisateurs/import', { users });
+  }
+
   private mapUser(data: any): User {
     const baseUser = {
       id: data.id,

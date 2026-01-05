@@ -13,10 +13,30 @@
       <h2>Gestion des Administrateurs</h2>
       <p>Gérer les comptes administrateurs du système</p>
     </div>
-    <button class="btn btn-primary" (click)="openCreateModal()">
-      <span class="material-icons">add</span>
-      Nouvel Administrateur
-    </button>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="toggleImportMenu()">
+        <span class="material-icons">more_vert</span>
+        Actions
+      </button>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <span class="material-icons">add</span>
+        Nouvel Administrateur
+      </button>
+      
+      <!-- Menu déroulant pour les actions -->
+      @if (showImportMenu()) {
+        <div class="dropdown-menu">
+          <button class="dropdown-item" (click)="openImportDialog()">
+            <span class="material-icons">upload_file</span>
+            Importer depuis Excel
+          </button>
+          <button class="dropdown-item" (click)="exportUsers()">
+            <span class="material-icons">download</span>
+            Exporter vers Excel
+          </button>
+        </div>
+      }
+    </div>
   </div>
 
   <!-- Filters -->
@@ -369,6 +389,33 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  }
+
+  <!-- Import Excel Modal -->
+  @if (showImportDialog()) {
+    <div class="modal-overlay" (click)="closeImportDialog()">
+      <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Importer des utilisateurs depuis Excel</h3>
+          <button class="close-btn" (click)="closeImportDialog()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <app-excel-upload
+            title="Importer des utilisateurs"
+            description="Sélectionnez un fichier Excel contenant les données des utilisateurs"
+            [config]="importConfig()"
+            [showCustomActions]="true"
+            [allowQuickValidation]="true"
+            (fileUploaded)="onExcelFileUploaded($event)"
+            (uploadCancelled)="onImportCancelled()"
+            (validationCompleted)="onValidationCompleted($event)">
+          </app-excel-upload>
+        </div>
       </div>
     </div>
   }

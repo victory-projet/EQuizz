@@ -10,7 +10,13 @@ export const API_BASE_URL = API_CONFIG.BASE_URL;
 // Clés de stockage
 export const STORAGE_KEYS = {
   AUTH_TOKEN: 'auth_token',
+  REFRESH_TOKEN: 'refresh_token',
   USER_DATA: 'user_data',
+  PUSH_TOKEN: 'push_token',
+  NOTIFICATION_PREFERENCES: 'notification_preferences',
+  // Sync offline
+  LAST_SYNC: 'sync_last_sync',
+  SYNC_STATUS: 'sync_status',
 } as const;
 
 // Couleurs de l'application

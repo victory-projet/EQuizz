@@ -12,6 +12,8 @@ if (fs.existsSync(envPath)) {
 
 const app = express();
 const db = require('./src/models'); // Importer db pour la connexion
+const { initializeFirebase } = require('./src/config/firebase');
+const schedulerService = require('./src/services/scheduler.service');
 
 // --- Importation des Routeurs ---
 const authRoutes = require('./src/routes/auth.routes');
@@ -19,10 +21,13 @@ const academicRoutes = require('./src/routes/academic.routes');
 const evaluationRoutes = require('./src/routes/evaluation.routes');
 const studentRoutes = require('./src/routes/student.routes');
 const initRoutes = require('./src/routes/init.routes');
+const { seedDatabase } = require('./src/routes/init.routes');
 const reportRoutes = require('./src/routes/report.routes');
 const notificationRoutes = require('./src/routes/notification.routes');
+const pushNotificationRoutes = require('./src/routes/push-notification.routes');
 const dashboardRoutes = require('./src/routes/dashboard.routes');
 const utilisateurRoutes = require('./src/routes/utilisateur.routes');
+const questionRoutes = require('./src/routes/question.routes');
 
 // --- Middlewares Globaux ---
 // Configuration CORS pour autoriser les requêtes depuis le frontend
@@ -50,8 +55,10 @@ app.use('/api/student', studentRoutes);
 app.use('/api/init', initRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/push-notifications', pushNotificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/utilisateurs', utilisateurRoutes);
+app.use('/api', questionRoutes);
 
 // --- Route 404 pour les endpoints non trouvés ---
 app.use((req, res, next) => {
@@ -74,10 +81,37 @@ if (process.env.NODE_ENV !== 'test') {
   db.sequelize.authenticate()
     .then(() => {
       console.log('✅ Connexion à la base de données établie avec succès.');
-      return db.sequelize.sync({ alter: true }); // Utiliser alter au lieu de force en production
+      return db.sequelize.sync({ force: false }); // Pas de sync en production, utiliser les migrations
     })
-    .then(() => {
+    .then(async () => {
       console.log('✅ Base de données synchronisée avec succès.');
+      
+      // Vérifier si la base de données est vide et l'initialiser automatiquement
+      const userCount = await db.Utilisateur.count();
+      if (userCount === 0 && process.env.AUTO_SEED !== 'false') {
+        console.log('🌱 Base de données vide détectée, initialisation automatique...');
+        try {
+          const result = await seedDatabase();
+          if (result.success) {
+            console.log('✅ Données d\'initialisation chargées automatiquement.');
+          } else if (result.skipSeed) {
+            console.log('ℹ️  Initialisation ignorée - données déjà présentes.');
+          }
+        } catch (error) {
+          console.error('❌ Erreur lors de l\'initialisation automatique:', error.message);
+          console.log('💡 Vous pouvez initialiser manuellement avec: POST /api/init/seed');
+        }
+      } else if (userCount > 0) {
+        console.log(`ℹ️  Base de données déjà initialisée (${userCount} utilisateurs trouvés).`);
+      }
+      
+      // Initialiser Firebase
+      console.log('🔥 Initialisation de Firebase...');
+      initializeFirebase();
+      
+      // Démarrer les tâches programmées
+      schedulerService.startAllJobs();
+      
       app.listen(PORT, () => {
         console.log(`🚀 Serveur démarré sur le port ${PORT}`);
       });

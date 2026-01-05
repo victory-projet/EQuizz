@@ -147,6 +147,9 @@
           }
         </div>
 
+        <!-- Theme Toggle -->
+        <app-theme-toggle></app-theme-toggle>
+
         <div class="user-profile" (click)="toggleUserMenu()">
           <div class="user-info">
             <span class="user-name">{{ authService.currentUser()?.prenom }} {{ authService.currentUser()?.nom }}</span>

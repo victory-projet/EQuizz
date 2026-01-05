@@ -992,3 +992,206 @@
     }
   }
 }
+
+// === STYLES POUR LES NOUVEAUX COMPOSANTS INTÉGRÉS ===
+
+// Barre de santé système
+.system-health-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #e9ecef);
+  transition: all 0.3s ease;
+
+  &.system-health-healthy {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-color: var(--success, #28a745);
+    
+    .health-indicator .material-icons {
+      color: var(--success, #28a745);
+    }
+  }
+
+  &.system-health-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-color: var(--warning, #ffc107);
+    
+    .health-indicator .material-icons {
+      color: var(--warning, #ffc107);
+      animation: pulse 2s infinite;
+    }
+  }
+
+  &.system-health-critical {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border-color: var(--danger, #dc3545);
+    
+    .health-indicator .material-icons {
+      color: var(--danger, #dc3545);
+      animation: pulse 1s infinite;
+    }
+  }
+
+  .health-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .material-icons {
+      font-size: 1.5rem;
+    }
+
+    .health-text {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary, #212529);
+    }
+  }
+
+  .health-stats {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary, #6c757d);
+
+      .material-icons {
+        font-size: 1rem;
+      }
+    }
+
+    .btn-refresh {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      border: 1px solid var(--border-color, #dee2e6);
+      background: var(--white, #ffffff);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      .material-icons {
+        font-size: 1.2rem;
+        color: var(--text-secondary, #6c757d);
+      }
+
+      &:hover {
+        background: var(--primary-light, #e3f2fd);
+        border-color: var(--primary, #2196f3);
+
+        .material-icons {
+          color: var(--primary, #2196f3);
+        }
+      }
+    }
+  }
+}
+
+// Conteneur des composants intégrés
+.integrated-components {
+  margin-top: 2rem;
+
+  .components-row {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+
+    &:first-child {
+      grid-template-columns: 2fr 1fr;
+    }
+
+    &:last-child {
+      grid-template-columns: 1fr;
+    }
+
+    .component-col-large {
+      grid-column: 1;
+    }
+
+    .component-col-small {
+      grid-column: 2;
+    }
+
+    .component-col-full {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+// Section legacy (à supprimer après migration)
+.legacy-section {
+  opacity: 0.5;
+  pointer-events: none;
+  
+  &::before {
+    content: 'LEGACY - À SUPPRIMER';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--warning, #ffc107);
+    color: var(--dark, #212529);
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    z-index: 10;
+  }
+}
+
+// Responsive pour les nouveaux composants
+@media (max-width: 1200px) {
+  .integrated-components {
+    .components-row:first-child {
+      grid-template-columns: 1fr;
+      
+      .component-col-large,
+      .component-col-small {
+        grid-column: 1;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .system-health-bar {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+
+    .health-stats {
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  }
+
+  .integrated-components {
+    .components-row {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+}
+
+// Animation pour les éléments critiques
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}

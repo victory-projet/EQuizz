@@ -16,6 +16,21 @@ export interface Evaluation {
   dateModification: Date;
 }
 
+// Interface pour les données d'API (avec dates en string)
+export interface EvaluationApiData {
+  id?: number | string;
+  titre: string;
+  description?: string;
+  dateDebut: string | Date;
+  dateFin: string | Date;
+  statut: 'BROUILLON' | 'PUBLIEE' | 'CLOTUREE';
+  cours_id?: number | string;
+  coursId?: number | string;
+  classeIds?: (number | string)[];
+  dateCreation?: string | Date;
+  dateModification?: string | Date;
+}
+
 export interface Quizz {
   id: number | string;  // Peut être un nombre ou un UUID
   titre: string;

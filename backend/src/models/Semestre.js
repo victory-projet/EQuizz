@@ -34,6 +34,8 @@ const Semestre = sequelize.define('Semestre', {
     allowNull: false,
   },
 
+}, {
+  freezeTableName: true // Empêche la pluralisation automatique
 });
 
 module.exports = Semestre;

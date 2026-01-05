@@ -24,4 +24,9 @@ export interface AuthRepository {
    * Récupère le token stocké
    */
   getStoredToken(): Promise<string | null>;
+
+  /**
+   * Rafraîchit le token d'authentification
+   */
+  refreshToken(): Promise<{ token: string; refreshToken: string }>;
 }

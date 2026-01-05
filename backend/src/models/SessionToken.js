@@ -37,6 +37,7 @@ const SessionToken = sequelize.define('SessionToken', {
     allowNull: false,
   },
 }, {
+  freezeTableName: true, // Empêche la pluralisation automatique
   underscored: true,
   indexes: [
     {

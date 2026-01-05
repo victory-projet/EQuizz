@@ -4,6 +4,14 @@
     <div class="header-content">
       <h1 class="page-title">Créer une Évaluation</h1>
       <p class="page-subtitle">Configurez les paramètres de base de votre quiz</p>
+      
+      <!-- Indicateur de sauvegarde -->
+      @if (lastSaved()) {
+        <div class="auto-save-indicator">
+          <span class="material-icons">cloud_done</span>
+          Sauvegardé automatiquement à {{ lastSaved()!.toLocaleTimeString('fr-FR') }}
+        </div>
+      }
     </div>
     <button class="btn-cancel" (click)="cancel()">
       <span class="material-icons">close</span> Annuler
@@ -48,6 +56,9 @@
             type="text" 
             class="form-input" 
             placeholder="Ex: Évaluation Mi-parcours - Algorithmique"
+            [(ngModel)]="formData.titre"
+            (input)="onFormChange()"
+            required>
             [(ngModel)]="formData.titre"
           />
         </div>
@@ -170,14 +181,14 @@
           <span>ou</span>
         </div>
 
-        <div class="method-card" (click)="selectExcelImport()">
-          <div class="method-icon method-icon-import">
-            <span class="material-icons">description</span>
+        <div class="method-card" (click)="selectManualCreation()">
+          <div class="method-icon method-icon-template">
+            <span class="material-icons">library_books</span>
           </div>
-          <h3>Import depuis Excel</h3>
-          <p>Importez vos questions depuis un fichier Excel pré-formaté</p>
+          <h3>Utiliser un Template</h3>
+          <p>Commencez avec un modèle pré-défini et personnalisez selon vos besoins</p>
           <button class="btn-method">
-            <span class="material-icons">upload_file</span> Importer depuis Excel
+            <span class="material-icons">content_copy</span> Utiliser un Template
           </button>
         </div>
       </div>

@@ -2,9 +2,11 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { routes } from './app.routes';
 import { authInterceptor } from './presentation/shared/interceptors/auth.interceptor';
-import { errorInterceptor } from './presentation/shared/interceptors/error.interceptor';
+import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { cacheInterceptor } from './core/interceptors/cache.interceptor';
 
 // Repository Providers
 import { AuthRepositoryInterface } from './core/domain/repositories/auth.repository.interface';
@@ -27,8 +29,9 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(
       withFetch(),
-      withInterceptors([authInterceptor, errorInterceptor])
+      withInterceptors([authInterceptor, errorInterceptor, cacheInterceptor])
     ),
+    provideAnimationsAsync(),
     provideCharts(withDefaultRegisterables()),
     // Repository Implementations
     { provide: AuthRepositoryInterface, useClass: AuthRepository },

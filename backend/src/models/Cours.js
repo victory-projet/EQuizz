@@ -35,6 +35,8 @@ const Cours = sequelize.define('Cours', {
     field: 'annee_academique_id'
   }
 
+}, {
+  freezeTableName: true // Empêche la pluralisation automatique
 });
 
 module.exports = Cours;
