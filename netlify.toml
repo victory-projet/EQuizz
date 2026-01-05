@@ -1,0 +1,48 @@
+[build]
+  # Répertoire de base pour le build
+  base = "frontend-admin/"
+  
+  # Commande de build
+  command = "npm ci && npm run build"
+  
+  # Répertoire de publication (où se trouvent les fichiers buildés)
+  publish = "dist/frontend-admin/"
+
+[build.environment]
+  # Version de Node.js à utiliser
+  NODE_VERSION = "18"
+  
+  # Variables d'environnement pour le build
+  NG_CLI_ANALYTICS = "false"
+
+# Configuration des redirections pour Angular SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers de sécurité
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Cache des assets statiques
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Cache des fichiers JS/CSS avec hash
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
