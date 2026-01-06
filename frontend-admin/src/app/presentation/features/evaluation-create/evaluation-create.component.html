@@ -1,23 +1,21 @@
 <div class="wizard-container">
   
-  <!-- Header simplifié -->
-  <header class="wizard-header-simple">
-    <div class="header-main">
-      <button class="btn-back" (click)="goBack()" [attr.aria-label]="'Retour à la liste des évaluations'">
-        <span class="material-icons">arrow_back</span>
+  <!-- Actions principales déplacées -->
+  <div class="wizard-actions">
+    <button class="btn-back" (click)="goBack()" [attr.aria-label]="'Retour à la liste des évaluations'">
+      <span class="material-icons">arrow_back</span>
+      <span>Retour</span>
+    </button>
+    <div class="actions-right">
+      <button class="btn-save-draft" 
+              (click)="saveDraft()" 
+              [disabled]="!canSaveDraft()"
+              [attr.aria-label]="'Sauvegarder le brouillon'">
+        <span class="material-icons">save</span>
+        <span>Sauvegarder</span>
       </button>
-      <h1 class="wizard-title">Créer une évaluation</h1>
-      <div class="header-actions">
-        <button class="btn-save-draft" 
-                (click)="saveDraft()" 
-                [disabled]="!canSaveDraft()"
-                [attr.aria-label]="'Sauvegarder le brouillon'">
-          <span class="material-icons">save</span>
-          <span>Sauvegarder</span>
-        </button>
-      </div>
     </div>
-  </header>
+  </div>
 
   <!-- Messages d'état -->
   <div class="messages-container" role="alert" aria-live="polite">
@@ -49,46 +47,19 @@
     }
   </div>
 
-  <!-- Indicateur de progression -->
-  <nav class="wizard-steps" role="navigation" aria-label="Étapes de création">
-    <ol class="steps-list">
-      <li class="step" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1">
-        <button class="step-button" (click)="goToStep(1)" [disabled]="!canNavigateToStep(1)">
-          <div class="step-indicator">
-            @if (currentStep() > 1) {
-              <span class="material-icons">check</span>
-            } @else {
-              <span>1</span>
-            }
-          </div>
-          <span class="step-label">Configuration</span>
-        </button>
-      </li>
-      <li class="step" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2">
-        <button class="step-button" (click)="goToStep(2)" [disabled]="!canNavigateToStep(2)">
-          <div class="step-indicator">
-            @if (currentStep() > 2) {
-              <span class="material-icons">check</span>
-            } @else {
-              <span>2</span>
-            }
-          </div>
-          <span class="step-label">Questions</span>
-        </button>
-      </li>
-      <li class="step" [class.active]="currentStep() === 3">
-        <button class="step-button" (click)="goToStep(3)" [disabled]="!canNavigateToStep(3)">
-          <div class="step-indicator">
-            <span>3</span>
-          </div>
-          <span class="step-label">Publication</span>
-        </button>
-      </li>
-    </ol>
-  </nav>
-
   <!-- Contenu principal du wizard -->
   <main class="wizard-main" role="main">
+    <!-- Indicateur de progression intégré -->
+    <div class="step-progress">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="(currentStep() / 3) * 100"></div>
+      </div>
+      <div class="step-info">
+        <span class="step-current">Étape {{ currentStep() }} sur 3</span>
+        <span class="step-name">{{ getStepName() }}</span>
+      </div>
+    </div>
+
     <div class="step-container">
       
       <!-- Étape 1: Configuration de base -->
@@ -586,6 +557,81 @@
       <div class="modal-content">
         <!-- Question import content will be implemented here -->
         <p>Interface d'import de questions à implémenter</p>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Creation Method Modal -->
+@if (showCreationMethodModal()) {
+  <div class="modal-overlay" (click)="closeCreationMethodModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Choisir la méthode de création</h3>
+        <button class="btn-icon" (click)="closeCreationMethodModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Comment souhaitez-vous créer les questions de votre évaluation ?</p>
+        
+        <div class="method-options">
+          <button class="method-option" (click)="selectCreationMethod('manual')">
+            <div class="method-icon">
+              <span class="material-icons">edit</span>
+            </div>
+            <div class="method-info">
+              <h4>Création manuelle</h4>
+              <p>Créez vos questions une par une avec notre éditeur</p>
+            </div>
+          </button>
+          
+          <button class="method-option" (click)="selectCreationMethod('template')">
+            <div class="method-icon">
+              <span class="material-icons">upload_file</span>
+            </div>
+            <div class="method-info">
+              <h4>Import depuis un fichier</h4>
+              <p>Importez vos questions depuis un fichier Excel ou CSV</p>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Template Import Modal -->
+@if (showTemplateImport()) {
+  <div class="modal-overlay" (click)="closeTemplateImport()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Importer depuis un fichier</h3>
+        <button class="btn-icon" (click)="closeTemplateImport()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Interface d'import de fichier à implémenter</p>
+        <button class="btn btn-secondary" (click)="closeTemplateImport()">Fermer</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Manual Creation Modal -->
+@if (showManualCreation()) {
+  <div class="modal-overlay" (click)="closeManualCreation()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Création manuelle</h3>
+        <button class="btn-icon" (click)="closeManualCreation()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Éditeur de questions à implémenter</p>
+        <button class="btn btn-secondary" (click)="closeManualCreation()">Fermer</button>
       </div>
     </div>
   </div>

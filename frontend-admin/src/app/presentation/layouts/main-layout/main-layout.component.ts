@@ -21,6 +21,7 @@ export class MainLayoutComponent {
   private pageTitles: { [key: string]: string } = {
     '/dashboard': 'Tableau de bord',
     '/evaluations': 'Évaluations',
+    '/evaluations/create': 'Créer une évaluation',
     '/courses': 'Cours & UE',
     '/classes': 'Classes',
     '/associations': 'Associations',
@@ -37,6 +38,7 @@ export class MainLayoutComponent {
   private pageSubtitles: { [key: string]: string } = {
     '/dashboard': 'Vue d\'ensemble du système d\'évaluation des enseignements',
     '/evaluations': 'Gestion des évaluations et questionnaires',
+    '/evaluations/create': 'Assistant de création d\'évaluation en 3 étapes',
     '/courses': 'Gestion des cours et unités d\'enseignement',
     '/classes': 'Gestion des classes et groupes d\'étudiants',
     '/associations': 'Gestion des associations cours-classes',
@@ -107,6 +109,11 @@ export class MainLayoutComponent {
   getPageTitle(): string {
     const url = this.router.url.split('?')[0];
     return this.pageTitles[url] || 'EQuizz Admin';
+  }
+
+  getPageSubtitle(): string {
+    const url = this.router.url.split('?')[0];
+    return this.pageSubtitles[url] || 'Vue d\'ensemble du système d\'évaluation des enseignements';
   }
 
   logout(): void {

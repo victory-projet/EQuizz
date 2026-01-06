@@ -448,7 +448,9 @@ class EvaluationService {
     if (evaluation.statut === 'CLOTUREE') {
       // Retourner l'évaluation existante au lieu de lancer une erreur
       return {
-        ...evaluation,
+        id: evaluation.id,
+        titre: evaluation.titre,
+        statut: evaluation.statut,
         message: 'Cette évaluation est déjà clôturée.'
       };
     }
@@ -464,7 +466,13 @@ class EvaluationService {
       // Ne pas faire échouer la clôture si les notifications échouent
     }
 
-    return updatedEvaluation;
+    // Retourner un objet simple sans références circulaires
+    return {
+      id: updatedEvaluation?.id || id,
+      titre: updatedEvaluation?.titre || 'Évaluation',
+      statut: 'CLOTUREE',
+      date_cloture: new Date()
+    };
   }
 
   async getSubmissions(id) {

@@ -111,8 +111,29 @@ export class ReportsComponent implements OnInit, OnDestroy {
       next: (data) => {
         // Use setTimeout to avoid change detection issues
         setTimeout(() => {
-          this.reportData.set(data);
-          this.calculateTotalResponses(data);
+          // Ensure data structure is complete with defaults
+          const safeData = {
+            ...data,
+            statistics: {
+              totalStudents: data?.statistics?.totalStudents ?? 0,
+              totalRespondents: data?.statistics?.totalRespondents ?? 0,
+              participationRate: data?.statistics?.participationRate ?? 0,
+              totalQuestions: data?.statistics?.totalQuestions ?? 0,
+              averageScore: data?.statistics?.averageScore ?? 0,
+              averageTime: data?.statistics?.averageTime ?? 0,
+              successRate: data?.statistics?.successRate ?? 0
+            },
+            mcqQuestions: data?.mcqQuestions || [],
+            openQuestions: data?.openQuestions || [],
+            sentimentData: {
+              positive: data?.sentimentData?.positive ?? 0,
+              neutral: data?.sentimentData?.neutral ?? 0,
+              negative: data?.sentimentData?.negative ?? 0
+            }
+          };
+          
+          this.reportData.set(safeData);
+          this.calculateTotalResponses(safeData);
           this.isLoading.set(false);
         }, 0);
       },
@@ -279,7 +300,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
   }
 
   calculateTotalResponses(data: EvaluationReportData): void {
-    this.totalResponses.set(data.statistics.totalRespondents);
+    const totalRespondents = data?.statistics?.totalRespondents ?? 0;
+    this.totalResponses.set(totalRespondents);
   }
 
   formatDate(date: Date | string): string {

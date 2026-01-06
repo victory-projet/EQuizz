@@ -196,15 +196,15 @@
             Retour à la sélection
           </button>
           <div class="report-title">
-            <h2>{{ reportData()!.evaluation.titre }}</h2>
+            <h2>{{ reportData()?.evaluation?.titre ?? 'Titre non défini' }}</h2>
             <div class="report-meta">
               <span class="meta-item">
                 <span class="material-icons">book</span>
-                {{ reportData()!.evaluation.cours?.nom || 'Cours non défini' }}
+                {{ reportData()?.evaluation?.cours?.nom || 'Cours non défini' }}
               </span>
               <span class="meta-item">
                 <span class="material-icons">calendar_today</span>
-                {{ formatDate(reportData()!.evaluation.dateDebut) }} - {{ formatDate(reportData()!.evaluation.dateFin) }}
+                {{ formatDate(reportData()?.evaluation?.dateDebut || '') }} - {{ formatDate(reportData()?.evaluation?.dateFin || '') }}
               </span>
             </div>
           </div>
@@ -258,7 +258,7 @@
                 </div>
                 <div class="metric-content">
                   <div class="metric-label">ÉTUDIANTS CIBLÉS</div>
-                  <div class="metric-value">{{ reportData()!.statistics.totalStudents }}</div>
+                  <div class="metric-value">{{ reportData()?.statistics?.totalStudents ?? 0 }}</div>
                 </div>
               </div>
               
@@ -268,7 +268,7 @@
                 </div>
                 <div class="metric-content">
                   <div class="metric-label">RÉPONDANTS</div>
-                  <div class="metric-value">{{ reportData()!.statistics.totalRespondents }}</div>
+                  <div class="metric-value">{{ reportData()?.statistics?.totalRespondents ?? 0 }}</div>
                 </div>
               </div>
               
@@ -278,7 +278,7 @@
                 </div>
                 <div class="metric-content">
                   <div class="metric-label">TAUX DE PARTICIPATION</div>
-                  <div class="metric-value">{{ reportData()!.statistics.participationRate }}%</div>
+                  <div class="metric-value">{{ reportData()?.statistics?.participationRate ?? 0 }}%</div>
                 </div>
               </div>
               
@@ -288,7 +288,7 @@
                 </div>
                 <div class="metric-content">
                   <div class="metric-label">QUESTIONS</div>
-                  <div class="metric-value">{{ reportData()!.statistics.totalQuestions }}</div>
+                  <div class="metric-value">{{ reportData()?.statistics?.totalQuestions ?? 0 }}</div>
                 </div>
               </div>
             </div>
@@ -298,10 +298,10 @@
               <h3><span class="material-icons">trending_up</span> Progression de la participation</h3>
               <div class="progress-container">
                 <div class="progress-bar">
-                  <div class="progress-fill" [style.width.%]="reportData()!.statistics.participationRate"></div>
+                  <div class="progress-fill" [style.width.%]="reportData()?.statistics?.participationRate ?? 0"></div>
                 </div>
                 <p class="progress-text">
-                  {{ reportData()!.statistics.totalRespondents }} / {{ reportData()!.statistics.totalStudents }} étudiants ont répondu
+                  {{ reportData()?.statistics?.totalRespondents ?? 0 }} / {{ reportData()?.statistics?.totalStudents ?? 0 }} étudiants ont répondu
                 </p>
               </div>
             </div>
@@ -314,7 +314,7 @@
             <h3>Analyse par question</h3>
             
             <!-- Questions QCM avec graphiques -->
-            @for (question of reportData()!.mcqQuestions; track question.id) {
+            @for (question of reportData()?.mcqQuestions || []; track question.id) {
               <div class="question-analysis">
                 <div class="question-header">
                   <h4>{{ question.titre }}</h4>
@@ -338,7 +338,7 @@
             }
 
             <!-- Questions ouvertes -->
-            @for (question of reportData()!.openQuestions; track question.id) {
+            @for (question of reportData()?.openQuestions || []; track question.id) {
               <div class="question-analysis">
                 <div class="question-header">
                   <h4>{{ question.titre }}</h4>
@@ -373,17 +373,17 @@
               <div class="sentiment-card positive">
                 <div class="sentiment-icon">😊</div>
                 <div class="sentiment-label">Positif</div>
-                <div class="sentiment-value">{{ reportData()!.sentimentData.positive }}%</div>
+                <div class="sentiment-value">{{ reportData()?.sentimentData?.positive ?? 0 }}%</div>
               </div>
               <div class="sentiment-card neutral">
                 <div class="sentiment-icon">😐</div>
                 <div class="sentiment-label">Neutre</div>
-                <div class="sentiment-value">{{ reportData()!.sentimentData.neutral }}%</div>
+                <div class="sentiment-value">{{ reportData()?.sentimentData?.neutral ?? 0 }}%</div>
               </div>
               <div class="sentiment-card negative">
                 <div class="sentiment-icon">😞</div>
                 <div class="sentiment-label">Négatif</div>
-                <div class="sentiment-value">{{ reportData()!.sentimentData.negative }}%</div>
+                <div class="sentiment-value">{{ reportData()?.sentimentData?.negative ?? 0 }}%</div>
               </div>
             </div>
           </div>
@@ -398,15 +398,15 @@
             <div class="performance-metrics">
               <div class="metric-item">
                 <span class="label">Score moyen:</span>
-                <span class="value">{{ reportData()!.statistics.averageScore }}%</span>
+                <span class="value">{{ reportData()?.statistics?.averageScore ?? 0 }}%</span>
               </div>
               <div class="metric-item">
                 <span class="label">Temps moyen de réponse:</span>
-                <span class="value">{{ reportData()!.statistics.averageTime }} min</span>
+                <span class="value">{{ reportData()?.statistics?.averageTime ?? 0 }} min</span>
               </div>
               <div class="metric-item">
                 <span class="label">Taux de réussite:</span>
-                <span class="value">{{ reportData()!.statistics.successRate }}%</span>
+                <span class="value">{{ reportData()?.statistics?.successRate ?? 0 }}%</span>
               </div>
             </div>
           </div>

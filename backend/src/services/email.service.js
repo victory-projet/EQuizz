@@ -146,12 +146,27 @@ class EmailService {
     try {
       await sgMail.send(msg);
       console.log(`✅ Email d'activation envoyé avec succès à ${utilisateur.email}`);
+      return { success: true, message: 'Email envoyé avec succès' };
     } catch (error) {
       console.error('❌ Erreur lors de l\'envoi de l\'email via SendGrid:', error);
-      if (error.response) {
-        console.error(error.response.body);
+      
+      // Gestion spécifique des erreurs SendGrid
+      if (error.response && error.response.body && error.response.body.errors) {
+        const sendGridError = error.response.body.errors[0];
+        
+        if (sendGridError && sendGridError.message.includes('Maximum credits exceeded')) {
+          console.warn('⚠️ Quota SendGrid dépassé - email non envoyé à:', utilisateur.email);
+          return { success: false, message: 'Quota SendGrid dépassé' };
+        }
       }
-      throw new Error('Le service d\'email n\'a pas pu envoyer le message.');
+      
+      if (error.code === 401) {
+        console.warn('⚠️ Clé API SendGrid invalide ou expirée');
+        return { success: false, message: 'Configuration email invalide' };
+      }
+      
+      console.warn('⚠️ L\'utilisateur a été créé mais l\'email n\'a pas pu être envoyé');
+      return { success: false, message: 'Email service error' };
     }
   }
 
@@ -243,12 +258,27 @@ class EmailService {
       console.log(`✅ Email de notification envoyé à ${email}`);
     } catch (error) {
       console.error('❌ Erreur lors de l\'envoi de l\'email de notification:', error);
-      if (error.response) {
-        console.error(error.response.body);
+      
+      // Gestion spécifique des erreurs SendGrid
+      if (error.response && error.response.body && error.response.body.errors) {
+        const sendGridError = error.response.body.errors[0];
+        
+        if (sendGridError && sendGridError.message.includes('Maximum credits exceeded')) {
+          console.warn('⚠️ Quota SendGrid dépassé - notification non envoyée à:', email);
+          // Ne pas faire échouer le processus, juste logger l'erreur
+          return { success: false, message: 'Quota SendGrid dépassé' };
+        }
       }
+      
+      if (error.code === 401) {
+        console.warn('⚠️ Clé API SendGrid invalide ou expirée');
+        return { success: false, message: 'Configuration email invalide' };
+      }
+      
+      // Pour les autres erreurs, on lance toujours l'exception
       throw new Error('Le service d\'email n\'a pas pu envoyer la notification.');
     }
-  }
+  } 
 
   async sendCardLinkConfirmation(etudiant, idCarte) {
     // Vérifier si les emails sont désactivés
@@ -513,14 +543,28 @@ class EmailService {
     try {
       await sgMail.send(msg);
       console.log(`✅ Email de bienvenue envoyé à ${user.email}`);
+      return { success: true, message: 'Email envoyé avec succès' };
     } catch (error) {
       console.error('❌ Erreur lors de l\'envoi de l\'email de bienvenue:', error);
-      if (error.response) {
-        console.error(error.response.body);
+      
+      // Gestion spécifique des erreurs SendGrid
+      if (error.response && error.response.body && error.response.body.errors) {
+        const sendGridError = error.response.body.errors[0];
+        
+        if (sendGridError && sendGridError.message.includes('Maximum credits exceeded')) {
+          console.warn('⚠️ Quota SendGrid dépassé - email non envoyé à:', user.email);
+          return { success: false, message: 'Quota SendGrid dépassé' };
+        }
       }
+      
+      if (error.code === 401) {
+        console.warn('⚠️ Clé API SendGrid invalide ou expirée');
+        return { success: false, message: 'Configuration email invalide' };
+      }
+      
       // Ne pas bloquer la création de l'utilisateur si l'email échoue
       console.warn('⚠️ L\'utilisateur a été créé mais l\'email n\'a pas pu être envoyé');
-      throw new Error('Email service not configured properly');
+      return { success: false, message: 'Email service error' };
     }
   }
 

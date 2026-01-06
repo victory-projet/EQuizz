@@ -9,6 +9,8 @@ export interface CreateUserDto {
   role: 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT';
   specialite?: string;
   matricule?: string;
+  classe_id?: string; // Pour les étudiants
+  numeroCarteEtudiant?: string; // Pour les étudiants
 }
 
 export interface UpdateUserDto {
@@ -17,6 +19,8 @@ export interface UpdateUserDto {
   email?: string;
   estActif?: boolean;
   specialite?: string;
+  classe_id?: string; // Pour les étudiants
+  numeroCarteEtudiant?: string; // Pour les étudiants
 }
 
 export abstract class UserRepositoryInterface {

@@ -62,8 +62,12 @@ class AnneeAcademiqueRepository {
       { where: {} }
     );
     
-    // Activer l'année spécifiée
-    return await this.update(id, { estActive: true });
+    // Activer l'année spécifiée seulement si un ID est fourni
+    if (id) {
+      return await this.update(id, { estActive: true });
+    }
+    
+    return null;
   }
 }
 

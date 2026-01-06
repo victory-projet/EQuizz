@@ -65,8 +65,26 @@ class EtudiantService {
       distinct: true // Important pour le count avec les includes
     });
 
+    // Transformer les données pour aplatir la structure
+    const etudiants = rows.map(etudiant => {
+      const etudiantData = etudiant.toJSON();
+      return {
+        id: etudiantData.id,
+        nom: etudiantData.Utilisateur?.nom || '',
+        prenom: etudiantData.Utilisateur?.prenom || '',
+        email: etudiantData.Utilisateur?.email || '',
+        matricule: etudiantData.matricule,
+        classeId: etudiantData.classe_id,
+        classe: etudiantData.Classe,
+        estActif: etudiantData.Utilisateur?.estActif || false,
+        idCarte: etudiantData.idCarte,
+        createdAt: etudiantData.createdAt,
+        updatedAt: etudiantData.updatedAt
+      };
+    });
+
     return {
-      etudiants: rows,
+      etudiants,
       pagination: {
         currentPage: parseInt(page),
         totalPages: Math.ceil(count / limit),
@@ -96,7 +114,21 @@ class EtudiantService {
       throw AppError.notFound('Étudiant non trouvé', 'STUDENT_NOT_FOUND');
     }
 
-    return etudiant;
+    // Transformer les données pour aplatir la structure
+    const etudiantData = etudiant.toJSON();
+    return {
+      id: etudiantData.id,
+      nom: etudiantData.Utilisateur?.nom || '',
+      prenom: etudiantData.Utilisateur?.prenom || '',
+      email: etudiantData.Utilisateur?.email || '',
+      matricule: etudiantData.matricule,
+      classeId: etudiantData.classe_id,
+      classe: etudiantData.Classe,
+      estActif: etudiantData.Utilisateur?.estActif || false,
+      idCarte: etudiantData.idCarte,
+      createdAt: etudiantData.createdAt,
+      updatedAt: etudiantData.updatedAt
+    };
   }
 
   async create(data) {
@@ -245,7 +277,23 @@ class EtudiantService {
       order: [[db.Utilisateur, 'nom', 'ASC']]
     });
 
-    return etudiants;
+    // Transformer les données pour aplatir la structure
+    return etudiants.map(etudiant => {
+      const etudiantData = etudiant.toJSON();
+      return {
+        id: etudiantData.id,
+        nom: etudiantData.Utilisateur?.nom || '',
+        prenom: etudiantData.Utilisateur?.prenom || '',
+        email: etudiantData.Utilisateur?.email || '',
+        matricule: etudiantData.matricule,
+        classeId: etudiantData.classe_id,
+        classe: etudiantData.Classe,
+        estActif: etudiantData.Utilisateur?.estActif || false,
+        idCarte: etudiantData.idCarte,
+        createdAt: etudiantData.createdAt,
+        updatedAt: etudiantData.updatedAt
+      };
+    });
   }
 }
 

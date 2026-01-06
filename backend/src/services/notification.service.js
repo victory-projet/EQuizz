@@ -65,17 +65,32 @@ class NotificationService {
     }
 
     // Envoyer les emails
-    const emailPromises = etudiants.map(etudiant => 
-      emailService.sendNotificationEmail(
-        etudiant.Utilisateur.email,
-        notification.titre,
-        notification.message
-      ).catch(err => console.error(`Erreur envoi email à ${etudiant.Utilisateur.email}:`, err))
-    );
+    const emailPromises = etudiants.map(async (etudiant) => {
+      try {
+        await emailService.sendNotificationEmail(
+          etudiant.Utilisateur.email,
+          notification.titre,
+          notification.message
+        );
+        return { success: true, email: etudiant.Utilisateur.email };
+      } catch (error) {
+        console.error(`Erreur envoi email à ${etudiant.Utilisateur.email}:`, error);
+        return { success: false, email: etudiant.Utilisateur.email, error: error.message };
+      }
+    });
 
-    await Promise.all(emailPromises);
+    const emailResults = await Promise.allSettled(emailPromises);
+    const failedEmails = emailResults.filter(result => result.status === 'rejected' || !result.value.success);
+    
+    if (failedEmails.length > 0) {
+      console.warn(`⚠️ ${failedEmails.length} emails n'ont pas pu être envoyés`);
+    }
 
-    return { sent: etudiants.length };
+    return {
+      sent: etudiants.length,
+      failed: failedEmails.length,
+      emailsSent: etudiants.length - failedEmails.length
+    };
   }
 
   /**

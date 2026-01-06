@@ -8,6 +8,7 @@ import { User, Etudiant } from '../../../core/domain/entities/user.entity';
 import { Classe } from '../../../core/domain/entities/academic.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { UserCacheService } from '../../../core/services/user-cache.service';
+import { StudentService } from '../../../core/services/student.service';
 
 @Component({
   selector: 'app-students',
@@ -24,7 +25,9 @@ export class StudentsComponent implements OnInit, OnDestroy {
   isLoading = signal(false);
   showModal = signal(false);
   showDeleteModal = signal(false);
+  showChangeClasseModal = signal(false);
   selectedStudent = signal<Etudiant | null>(null);
+  newClasseId = '';
   
   // Pagination
   currentPage = signal(1);
@@ -66,7 +69,8 @@ export class StudentsComponent implements OnInit, OnDestroy {
 
   constructor(
     private userUseCase: UserUseCase,
-    private academicUseCase: AcademicUseCase
+    private academicUseCase: AcademicUseCase,
+    private studentService: StudentService
   ) {}
 
   ngOnInit(): void {
@@ -256,10 +260,18 @@ export class StudentsComponent implements OnInit, OnDestroy {
     this.showDeleteModal.set(true);
   }
 
+  openChangeClasseModal(student: Etudiant): void {
+    this.selectedStudent.set(student);
+    this.newClasseId = student.classeId?.toString() || '';
+    this.showChangeClasseModal.set(true);
+  }
+
   closeModal(): void {
     this.showModal.set(false);
     this.showDeleteModal.set(false);
+    this.showChangeClasseModal.set(false);
     this.errorMessage.set('');
+    this.newClasseId = '';
   }
 
   resetForm(): void {
@@ -289,18 +301,23 @@ export class StudentsComponent implements OnInit, OnDestroy {
       nom: this.formData.nom,
       prenom: this.formData.prenom,
       email: this.formData.email,
-      role: 'ETUDIANT' as const,
-      matricule: this.formData.matricule || undefined
+      motDePasse: 'temp123', // Mot de passe temporaire
+      matricule: this.formData.matricule || undefined,
+      classe_id: this.formData.classeId || undefined
     };
 
-    this.userUseCase.createUser(data).subscribe({
-      next: (newStudent) => {
+    // Utiliser l'API directement pour la création car le StudentService pourrait ne pas être configuré correctement
+    this.userUseCase.createUser({
+      ...data,
+      role: 'ETUDIANT' as const
+    }).subscribe({
+      next: (response) => {
         this.successMessage.set('Étudiant créé avec succès');
         this.closeModal();
         
         // Mettre à jour le cache
         if (this.cacheEnabled()) {
-          this.userCacheService.updateCacheAfterOperation('create', newStudent);
+          this.userCacheService.updateCacheAfterOperation('create', response);
         } else {
           this.loadStudents();
         }
@@ -322,17 +339,19 @@ export class StudentsComponent implements OnInit, OnDestroy {
     const data = {
       nom: this.formData.nom,
       prenom: this.formData.prenom,
-      email: this.formData.email
+      email: this.formData.email,
+      classe_id: this.formData.classeId || undefined,
+      numeroCarteEtudiant: this.formData.numeroCarteEtudiant || undefined
     };
 
     this.userUseCase.updateUser(student.id.toString(), data).subscribe({
-      next: (updatedStudent) => {
+      next: (response) => {
         this.successMessage.set('Étudiant mis à jour avec succès');
         this.closeModal();
         
         // Mettre à jour le cache
         if (this.cacheEnabled()) {
-          this.userCacheService.updateCacheAfterOperation('update', updatedStudent);
+          this.userCacheService.updateCacheAfterOperation('update', response);
         } else {
           this.loadStudents();
         }
@@ -385,6 +404,33 @@ export class StudentsComponent implements OnInit, OnDestroy {
       },
       error: (error: any) => {
         this.errorMessage.set(error.error?.message || 'Erreur lors du changement de statut');
+      }
+    });
+  }
+
+  changeClasse(): void {
+    const student = this.selectedStudent();
+    if (!student) return;
+
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    const data = {
+      classe_id: this.newClasseId || undefined
+    };
+
+    this.userUseCase.updateUser(student.id.toString(), data).subscribe({
+      next: (response) => {
+        const oldClasse = this.getClasseNom(student.classeId);
+        const newClasse = this.getClasseNom(this.newClasseId);
+        this.successMessage.set(`Étudiant déplacé de "${oldClasse}" vers "${newClasse}"`);
+        this.closeModal();
+        this.loadStudents();
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error: any) => {
+        this.errorMessage.set(error.error?.message || 'Erreur lors du changement de classe');
+        this.isLoading.set(false);
       }
     });
   }

@@ -9,7 +9,7 @@ class AnneeAcademiqueService {
       const where = {};
       
       if (search) {
-        where.nom = { [require('sequelize').Op.like]: `%${search}%` };
+        where.libelle = { [require('sequelize').Op.like]: `%${search}%` };
       }
       
       if (estActive !== undefined) {
@@ -50,13 +50,13 @@ class AnneeAcademiqueService {
 
   async create(data) {
     try {
-      // Vérifier si une année avec le même nom existe déjà
+      // Vérifier si une année avec le même libellé existe déjà
       const existingAnnee = await anneeAcademiqueRepository.findOne({
-        nom: data.nom
+        libelle: data.libelle
       });
       
       if (existingAnnee) {
-        throw new AppError('Une année académique avec ce nom existe déjà', 400);
+        throw new AppError('Une année académique avec ce libellé existe déjà', 400);
       }
 
       // Si c'est la première année ou si estActive est true, désactiver les autres

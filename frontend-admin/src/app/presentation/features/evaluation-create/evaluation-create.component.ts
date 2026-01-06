@@ -298,6 +298,15 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
     }
   }
 
+  getStepName(): string {
+    switch (this.currentStep()) {
+      case 1: return 'Configuration';
+      case 2: return 'Questions';
+      case 3: return 'Publication';
+      default: return '';
+    }
+  }
+
   getStepIcon(): string {
     switch (this.currentStep()) {
       case 1: return 'settings';

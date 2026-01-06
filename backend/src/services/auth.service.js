@@ -27,7 +27,15 @@ class AuthService {
     await etudiantRepository.setPassword(etudiant.Utilisateur, password);
     
     // 5. Le service appelle le service d'email pour envoyer la notification
-    await emailService.sendAccountClaimEmail(etudiant, password);
+    try {
+      const emailResult = await emailService.sendAccountClaimEmail(etudiant, password);
+      if (!emailResult.success) {
+        console.warn('⚠️ L\'utilisateur a été créé mais l\'email n\'a pas pu être envoyé');
+      }
+    } catch (emailError) {
+      console.warn('⚠️ L\'utilisateur a été créé mais l\'email n\'a pas pu être envoyé:', emailError.message);
+      // Ne pas faire échouer l'activation si l'email échoue
+    }
 
     return true;
   }
@@ -75,7 +83,12 @@ class AuthService {
     await etudiantRepository.updateIdCarte(etudiant.id, idCarte);
 
     // 5. Envoyer un email de confirmation
-    await emailService.sendCardLinkConfirmation(etudiant, idCarte);
+    try {
+      await emailService.sendCardLinkConfirmation(etudiant, idCarte);
+    } catch (emailError) {
+      console.warn('⚠️ Carte liée avec succès mais l\'email de confirmation n\'a pas pu être envoyé:', emailError.message);
+      // Ne pas faire échouer l'association si l'email échoue
+    }
 
     return true;
   }
