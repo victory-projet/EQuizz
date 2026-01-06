@@ -160,7 +160,7 @@ class NotificationService {
 
     // Préparer les données de notification
     const coursNom = evaluation.Cours?.nom || 'Cours non spécifié';
-    const titre = `📚 Nouvelle évaluation disponible`;
+    const titre = '📚 Nouvelle évaluation disponible';
     const message = `L'évaluation "${evaluation.titre}" pour le cours ${coursNom} est maintenant ouverte. Date limite: ${new Date(evaluation.dateFin).toLocaleDateString('fr-FR')}`;
 
     // Envoyer la notification complète
@@ -226,7 +226,7 @@ class NotificationService {
     }
 
     const coursNom = evaluation.Cours?.nom || 'Cours non spécifié';
-    const titre = `⏰ Rappel: Évaluation bientôt fermée`;
+    const titre = '⏰ Rappel: Évaluation bientôt fermée';
     const message = `L'évaluation "${evaluation.titre}" pour le cours ${coursNom} ferme dans ${heuresRestantes}h. N'oubliez pas de la compléter !`;
 
     return await this.sendCompleteNotification(etudiantsNonSoumis, {
@@ -273,7 +273,7 @@ class NotificationService {
     });
 
     const coursNom = evaluation.Cours?.nom || 'Cours non spécifié';
-    const titre = `🔒 Évaluation fermée`;
+    const titre = '🔒 Évaluation fermée';
     const message = `L'évaluation "${evaluation.titre}" pour le cours ${coursNom} est maintenant fermée. Les résultats seront bientôt disponibles.`;
 
     return await this.sendCompleteNotification(etudiantIds, {
@@ -305,7 +305,7 @@ class NotificationService {
     }
 
     const coursNom = evaluation.Cours?.nom || 'Cours non spécifié';
-    const titre = `✅ Soumission confirmée`;
+    const titre = '✅ Soumission confirmée';
     const message = `Votre réponse à l'évaluation "${evaluation.titre}" pour le cours ${coursNom} a été enregistrée avec succès.`;
 
     return await this.sendCompleteNotification([etudiantId], {
@@ -335,21 +335,21 @@ class NotificationService {
 
     let titre, message;
     switch (action) {
-      case 'password_changed':
-        titre = '🔐 Mot de passe modifié';
-        message = `Votre mot de passe a été modifié avec succès. Si ce n'était pas vous, contactez l'administration.`;
-        break;
-      case 'card_linked':
-        titre = '💳 Carte étudiante associée';
-        message = `Votre carte étudiante a été associée à votre compte avec succès.`;
-        break;
-      case 'profile_updated':
-        titre = '👤 Profil mis à jour';
-        message = `Vos informations de profil ont été mises à jour avec succès.`;
-        break;
-      default:
-        titre = '🔒 Action de sécurité';
-        message = `Une action de sécurité a été effectuée sur votre compte.`;
+    case 'password_changed':
+      titre = '🔐 Mot de passe modifié';
+      message = 'Votre mot de passe a été modifié avec succès. Si ce n\'était pas vous, contactez l\'administration.';
+      break;
+    case 'card_linked':
+      titre = '💳 Carte étudiante associée';
+      message = 'Votre carte étudiante a été associée à votre compte avec succès.';
+      break;
+    case 'profile_updated':
+      titre = '👤 Profil mis à jour';
+      message = 'Vos informations de profil ont été mises à jour avec succès.';
+      break;
+    default:
+      titre = '🔒 Action de sécurité';
+      message = 'Une action de sécurité a été effectuée sur votre compte.';
     }
 
     return await this.sendCompleteNotification([utilisateurId], {

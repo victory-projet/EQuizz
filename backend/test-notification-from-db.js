@@ -84,7 +84,7 @@ async function testNotificationFromDB() {
     });
     
     // Récupérer les tokens actifs
-    console.log(`\n🔍 Récupération des tokens actifs...`);
+    console.log('\n🔍 Récupération des tokens actifs...');
     const [tokens] = await connection.execute(`
       SELECT * FROM ${tokenTable} 
       WHERE isActive = 1 OR isActive = true

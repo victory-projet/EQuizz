@@ -32,7 +32,7 @@ async function fixProductionDB() {
 
     // Nettoyer les entrées de migration
     console.log('🧹 Nettoyage des migrations...');
-    await sequelize.query(`DELETE FROM SequelizeMeta WHERE name LIKE '%push-notifications%'`);
+    await sequelize.query('DELETE FROM SequelizeMeta WHERE name LIKE \'%push-notifications%\'');
     
     console.log('✅ Base de données nettoyée avec succès');
     console.log('🔄 Redémarrez maintenant le service Render pour appliquer les nouvelles migrations');

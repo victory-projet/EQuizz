@@ -68,11 +68,11 @@ async function testAdminPermissions() {
     });
     
     console.log(`Found ${evaluations.length} evaluations:`);
-    evaluations.forEach(eval => {
-      console.log(`  - ${eval.titre}`);
-      console.log(`    Course: ${eval.Cour?.nom || eval.Cours?.nom || 'No course'}`);
-      console.log(`    Admin ID: ${eval.administrateur_id}`);
-      console.log(`    Status: ${eval.statut}`);
+    evaluations.forEach(evaluation => {
+      console.log(`  - ${evaluation.titre}`);
+      console.log(`    Course: ${evaluation.Cour?.nom || evaluation.Cours?.nom || 'No course'}`);
+      console.log(`    Admin ID: ${evaluation.administrateur_id}`);
+      console.log(`    Status: ${evaluation.statut}`);
     });
 
     process.exit(0);

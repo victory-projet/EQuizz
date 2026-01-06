@@ -642,17 +642,17 @@ class ReportExportService {
         // Informations générales
         doc.fontSize(14).text('Informations Générales', 50, 100);
         doc.fontSize(12)
-           .text(`Cours: ${evaluation.Cours?.nom || 'N/A'}`, 50, 120)
-           .text(`Date de création: ${new Date(evaluation.createdAt).toLocaleDateString('fr-FR')}`, 50, 140)
-           .text(`Statut: ${evaluation.statut}`, 50, 160)
-           .text(`Nombre de soumissions: ${submissions.length}`, 50, 180);
+          .text(`Cours: ${evaluation.Cours?.nom || 'N/A'}`, 50, 120)
+          .text(`Date de création: ${new Date(evaluation.createdAt).toLocaleDateString('fr-FR')}`, 50, 140)
+          .text(`Statut: ${evaluation.statut}`, 50, 160)
+          .text(`Nombre de soumissions: ${submissions.length}`, 50, 180);
 
         // Statistiques
         const completedSubmissions = submissions.filter(s => s.estTermine);
         doc.fontSize(14).text('Statistiques', 50, 220);
         doc.fontSize(12)
-           .text(`Soumissions complètes: ${completedSubmissions.length}`, 50, 240)
-           .text(`Taux de completion: ${Math.round((completedSubmissions.length / submissions.length) * 100)}%`, 50, 260);
+          .text(`Soumissions complètes: ${completedSubmissions.length}`, 50, 240)
+          .text(`Taux de completion: ${Math.round((completedSubmissions.length / submissions.length) * 100)}%`, 50, 260);
 
         doc.end();
       } catch (error) {

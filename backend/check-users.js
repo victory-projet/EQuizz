@@ -27,11 +27,11 @@ async function checkUsers() {
       
       if (user.Etudiant) {
         console.log(`   Matricule: ${user.Etudiant.matricule}`);
-        console.log(`   Type: Étudiant`);
+        console.log('   Type: Étudiant');
       } else if (user.Enseignant) {
-        console.log(`   Type: Enseignant`);
+        console.log('   Type: Enseignant');
       } else if (user.Administrateur) {
-        console.log(`   Type: Administrateur`);
+        console.log('   Type: Administrateur');
       }
       
       console.log(`   Actif: ${user.estActif ? 'Oui' : 'Non'}`);
