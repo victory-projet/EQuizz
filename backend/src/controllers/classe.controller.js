@@ -1,6 +1,7 @@
 const db = require('../models');
 const asyncHandler = require('../utils/asyncHandler');
 const ErrorHandler = require('../middlewares/errorHandler.middleware');
+const ResponseFormatter = require('../utils/ResponseFormatter');
 
 class ClasseController {
   findAll = asyncHandler(async (req, res) => {
@@ -46,17 +47,15 @@ class ClasseController {
 
     const totalPages = Math.ceil(count / limit);
 
-    res.status(200).json({
-      classes: classesWithEffectif,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalItems: count,
-        itemsPerPage: limit,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
-      }
-    });
+    // Format compatible avec le frontend Angular
+    return ResponseFormatter.compatibilityFormat(res, classesWithEffectif, {
+      currentPage: page,
+      totalPages,
+      totalItems: count,
+      itemsPerPage: limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
+    }, 'classes');
   });
 
   findOne = asyncHandler(async (req, res) => {
@@ -86,12 +85,12 @@ class ClasseController {
       effectif: classe.Etudiants ? classe.Etudiants.length : 0
     };
 
-    res.status(200).json(classeWithEffectif);
+    return ResponseFormatter.success(res, classeWithEffectif, 'Classe récupérée avec succès');
   });
 
   create = asyncHandler(async (req, res) => {
     const classe = await db.Classe.create(req.body);
-    res.status(201).json(classe);
+    return ResponseFormatter.created(res, classe, 'Classe créée avec succès');
   });
 
   update = asyncHandler(async (req, res) => {
@@ -104,7 +103,7 @@ class ClasseController {
     }
 
     const classe = await db.Classe.findByPk(req.params.id);
-    res.status(200).json(classe);
+    return ResponseFormatter.success(res, classe, 'Classe mise à jour avec succès');
   });
 
   delete = asyncHandler(async (req, res) => {
@@ -116,7 +115,7 @@ class ClasseController {
       throw ErrorHandler.createError('Classe non trouvée.', 404, 'NOT_FOUND');
     }
 
-    res.status(200).json({ message: 'Classe supprimée avec succès.' });
+    return ResponseFormatter.deleted(res, 'Classe supprimée avec succès.');
   });
 }
 

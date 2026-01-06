@@ -43,6 +43,10 @@ class SemestreService {
     }
     return { message: 'Semestre supprimé avec succès.' };
   }
+
+  async findAll(options = {}) {
+    return semestreRepository.findAll(options);
+  }
 }
 
 module.exports = new SemestreService();

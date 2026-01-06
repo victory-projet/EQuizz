@@ -24,3 +24,7 @@ Thumbs.db
 .idea
 .vscode/
 *.swp
+
+# Fichiers de configuration Google (sensibles)
+mobile-student/GoogleService-Info.plist
+mobile-student/google-services.json

@@ -26,8 +26,11 @@ class EvaluationService {
     }
     
     // Validation des données d'entrée
-    if (!classeIds || !Array.isArray(classeIds) || classeIds.length === 0) {
-      throw AppError.badRequest('Au moins une classe doit être ciblée.', 'CLASSES_REQUIRED');
+    // Pour les brouillons, permettre des classeIds vides, mais pour les évaluations publiées, les exiger
+    const isDraft = evaluationData.statut === 'BROUILLON';
+    
+    if (!isDraft && (!classeIds || !Array.isArray(classeIds) || classeIds.length === 0)) {
+      throw AppError.badRequest('Au moins une classe doit être ciblée pour publier une évaluation.', 'CLASSES_REQUIRED');
     }
 
     if (!evaluationData.cours_id) {
@@ -59,7 +62,11 @@ class EvaluationService {
       evaluationData.administrateur_id = adminId;
 
       const evaluation = await evaluationRepository.create(evaluationData, transaction);
-      await evaluation.addClasses(classeIds, { transaction });
+      
+      // Associer les classes seulement si elles sont fournies
+      if (classeIds && Array.isArray(classeIds) && classeIds.length > 0) {
+        await evaluation.addClasses(classeIds, { transaction });
+      }
 
       await db.Quizz.create({
         titre: `Quizz pour ${evaluation.titre}`,
@@ -183,11 +190,52 @@ class EvaluationService {
   }
 
   async update(id, data) {
-    const updatedEvaluation = await evaluationRepository.update(id, data);
-    if (!updatedEvaluation) {
+    const { classeIds, coursId, ...evaluationData } = data;
+    
+    // Mapper coursId vers cours_id pour la compatibilité backend
+    if (coursId) {
+      evaluationData.cours_id = coursId;
+    }
+    
+    // Récupérer l'évaluation existante
+    const existingEvaluation = await evaluationRepository.findById(id);
+    if (!existingEvaluation) {
       throw AppError.notFound('Évaluation non trouvée.', 'EVALUATION_NOT_FOUND');
     }
-    return updatedEvaluation;
+    
+    // Validation des données d'entrée
+    // Pour les brouillons, permettre des classeIds vides, mais pour les évaluations publiées, les exiger
+    const isDraft = evaluationData.statut === 'BROUILLON' || existingEvaluation.statut === 'BROUILLON';
+    
+    if (!isDraft && classeIds !== undefined && (!Array.isArray(classeIds) || classeIds.length === 0)) {
+      throw AppError.badRequest('Au moins une classe doit être ciblée pour une évaluation publiée.', 'CLASSES_REQUIRED');
+    }
+
+    const transaction = await db.sequelize.transaction();
+
+    try {
+      // Mettre à jour l'évaluation
+      const updatedEvaluation = await evaluationRepository.update(id, evaluationData);
+      
+      // Mettre à jour les classes si classeIds est fourni
+      if (classeIds !== undefined) {
+        // Supprimer toutes les associations existantes
+        await updatedEvaluation.setClasses([], { transaction });
+        
+        // Ajouter les nouvelles associations si classeIds n'est pas vide
+        if (Array.isArray(classeIds) && classeIds.length > 0) {
+          await updatedEvaluation.addClasses(classeIds, { transaction });
+        }
+      }
+
+      await transaction.commit();
+      
+      // Retourner l'évaluation mise à jour avec ses relations
+      return evaluationRepository.findById(id);
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 
   async publish(id) {
@@ -204,6 +252,12 @@ class EvaluationService {
     const questions = await db.Question.count({ where: { quizz_id: evaluation.Quizz.id } });
     if (questions === 0) {
       throw AppError.badRequest('Impossible de publier une évaluation sans questions.', 'NO_QUESTIONS');
+    }
+
+    // Vérifier qu'il y a au moins une classe ciblée
+    const classesCount = await evaluation.countClasses();
+    if (classesCount === 0) {
+      throw AppError.badRequest('Au moins une classe doit être ciblée pour publier une évaluation.', 'CLASSES_REQUIRED');
     }
 
     // Mettre à jour le statut

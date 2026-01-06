@@ -2,6 +2,7 @@
 
 const etudiantService = require('../services/etudiant.service');
 const asyncHandler = require('../utils/asyncHandler');
+const ResponseFormatter = require('../utils/ResponseFormatter');
 
 class EtudiantController {
   findAll = asyncHandler(async (req, res) => {
@@ -17,47 +18,44 @@ class EtudiantController {
 
     const result = await etudiantService.findAll(options);
     
-    res.status(200).json({
-      success: true,
-      data: result.etudiants,
-      pagination: result.pagination
-    });
+    // Format uniforme pour cohérence avec les autres endpoints
+    return ResponseFormatter.successWithPagination(res, result.etudiants, result.pagination, 'Étudiants récupérés avec succès', 'etudiants');
   });
 
   findOne = asyncHandler(async (req, res) => {
     const etudiant = await etudiantService.findOne(req.params.id);
-    res.status(200).json(etudiant);
+    return ResponseFormatter.success(res, etudiant, 'Étudiant récupéré avec succès');
   });
 
   create = asyncHandler(async (req, res) => {
     const etudiant = await etudiantService.create(req.body);
-    res.status(201).json(etudiant);
+    return ResponseFormatter.created(res, etudiant, 'Étudiant créé avec succès');
   });
 
   update = asyncHandler(async (req, res) => {
     const etudiant = await etudiantService.update(req.params.id, req.body);
-    res.status(200).json(etudiant);
+    return ResponseFormatter.success(res, etudiant, 'Étudiant mis à jour avec succès');
   });
 
   delete = asyncHandler(async (req, res) => {
     await etudiantService.delete(req.params.id);
-    res.status(200).json({ message: 'Étudiant supprimé avec succès' });
+    return ResponseFormatter.deleted(res, 'Étudiant supprimé avec succès');
   });
 
   toggleStatus = asyncHandler(async (req, res) => {
     const etudiant = await etudiantService.toggleStatus(req.params.id);
-    res.status(200).json(etudiant);
+    return ResponseFormatter.success(res, etudiant, 'Statut de l\'étudiant modifié avec succès');
   });
 
   changeClasse = asyncHandler(async (req, res) => {
     const { classeId } = req.body;
     const etudiant = await etudiantService.changeClasse(req.params.id, classeId);
-    res.status(200).json(etudiant);
+    return ResponseFormatter.success(res, etudiant, 'Classe de l\'étudiant modifiée avec succès');
   });
 
   findByClasse = asyncHandler(async (req, res) => {
     const etudiants = await etudiantService.findByClasse(req.params.classeId);
-    res.status(200).json(etudiants);
+    return ResponseFormatter.success(res, etudiants, 'Étudiants de la classe récupérés avec succès');
   });
 }
 

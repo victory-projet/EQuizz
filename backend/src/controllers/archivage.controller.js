@@ -185,6 +185,44 @@ class ArchivageController {
       generatedAt: new Date().toISOString()
     });
   });
+
+  /**
+   * Récupère tous les archivages disponibles
+   */
+  getAll = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 10, modelName } = req.query;
+    
+    try {
+      // Pour le moment, retourner des données simulées
+      const archivages = [];
+      
+      // Simuler quelques archivages
+      for (let i = 1; i <= 5; i++) {
+        archivages.push({
+          id: i,
+          modelName: modelName || 'Evaluation',
+          entityId: `entity-${i}`,
+          entityName: `Entité archivée ${i}`,
+          dateArchivage: new Date(Date.now() - i * 24 * 60 * 60 * 1000),
+          archivedBy: 'admin',
+          statut: 'Archivé'
+        });
+      }
+
+      res.json({
+        archivages,
+        pagination: {
+          total: archivages.length,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          totalPages: Math.ceil(archivages.length / limit)
+        }
+      });
+    } catch (error) {
+      console.error('Erreur lors de la récupération des archivages:', error);
+      res.status(500).json({ message: 'Erreur serveur' });
+    }
+  });
 }
 
 module.exports = new ArchivageController();

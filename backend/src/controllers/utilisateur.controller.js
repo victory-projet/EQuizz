@@ -1,6 +1,7 @@
 const { Utilisateur, Administrateur, Enseignant, Etudiant } = require('../models');
 const bcrypt = require('bcryptjs');
 const emailService = require('../services/email.service');
+const ResponseFormatter = require('../utils/ResponseFormatter');
 
 // Récupérer tous les utilisateurs avec leurs rôles
 exports.getAllUtilisateurs = async (req, res) => {
@@ -28,10 +29,10 @@ exports.getAllUtilisateurs = async (req, res) => {
       return userData;
     });
 
-    res.json(utilisateursAvecRole);
+    return ResponseFormatter.success(res, utilisateursAvecRole, 'Utilisateurs récupérés avec succès');
   } catch (error) {
     console.error('Erreur lors de la récupération des utilisateurs:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+    return ResponseFormatter.error(res, 'Erreur lors de la récupération des utilisateurs', 500);
   }
 };
 
@@ -48,7 +49,7 @@ exports.getUtilisateurById = async (req, res) => {
     });
 
     if (!utilisateur) {
-      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+      return ResponseFormatter.notFound(res, 'Utilisateur');
     }
 
     const userData = utilisateur.toJSON();
@@ -61,10 +62,10 @@ exports.getUtilisateurById = async (req, res) => {
       userData.matricule = userData.Etudiant.matricule;
     }
 
-    res.json(userData);
+    return ResponseFormatter.success(res, userData, 'Utilisateur récupéré avec succès');
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'utilisateur:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+    return ResponseFormatter.error(res, 'Erreur lors de la récupération de l\'utilisateur', 500);
   }
 };
 
@@ -73,31 +74,55 @@ exports.createUtilisateur = async (req, res) => {
   try {
     const { nom, prenom, email, motDePasse, role, specialite, matricule } = req.body;
 
+    // Validation des champs requis
+    if (!nom || !prenom || !email || !role) {
+      return ResponseFormatter.validationError(res, [
+        { field: 'nom', message: 'Le nom est requis' },
+        { field: 'prenom', message: 'Le prénom est requis' },
+        { field: 'email', message: 'L\'email est requis' },
+        { field: 'role', message: 'Le rôle est requis' }
+      ]);
+    }
+
+    // Validation du rôle
+    if (!['ADMIN', 'ENSEIGNANT', 'ETUDIANT'].includes(role)) {
+      return ResponseFormatter.validationError(res, [
+        { field: 'role', message: 'Rôle invalide. Doit être ADMIN, ENSEIGNANT ou ETUDIANT' }
+      ]);
+    }
+
     // Vérifier si l'email existe déjà
     const existingUser = await Utilisateur.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(400).json({ message: 'Cet email est déjà utilisé' });
+      return ResponseFormatter.validationError(res, [
+        { field: 'email', message: 'Cet email est déjà utilisé' }
+      ]);
     }
 
-    // Pour les étudiants, le mot de passe est null (sera défini lors du claim account)
-    // Pour les admins et enseignants, le mot de passe est requis
+    // Générer un mot de passe temporaire si non fourni pour les admins et enseignants
     let motDePasseHash = null;
+    let motDePasseTemporaire = null;
+    
     if (role === 'ETUDIANT') {
       // Les étudiants n'ont pas de mot de passe à la création
       motDePasseHash = null;
     } else {
-      // Admin et Enseignant doivent avoir un mot de passe
-      if (!motDePasse) {
-        return res.status(400).json({ message: 'Le mot de passe est requis pour les administrateurs et enseignants' });
+      // Admin et Enseignant : utiliser le mot de passe fourni ou en générer un
+      if (motDePasse) {
+        motDePasseHash = motDePasse;
+        motDePasseTemporaire = motDePasse;
+      } else {
+        // Générer un mot de passe temporaire
+        motDePasseTemporaire = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+        motDePasseHash = motDePasseTemporaire;
       }
-      motDePasseHash = motDePasse;
     }
 
     // Créer l'utilisateur
     const utilisateur = await Utilisateur.create({
-      nom,
-      prenom,
-      email,
+      nom: nom.trim(),
+      prenom: prenom.trim(),
+      email: email.trim().toLowerCase(),
       motDePasseHash: motDePasseHash,
       estActif: true
     });
@@ -111,20 +136,26 @@ exports.createUtilisateur = async (req, res) => {
         specialite: specialite || null
       });
     } else if (role === 'ETUDIANT') {
+      // Validation du matricule pour les étudiants
       if (!matricule) {
-        return res.status(400).json({ message: 'Le matricule est requis pour un étudiant' });
+        await utilisateur.destroy();
+        return ResponseFormatter.validationError(res, [
+          { field: 'matricule', message: 'Le matricule est requis pour un étudiant' }
+        ]);
       }
       
       // Vérifier si le matricule existe déjà
       const existingMatricule = await Etudiant.findOne({ where: { matricule } });
       if (existingMatricule) {
         await utilisateur.destroy();
-        return res.status(400).json({ message: 'Ce matricule est déjà utilisé' });
+        return ResponseFormatter.validationError(res, [
+          { field: 'matricule', message: 'Ce matricule est déjà utilisé' }
+        ]);
       }
       
       await Etudiant.create({ 
         id: utilisateur.id,
-        matricule
+        matricule: matricule.trim()
       });
     }
 
@@ -142,21 +173,24 @@ exports.createUtilisateur = async (req, res) => {
     if (role === 'ETUDIANT' && userData.Etudiant) {
       userData.matricule = userData.Etudiant.matricule;
     }
+    if (role === 'ENSEIGNANT' && userData.Enseignant) {
+      userData.specialite = userData.Enseignant.specialite;
+    }
 
     // Envoyer un email de bienvenue si c'est un admin ou enseignant avec mot de passe
-    if ((role === 'ADMIN' || role === 'ENSEIGNANT') && motDePasse) {
+    if ((role === 'ADMIN' || role === 'ENSEIGNANT') && motDePasseTemporaire) {
       try {
-        await emailService.sendWelcomeEmail(userData, motDePasse);
+        await emailService.sendWelcomeEmail(userData, motDePasseTemporaire);
       } catch (emailError) {
         console.warn('⚠️ L\'utilisateur a été créé mais l\'email n\'a pas pu être envoyé:', emailError.message);
         // Ne pas faire échouer la création de l'utilisateur si l'email échoue
       }
     }
 
-    res.status(201).json(userData);
+    return ResponseFormatter.created(res, userData, `${role === 'ENSEIGNANT' ? 'Enseignant' : role === 'ETUDIANT' ? 'Étudiant' : 'Administrateur'} créé avec succès`);
   } catch (error) {
     console.error('Erreur lors de la création de l\'utilisateur:', error);
-    res.status(500).json({ message: error.message || 'Erreur serveur' });
+    return ResponseFormatter.error(res, error.message || 'Erreur lors de la création de l\'utilisateur', 500);
   }
 };
 

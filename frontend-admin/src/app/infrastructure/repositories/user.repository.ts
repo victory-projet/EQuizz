@@ -11,8 +11,16 @@ export class UserRepository implements UserRepositoryInterface {
   constructor(private api: ApiService) {}
 
   getAll(): Observable<User[]> {
-    return this.api.get<any[]>('/utilisateurs').pipe(
-      map(users => users.map(u => this.mapUser(u)))
+    return this.api.get<any>('/utilisateurs').pipe(
+      map(response => {
+        // Gérer les deux formats de réponse possibles
+        const users = response.data || response;
+        if (!Array.isArray(users)) {
+          console.error('La réponse API n\'est pas un tableau:', response);
+          return [];
+        }
+        return users.map(u => this.mapUser(u));
+      })
     );
   }
 

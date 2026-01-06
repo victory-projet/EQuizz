@@ -21,8 +21,19 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
   }
 
   findAll(): Observable<Evaluation[]> {
-    return this.api.get<any[]>('/evaluations').pipe(
-      map((data: any[]) => data.map(item => this.mapEvaluationFromBackend(item)))
+    return this.api.get<any>('/evaluations').pipe(
+      map((response: any) => {
+        // Le backend renvoie { evaluations: [...], pagination: {...} }
+        const evaluations = response.evaluations || response.data?.evaluations || response;
+        
+        // S'assurer que nous avons un tableau
+        if (!Array.isArray(evaluations)) {
+          console.error('❌ Repository - La réponse n\'est pas un tableau:', response);
+          return [];
+        }
+        
+        return evaluations.map(item => this.mapEvaluationFromBackend(item));
+      })
     );
   }
 

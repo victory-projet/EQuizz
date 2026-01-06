@@ -39,7 +39,23 @@ export class AcademicRepository implements AcademicRepositoryInterface {
   }
 
   getAnneesAcademiques(): Observable<AnneeAcademique[]> {
-    return this.api.get<AnneeAcademique[]>('/academic/annees-academiques');
+    return this.api.get<any>('/academic/annees-academiques').pipe(
+      map((response: any) => {
+        // Le backend peut renvoyer { success: true, data: [...] } ou directement un tableau
+        let annees = response;
+        
+        if (response && response.data && Array.isArray(response.data)) {
+          annees = response.data;
+        } else if (response && response.anneesAcademiques && Array.isArray(response.anneesAcademiques)) {
+          annees = response.anneesAcademiques;
+        } else if (!Array.isArray(response)) {
+          console.error('❌ Repository - La réponse des années académiques n\'est pas un tableau:', response);
+          return [];
+        }
+        
+        return Array.isArray(annees) ? annees : [];
+      })
+    );
   }
 
   getAnneeAcademique(id: string | number): Observable<AnneeAcademique> {
@@ -62,8 +78,22 @@ export class AcademicRepository implements AcademicRepositoryInterface {
   }
 
   getSemestresByAnnee(anneeId: string | number): Observable<Semestre[]> {
-    return this.api.get<any[]>(`/academic/annees-academiques/${anneeId}/semestres`).pipe(
-      map((semestres: any[]) => semestres.map(s => this.mapSemestreFromBackend(s)))
+    return this.api.get<any>(`/academic/annees-academiques/${anneeId}/semestres`).pipe(
+      map((response: any) => {
+        // Le backend peut renvoyer { success: true, data: [...] } ou directement un tableau
+        let semestres = response;
+        
+        if (response && response.data && Array.isArray(response.data)) {
+          semestres = response.data;
+        } else if (response && response.semestres && Array.isArray(response.semestres)) {
+          semestres = response.semestres;
+        } else if (!Array.isArray(response)) {
+          console.error('❌ Repository - La réponse des semestres n\'est pas un tableau:', response);
+          return [];
+        }
+        
+        return Array.isArray(semestres) ? semestres.map(s => this.mapSemestreFromBackend(s)) : [];
+      })
     );
   }
 

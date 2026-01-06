@@ -40,6 +40,10 @@ router.get('/annees-academiques/:id', anneeAcademiqueController.findOne);
 router.put('/annees-academiques/:id', anneeAcademiqueController.update);
 router.delete('/annees-academiques/:id', anneeAcademiqueController.delete);
 
+// Alias pour compatibilité frontend
+router.get('/annees', anneeAcademiqueController.findAll);
+router.post('/annees', anneeAcademiqueController.create);
+
 // --- Routes pour la gestion des Semestres (CRUD) ---
 
 // POST /api/academic/semestres - Créer un nouveau semestre
@@ -56,6 +60,9 @@ router.put('/semestres/:id', semestreController.update);
 
 // DELETE /api/academic/semestres/:id - Supprimer un semestre
 router.delete('/semestres/:id', semestreController.delete);
+
+// Route générale pour tous les semestres
+router.get('/semestres', semestreController.findAll);
 
 // --- Routes pour la gestion des Cours (CRUD) ---
 

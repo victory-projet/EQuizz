@@ -7,6 +7,10 @@ const { authenticate, authorize } = require('../middlewares/auth.middleware');
 router.use(authenticate);
 router.use(authorize(['ADMIN']));
 
+// Routes générales pour les questions
+router.get('/questions', questionController.getAllQuestions);
+router.post('/questions', questionController.createStandaloneQuestion);
+
 // Routes pour les questions d'un quiz spécifique
 router.get('/quizz/:quizz_id/questions', questionController.getQuestionsByQuizz);
 router.post('/quizz/:quizz_id/questions', questionController.createQuestion);

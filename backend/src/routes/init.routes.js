@@ -25,10 +25,10 @@ async function seedDatabase() {
 
     // 2. Créer l'année académique
     const anneeAcademique = await db.AnneeAcademique.create({
-      libelle: '2024-2025',
+      nom: '2024-2025',
       dateDebut: '2024-09-01',
       dateFin: '2025-06-30',
-      estCourante: true
+      estActive: true
     }, { transaction });
 
     // 3. Créer les semestres
@@ -37,7 +37,7 @@ async function seedDatabase() {
       numero: 1,
       dateDebut: '2024-09-01',
       dateFin: '2025-01-31',
-      annee_academique_id: anneeAcademique.id
+      anneeAcademiqueId: anneeAcademique.id
     }, { transaction });
 
     const semestre2 = await db.Semestre.create({
@@ -45,15 +45,15 @@ async function seedDatabase() {
       numero: 2,
       dateDebut: '2025-02-01',
       dateFin: '2025-06-30',
-      annee_academique_id: anneeAcademique.id
+      anneeAcademiqueId: anneeAcademique.id
     }, { transaction });
 
     // 4. Créer les classes
     const classes = await db.Classe.bulkCreate([
-      { nom: 'ING4 ISI FR', niveau: 'ING4', ecole_id: ecole.id, annee_academique_id: anneeAcademique.id },
-      { nom: 'ING4 ISI EN', niveau: 'ING4', ecole_id: ecole.id, annee_academique_id: anneeAcademique.id },
-      { nom: 'ING5 ISI FR', niveau: 'ING5', ecole_id: ecole.id, annee_academique_id: anneeAcademique.id },
-      { nom: 'ING3 GC FR', niveau: 'ING3', ecole_id: ecole.id, annee_academique_id: anneeAcademique.id }
+      { nom: 'ING4 ISI FR', niveau: 'ING4', ecole_id: ecole.id, anneeAcademiqueId: anneeAcademique.id },
+      { nom: 'ING4 ISI EN', niveau: 'ING4', ecole_id: ecole.id, anneeAcademiqueId: anneeAcademique.id },
+      { nom: 'ING5 ISI FR', niveau: 'ING5', ecole_id: ecole.id, anneeAcademiqueId: anneeAcademique.id },
+      { nom: 'ING3 GC FR', niveau: 'ING3', ecole_id: ecole.id, anneeAcademiqueId: anneeAcademique.id }
     ], { transaction });
 
     // 5. Créer les utilisateurs (Administrateurs)
@@ -97,25 +97,25 @@ async function seedDatabase() {
     const cours1 = await db.Cours.create({
       code: 'INF401',
       nom: 'Bases de Données Avancées',
-      semestre_id: semestre1.id,
+      semestreId: semestre1.id,
       enseignant_id: enseignant1.id,
-      annee_academique_id: anneeAcademique.id
+      anneeAcademiqueId: anneeAcademique.id
     }, { transaction });
 
     const cours2 = await db.Cours.create({
       code: 'INF402',
       nom: 'Développement Web',
-      semestre_id: semestre1.id,
+      semestreId: semestre1.id,
       enseignant_id: enseignant1.id,
-      annee_academique_id: anneeAcademique.id
+      anneeAcademiqueId: anneeAcademique.id
     }, { transaction });
 
     const cours3 = await db.Cours.create({
       code: 'MAT401',
       nom: 'Analyse Numérique',
-      semestre_id: semestre1.id,
+      semestreId: semestre1.id,
       enseignant_id: enseignant2.id,
-      annee_academique_id: anneeAcademique.id
+      anneeAcademiqueId: anneeAcademique.id
     }, { transaction });
 
     // 8. Associer les cours aux classes
@@ -253,7 +253,7 @@ async function seedDatabase() {
       message: '✅ Base de données peuplée avec succès !',
       data: {
         ecole: ecole.nom,
-        anneeAcademique: anneeAcademique.libelle,
+        anneeAcademique: anneeAcademique.nom,
         classes: classes.length,
         cours: 3,
         enseignants: 2,

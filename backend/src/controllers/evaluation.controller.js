@@ -3,18 +3,19 @@
 const evaluationService = require('../services/evaluation.service');
 const asyncHandler = require('../utils/asyncHandler');
 const ErrorHandler = require('../middlewares/errorHandler.middleware');
+const ResponseFormatter = require('../utils/ResponseFormatter');
 
 class EvaluationController {
   create = asyncHandler(async (req, res) => {
     // Récupérer l'ID de l'administrateur depuis le token JWT
     const adminId = req.user.id;
     const evaluation = await evaluationService.create(req.body, adminId);
-    res.status(201).json(evaluation);
+    return ResponseFormatter.created(res, evaluation, 'Évaluation créée avec succès');
   });
 
   findAll = asyncHandler(async (req, res) => {
-    const evaluations = await evaluationService.findAll();
-    res.status(200).json(evaluations);
+    const result = await evaluationService.findAll(req.query);
+    return ResponseFormatter.compatibilityFormat(res, result.evaluations, result.pagination, 'evaluations');
   });
 
   findOne = asyncHandler(async (req, res) => {
@@ -22,12 +23,12 @@ class EvaluationController {
     if (!evaluation) {
       throw ErrorHandler.createError('Évaluation non trouvée.', 404, 'NOT_FOUND');
     }
-    res.status(200).json(evaluation);
+    return ResponseFormatter.success(res, evaluation, 'Évaluation récupérée avec succès');
   });
 
   update = asyncHandler(async (req, res) => {
     const updatedEvaluation = await evaluationService.update(req.params.id, req.body);
-    res.status(200).json(updatedEvaluation);
+    return ResponseFormatter.success(res, updatedEvaluation, 'Évaluation mise à jour avec succès');
   });
 
   delete = asyncHandler(async (req, res) => {
@@ -36,31 +37,31 @@ class EvaluationController {
     
     const result = await evaluationService.delete(req.params.id);
     console.log('✅ Controller - Suppression réussie, envoi de la réponse');
-    res.status(200).json(result);
+    return ResponseFormatter.success(res, result, 'Évaluation supprimée avec succès');
   });
 
   addQuestionToQuizz = asyncHandler(async (req, res) => {
     const { quizzId } = req.params;
     const question = await evaluationService.addQuestionToQuizz(quizzId, req.body);
-    res.status(201).json(question);
+    return ResponseFormatter.created(res, question, 'Question ajoutée au quiz avec succès');
   });
 
   updateQuestion = asyncHandler(async (req, res) => {
     const { questionId } = req.params;
     const updatedQuestion = await evaluationService.updateQuestion(questionId, req.body);
-    res.status(200).json(updatedQuestion);
+    return ResponseFormatter.success(res, updatedQuestion, 'Question mise à jour avec succès');
   });
 
   removeQuestion = asyncHandler(async (req, res) => {
     const { questionId } = req.params;
     const result = await evaluationService.removeQuestion(questionId);
-    res.status(200).json(result);
+    return ResponseFormatter.success(res, result, 'Question supprimée avec succès');
   });
 
   getQuestionsByQuizz = asyncHandler(async (req, res) => {
     const { quizzId } = req.params;
     const questions = await evaluationService.getQuestionsByQuizz(quizzId);
-    res.status(200).json(questions);
+    return ResponseFormatter.success(res, questions, 'Questions récupérées avec succès');
   });
 
   importQuestions = asyncHandler(async (req, res) => {
@@ -77,19 +78,13 @@ class EvaluationController {
 
     const result = await evaluationService.importQuestionsFromExcel(quizzId, req.file.buffer);
     
-    res.status(201).json({ 
-      message: `${result.count} questions ont été importées avec succès.`,
-      questions: result.questions 
-    });
+    return ResponseFormatter.created(res, result.questions, `${result.count} questions ont été importées avec succès.`);
   });
 
   publish = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const evaluation = await evaluationService.publish(id);
-    res.status(200).json({
-      message: 'Évaluation publiée avec succès. Les notifications ont été envoyées.',
-      evaluation
-    });
+    return ResponseFormatter.success(res, evaluation, 'Évaluation publiée avec succès. Les notifications ont été envoyées.');
   });
 
   close = asyncHandler(async (req, res) => {
@@ -98,39 +93,29 @@ class EvaluationController {
     
     // Gérer le cas où l'évaluation est déjà clôturée
     if (result.message) {
-      res.status(200).json({
-        message: result.message,
-        evaluation: result,
-        alreadyClosed: true
-      });
+      return ResponseFormatter.success(res, result, result.message);
     } else {
-      res.status(200).json({
-        message: 'Évaluation clôturée avec succès.',
-        evaluation: result
-      });
+      return ResponseFormatter.success(res, result, 'Évaluation clôturée avec succès.');
     }
   });
 
   getSubmissions = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const submissions = await evaluationService.getSubmissions(id);
-    res.status(200).json(submissions);
+    return ResponseFormatter.success(res, submissions, 'Soumissions récupérées avec succès');
   });
 
   duplicate = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const adminId = req.user.id; // Récupérer l'ID de l'admin connecté
     const duplicatedEvaluation = await evaluationService.duplicate(id, adminId);
-    res.status(201).json({
-      message: 'Évaluation dupliquée avec succès.',
-      evaluation: duplicatedEvaluation
-    });
+    return ResponseFormatter.created(res, duplicatedEvaluation, 'Évaluation dupliquée avec succès.');
   });
 
   analyzeSentiments = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const sentimentAnalysis = await evaluationService.analyzeSentiments(id);
-    res.status(200).json(sentimentAnalysis);
+    return ResponseFormatter.success(res, sentimentAnalysis, 'Analyse de sentiment effectuée avec succès');
   });
 
   exportReport = asyncHandler(async (req, res) => {
@@ -156,7 +141,7 @@ class EvaluationController {
   generateAdvancedReport = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const advancedReport = await evaluationService.generateAdvancedReport(id);
-    res.status(200).json(advancedReport);
+    return ResponseFormatter.success(res, advancedReport, 'Rapport avancé généré avec succès');
   });
 }
 

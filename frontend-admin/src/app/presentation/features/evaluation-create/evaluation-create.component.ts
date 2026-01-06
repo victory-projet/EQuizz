@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,13 +7,11 @@ import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
 import { Cours, Classe } from '../../../core/domain/entities/academic.entity';
 import { EvaluationApiData } from '../../../core/domain/entities/evaluation.entity';
 import { Question } from '../../../core/domain/entities/question.entity';
-import { QuestionFormComponent } from '../question-form/question-form.component';
-import { QuestionImportComponent } from '../question-import/question-import.component';
 
 @Component({
   selector: 'app-evaluation-create',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, QuestionFormComponent, QuestionImportComponent],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './evaluation-create.component.html',
   styleUrls: ['./evaluation-create.component.scss']
 })
@@ -46,7 +44,11 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   // Modales
   showQuestionForm = signal(false);
   showImportModal = signal(false);
+  showCreationMethodModal = signal(false);
+  showTemplateImport = signal(false);
+  showManualCreation = signal(false);
   editingQuestion = signal<Question | null>(null);
+  selectedCreationMethod = signal<'manual' | 'template' | null>(null);
 
   // Auto-save timer
   private autoSaveTimer: any;
@@ -206,6 +208,10 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
 
   goToStep(step: number): void {
     if (this.canNavigateToStep(step)) {
+      // Si on va à l'étape 2 et qu'aucune méthode n'est sélectionnée, afficher le modal
+      if (step === 2 && !this.selectedCreationMethod()) {
+        this.showCreationMethodModal.set(true);
+      }
       this.currentStep.set(step);
     }
   }
@@ -223,6 +229,55 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
     if (this.currentStep() > 1) {
       this.currentStep.set(this.currentStep() - 1);
     }
+  }
+
+  // Méthodes pour le modal de sélection de méthode
+  selectCreationMethod(method: 'manual' | 'template'): void {
+    this.selectedCreationMethod.set(method);
+    this.showCreationMethodModal.set(false);
+    
+    if (method === 'template') {
+      this.showTemplateImport.set(true);
+    } else {
+      this.showManualCreation.set(true);
+    }
+  }
+
+  closeCreationMethodModal(): void {
+    this.showCreationMethodModal.set(false);
+    // Si aucune méthode n'est sélectionnée, retourner à l'étape 1
+    if (!this.selectedCreationMethod()) {
+      this.currentStep.set(1);
+    }
+  }
+
+  changeCreationMethod(): void {
+    this.selectedCreationMethod.set(null);
+    this.showTemplateImport.set(false);
+    this.showManualCreation.set(false);
+    this.showCreationMethodModal.set(true);
+  }
+
+  // Méthodes pour l'import de template
+  closeTemplateImport(): void {
+    this.showTemplateImport.set(false);
+  }
+
+  onTemplateImported(questions: Question[]): void {
+    this.questions.set(questions);
+    this.showTemplateImport.set(false);
+    this.successMessage.set(`${questions.length} question(s) importée(s) avec succès`);
+  }
+
+  // Méthodes pour la création manuelle
+  closeManualCreation(): void {
+    this.showManualCreation.set(false);
+  }
+
+  onManualQuestionCreated(question: Question): void {
+    const currentQuestions = this.questions();
+    this.questions.set([...currentQuestions, question]);
+    this.successMessage.set('Question ajoutée avec succès');
   }
 
   canProceedToNextStep(): boolean {

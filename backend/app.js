@@ -36,6 +36,7 @@ const coursEnseignantRoutes = require('./src/routes/cours-enseignant.routes');
 const questionRoutes = require('./src/routes/question.routes');
 const coursRoutes = require('./src/routes/cours.routes');
 const classeRoutes = require('./src/routes/classe.routes');
+const enseignantRoutes = require('./src/routes/enseignant.routes');
 
 // --- Middlewares Globaux ---
 // Configuration CORS pour autoriser les requêtes depuis le frontend
@@ -68,6 +69,7 @@ app.use('/api/utilisateurs', utilisateurRoutes);
 app.use('/api/cours', coursRoutes);
 app.use('/api/classes', classeRoutes);
 app.use('/api/etudiants', etudiantRoutes);
+app.use('/api/enseignants', enseignantRoutes);
 app.use('/api/archivage', archivageRoutes);
 app.use('/api/cours-enseignant', coursEnseignantRoutes);
 app.use('/api', questionRoutes);

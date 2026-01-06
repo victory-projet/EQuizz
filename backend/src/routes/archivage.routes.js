@@ -8,6 +8,9 @@ const archivageController = require('../controllers/archivage.controller');
 // Sécuriser toutes les routes
 router.use(authenticate, isAdmin);
 
+// Route générale pour lister tous les archivages
+router.get('/', archivageController.getAll);
+
 // =========================================================
 // --- Routes générales d'archivage ---
 // =========================================================

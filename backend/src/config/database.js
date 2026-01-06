@@ -1,7 +1,5 @@
-// Charger dotenv uniquement en développement
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
+// Charger dotenv
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
 
 const { Sequelize } = require('sequelize');
 

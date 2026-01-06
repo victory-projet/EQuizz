@@ -109,7 +109,27 @@ export class StudentService {
 
     return this.cacheService.getOrFetch(
       cacheKey,
-      () => this.http.get<StudentsResponse>(this.apiUrl, { params: httpParams }).pipe(
+      () => this.http.get<any>(this.apiUrl, { params: httpParams }).pipe(
+        map(response => {
+          // Gérer les deux formats de réponse possibles
+          if (response.success && response.data) {
+            // Nouveau format uniforme: { success: true, data: { etudiants: [...], pagination: {...} } }
+            return {
+              etudiants: response.data.etudiants || [],
+              pagination: response.data.pagination || {}
+            };
+          } else if (response.etudiants && response.pagination) {
+            // Format direct: { etudiants: [...], pagination: {...} }
+            return response;
+          } else {
+            // Fallback pour format inattendu
+            console.warn('Format de réponse inattendu pour /etudiants:', response);
+            return {
+              etudiants: [],
+              pagination: {}
+            };
+          }
+        }),
         catchError(this.errorHandler.handleError<StudentsResponse>('getStudents'))
       ),
       this.cacheConfig

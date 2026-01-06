@@ -1,6 +1,7 @@
 const db = require('../models');
 const asyncHandler = require('../utils/asyncHandler');
 const ErrorHandler = require('../middlewares/errorHandler.middleware');
+const ResponseFormatter = require('../utils/ResponseFormatter');
 
 class CoursController {
   findAll = asyncHandler(async (req, res) => {
@@ -43,17 +44,15 @@ class CoursController {
 
     const totalPages = Math.ceil(count / limit);
 
-    res.status(200).json({
-      cours,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalItems: count,
-        itemsPerPage: limit,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
-      }
-    });
+    // Format compatible avec le frontend Angular
+    return ResponseFormatter.compatibilityFormat(res, cours, {
+      currentPage: page,
+      totalPages,
+      totalItems: count,
+      itemsPerPage: limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
+    }, 'cours');
   });
 
   findOne = asyncHandler(async (req, res) => {
@@ -82,7 +81,7 @@ class CoursController {
       throw ErrorHandler.createError('Cours non trouvé.', 404, 'NOT_FOUND');
     }
 
-    res.status(200).json(cours);
+    return ResponseFormatter.success(res, cours, 'Cours récupéré avec succès');
   });
 
   create = asyncHandler(async (req, res) => {
@@ -109,7 +108,7 @@ class CoursController {
       ]
     });
     
-    res.status(201).json(coursComplet);
+    return ResponseFormatter.created(res, coursComplet, 'Cours créé avec succès');
   });
 
   update = asyncHandler(async (req, res) => {
@@ -144,7 +143,7 @@ class CoursController {
       ]
     });
     
-    res.status(200).json(coursComplet);
+    return ResponseFormatter.success(res, coursComplet, 'Cours mis à jour avec succès');
   });
 
   delete = asyncHandler(async (req, res) => {
@@ -158,7 +157,7 @@ class CoursController {
       throw ErrorHandler.createError('Cours non trouvé.', 404, 'NOT_FOUND');
     }
 
-    res.status(200).json({ message: 'Cours archivé avec succès.' });
+    return ResponseFormatter.success(res, null, 'Cours archivé avec succès.');
   });
 
   // Nouvelle méthode pour gérer les enseignants d'un cours

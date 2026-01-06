@@ -1,44 +1,31 @@
 <div class="wizard-container">
-  <!-- Header avec navigation contextuelle -->
-  <header class="wizard-header">
-    <div class="header-navigation">
+  
+  <!-- Header simplifié -->
+  <header class="wizard-header-simple">
+    <div class="header-main">
       <button class="btn-back" (click)="goBack()" [attr.aria-label]="'Retour à la liste des évaluations'">
         <span class="material-icons">arrow_back</span>
       </button>
-      <div class="breadcrumb">
-        <span class="breadcrumb-item">Évaluations</span>
-        <span class="breadcrumb-separator">/</span>
-        <span class="breadcrumb-item current">Nouvelle évaluation</span>
-      </div>
-    </div>
-    
-    <div class="header-content">
       <h1 class="wizard-title">Créer une évaluation</h1>
-      <p class="wizard-subtitle">{{ getStepDescription() }}</p>
-    </div>
-
-    <div class="header-actions">
-      <button class="btn-save-draft" 
-              (click)="saveDraft()" 
-              [disabled]="!canSaveDraft()"
-              [attr.aria-label]="'Sauvegarder en brouillon'">
-        <span class="material-icons">save</span>
-        <span class="btn-text">Brouillon</span>
-      </button>
-      <button class="btn-cancel" (click)="confirmCancel()">
-        <span class="material-icons">close</span>
-        <span class="btn-text">Annuler</span>
-      </button>
+      <div class="header-actions">
+        <button class="btn-save-draft" 
+                (click)="saveDraft()" 
+                [disabled]="!canSaveDraft()"
+                [attr.aria-label]="'Sauvegarder le brouillon'">
+          <span class="material-icons">save</span>
+          <span>Sauvegarder</span>
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- Messages d'état globaux -->
+  <!-- Messages d'état -->
   <div class="messages-container" role="alert" aria-live="polite">
     @if (successMessage()) {
       <div class="message message-success">
         <span class="material-icons">check_circle</span>
-        <span class="message-text">{{ successMessage() }}</span>
-        <button class="message-close" (click)="clearMessages()" [attr.aria-label]="'Fermer le message'">
+        <span>{{ successMessage() }}</span>
+        <button class="btn-close" (click)="clearMessages()">
           <span class="material-icons">close</span>
         </button>
       </div>
@@ -47,92 +34,54 @@
     @if (errorMessage()) {
       <div class="message message-error">
         <span class="material-icons">error</span>
-        <span class="message-text">{{ errorMessage() }}</span>
-        <button class="message-close" (click)="clearMessages()" [attr.aria-label]="'Fermer le message'">
+        <span>{{ errorMessage() }}</span>
+        <button class="btn-close" (click)="clearMessages()">
           <span class="material-icons">close</span>
         </button>
       </div>
     }
 
     @if (autoSaveStatus()) {
-      <div class="message message-info auto-save">
+      <div class="message message-info">
         <span class="material-icons">cloud_done</span>
-        <span class="message-text">{{ autoSaveStatus() }}</span>
+        <span>{{ autoSaveStatus() }}</span>
       </div>
     }
   </div>
 
-  <!-- Indicateur de progression du wizard -->
-  <nav class="wizard-progress" role="navigation" aria-label="Progression du wizard">
-    <div class="progress-track">
-      <div class="progress-fill" 
-           [style.width.%]="getProgressPercentage()"
-           [attr.aria-valuenow]="currentStep()"
-           [attr.aria-valuemin]="1"
-           [attr.aria-valuemax]="3"
-           role="progressbar">
-      </div>
-    </div>
-    
+  <!-- Indicateur de progression -->
+  <nav class="wizard-steps" role="navigation" aria-label="Étapes de création">
     <ol class="steps-list">
-      <li class="step" 
-          [class.active]="currentStep() === 1" 
-          [class.completed]="currentStep() > 1"
-          [class.accessible]="true">
-        <button class="step-button" 
-                (click)="goToStep(1)" 
-                [disabled]="!canNavigateToStep(1)"
-                [attr.aria-current]="currentStep() === 1 ? 'step' : null">
+      <li class="step" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1">
+        <button class="step-button" (click)="goToStep(1)" [disabled]="!canNavigateToStep(1)">
           <div class="step-indicator">
             @if (currentStep() > 1) {
-              <span class="material-icons step-check">check</span>
+              <span class="material-icons">check</span>
             } @else {
-              <span class="step-number">1</span>
+              <span>1</span>
             }
           </div>
-          <div class="step-content">
-            <div class="step-title">Configuration</div>
-            <div class="step-description">Informations de base</div>
-          </div>
+          <span class="step-label">Configuration</span>
         </button>
       </li>
-
-      <li class="step" 
-          [class.active]="currentStep() === 2" 
-          [class.completed]="currentStep() > 2"
-          [class.accessible]="canNavigateToStep(2)">
-        <button class="step-button" 
-                (click)="goToStep(2)" 
-                [disabled]="!canNavigateToStep(2)"
-                [attr.aria-current]="currentStep() === 2 ? 'step' : null">
+      <li class="step" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2">
+        <button class="step-button" (click)="goToStep(2)" [disabled]="!canNavigateToStep(2)">
           <div class="step-indicator">
             @if (currentStep() > 2) {
-              <span class="material-icons step-check">check</span>
+              <span class="material-icons">check</span>
             } @else {
-              <span class="step-number">2</span>
+              <span>2</span>
             }
           </div>
-          <div class="step-content">
-            <div class="step-title">Questions</div>
-            <div class="step-description">Contenu de l'évaluation</div>
-          </div>
+          <span class="step-label">Questions</span>
         </button>
       </li>
-
-      <li class="step" 
-          [class.active]="currentStep() === 3"
-          [class.accessible]="canNavigateToStep(3)">
-        <button class="step-button" 
-                (click)="goToStep(3)" 
-                [disabled]="!canNavigateToStep(3)"
-                [attr.aria-current]="currentStep() === 3 ? 'step' : null">
+      <li class="step" [class.active]="currentStep() === 3">
+        <button class="step-button" (click)="goToStep(3)" [disabled]="!canNavigateToStep(3)">
           <div class="step-indicator">
-            <span class="step-number">3</span>
+            <span>3</span>
           </div>
-          <div class="step-content">
-            <div class="step-title">Publication</div>
-            <div class="step-description">Finalisation et mise en ligne</div>
-          </div>
+          <span class="step-label">Publication</span>
         </button>
       </li>
     </ol>
@@ -144,15 +93,10 @@
       
       <!-- Étape 1: Configuration de base -->
       @if (currentStep() === 1) {
-        <section class="step-section" aria-labelledby="step1-title">
+        <section class="step-content" role="tabpanel" aria-labelledby="step-1-title">
           <header class="step-header">
-            <div class="step-icon">
-              <span class="material-icons">settings</span>
-            </div>
-            <div class="step-info">
-              <h2 id="step1-title" class="step-title">Configuration de l'évaluation</h2>
-              <p class="step-description">Définissez les paramètres essentiels de votre évaluation</p>
-            </div>
+            <h2 id="step-1-title" class="step-title">Configuration de l'évaluation</h2>
+            <p class="step-description">{{ getStepDescription() }}</p>
           </header>
 
           <form class="wizard-form" [formGroup]="evaluationForm" novalidate>
@@ -162,7 +106,7 @@
               <fieldset class="form-section">
                 <legend class="section-title">
                   <span class="material-icons">info</span>
-                  <span>Informations générales</span>
+                  Informations générales
                 </legend>
                 
                 <div class="form-grid">
@@ -171,16 +115,16 @@
                     <input 
                       id="titre"
                       type="text" 
-                      class="form-input" 
-                      [class.error]="isFieldInvalid('titre')"
-                      placeholder="Ex: Évaluation Mi-parcours - Algorithmique"
+                      class="form-input"
                       formControlName="titre"
+                      placeholder="Ex: Examen final de mathématiques"
                       maxlength="100"
-                      autocomplete="off"
+                      [class.error]="isFieldInvalid('titre')"
                       [attr.aria-describedby]="isFieldInvalid('titre') ? 'titre-error' : 'titre-help'"
                       required>
                     <div id="titre-help" class="form-help">
-                      {{ formData.titre.length }}/100 caractères
+                      Donnez un titre clair et descriptif. 
+                      {{ formData.titre?.length || 0 }}/100 caractères
                     </div>
                     @if (isFieldInvalid('titre')) {
                       <div id="titre-error" class="form-error" role="alert">
@@ -194,15 +138,16 @@
                     <label for="description" class="form-label">Description (optionnelle)</label>
                     <textarea 
                       id="description"
-                      class="form-textarea" 
-                      placeholder="Description détaillée de l'évaluation..."
+                      class="form-textarea"
                       formControlName="description"
+                      placeholder="Décrivez brièvement le contenu et les objectifs de cette évaluation..."
                       maxlength="500"
                       rows="3"
                       [attr.aria-describedby]="'description-help'">
                     </textarea>
                     <div id="description-help" class="form-help">
-                      {{ formData.description.length }}/500 caractères
+                      Ajoutez des détails sur le contenu, les objectifs ou les consignes. 
+                      {{ formData.description?.length || 0 }}/500 caractères
                     </div>
                   </div>
 
@@ -210,14 +155,13 @@
                     <label for="coursId" class="form-label required">Cours / Unité d'Enseignement</label>
                     <select 
                       id="coursId"
-                      class="form-select" 
-                      [class.error]="isFieldInvalid('coursId')"
+                      class="form-select"
                       formControlName="coursId"
-                      [attr.aria-describedby]="isFieldInvalid('coursId') ? 'coursId-error' : null"
+                      [class.error]="isFieldInvalid('coursId')"
                       required>
                       <option value="">Sélectionnez un cours</option>
-                      @for (c of cours(); track c.id) {
-                        <option [value]="c.id">{{ c.nom }}</option>
+                      @for (cours of cours(); track cours.id) {
+                        <option [value]="cours.id">{{ cours.nom }}</option>
                       }
                     </select>
                     @if (isFieldInvalid('coursId')) {
@@ -227,8 +171,6 @@
                       </div>
                     }
                   </div>
-
-                  
                 </div>
               </fieldset>
 
@@ -236,7 +178,7 @@
               <fieldset class="form-section">
                 <legend class="section-title">
                   <span class="material-icons">schedule</span>
-                  <span>Planification</span>
+                  Planification
                 </legend>
                 
                 <div class="form-grid">
@@ -246,9 +188,8 @@
                       id="dateDebut"
                       type="datetime-local" 
                       class="form-input"
-                      [class.error]="isFieldInvalid('dateDebut')"
                       formControlName="dateDebut"
-                      [attr.aria-describedby]="isFieldInvalid('dateDebut') ? 'dateDebut-error' : null"
+                      [class.error]="isFieldInvalid('dateDebut')"
                       required>
                     @if (isFieldInvalid('dateDebut')) {
                       <div id="dateDebut-error" class="form-error" role="alert">
@@ -264,9 +205,8 @@
                       id="dateFin"
                       type="datetime-local" 
                       class="form-input"
-                      [class.error]="isFieldInvalid('dateFin')"
                       formControlName="dateFin"
-                      [attr.aria-describedby]="isFieldInvalid('dateFin') ? 'dateFin-error' : null"
+                      [class.error]="isFieldInvalid('dateFin')"
                       required>
                     @if (isFieldInvalid('dateFin')) {
                       <div id="dateFin-error" class="form-error" role="alert">
@@ -279,22 +219,23 @@
               </fieldset>
 
               <!-- Section: Classes participantes -->
-              <fieldset class="form-section full-width">
+              <fieldset class="form-section">
                 <legend class="section-title">
-                  <span class="material-icons">group</span>
-                  <span>Classes participantes</span>
+                  <span class="material-icons">groups</span>
+                  Classes participantes
                 </legend>
                 
                 <div class="form-group">
                   <div class="classes-selection" role="group" aria-labelledby="classes-label">
                     <div id="classes-label" class="sr-only">Sélectionnez les classes participantes</div>
+                    
                     @for (classe of classes(); track classe.id) {
                       <label class="class-option" 
                              [class.selected]="isClassSelected(classe.id)"
-                             [attr.aria-describedby]="'class-' + classe.id + '-info'">
+                             [attr.aria-label]="'Sélectionner la classe ' + classe.nom">
                         <input 
                           type="checkbox"
-                          class="class-checkbox sr-only"
+                          class="sr-only"
                           [checked]="isClassSelected(classe.id)"
                           (change)="toggleClass(classe.id)"
                           [attr.aria-describedby]="'class-' + classe.id + '-info'">
@@ -313,7 +254,7 @@
                     }
                   </div>
                   
-                  @if (formData.classeIds.length > 0) {
+                  @if (formData.classeIds?.length > 0) {
                     <div class="selection-summary" role="status" aria-live="polite">
                       <span class="material-icons">info</span>
                       <span>{{ formData.classeIds.length }} classe(s) sélectionnée(s) - {{ getTotalStudents() }} étudiant(s) au total</span>
@@ -339,9 +280,10 @@
                 <div class="info-content">
                   <h4>Conseils pour cette étape</h4>
                   <ul>
-                    <li>Choisissez un titre descriptif et précis</li>
-                    <li>Vérifiez que les dates correspondent à votre planning</li>
-                    <li>Sélectionnez toutes les classes concernées</li>
+                    <li>Choisissez un titre descriptif et professionnel</li>
+                    <li>Planifiez les dates en tenant compte du calendrier académique</li>
+                    <li>Sélectionnez toutes les classes concernées par cette évaluation</li>
+                    <li>La description peut inclure des consignes ou des objectifs</li>
                   </ul>
                 </div>
               </div>
@@ -352,98 +294,67 @@
 
       <!-- Étape 2: Gestion des questions -->
       @if (currentStep() === 2) {
-        <section class="step-section" aria-labelledby="step2-title">
+        <section class="step-content" role="tabpanel" aria-labelledby="step-2-title">
           <header class="step-header">
-            <div class="step-icon">
-              <span class="material-icons">quiz</span>
-            </div>
-            <div class="step-info">
-              <h2 id="step2-title" class="step-title">Gestion des questions</h2>
-              <p class="step-description">Créez et organisez les questions de votre évaluation</p>
-            </div>
-            <div class="step-stats">
-              <div class="stat-item">
-                <span class="stat-number">{{ questions().length }}</span>
-                <span class="stat-label">Question(s)</span>
-              </div>
-            </div>
+            <h2 id="step-2-title" class="step-title">Questions de l'évaluation</h2>
+            <p class="step-description">{{ getStepDescription() }}</p>
           </header>
 
           <div class="questions-workspace">
             <!-- Actions principales -->
-            <div class="question-actions">
-              <button class="btn-primary btn-large" 
-                      (click)="openQuestionForm()"
-                      [attr.aria-label]="'Ajouter une nouvelle question'">
+            <div class="questions-actions">
+              <button class="btn-primary" (click)="openQuestionForm()">
                 <span class="material-icons">add</span>
                 <span>Ajouter une question</span>
               </button>
               
-              <button class="btn-outline btn-large" 
-                      (click)="openImportModal()"
-                      [attr.aria-label]="'Importer des questions depuis Excel'">
-                <span class="material-icons">file_upload</span>
+              <button class="btn-secondary" (click)="openImportModal()">
+                <span class="material-icons">upload</span>
                 <span>Importer depuis Excel</span>
               </button>
             </div>
-
-            <!-- État vide -->
-            @if (questions().length === 0) {
-              <div class="empty-state">
-                <div class="empty-icon">
-                  <span class="material-icons">quiz</span>
-                </div>
-                <h3 class="empty-title">Aucune question ajoutée</h3>
-                <p class="empty-description">
-                  Commencez par créer votre première question pour cette évaluation. 
-                  Vous pouvez créer des questions manuellement ou les importer depuis un fichier Excel.
-                </p>
-                <button class="btn-primary" (click)="openQuestionForm()">
-                  <span class="material-icons">add</span>
-                  Créer ma première question
-                </button>
-              </div>
-            }
 
             <!-- Liste des questions -->
             @if (questions().length > 0) {
               <div class="questions-container">
                 <div class="questions-header">
-                  <h3 class="questions-title">Questions créées ({{ questions().length }})</h3>
-                  <div class="questions-actions">
-                    <button class="btn-text" (click)="reorderQuestions()">
-                      <span class="material-icons">swap_vert</span>
-                      Réorganiser
-                    </button>
+                  <h3>Questions créées ({{ questions().length }})</h3>
+                  <div class="questions-stats">
+                    <span class="stat-item">
+                      <span class="material-icons">quiz</span>
+                      {{ getQCMCount() }} QCM
+                    </span>
+                    <span class="stat-item">
+                      <span class="material-icons">edit</span>
+                      {{ getOpenCount() }} Ouvertes
+                    </span>
+                    <span class="stat-item">
+                      <span class="material-icons">schedule</span>
+                      ~{{ getEstimatedDuration() }} min
+                    </span>
                   </div>
                 </div>
-                
-                <div class="questions-list" role="list">
+
+                <div class="questions-list">
                   @for (question of questions(); track question.id; let i = $index) {
-                    <article class="question-card" role="listitem">
-                      <header class="question-header">
+                    <div class="question-card">
+                      <div class="question-header">
                         <div class="question-meta">
-                          <span class="question-number">Q{{ i + 1 }}</span>
-                          <div class="question-type-badge" [attr.data-type]="question.typeQuestion">
-                            <span class="material-icons">
-                              {{ getQuestionTypeIcon(question.typeQuestion) }}
-                            </span>
-                            <span>{{ getQuestionTypeLabel(question.typeQuestion) }}</span>
-                          </div>
+                          <span class="question-number">{{ i + 1 }}</span>
+                          <span class="question-type">
+                            <span class="material-icons">{{ getQuestionTypeIcon(question.typeQuestion) }}</span>
+                            {{ getQuestionTypeLabel(question.typeQuestion) }}
+                          </span>
                         </div>
                         <div class="question-actions">
-                          <button class="btn-icon" 
-                                  (click)="editQuestion(question)"
-                                  [attr.aria-label]="'Modifier la question ' + (i + 1)">
+                          <button class="btn-icon" (click)="editQuestion(question)">
                             <span class="material-icons">edit</span>
                           </button>
-                          <button class="btn-icon btn-danger" 
-                                  (click)="confirmDeleteQuestion(question.id!)"
-                                  [attr.aria-label]="'Supprimer la question ' + (i + 1)">
+                          <button class="btn-icon btn-danger" (click)="confirmDeleteQuestion(question.id!)">
                             <span class="material-icons">delete</span>
                           </button>
                         </div>
-                      </header>
+                      </div>
                       
                       <div class="question-content">
                         <p class="question-text">{{ question.enonce }}</p>
@@ -451,8 +362,7 @@
                         @if (question.typeQuestion === 'QCM' && question.options) {
                           <div class="question-options">
                             @for (option of question.options; track $index; let j = $index) {
-                              <div class="option-item" 
-                                   [class.correct]="j === question.bonneReponse">
+                              <div class="option-item" [class.correct]="j === question.bonneReponse">
                                 <span class="option-letter">{{ getOptionLetter(j) }}</span>
                                 <span class="option-text">{{ option }}</span>
                                 @if (j === question.bonneReponse) {
@@ -462,71 +372,41 @@
                             }
                           </div>
                         } @else {
-                          <div class="open-response-indicator">
+                          <div class="open-indicator">
                             <span class="material-icons">edit</span>
                             <span>Réponse ouverte attendue</span>
                           </div>
                         }
                       </div>
-                    </article>
+                    </div>
                   }
                 </div>
               </div>
-            }
-
-            <!-- Conseils et informations -->
-            <aside class="step-sidebar">
-              <div class="info-card">
-                <div class="info-icon">
-                  <span class="material-icons">tips_and_updates</span>
+            } @else {
+              <div class="empty-state">
+                <div class="empty-icon">
+                  <span class="material-icons">quiz</span>
                 </div>
-                <div class="info-content">
-                  <h4>Conseils pour vos questions</h4>
-                  <ul>
-                    <li>Rédigez des énoncés clairs et précis</li>
-                    <li>Pour les QCM, vérifiez les bonnes réponses</li>
-                    <li>Variez les types de questions</li>
-                    <li>Testez la difficulté progressive</li>
-                  </ul>
-                </div>
+                <h3>Aucune question créée</h3>
+                <p>Commencez par ajouter des questions à votre évaluation</p>
+                <button class="btn-primary" (click)="openQuestionForm()">
+                  <span class="material-icons">add</span>
+                  <span>Créer ma première question</span>
+                </button>
               </div>
-
-              @if (questions().length > 0) {
-                <div class="stats-card">
-                  <h4>Statistiques</h4>
-                  <div class="stats-grid">
-                    <div class="stat-item">
-                      <span class="stat-number">{{ getQCMCount() }}</span>
-                      <span class="stat-label">QCM</span>
-                    </div>
-                    <div class="stat-item">
-                      <span class="stat-number">{{ getOpenCount() }}</span>
-                      <span class="stat-label">Ouvertes</span>
-                    </div>
-                    <div class="stat-item">
-                      <span class="stat-number">{{ getEstimatedDuration() }}</span>
-                      <span class="stat-label">min estimées</span>
-                    </div>
-                  </div>
-                </div>
-              }
-            </aside>
+            }
           </div>
         </section>
       }
 
       <!-- Étape 3: Révision et publication -->
       @if (currentStep() === 3) {
-        <section class="step-section" aria-labelledby="step3-title">
+        <section class="step-content" role="tabpanel" aria-labelledby="step-3-title">
           <header class="step-header">
-            <div class="step-icon">
-              <span class="material-icons">publish</span>
-            </div>
-            <div class="step-info">
-              <h2 id="step3-title" class="step-title">Finalisation et publication</h2>
-              <p class="step-description">Vérifiez tous les détails avant de publier votre évaluation</p>
-            </div>
-            <div class="step-status">
+            <h2 id="step-3-title" class="step-title">Révision et publication</h2>
+            <p class="step-description">{{ getStepDescription() }}</p>
+            
+            <div class="readiness-indicator">
               @if (canPublishEvaluation()) {
                 <div class="status-badge status-ready">
                   <span class="material-icons">check_circle</span>
@@ -568,165 +448,50 @@
                 </div>
                 
                 <div class="summary-item">
-                  <label>Début</label>
-                  <span class="summary-value">{{ formatDateTime(formData.dateDebut) }}</span>
+                  <label>Classes</label>
+                  <span class="summary-value">{{ getSelectedClassesNames() }}</span>
                 </div>
                 
                 <div class="summary-item">
-                  <label>Fin</label>
-                  <span class="summary-value">{{ formatDateTime(formData.dateFin) }}</span>
+                  <label>Période</label>
+                  <span class="summary-value">
+                    Du {{ formatDateTime(formData.dateDebut) }} au {{ formatDateTime(formData.dateFin) }}
+                  </span>
                 </div>
                 
-                <div class="summary-item full-width">
-                  <label>Classes participantes</label>
-                  <div class="classes-summary">
-                    @for (classeId of formData.classeIds; track classeId) {
-                      <span class="class-tag">{{ getClassName(classeId) }}</span>
-                    }
-                  </div>
+                <div class="summary-item">
+                  <label>Questions</label>
+                  <span class="summary-value">{{ questions().length }} question(s)</span>
                 </div>
               </div>
-            </div>
-
-            <!-- Résumé des questions -->
-            <div class="review-section">
-              <h3 class="review-title">
-                <span class="material-icons">quiz</span>
-                Questions ({{ questions().length }})
-              </h3>
-              
-              @if (questions().length === 0) {
-                <div class="warning-box">
-                  <span class="material-icons">warning</span>
-                  <div class="warning-content">
-                    <strong>Attention :</strong> Aucune question n'a été ajoutée à cette évaluation.
-                    <button class="btn-link" (click)="goToStep(2)">
-                      Retourner à l'étape précédente pour ajouter des questions
-                    </button>
-                  </div>
-                </div>
-              } @else {
-                <div class="questions-summary">
-                  <div class="summary-stats">
-                    <div class="stat-card">
-                      <span class="stat-number">{{ questions().length }}</span>
-                      <span class="stat-label">Total</span>
-                    </div>
-                    <div class="stat-card">
-                      <span class="stat-number">{{ getQCMCount() }}</span>
-                      <span class="stat-label">QCM</span>
-                    </div>
-                    <div class="stat-card">
-                      <span class="stat-number">{{ getOpenCount() }}</span>
-                      <span class="stat-label">Ouvertes</span>
-                    </div>
-                    <div class="stat-card">
-                      <span class="stat-number">{{ getEstimatedDuration() }}</span>
-                      <span class="stat-label">min est.</span>
-                    </div>
-                  </div>
-                  
-                  <div class="questions-preview">
-                    @for (question of questions(); track question.id; let i = $index) {
-                      <div class="question-preview">
-                        <div class="preview-header">
-                          <span class="question-number">{{ i + 1 }}.</span>
-                          <span class="question-type-badge" [attr.data-type]="question.typeQuestion">
-                            {{ getQuestionTypeLabel(question.typeQuestion) }}
-                          </span>
-                        </div>
-                        <div class="preview-content">
-                          <p class="question-text">{{ question.enonce }}</p>
-                          @if (question.typeQuestion === 'QCM' && question.options) {
-                            <div class="options-count">
-                              <span class="material-icons">list</span>
-                              {{ question.options.length }} options
-                            </div>
-                          }
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </div>
-              }
             </div>
 
             <!-- Actions de publication -->
-            <div class="review-section">
+            <div class="publication-section">
               <h3 class="review-title">
-                <span class="material-icons">rocket_launch</span>
-                Options de publication
+                <span class="material-icons">publish</span>
+                Publication
               </h3>
               
               <div class="publication-options">
-                @if (canPublishEvaluation()) {
-                  <div class="success-box">
-                    <span class="material-icons">check_circle</span>
-                    <div class="success-content">
-                      <strong>Évaluation complète !</strong>
-                      <p>Votre évaluation contient toutes les informations nécessaires et peut être publiée.</p>
-                    </div>
-                  </div>
-                  
-                  <div class="publication-actions">
-                    <button class="btn-success btn-large" 
-                            (click)="publishEvaluation()"
-                            [disabled]="isPublishing()">
-                      @if (isPublishing()) {
-                        <div class="loading-spinner"></div>
-                        <span>Publication en cours...</span>
-                      } @else {
-                        <span class="material-icons">publish</span>
-                        <span>Publier maintenant</span>
-                      }
-                    </button>
-                    
-                    <button class="btn-outline" (click)="schedulePublication()">
-                      <span class="material-icons">schedule</span>
-                      <span>Programmer la publication</span>
-                    </button>
-                  </div>
-                } @else {
-                  <div class="warning-box">
-                    <span class="material-icons">warning</span>
-                    <div class="warning-content">
-                      <strong>Évaluation incomplète</strong>
-                      <p>Ajoutez au moins une question pour pouvoir publier cette évaluation.</p>
-                    </div>
-                  </div>
-                }
+                <button class="btn-success btn-large" 
+                        [disabled]="isPublishing() || !canPublishEvaluation()" 
+                        (click)="publishEvaluation()">
+                  @if (isPublishing()) {
+                    <div class="loading-spinner"></div>
+                    <span>Publication en cours...</span>
+                  } @else {
+                    <span class="material-icons">publish</span>
+                    <span>Publier maintenant</span>
+                  }
+                </button>
                 
-                <div class="draft-actions">
-                  <button class="btn-secondary" (click)="saveDraft()">
-                    <span class="material-icons">save</span>
-                    <span>Sauvegarder en brouillon</span>
-                  </button>
-                  
-                  <button class="btn-text" (click)="previewEvaluation()">
-                    <span class="material-icons">preview</span>
-                    <span>Aperçu étudiant</span>
-                  </button>
-                </div>
+                <button class="btn-secondary" (click)="previewEvaluation()">
+                  <span class="material-icons">visibility</span>
+                  <span>Aperçu étudiant</span>
+                </button>
               </div>
             </div>
-
-            <!-- Informations complémentaires -->
-            <aside class="step-sidebar">
-              <div class="info-card">
-                <div class="info-icon">
-                  <span class="material-icons">info</span>
-                </div>
-                <div class="info-content">
-                  <h4>Après publication</h4>
-                  <ul>
-                    <li>L'évaluation sera visible par les étudiants</li>
-                    <li>Les notifications seront envoyées automatiquement</li>
-                    <li>Vous pourrez suivre les résultats en temps réel</li>
-                    <li>Les modifications seront limitées</li>
-                  </ul>
-                </div>
-              </div>
-            </aside>
           </div>
         </section>
       }
@@ -801,10 +566,8 @@
         </button>
       </div>
       <div class="modal-content">
-        <app-question-form 
-          (questionSaved)="onQuestionSaved($any($event))"
-          (cancelled)="closeQuestionForm()">
-        </app-question-form>
+        <!-- Question form content will be implemented here -->
+        <p>Formulaire de création de question à implémenter</p>
       </div>
     </div>
   </div>
@@ -821,10 +584,8 @@
         </button>
       </div>
       <div class="modal-content">
-        <app-question-import 
-          (questionsImported)="onQuestionsImported($any($event))"
-          (cancelled)="closeImportModal()">
-        </app-question-import>
+        <!-- Question import content will be implemented here -->
+        <p>Interface d'import de questions à implémenter</p>
       </div>
     </div>
   </div>

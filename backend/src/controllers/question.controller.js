@@ -1,4 +1,5 @@
 const { Question, Quizz } = require('../models');
+const ResponseFormatter = require('../utils/ResponseFormatter');
 
 // Créer une nouvelle question
 exports.createQuestion = async (req, res) => {
@@ -9,22 +10,29 @@ exports.createQuestion = async (req, res) => {
     // Vérifier que le quiz existe
     const quizz = await Quizz.findByPk(quizz_id);
     if (!quizz) {
-      return res.status(404).json({ message: 'Quiz non trouvé' });
+      return ResponseFormatter.notFound(res, 'Quiz');
     }
 
     // Validation des données
     if (!enonce || !typeQuestion) {
-      return res.status(400).json({ message: 'L\'énoncé et le type de question sont requis' });
+      return ResponseFormatter.validationError(res, [
+        { field: 'enonce', message: 'L\'énoncé est requis' },
+        { field: 'typeQuestion', message: 'Le type de question est requis' }
+      ]);
     }
 
     if (!['CHOIX_MULTIPLE', 'REPONSE_OUVERTE'].includes(typeQuestion)) {
-      return res.status(400).json({ message: 'Type de question invalide' });
+      return ResponseFormatter.validationError(res, [
+        { field: 'typeQuestion', message: 'Type de question invalide' }
+      ]);
     }
 
     // Pour les questions à choix multiple, vérifier les options
     if (typeQuestion === 'CHOIX_MULTIPLE') {
       if (!options || !Array.isArray(options) || options.length < 2) {
-        return res.status(400).json({ message: 'Au moins 2 options sont requises pour les questions à choix multiple' });
+        return ResponseFormatter.validationError(res, [
+          { field: 'options', message: 'Au moins 2 options sont requises pour les questions à choix multiple' }
+        ]);
       }
     }
 
@@ -46,10 +54,10 @@ exports.createQuestion = async (req, res) => {
       quizz_id
     });
 
-    res.status(201).json(question);
+    return ResponseFormatter.created(res, question, 'Question créée avec succès');
   } catch (error) {
     console.error('Erreur lors de la création de la question:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+    return ResponseFormatter.error(res, 'Erreur lors de la création de la question', 500);
   }
 };
 
@@ -251,5 +259,102 @@ exports.importQuestions = async (req, res) => {
   } catch (error) {
     console.error('Erreur lors de l\'import des questions:', error);
     res.status(500).json({ message: 'Erreur serveur lors de l\'import' });
+  }
+};
+
+// Récupérer toutes les questions (toutes évaluations confondues)
+exports.getAllQuestions = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '' } = req.query;
+    const offset = (page - 1) * limit;
+
+    const whereClause = {};
+    if (search) {
+      whereClause.enonce = {
+        [require('sequelize').Op.like]: `%${search}%`
+      };
+    }
+
+    const { count, rows: questions } = await Question.findAndCountAll({
+      where: whereClause,
+      include: [{ 
+        model: Quizz,
+        attributes: ['id', 'titre']
+      }],
+      order: [['created_at', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+
+    // Format compatible avec le frontend Angular
+    return ResponseFormatter.compatibilityFormat(res, questions, {
+      total: count,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(count / limit)
+    }, 'questions');
+  } catch (error) {
+    console.error('Erreur lors de la récupération des questions:', error);
+    return ResponseFormatter.error(res, 'Erreur lors de la récupération des questions', 500);
+  }
+};
+
+// Créer une question autonome (sans quiz spécifique)
+exports.createStandaloneQuestion = async (req, res) => {
+  try {
+    const { texte, type, options, bonneReponse, points, difficulte } = req.body;
+
+    // Validation des données
+    if (!texte || !type) {
+      return res.status(400).json({ 
+        message: 'Le texte et le type de question sont requis',
+        errors: [
+          { field: 'texte', message: 'Le texte de la question est requis' },
+          { field: 'type', message: 'Le type de question est requis' }
+        ]
+      });
+    }
+
+    if (!['QCM', 'VRAI_FAUX', 'REPONSE_OUVERTE'].includes(type)) {
+      return res.status(400).json({ 
+        message: 'Type de question invalide',
+        errors: [{ field: 'type', message: 'Type de question invalide' }]
+      });
+    }
+
+    // Pour les questions QCM, vérifier les options
+    if (type === 'QCM') {
+      if (!options || !Array.isArray(options) || options.length < 2) {
+        return res.status(400).json({ 
+          message: 'Au moins 2 options sont requises pour les questions QCM',
+          errors: [{ field: 'options', message: 'Au moins 2 options sont requises' }]
+        });
+      }
+      
+      if (bonneReponse === undefined || bonneReponse < 0 || bonneReponse >= options.length) {
+        return res.status(400).json({ 
+          message: 'Index de bonne réponse invalide',
+          errors: [{ field: 'bonneReponse', message: 'Index de bonne réponse invalide' }]
+        });
+      }
+    }
+
+    const question = await Question.create({
+      enonce: texte,
+      typeQuestion: type,
+      options: type === 'QCM' ? options : [],
+      bonneReponse: bonneReponse || 0,
+      points: points || 1,
+      difficulte: difficulte || 'MOYEN',
+      ordre: 1 // Ordre par défaut pour les questions autonomes
+    });
+
+    res.status(201).json({
+      message: 'Question créée avec succès',
+      question
+    });
+  } catch (error) {
+    console.error('Erreur lors de la création de la question:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 };

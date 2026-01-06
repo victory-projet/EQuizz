@@ -29,6 +29,12 @@ class SemestreController {
     const result = await semestreService.delete(req.params.id);
     res.status(200).json(result);
   });
+
+  findAll = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 10 } = req.query;
+    const semestres = await semestreService.findAll({ page, limit });
+    res.status(200).json(semestres);
+  });
 }
 
 module.exports = new SemestreController();
