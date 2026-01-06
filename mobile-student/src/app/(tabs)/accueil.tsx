@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, StatusBar, View, Alert, Text } from 'react-native';
+import { ScrollView, StyleSheet, StatusBar, View, Alert, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -118,7 +118,17 @@ export default function Accueil() {
                                 : 'Aucune évaluation n\'est disponible pour le moment.\n\nRevenez plus tard ou contactez votre enseignant.'}
                         </Text>
 
-                        
+                        {/* Bouton pour accéder aux démos offline-first */}
+                        {!searchQuery && (
+                            <TouchableOpacity
+                                style={styles.offlineDemoButton}
+                                onPress={() => router.push('/offline-demo')}
+                            >
+                                <Text style={styles.offlineDemoButtonText}>
+                                    🔄 Tester le système Offline-First
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 ) : (
                     <>
@@ -132,6 +142,17 @@ export default function Accueil() {
                                 onPress={handleQuizPress}
                             />
                         ))}
+                        
+                        {/* Bouton permanent pour les démos offline-first */}
+                        <TouchableOpacity
+                            style={styles.offlineDemoButtonSmall}
+                            onPress={() => router.push('/offline-demo')}
+                        >
+                            <Text style={styles.offlineDemoButtonSmallText}>
+                                🔄 Démos Offline-First
+                            </Text>
+                        </TouchableOpacity>
+                        
                         <View style={styles.bottomSpacing} />
                     </>
                 )}
@@ -215,5 +236,38 @@ const styles = StyleSheet.create({
         color: '#78350F',
         marginBottom: 4,
         fontFamily: 'monospace',
+    },
+    offlineDemoButton: {
+        backgroundColor: '#007AFF',
+        borderRadius: 12,
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        marginTop: 24,
+        alignSelf: 'stretch',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    offlineDemoButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    offlineDemoButtonSmall: {
+        backgroundColor: '#6C757D',
+        borderRadius: 8,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        marginTop: 16,
+        alignSelf: 'center',
+    },
+    offlineDemoButtonSmallText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '600',
+        textAlign: 'center',
     },
 });
