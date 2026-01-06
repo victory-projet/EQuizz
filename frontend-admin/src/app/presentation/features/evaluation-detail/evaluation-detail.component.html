@@ -152,10 +152,12 @@
         </ng-template>
         
         <div class="tab-content">
-          <app-sentiment-analysis 
-            [evaluationId]="evaluation()!.id.toString()"
-            [autoLoad]="true">
-          </app-sentiment-analysis>
+          @if (evaluation()) {
+            <app-sentiment-analysis 
+              [evaluationId]="evaluation()!.id.toString()"
+              [autoLoad]="true">
+            </app-sentiment-analysis>
+          }
         </div>
       </mat-tab>
 
@@ -167,9 +169,11 @@
         </ng-template>
         
         <div class="tab-content">
-          <app-report-export 
-            [evaluationId]="evaluation()!.id.toString()">
-          </app-report-export>
+          @if (evaluation()) {
+            <app-report-export 
+              [evaluationId]="evaluation()!.id.toString()">
+            </app-report-export>
+          }
         </div>
       </mat-tab>
 
