@@ -5,7 +5,7 @@ import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
 import { of } from 'rxjs';
 
-describe('EvaluationCreateComponent', () => {
+describe('EvaluationCreateComponent - Modal Selection', () => {
   let component: EvaluationCreateComponent;
   let fixture: ComponentFixture<EvaluationCreateComponent>;
   let mockRouter: jasmine.SpyObj<Router>;
@@ -14,15 +14,8 @@ describe('EvaluationCreateComponent', () => {
 
   beforeEach(async () => {
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
-    const evaluationUseCaseSpy = jasmine.createSpyObj('EvaluationUseCase', [
-      'createEvaluation', 
-      'updateEvaluation', 
-      'getQuestionsByQuizz',
-      'deleteQuestion',
-      'createQuestion',
-      'publishEvaluation'
-    ]);
-    const academicUseCaseSpy = jasmine.createSpyObj('AcademicUseCase', ['getCours', 'getAllClasses']);
+    const evaluationUseCaseSpy = jasmine.createSpyObj('EvaluationUseCase', ['createEvaluation', 'updateEvaluation']);
+    const academicUseCaseSpy = jasmine.createSpyObj('AcademicUseCase', ['getCours', 'getClasses']);
 
     await TestBed.configureTestingModule({
       imports: [EvaluationCreateComponent],
@@ -41,116 +34,75 @@ describe('EvaluationCreateComponent', () => {
 
     // Setup default mocks
     mockAcademicUseCase.getCours.and.returnValue(of([]));
-    mockAcademicUseCase.getAllClasses.and.returnValue(of([]));
-    mockEvaluationUseCase.getQuestionsByQuizz.and.returnValue(of([]));
+    mockAcademicUseCase.getClasses.and.returnValue(of([]));
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize with step 1', () => {
-    expect(component.currentStep()).toBe(1);
-  });
-
-  it('should load cours and classes on init', () => {
-    component.ngOnInit();
+  it('should show method modal when showMethodModal is true', () => {
+    component.showMethodModal.set(true);
+    fixture.detectChanges();
     
-    expect(mockAcademicUseCase.getCours).toHaveBeenCalled();
-    expect(mockAcademicUseCase.getAllClasses).toHaveBeenCalled();
+    const modalElement = fixture.nativeElement.querySelector('.modal-overlay');
+    expect(modalElement).toBeTruthy();
   });
 
-  it('should validate step 1 form data', () => {
-    // Invalid form - missing title
-    component.formData.titre = '';
-    expect(component.validateStep1()).toBeFalse();
-    expect(component.errorMessage()).toContain('titre');
-
-    // Invalid form - missing cours
-    component.formData.titre = 'Test Title';
-    component.formData.coursId = '';
-    expect(component.validateStep1()).toBeFalse();
-    expect(component.errorMessage()).toContain('cours');
-
-    // Invalid form - missing classes
-    component.formData.coursId = '1';
-    component.formData.classeIds = [];
-    expect(component.validateStep1()).toBeFalse();
-    expect(component.errorMessage()).toContain('classe');
-
-    // Valid form
-    component.formData.classeIds = ['1'];
-    expect(component.validateStep1()).toBeTruthy();
+  it('should hide method modal when showMethodModal is false', () => {
+    component.showMethodModal.set(false);
+    fixture.detectChanges();
+    
+    const modalElement = fixture.nativeElement.querySelector('.modal-overlay');
+    expect(modalElement).toBeFalsy();
   });
 
-  it('should navigate to next step when form is valid', () => {
-    // Setup valid form data
-    component.formData.titre = 'Test Evaluation';
-    component.formData.coursId = '1';
-    component.formData.classeIds = ['1'];
-    component.formData.dateDebut = '2024-01-01';
-    component.formData.dateFin = '2024-01-31';
-
-    mockEvaluationUseCase.createEvaluation.and.returnValue(of({
-      id: 'test-id',
-      quizz: { id: 'quiz-id' }
-    } as any));
-
-    component.nextStep();
-
-    expect(mockEvaluationUseCase.createEvaluation).toHaveBeenCalled();
-  });
-
-  it('should go to previous step', () => {
-    component.currentStep.set(2);
-    component.prevStep();
-    expect(component.currentStep()).toBe(1);
-
-    // Should not go below step 1
-    component.prevStep();
-    expect(component.currentStep()).toBe(1);
-  });
-
-  it('should open question form', () => {
-    component.openQuestionForm();
-    expect(component.showQuestionForm()).toBeTruthy();
-    expect(component.editingQuestion()).toBeNull();
-  });
-
-  it('should open question import', () => {
-    component.openQuestionImport();
-    expect(component.showQuestionImport()).toBeTruthy();
-  });
-
-  it('should navigate to evaluations list', () => {
-    component.goToEvaluations();
-    expect(mockRouter.navigate).toHaveBeenCalledWith(['/evaluations']);
-  });
-
-  it('should navigate to evaluation detail when ID is available', () => {
+  it('should navigate to manual creation when selectManualCreation is called', () => {
     const evaluationId = 'test-id';
     component.createdEvaluationId.set(evaluationId);
     
-    component.goToEvaluationDetail();
+    component.selectManualCreation();
     
-    expect(mockRouter.navigate).toHaveBeenCalledWith(['/evaluations', evaluationId]);
+    expect(mockRouter.navigate).toHaveBeenCalledWith(
+      ['/evaluations', evaluationId, 'questions'],
+      { queryParams: { mode: 'manual' } }
+    );
+    expect(component.showMethodModal()).toBeFalse();
   });
 
-  it('should handle question form cancellation', () => {
-    component.showQuestionForm.set(true);
-    component.editingQuestion.set({} as any);
+  it('should navigate to Excel import when selectExcelImport is called', () => {
+    const evaluationId = 'test-id';
+    component.createdEvaluationId.set(evaluationId);
     
-    component.onQuestionFormCancelled();
+    component.selectExcelImport();
     
-    expect(component.showQuestionForm()).toBeFalsy();
-    expect(component.editingQuestion()).toBeNull();
+    expect(mockRouter.navigate).toHaveBeenCalledWith(
+      ['/evaluations', evaluationId, 'import'],
+      { queryParams: { mode: 'excel' } }
+    );
+    expect(component.showMethodModal()).toBeFalse();
   });
 
-  it('should handle question import cancellation', () => {
-    component.showQuestionImport.set(true);
+  it('should close modal when closeMethodModal is called', () => {
+    component.showMethodModal.set(true);
     
-    component.onQuestionImportCancelled();
+    component.closeMethodModal();
     
-    expect(component.showQuestionImport()).toBeFalsy();
+    expect(component.showMethodModal()).toBeFalse();
+  });
+
+  it('should display both method options in the modal', () => {
+    component.showMethodModal.set(true);
+    fixture.detectChanges();
+    
+    const manualCard = fixture.nativeElement.querySelector('.manual-creation');
+    const excelCard = fixture.nativeElement.querySelector('.excel-import');
+    
+    expect(manualCard).toBeTruthy();
+    expect(excelCard).toBeTruthy();
+    
+    // Check for specific content
+    expect(manualCard.textContent).toContain('Création Manuelle');
+    expect(excelCard.textContent).toContain('Import Excel');
   });
 });

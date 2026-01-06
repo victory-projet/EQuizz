@@ -2,7 +2,7 @@ import { Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { QuestionFormComponent } from '../question-form/question-form.component';
 import { QuestionImportComponent } from '../question-import/question-import.component';
-import { Question } from '../../../core/domain/entities/evaluation.entity';
+import { Question } from '../../../core/domain/entities/question.entity';
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
 
 @Component({
@@ -50,12 +50,12 @@ export class QuestionManagementComponent implements OnInit {
     console.log('📡 QuestionManagement - Appel API getQuestionsByQuizz avec ID:', this.quizzId);
     
     this.evaluationUseCase.getQuestionsByQuizz(this.quizzId).subscribe({
-      next: (questions) => {
+      next: (questions: Question[]) => {
         console.log('✅ QuestionManagement - Questions reçues:', questions);
         this.questions.set(questions);
         this.isLoading.set(false);
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('❌ QuestionManagement - Erreur lors du chargement des questions:', error);
         this.errorMessage.set('Erreur lors du chargement des questions');
         this.isLoading.set(false);
@@ -75,7 +75,7 @@ export class QuestionManagementComponent implements OnInit {
 
   onQuestionCreated(question: Question): void {
     this.evaluationUseCase.createQuestion(this.quizzId, question).subscribe({
-      next: (createdQuestion) => {
+      next: (createdQuestion: Question) => {
         // Ajouter la nouvelle question à la liste
         const currentQuestions = this.questions();
         this.questions.set([...currentQuestions, createdQuestion]);
@@ -86,7 +86,7 @@ export class QuestionManagementComponent implements OnInit {
         
         console.log('✅ Question créée avec succès:', createdQuestion);
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('❌ Erreur lors de la création de la question:', error);
         this.errorMessage.set('Erreur lors de la création de la question');
       }
@@ -105,12 +105,7 @@ export class QuestionManagementComponent implements OnInit {
     this.showImportForm.set(false);
   }
 
-  onDeleteQuestion(questionId: string | number | undefined): void {
-    if (!questionId) {
-      this.errorMessage.set('ID de question manquant');
-      return;
-    }
-    
+  onDeleteQuestion(questionId: string | number): void {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette question ?')) {
       this.evaluationUseCase.deleteQuestion(questionId.toString()).subscribe({
         next: () => {
@@ -145,14 +140,14 @@ export class QuestionManagementComponent implements OnInit {
       };
 
       this.evaluationUseCase.createQuestion(this.quizzId, duplicatedQuestion).subscribe({
-        next: (createdQuestion) => {
+        next: (createdQuestion: Question) => {
           // Ajouter la nouvelle question à la liste
           const currentQuestions = this.questions();
           this.questions.set([...currentQuestions, createdQuestion]);
           this.showSuccessMessage('Question dupliquée avec succès !');
           console.log('✅ Question dupliquée avec succès:', createdQuestion);
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('❌ Erreur lors de la duplication:', error);
           this.errorMessage.set('Erreur lors de la duplication de la question');
         }
@@ -163,12 +158,8 @@ export class QuestionManagementComponent implements OnInit {
   getQuestionTypeLabel(type: string | undefined): string {
     if (!type) return 'Type inconnu';
     const labels: { [key: string]: string } = {
-      'QCM': 'Choix multiples',
-      'TEXTE_LIBRE': 'Réponse ouverte',
-      'VRAI_FAUX': 'Vrai/Faux',
-      'NUMERIQUE': 'Numérique',
-      'OUI_NON': 'Oui/Non',
-      'ECHELLE': 'Échelle'
+      'CHOIX_MULTIPLE': 'Choix multiples',
+      'REPONSE_OUVERTE': 'Réponse ouverte'
     };
     return labels[type] || type;
   }
@@ -176,12 +167,8 @@ export class QuestionManagementComponent implements OnInit {
   getQuestionTypeIcon(type: string | undefined): string {
     if (!type) return 'help_outline';
     const icons: { [key: string]: string } = {
-      'QCM': 'checklist',
-      'TEXTE_LIBRE': 'edit_note',
-      'VRAI_FAUX': 'check_box',
-      'NUMERIQUE': 'numbers',
-      'OUI_NON': 'toggle_on',
-      'ECHELLE': 'linear_scale'
+      'CHOIX_MULTIPLE': 'checklist',
+      'REPONSE_OUVERTE': 'edit_note'
     };
     return icons[type] || 'help_outline';
   }
@@ -210,10 +197,10 @@ export class QuestionManagementComponent implements OnInit {
     const descriptions: { [key: string]: string } = {
       'QCM': 'Les étudiants doivent choisir parmi plusieurs options proposées',
       'TEXTE_LIBRE': 'Les étudiants peuvent répondre librement par du texte',
-      'VRAI_FAUX': 'Les étudiants choisissent entre Vrai et Faux',
-      'NUMERIQUE': 'Les étudiants saisissent une valeur numérique',
-      'OUI_NON': 'Les étudiants choisissent entre Oui et Non',
-      'ECHELLE': 'Les étudiants évaluent sur une échelle'
+      'VRAI_FAUX': 'Les étudiants doivent choisir entre Vrai ou Faux',
+      'NUMERIQUE': 'Les étudiants doivent saisir une valeur numérique',
+      'OUI_NON': 'Les étudiants doivent choisir entre Oui ou Non',
+      'ECHELLE': 'Les étudiants doivent évaluer sur une échelle'
     };
     return descriptions[type] || 'Type de question non reconnu';
   }

@@ -37,86 +37,76 @@ export interface SentimentData {
 })
 export class SentimentAnalysisComponent implements OnInit {
   @Input() evaluationId!: string;
+  @Input() autoLoad = true;
 
   sentimentData = signal<SentimentData | null>(null);
   isLoading = signal(false);
   errorMessage = signal('');
 
   ngOnInit() {
-    this.loadSentimentData();
+    if (this.autoLoad && this.evaluationId) {
+      this.loadSentimentAnalysis();
+    }
   }
 
-  private async loadSentimentData() {
+  async loadSentimentAnalysis() {
     if (!this.evaluationId) return;
 
     this.isLoading.set(true);
     this.errorMessage.set('');
 
     try {
-      // Mock data - replace with actual service call
+      // Simulation de données pour l'instant
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       const mockData: SentimentData = {
-        total: 25,
+        total: 45,
         sentiments: {
-          positif: 15,
-          positifPct: 60,
-          neutre: 7,
-          neutrePct: 28,
-          negatif: 3,
-          negatifPct: 12
+          positif: 28,
+          positifPct: 62,
+          neutre: 12,
+          neutrePct: 27,
+          negatif: 5,
+          negatifPct: 11
         },
-        summary: 'L\'analyse révèle une attitude globalement positive des étudiants envers cette évaluation.',
+        summary: "L'analyse révèle un sentiment globalement positif avec 62% de réponses exprimant de la satisfaction. Les étudiants apprécient particulièrement la clarté des explications et l'organisation du cours.",
         keywords: [
-          { word: 'facile', count: 8 },
-          { word: 'intéressant', count: 6 },
-          { word: 'clair', count: 5 },
-          { word: 'difficile', count: 3 },
-          { word: 'confus', count: 2 }
+          { word: "intéressant", count: 15 },
+          { word: "clair", count: 12 },
+          { word: "utile", count: 10 },
+          { word: "difficile", count: 8 },
+          { word: "bien", count: 7 },
+          { word: "compréhensible", count: 6 }
         ]
       };
 
       this.sentimentData.set(mockData);
-    } catch (error) {
-      this.errorMessage.set('Erreur lors du chargement de l\'analyse de sentiment');
-      console.error('Error loading sentiment data:', error);
+    } catch (error: any) {
+      this.errorMessage.set('Erreur lors du chargement de l\'analyse des sentiments');
+      console.error('Erreur sentiment analysis:', error);
     } finally {
       this.isLoading.set(false);
     }
   }
 
   getSentimentColor(sentiment: string): string {
-    switch (sentiment.toLowerCase()) {
-      case 'positif': return '#4caf50';
-      case 'neutre': return '#ff9800';
-      case 'negatif': return '#f44336';
-      default: return '#757575';
+    switch (sentiment) {
+      case 'positif': return '#4CAF50';
+      case 'negatif': return '#F44336';
+      case 'neutre': return '#9E9E9E';
+      default: return '#9E9E9E';
     }
-  }
-
-  getSentimentIcon(sentiment: string): string {
-    switch (sentiment.toLowerCase()) {
-      case 'positif': return 'sentiment_satisfied';
-      case 'neutre': return 'sentiment_neutral';
-      case 'negatif': return 'sentiment_dissatisfied';
-      default: return 'help';
-    }
-  }
-
-  refreshAnalysis() {
-    this.loadSentimentData();
   }
 
   getPositivePercentage(): number {
-    const data = this.sentimentData();
-    return data?.sentiments.positifPct || 0;
+    return this.sentimentData()?.sentiments.positifPct || 0;
   }
 
   getNegativePercentage(): number {
-    const data = this.sentimentData();
-    return data?.sentiments.negatifPct || 0;
+    return this.sentimentData()?.sentiments.negatifPct || 0;
   }
 
   getNeutralPercentage(): number {
-    const data = this.sentimentData();
-    return data?.sentiments.neutrePct || 0;
+    return this.sentimentData()?.sentiments.neutrePct || 0;
   }
 }

@@ -435,4 +435,25 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  // Template methods
+  onSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.searchQuery.set(target.value);
+    this.applyFilters();
+  }
+
+  onFilterStatus(status: string): void {
+    this.filterStatus.set(status);
+    this.applyFilters();
+  }
+
+  debugDelete(evaluation: Evaluation): void {
+    console.log('Debug delete for evaluation:', evaluation);
+    this.deleteEvaluation(evaluation);
+  }
+
+  editCopyEvaluation(evaluation: Evaluation): void {
+    this.duplicateEvaluation(evaluation);
+  }
 }

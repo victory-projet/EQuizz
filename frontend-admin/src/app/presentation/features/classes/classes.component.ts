@@ -1,10 +1,9 @@
-﻿import { Component, OnInit, signal, computed, inject } from '@angular/core';
+﻿import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Classe as ServiceClasse } from '../../../core/services/cours.service';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
-import { Classe, AnneeAcademique } from '../../../core/domain/entities/academic.entity';
-import { ConfirmationService } from '../../shared/services/confirmation.service';
+import { AnneeAcademique } from '../../../core/domain/entities/academic.entity';
 
 @Component({
   selector: 'app-classes',
@@ -22,8 +21,6 @@ export class ClassesComponent implements OnInit {
   showModal = signal(false);
   showDeleteModal = signal(false);
   selectedClasse = signal<ServiceClasse | null>(null);
-  
-  private confirmationService = inject(ConfirmationService);
   
   searchQuery = signal('');
   filterAnnee = signal<string>('ALL');

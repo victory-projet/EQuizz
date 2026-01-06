@@ -14,8 +14,6 @@ if (fs.existsSync(envPath)) {
 const app = express();
 const server = http.createServer(app);
 const db = require('./src/models'); // Importer db pour la connexion
-const { initializeFirebase } = require('./src/config/firebase');
-const schedulerService = require('./src/services/scheduler.service');
 
 // Initialiser Socket.IO
 const socketManager = require('./src/config/socket');
@@ -30,7 +28,6 @@ const initRoutes = require('./src/routes/init.routes');
 const { seedDatabase } = require('./src/routes/init.routes');
 const reportRoutes = require('./src/routes/report.routes');
 const notificationRoutes = require('./src/routes/notification.routes');
-const pushNotificationRoutes = require('./src/routes/push-notification.routes');
 const dashboardRoutes = require('./src/routes/dashboard.routes');
 const utilisateurRoutes = require('./src/routes/utilisateur.routes');
 const etudiantRoutes = require('./src/routes/etudiant.routes');
@@ -66,14 +63,16 @@ app.use('/api/student', studentRoutes);
 app.use('/api/init', initRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/push-notifications', pushNotificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/utilisateurs', utilisateurRoutes);
+<<<<<<< Updated upstream
+app.use('/api/cours', coursRoutes);
+app.use('/api/classes', classeRoutes);
+=======
 app.use('/api/etudiants', etudiantRoutes);
 app.use('/api/archivage', archivageRoutes);
 app.use('/api/cours-enseignant', coursEnseignantRoutes);
-app.use('/api/cours', coursRoutes);
-app.use('/api/classes', classeRoutes);
+>>>>>>> Stashed changes
 app.use('/api', questionRoutes);
 
 // Route de test temporaire pour debug de suppression (sans authentification)
@@ -157,7 +156,7 @@ if (process.env.NODE_ENV !== 'test') {
   db.sequelize.authenticate()
     .then(() => {
       console.log('✅ Connexion à la base de données établie avec succès.');
-      return db.sequelize.sync({ force: false }); // Pas de sync en production, utiliser les migrations
+      return db.sequelize.sync({ alter: true }); // Utiliser alter au lieu de force en production
     })
     .then(async () => {
       console.log('✅ Base de données synchronisée avec succès.');
@@ -167,26 +166,13 @@ if (process.env.NODE_ENV !== 'test') {
       if (userCount === 0 && process.env.AUTO_SEED !== 'false') {
         console.log('🌱 Base de données vide détectée, initialisation automatique...');
         try {
-          const result = await seedDatabase();
-          if (result.success) {
-            console.log('✅ Données d\'initialisation chargées automatiquement.');
-          } else if (result.skipSeed) {
-            console.log('ℹ️  Initialisation ignorée - données déjà présentes.');
-          }
+          await seedDatabase();
+          console.log('✅ Données d\'initialisation chargées automatiquement.');
         } catch (error) {
           console.error('❌ Erreur lors de l\'initialisation automatique:', error.message);
           console.log('💡 Vous pouvez initialiser manuellement avec: POST /api/init/seed');
         }
-      } else if (userCount > 0) {
-        console.log(`ℹ️  Base de données déjà initialisée (${userCount} utilisateurs trouvés).`);
       }
-      
-      // Initialiser Firebase
-      console.log('🔥 Initialisation de Firebase...');
-      initializeFirebase();
-      
-      // Démarrer les tâches programmées
-      schedulerService.startAllJobs();
       
       server.listen(PORT, () => {
         console.log(`🚀 Serveur démarré sur le port ${PORT}`);

@@ -25,6 +25,7 @@ export interface NotificationAction {
   action: () => void;
   style?: 'primary' | 'secondary';
 }
+
 export type NotificationType = 
   | 'info' 
   | 'success' 

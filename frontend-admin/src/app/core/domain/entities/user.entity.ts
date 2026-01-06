@@ -25,8 +25,6 @@ export interface Etudiant extends User {
   classeId?: number;
   classe?: Classe;
   numeroCarteEtudiant?: string;
-  numeroEtudiant?: string;
-  statut?: 'ACTIF' | 'INACTIF' | 'SUSPENDU';
 }
 
 export interface Classe {

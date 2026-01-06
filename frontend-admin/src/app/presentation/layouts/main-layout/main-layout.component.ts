@@ -1,12 +1,9 @@
-import { Component, signal, HostListener, OnInit, OnDestroy } from '@angular/core';
+import { Component, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../shared/services/auth.service';
-import { MessagesService } from '../../shared/services/messages.service';
-import { GlobalSearchService, SearchConfig } from '../../shared/services/global-search.service';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
-import { filter, takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-main-layout',
@@ -15,19 +12,11 @@ import { Subject } from 'rxjs';
   templateUrl: './main-layout.component.html',
   styleUrls: ['./main-layout.component.scss']
 })
-export class MainLayoutComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
-  
+export class MainLayoutComponent {
   isSidebarCollapsed = signal(false);
   isMobileMenuOpen = signal(false);
-  isUserMenuOpen = signal(false);
-  showSearchSuggestions = signal(false);
-
   searchQuery = signal('');
-  searchPlaceholder = signal('Rechercher...');
-  searchSuggestions = signal<string[]>([]);
   isMobile = signal(false);
-  currentSearchConfig = signal<SearchConfig | null>(null);
 
   private pageTitles: { [key: string]: string } = {
     '/dashboard': 'Tableau de bord',
@@ -52,7 +41,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     '/classes': 'Gestion des classes et groupes d\'étudiants',
     '/associations': 'Gestion des associations cours-classes',
     '/academic-years': 'Gestion des années académiques et semestres',
-    '/reports': 'Rapports et statistiques d\'évaluation',
+    '/rapports': 'Rapports et statistiques d\'évaluation',
     '/users': 'Gestion des comptes administrateurs',
     '/students': 'Gestion des comptes étudiants',
     '/teachers': 'Gestion des comptes enseignants',
@@ -63,32 +52,16 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   constructor(
     public authService: AuthService,
-    private router: Router,
-    public messagesService: MessagesService,
-    private globalSearchService: GlobalSearchService
+    private router: Router
   ) {
     this.checkScreenSize();
     
     // Fermer le menu mobile lors de la navigation
     this.router.events
-      .pipe(
-        filter(event => event instanceof NavigationEnd),
-        takeUntil(this.destroy$)
-      )
-      .subscribe((event: NavigationEnd) => {
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
         this.closeMobileMenu();
-        this.updateSearchConfig(event.url);
       });
-  }
-
-  ngOnInit(): void {
-    // Initialiser la configuration de recherche pour la route actuelle
-    this.updateSearchConfig(this.router.url);
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   @HostListener('window:resize')
@@ -128,63 +101,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   onSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const query = input.value;
-    this.searchQuery.set(query);
-    
-    // Afficher les suggestions si il y a du texte
-    this.showSearchSuggestions.set(query.length > 0);
-    
-    // Exécuter la recherche via la configuration actuelle
-    const config = this.currentSearchConfig();
-    if (config && query.trim()) {
-      config.onSearch(query);
-    }
-  }
-
-  onSearchFocus(): void {
-    if (this.searchQuery()) {
-      this.showSearchSuggestions.set(true);
-    }
-  }
-
-  onSearchBlur(): void {
-    // Délai pour permettre le clic sur les suggestions
-    setTimeout(() => {
-      this.showSearchSuggestions.set(false);
-    }, 200);
-  }
-
-  onSuggestionClick(suggestion: string): void {
-    this.searchQuery.set(suggestion);
-    this.showSearchSuggestions.set(false);
-    
-    const config = this.currentSearchConfig();
-    if (config) {
-      config.onSearch(suggestion);
-    }
-  }
-
-  clearSearch(): void {
-    this.searchQuery.set('');
-    this.showSearchSuggestions.set(false);
-    
-    const config = this.currentSearchConfig();
-    if (config?.onClear) {
-      config.onClear();
-    }
-  }
-
-  private updateSearchConfig(url: string): void {
-    const route = url.split('?')[0];
-    const config = this.globalSearchService.getConfigForRoute(route);
-    
-    this.currentSearchConfig.set(config);
-    this.searchPlaceholder.set(config.placeholder);
-    this.searchSuggestions.set(config.suggestions);
-    
-    // Réinitialiser la recherche lors du changement de page
-    this.searchQuery.set('');
-    this.showSearchSuggestions.set(false);
+    this.searchQuery.set(input.value);
   }
 
   getPageTitle(): string {
@@ -192,36 +109,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     return this.pageTitles[url] || 'EQuizz Admin';
   }
 
-  getPageSubtitle(): string {
-    const url = this.router.url.split('?')[0];
-    return this.pageSubtitles[url] || 'Vue d\'ensemble du système d\'évaluation des enseignements';
-  }
-
   logout(): void {
-    this.closeUserMenu();
     this.authService.logout();
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: Event): void {
-    const target = event.target as HTMLElement;
-    const userProfile = target.closest('.user-profile');
-    const searchContainer = target.closest('.search-container');
-    
-    if (!userProfile && this.isUserMenuOpen()) {
-      this.closeUserMenu();
-    }
-    
-    if (!searchContainer && this.showSearchSuggestions()) {
-      this.showSearchSuggestions.set(false);
-    }
-  }
-
-  toggleUserMenu(): void {
-    this.isUserMenuOpen.update(value => !value);
-  }
-
-  closeUserMenu(): void {
-    this.isUserMenuOpen.set(false);
   }
 }

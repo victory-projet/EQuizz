@@ -1,9 +1,8 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Question, QuestionImportData } from '../../../core/domain/entities/question.entity';
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
-import { Question } from '../../../core/domain/entities/question.entity';
-import * as ExcelJS from 'exceljs';
 
 @Component({
   selector: 'app-question-import',
@@ -22,8 +21,6 @@ export class QuestionImportComponent {
   isLoading = signal(false);
   errorMessage = signal('');
   successMessage = signal('');
-  previewQuestions = signal<any[]>([]);
-  showPreview = signal(false);
 
   constructor(private evaluationUseCase: EvaluationUseCase) {}
 
@@ -55,105 +52,12 @@ export class QuestionImportComponent {
            file.name.endsWith('.xls');
   }
 
-  async validateAndPreview(): Promise<void> {
-    const file = this.selectedFile();
-    if (!file) {
-      this.errorMessage.set('Veuillez sélectionner un fichier');
-      return;
-    }
-
-    this.isLoading.set(true);
-    this.errorMessage.set('');
-
-    try {
-      const questions = await this.parseExcelFile(file);
-      if (questions.length === 0) {
-        this.errorMessage.set('Aucune question valide trouvée dans le fichier');
-        this.isLoading.set(false);
-        return;
-      }
-
-      this.previewQuestions.set(questions);
-      this.showPreview.set(true);
-      this.isLoading.set(false);
-    } catch (error) {
-      console.error('❌ Erreur lors du parsing Excel:', error);
-      this.errorMessage.set('Erreur lors de la lecture du fichier Excel');
-      this.isLoading.set(false);
-    }
+  onCancel(): void {
+    this.resetForm();
+    this.cancelled.emit();
   }
 
-  private async parseExcelFile(file: File): Promise<any[]> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
-      reader.onload = async (e) => {
-        try {
-          const arrayBuffer = e.target?.result as ArrayBuffer;
-          const workbook = new ExcelJS.Workbook();
-          await workbook.xlsx.load(arrayBuffer);
-          
-          const worksheet = workbook.worksheets[0];
-          if (!worksheet) {
-            throw new Error('Aucune feuille de calcul trouvée');
-          }
-
-          const questions: any[] = [];
-
-          worksheet.eachRow((row, rowNumber) => {
-            // Skip header row
-            if (rowNumber === 1) {
-              return;
-            }
-
-            const enonce = row.getCell(1).value?.toString().trim();
-            const type = row.getCell(2).value?.toString().trim().toUpperCase();
-            const optionsRaw = row.getCell(3).value?.toString();
-
-            if (!enonce || !type) {
-              return;
-            }
-
-            // Validation du type
-            if (!['CHOIX_MULTIPLE', 'REPONSE_OUVERTE'].includes(type)) {
-              console.warn(`Ligne ${rowNumber}: Type de question invalide: ${type}`);
-              return;
-            }
-
-            let options: string[] = [];
-            if (type === 'CHOIX_MULTIPLE') {
-              if (!optionsRaw) {
-                console.warn(`Ligne ${rowNumber}: Options manquantes pour une question CHOIX_MULTIPLE`);
-                return;
-              }
-
-              options = optionsRaw.split(';').map(opt => opt.trim()).filter(opt => opt.length > 0);
-              if (options.length < 2) {
-                console.warn(`Ligne ${rowNumber}: Au moins 2 options requises pour une question CHOIX_MULTIPLE`);
-                return;
-              }
-            }
-
-            questions.push({
-              enonce,
-              type,
-              typeQuestion: type,
-              options
-            });
-          });
-
-          resolve(questions);
-        } catch (error) {
-          reject(error);
-        }
-      };
-
-      reader.onerror = () => reject(new Error('Erreur lors de la lecture du fichier'));
-      reader.readAsArrayBuffer(file);
-    });
-  }
-
-  async importQuestions(): Promise<void> {
+  onImportQuestions(): void {
     const file = this.selectedFile();
     if (!file) {
       this.errorMessage.set('Veuillez sélectionner un fichier');
@@ -161,54 +65,47 @@ export class QuestionImportComponent {
     }
 
     // Validation du quizzId
-    if (!this.quizzId || this.quizzId === '') {
-      this.errorMessage.set('ID du quiz manquant');
+    if (!this.quizzId || this.quizzId === 'null' || this.quizzId === 'undefined') {
+      this.errorMessage.set('Erreur: ID du quiz manquant. Veuillez rafraîchir la page.');
       return;
     }
 
-    console.log('📤 Import de questions depuis:', file.name);
+    console.log('📤 Import de questions depuis le fichier:', file.name);
     console.log('🎯 QuizzId pour import:', this.quizzId);
     console.log('🎯 EvaluationId pour import:', this.evaluationId);
 
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    // Utiliser le vrai service d'import
-    this.evaluationUseCase.importQuestionsFromExcel(this.quizzId, file).subscribe({
-      next: (result) => {
-        console.log('✅ Questions importées:', result);
+    // Utiliser le vrai service d'import du backend
+    this.evaluationUseCase.importQuestions(this.quizzId, file).subscribe({
+      next: (result: QuestionImportData) => {
+        console.log('✅ Import réussi:', result);
+        console.log('📊 Nombre de questions importées:', result.questions?.length || 0);
+        console.log('🎯 Questions importées dans le quizzId:', this.quizzId);
+        
         this.isLoading.set(false);
-        
-        // Extract questions from QuestionImportData
-        const questions = result.questions || [];
-        const errors = result.errors || [];
-        
-        if (errors.length > 0) {
-          console.warn('⚠️ Erreurs lors de l\'import:', errors);
-          this.errorMessage.set(`Import réussi avec des avertissements: ${errors.join(', ')}`);
-        } else {
-          this.successMessage.set(`${questions.length} questions importées avec succès dans le quiz`);
-        }
-        
-        // Émettre l'événement d'import réussi avec les questions
-        this.imported.emit(questions);
+        const questionsCount = result.questions?.length || 0;
+        this.successMessage.set(`${questionsCount} question(s) importée(s) avec succès dans le quizz ${this.quizzId}`);
+        this.imported.emit(result.questions || []);
         
         // Réinitialiser le formulaire après un délai
         setTimeout(() => {
-          this.resetImport();
+          this.resetForm();
         }, 2000);
       },
-      error: (error: any) => {
+      error: (error) => {
         console.error('❌ Erreur lors de l\'import:', error);
         console.error('❌ Status:', error.status);
+        console.error('❌ Error details:', error.error);
         
         let errorMsg = 'Erreur lors de l\'import des questions';
         if (error.error?.message) {
           errorMsg = error.error.message;
         } else if (error.status === 400) {
-          errorMsg = 'Format de fichier invalide ou données incorrectes';
-        } else if (error.status === 404) {
-          errorMsg = 'Quiz non trouvé';
+          errorMsg = 'Format de fichier invalide. Vérifiez que votre fichier Excel respecte le format attendu.';
+        } else if (error.status === 413) {
+          errorMsg = 'Fichier trop volumineux. Veuillez réduire la taille du fichier.';
         }
         
         this.errorMessage.set(errorMsg);
@@ -217,12 +114,10 @@ export class QuestionImportComponent {
     });
   }
 
-  resetImport(): void {
+  public resetForm(): void {
     this.selectedFile.set(null);
     this.errorMessage.set('');
     this.successMessage.set('');
-    this.previewQuestions.set([]);
-    this.showPreview.set(false);
     
     // Réinitialiser l'input file
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -231,47 +126,33 @@ export class QuestionImportComponent {
     }
   }
 
-  cancel(): void {
-    this.resetImport();
-    this.cancelled.emit();
-  }
-
-  onCancel(): void {
-    this.cancel();
-  }
-
   downloadTemplate(): void {
-    const csvContent = `Énoncé,Type,Options
-"Quelle est la capitale de la France ?","CHOIX_MULTIPLE","Paris;Londres;Berlin;Madrid"
+    // Créer un template Excel à télécharger
+    const csvContent = `Énoncé,Type de question,Options (séparées par ;)
+"Quelle est la capitale de la France ?","CHOIX_MULTIPLE","Paris;Lyon;Marseille;Toulouse"
 "Expliquez le concept de programmation orientée objet","REPONSE_OUVERTE",""
-"Qu'est-ce qu'une base de données relationnelle ?","CHOIX_MULTIPLE","Un système de gestion de fichiers;Un système de gestion de base de données;Un langage de programmation;Un protocole réseau"`;
+"Qu'est-ce qu'une base de données relationnelle ?","CHOIX_MULTIPLE","Un système de gestion de fichiers;Un système de stockage de données structurées;Un logiciel de traitement de texte;Un navigateur web"`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', 'template-questions.csv');
+    link.setAttribute('download', 'template_questions.csv');
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
-    this.successMessage.set('Template téléchargé avec succès');
+    this.successMessage.set('Template téléchargé ! Utilisez ce format pour vos questions.');
+    setTimeout(() => this.successMessage.set(''), 3000);
   }
 
-  getQuestionTypeLabel(type: string): string {
+  getQuestionTypeLabel(type: string | undefined): string {
+    if (!type) return 'Type inconnu';
     const labels: { [key: string]: string } = {
-      'CHOIX_MULTIPLE': 'Choix multiple',
+      'CHOIX_MULTIPLE': 'Choix multiples',
       'REPONSE_OUVERTE': 'Réponse ouverte'
     };
     return labels[type] || type;
-  }
-
-  confirmImport(): void {
-    this.importQuestions();
-  }
-
-  onImportQuestions(): void {
-    this.importQuestions();
   }
 }

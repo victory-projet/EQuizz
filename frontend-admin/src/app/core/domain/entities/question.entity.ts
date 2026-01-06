@@ -5,8 +5,8 @@
 export interface Question {
   id?: string | number;
   enonce: string;
-  typeQuestion: 'QCM' | 'VRAI_FAUX' | 'TEXTE_LIBRE' | 'NUMERIQUE' | 'OUI_NON' | 'ECHELLE' | 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE';
-  type?: 'QCM' | 'VRAI_FAUX' | 'TEXTE_LIBRE' | 'NUMERIQUE' | 'OUI_NON' | 'ECHELLE' | 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE'; // Alias for compatibility
+  typeQuestion: 'QCM' | 'VRAI_FAUX' | 'TEXTE_LIBRE' | 'NUMERIQUE' | 'OUI_NON' | 'ECHELLE';
+  type?: 'QCM' | 'VRAI_FAUX' | 'TEXTE_LIBRE' | 'NUMERIQUE' | 'OUI_NON' | 'ECHELLE'; // Alias for compatibility
   options?: string[];
   bonneReponse?: string | number;
   points?: number;
@@ -65,7 +65,7 @@ export interface ValidationError {
 // Legacy interfaces for backward compatibility
 export interface QuestionFormData {
   enonce: string;
-  typeQuestion: 'QCM' | 'VRAI_FAUX' | 'TEXTE_LIBRE' | 'NUMERIQUE' | 'OUI_NON' | 'ECHELLE' | 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE';
+  typeQuestion: 'QCM' | 'VRAI_FAUX' | 'TEXTE_LIBRE' | 'NUMERIQUE' | 'OUI_NON' | 'ECHELLE';
   options?: string[];
   bonneReponse?: string | number;
   points?: number;

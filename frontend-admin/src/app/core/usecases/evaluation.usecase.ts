@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { EvaluationApiData, Evaluation } from '../domain/entities/evaluation.entity';
 import { Question, QuestionFormData, QuestionImportData } from '../domain/entities/question.entity';
 import { EvaluationRepositoryInterface } from '../domain/repositories/evaluation.repository.interface';
@@ -56,7 +56,7 @@ export class EvaluationUseCase {
     return this.evaluationRepository.addQuestion(quizzId, questionData);
   }
 
-  updateQuestion(questionId: string | number, questionData: Partial<Question>): Observable<Question> {
+  updateQuestion(questionId: string | number, questionData: QuestionFormData): Observable<Question> {
     return this.evaluationRepository.updateQuestion(questionId, questionData);
   }
 
@@ -65,10 +65,6 @@ export class EvaluationUseCase {
   }
 
   importQuestions(quizzId: string | number, file: File): Observable<QuestionImportData> {
-    return this.evaluationRepository.importQuestions(quizzId, file);
-  }
-
-  importQuestionsFromExcel(quizzId: string | number, file: File): Observable<QuestionImportData> {
     return this.evaluationRepository.importQuestions(quizzId, file);
   }
 

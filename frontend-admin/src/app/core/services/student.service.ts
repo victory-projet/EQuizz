@@ -119,10 +119,10 @@ export class StudentService {
   /**
    * Obtenir tous les étudiants avec pagination (alias pour compatibilité)
    */
-  getStudentsPaginated(params: GetStudentsParams = {}): Observable<{ students: Student[]; pagination: any }> {
+  getStudentsPaginated(params: GetStudentsParams = {}): Observable<{ data: Student[]; pagination: any }> {
     return this.getStudents(params).pipe(
       map(response => ({
-        students: response.etudiants,
+        data: response.etudiants,
         pagination: response.pagination
       }))
     );
@@ -146,44 +146,41 @@ export class StudentService {
   /**
    * Créer un nouvel étudiant
    */
-  createStudent(student: CreateStudentRequest): Observable<Student> {
+  createStudent(student: CreateStudentRequest): Observable<{ message: string; etudiant: Student }> {
     return this.http.post<{ message: string; etudiant: Student }>(this.apiUrl, student).pipe(
-      map(response => response.etudiant),
       tap(() => {
         // Invalider le cache après création
         this.invalidateStudentsCache();
       }),
-      catchError(this.errorHandler.handleError<Student>('createStudent'))
+      catchError(this.errorHandler.handleError<{ message: string; etudiant: Student }>('createStudent'))
     );
   }
 
   /**
    * Mettre à jour un étudiant
    */
-  updateStudent(id: string | number, student: UpdateStudentRequest): Observable<Student> {
+  updateStudent(id: string, student: UpdateStudentRequest): Observable<{ message: string; etudiant: Student }> {
     return this.http.put<{ message: string; etudiant: Student }>(`${this.apiUrl}/${id}`, student).pipe(
-      map(response => response.etudiant),
       tap(() => {
         // Invalider le cache de cet étudiant et les listes
-        this.cacheService.delete(this.CACHE_KEYS.STUDENT_BY_ID(id.toString()));
+        this.cacheService.delete(this.CACHE_KEYS.STUDENT_BY_ID(id));
         this.invalidateStudentsCache();
       }),
-      catchError(this.errorHandler.handleError<Student>('updateStudent'))
+      catchError(this.errorHandler.handleError<{ message: string; etudiant: Student }>('updateStudent'))
     );
   }
 
   /**
    * Supprimer un étudiant
    */
-  deleteStudent(id: string | number): Observable<void> {
+  deleteStudent(id: string): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.apiUrl}/${id}`).pipe(
-      map(() => void 0),
       tap(() => {
         // Invalider le cache après suppression
-        this.cacheService.delete(this.CACHE_KEYS.STUDENT_BY_ID(id.toString()));
+        this.cacheService.delete(this.CACHE_KEYS.STUDENT_BY_ID(id));
         this.invalidateStudentsCache();
       }),
-      catchError(this.errorHandler.handleError<void>('deleteStudent'))
+      catchError(this.errorHandler.handleError<{ message: string }>('deleteStudent'))
     );
   }
 

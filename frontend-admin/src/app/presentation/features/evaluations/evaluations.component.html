@@ -102,63 +102,60 @@
 
   <!-- Filters -->
   <div class="filters-section">
-    <div class="filters-container">
-      <div class="filter-group">
-        <label class="filter-label">Rechercher</label>
-        <div class="search-input-container">
-          <span class="material-icons search-icon">search</span>
-          <input 
-            type="text" 
-            class="search-input" 
-            placeholder="Rechercher par titre, cours..."
-            [(ngModel)]="searchTerm"
-            (input)="onSearchChange()"
-          >
-          @if (searchTerm()) {
-            <button class="clear-search" (click)="clearSearch()">
-              <span class="material-icons">close</span>
-            </button>
-          }
-        </div>
-      </div>
-
-      <div class="filter-group">
-        <label class="filter-label">Statut</label>
-        <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
-          <option value="">Tous les statuts</option>
-          <option value="BROUILLON">Brouillons</option>
-          <option value="PUBLIEE">En cours</option>
-          <option value="CLOTUREE">Clôturées</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <label class="filter-label">Cours</label>
-        <select class="filter-select" [(ngModel)]="selectedCours" (change)="onFilterChange()">
-          <option value="">Tous les cours</option>
-          @for (cours of cours(); track cours.id) {
-            <option [value]="cours.id">{{ cours.nom }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="filter-actions">
-        <button class="btn-filter-reset" (click)="resetFilters()" [disabled]="!hasActiveFilters()">
-          <span class="material-icons">refresh</span>
-          Réinitialiser
-        </button>
-      </div>
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input 
+        type="text" 
+        placeholder="Rechercher un quiz par titre, UE ou classe..."
+        (input)="onSearch($event)"
+        [value]="searchQuery()"
+      />
+    </div>
+    <div class="filter-buttons">
+      <button class="btn-filter" (click)="onFilterStatus('ALL')">
+        <span class="material-icons">filter_list</span> Filtres
+      </button>
+      <button class="btn-filter">
+        <span class="material-icons">sort</span> Trier par
+      </button>
     </div>
   </div>
 
-  <!-- Loading State -->
+  <!-- Tabs -->
+  <div class="tabs">
+    <button 
+      class="tab" 
+      [class.active]="filterStatus() === 'ALL'"
+      (click)="onFilterStatus('ALL')"
+    >
+      Tous ({{ totalQuiz() }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="filterStatus() === 'PUBLIEE'"
+      (click)="onFilterStatus('PUBLIEE')"
+    >
+      En cours ({{ activeQuiz() }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="filterStatus() === 'BROUILLON'"
+      (click)="onFilterStatus('BROUILLON')"
+    >
+      Brouillons ({{ draftQuiz() }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="filterStatus() === 'CLOTUREE'"
+      (click)="onFilterStatus('CLOTUREE')"
+    >
+      Clôturés ({{ closedQuiz() }})
+    </button>
+  </div>
+
+  <!-- Loading -->
   @if (isLoading()) {
-    <div class="loading-container">
-      <div class="loading-spinner">
-        <div class="spinner"></div>
-      </div>
-      <p class="loading-text">Chargement des évaluations...</p>
-    </div>
+    <div class="loading">Chargement...</div>
   }
 
   <!-- Evaluations List -->
@@ -166,6 +163,17 @@
     <div class="evaluations-grid">
       @for (evaluation of filteredEvaluations(); track evaluation.id) {
         <div class="evaluation-card">
+          <!-- Menu Dupliquer flottant -->
+          @if (evaluation.statut === 'PUBLIEE' || evaluation.statut === 'CLOTUREE') {
+            <div class="duplicate-menu">
+              <button class="duplicate-btn" (click)="duplicateEvaluation(evaluation)" title="Dupliquer cette évaluation">
+                <span class="material-icons">content_copy</span>
+                Dupliquer
+                <span class="duplicate-subtitle">Créer une copie</span>
+              </button>
+            </div>
+          }
+
           <div class="card-header">
             <span class="status-badge" [ngClass]="getStatusBadgeClass(evaluation.statut)">
               <span class="material-icons">{{ getStatusIcon(evaluation.statut) }}</span>
@@ -190,21 +198,31 @@
                       <span class="material-icons">delete</span>
                       Supprimer
                     </button>
+                    <button class="menu-item" (click)="debugDelete(evaluation); hideCardMenu()" title="Debug suppression">
+                      <div class="menu-icon">
+                        <span class="material-icons">bug_report</span>
+                      </div>
+                      <div class="menu-content">
+                        <span class="menu-title">Debug</span>
+                        <span class="menu-subtitle">Tester suppression</span>
+                      </div>
+                    </button>
                   }
                   @if (evaluation.statut === 'PUBLIEE') {
-                    <button class="menu-item" (click)="viewSubmissions(evaluation); hideCardMenu()">
-                      <span class="material-icons">assignment_turned_in</span>
-                      Voir les soumissions
-                    </button>
                     <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
                       <span class="material-icons">content_copy</span>
                       Dupliquer
                     </button>
                   }
                   @if (evaluation.statut === 'CLOTUREE') {
-                    <button class="menu-item" (click)="viewSubmissions(evaluation); hideCardMenu()">
-                      <span class="material-icons">assignment_turned_in</span>
-                      Voir les soumissions
+                    <button class="menu-item edit-copy-item" (click)="editCopyEvaluation(evaluation); hideCardMenu()" title="Créer une copie modifiable de cette évaluation">
+                      <div class="menu-icon edit-icon">
+                        <span class="material-icons">edit</span>
+                      </div>
+                      <div class="menu-content">
+                        <span class="menu-title">Modifier (copie)</span>
+                        <span class="menu-subtitle">Créer une version modifiable</span>
+                      </div>
                     </button>
                     <button class="menu-item" (click)="exportResults(evaluation); hideCardMenu()">
                       <span class="material-icons">download</span>

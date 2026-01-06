@@ -1,134 +1,271 @@
-<div class="evaluation-detail-container">
-  <div class="page-header">
-    <div class="header-content">
-      <div class="header-left">
-        <button class="btn-back" (click)="goBack()">
-          <span class="material-icons">arrow_back</span>
-          Retour
-        </button>
-        <div class="header-info">
-          <h1 class="page-title">{{ evaluation()?.titre || 'Évaluation' }}</h1>
-          <div class="evaluation-meta">
-            <span class="status-badge" [class]="'status-' + (evaluation()?.statut || '').toLowerCase()">
-              {{ evaluation()?.statut }}
-            </span>
-            <span class="course-info">{{ evaluation()?.cours?.nom }}</span>
-          </div>
-        </div>
-      </div>
-      <div class="header-actions">
-        @if (evaluation()?.statut === 'BROUILLON') {
-          <button class="btn-primary" (click)="editEvaluation()">
-            <span class="material-icons">edit</span>
-            Modifier
-          </button>
-        }
-        @if (evaluation()?.statut === 'PUBLIEE') {
-          <button class="btn-secondary" (click)="viewResults()">
-            <span class="material-icons">analytics</span>
-            Résultats
-          </button>
-        }
-      </div>
-    </div>
-  </div>
-
+<div class="page-container">
+  <!-- Loading -->
   @if (isLoading()) {
-    <div class="loading-container">
-      <div class="spinner"></div>
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
       <p>Chargement de l'évaluation...</p>
     </div>
-  } @else if (evaluation()) {
-    <div class="evaluation-content">
-      <!-- Informations générales -->
-      <div class="info-section">
-        <h2>Informations générales</h2>
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Description</label>
-            <p>{{ evaluation()?.description || 'Aucune description' }}</p>
-          </div>
-          <div class="info-item">
-            <label>Date de début</label>
-            <p>{{ formatDate(evaluation()?.dateDebut) }}</p>
-          </div>
-          <div class="info-item">
-            <label>Date de fin</label>
-            <p>{{ formatDate(evaluation()?.dateFin) }}</p>
-          </div>
-          <div class="info-item">
-            <label>Classes concernées</label>
-            <div class="classes-list">
-              @for (classe of evaluation()?.Classes || evaluation()?.classes; track classe.id) {
-                <span class="class-badge">{{ classe.nom }}</span>
-              }
-            </div>
+  }
+
+  <!-- Content -->
+  @if (!isLoading() && evaluation()) {
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <button class="btn-back" (click)="goBack()">
+          <span class="material-icons">arrow_back</span>
+        </button>
+        <div class="title-section">
+          <h1 class="page-title">{{ evaluation()!.titre }}</h1>
+          <div class="evaluation-meta">
+            <span class="meta-item">
+              <span class="material-icons">book</span>
+              {{ evaluation()!.cours?.nom }}
+            </span>
+            <span class="meta-item">
+              <span class="material-icons">schedule</span>
+              {{ formatDate(evaluation()!.dateDebut) }} - {{ formatDate(evaluation()!.dateFin) }}
+            </span>
           </div>
         </div>
       </div>
 
-      <!-- Questions -->
-      <div class="questions-section">
-        <h2>Questions ({{ questions().length }})</h2>
-        @if (questions().length > 0) {
-          <div class="questions-list">
-            @for (question of questions(); track question.id; let i = $index) {
-              <div class="question-card">
-                <div class="question-header">
-                  <span class="question-number">{{ i + 1 }}</span>
-                  <span class="question-type">{{ getQuestionTypeLabel(question.typeQuestion) }}</span>
-                  <span class="question-points">{{ question.points || 1 }} pts</span>
-                </div>
-                <div class="question-content">
-                  <p class="question-text">{{ question.enonce }}</p>
-                  @if (question.typeQuestion === 'QCM' && question.options) {
-                    <div class="question-options">
-                      @for (option of question.options; track $index; let optIndex = $index) {
-                        <div class="option-item">
-                          <span class="option-letter">{{ getCharFromIndex(optIndex) }}.</span>
-                          <span class="option-text">{{ option }}</span>
-                        </div>
-                      }
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        } @else {
-          <div class="empty-state">
-            <span class="material-icons">quiz</span>
-            <p>Aucune question n'a été ajoutée à cette évaluation.</p>
-          </div>
+      <div class="header-actions">
+        @if (evaluation()!.statut === 'BROUILLON') {
+          <button class="btn-primary" (click)="publishEvaluation()">
+            <span class="material-icons">publish</span>
+            Publier
+          </button>
         }
+        
+        <button class="btn-secondary" (click)="editEvaluation()">
+          <span class="material-icons">edit</span>
+          Modifier
+        </button>
+      </div>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <span class="material-icons">error</span>
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <span class="material-icons">quiz</span>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ getQuestionCount() }}</span>
+          <span class="stat-label">Questions</span>
+        </div>
       </div>
 
-      <!-- Statistiques (si publiée) -->
-      @if (evaluation()?.statut === 'PUBLIEE') {
-        <div class="stats-section">
-          <h2>Statistiques</h2>
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-value">{{ stats()?.totalParticipants || 0 }}</div>
-              <div class="stat-label">Participants</div>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <span class="material-icons">group</span>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ getClassesCount() }}</span>
+          <span class="stat-label">Classes</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <span class="material-icons">schedule</span>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ getDuration() }}</span>
+          <span class="stat-label">Minutes</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <span class="material-icons">people</span>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">0</span>
+          <span class="stat-label">Participants</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+      <div class="tabs">
+        <button 
+          class="tab-button"
+          [class.active]="activeTab() === 'info'"
+          (click)="setActiveTab('info')">
+          <span class="material-icons">info</span>
+          Informations
+        </button>
+        
+        <button 
+          class="tab-button"
+          [class.active]="activeTab() === 'questions'"
+          (click)="setActiveTab('questions')">
+          <span class="material-icons">quiz</span>
+          Questions
+        </button>
+        
+        <button 
+          class="tab-button"
+          [class.active]="activeTab() === 'results'"
+          (click)="setActiveTab('results')">
+          <span class="material-icons">assessment</span>
+          Résultats
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Info Tab -->
+      @if (activeTab() === 'info') {
+        <div class="info-section">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Description</label>
+              <span>{{ evaluation()!.description || 'Aucune description' }}</span>
             </div>
-            <div class="stat-card">
-              <div class="stat-value">{{ stats()?.moyenneGenerale || 0 }}%</div>
-              <div class="stat-label">Moyenne générale</div>
+            
+            <div class="info-item">
+              <label>Statut</label>
+              <span class="status-badge" [class]="'status-' + evaluation()!.statut.toLowerCase()">
+                {{ evaluation()!.statut }}
+              </span>
             </div>
-            <div class="stat-card">
-              <div class="stat-value">{{ stats()?.tauxCompletion || 0 }}%</div>
-              <div class="stat-label">Taux de complétion</div>
+            
+            <div class="info-item">
+              <label>Date de création</label>
+              <span>{{ formatDate(evaluation()!.dateCreation || evaluation()!.createdAt || '') }}</span>
+            </div>
+            
+            <div class="info-item">
+              <label>Classes concernées</label>
+              <div class="classes-list">
+                @for (classe of getClasses(); track classe.id) {
+                  <span class="class-chip">{{ classe.nom }}</span>
+                } @empty {
+                  <span>Aucune classe assignée</span>
+                }
+              </div>
             </div>
           </div>
         </div>
       }
+
+      <!-- Questions Tab -->
+      @if (activeTab() === 'questions') {
+        <div class="questions-section">
+          <div class="section-header">
+            <h3>Questions de l'évaluation</h3>
+            <button class="btn-primary" (click)="addQuestion()">
+              <span class="material-icons">add</span>
+              Ajouter une question
+            </button>
+          </div>
+
+          @if (questions() && questions().length > 0) {
+            <div class="questions-list">
+              @for (question of questions(); track question.id; let i = $index) {
+                <div class="question-card">
+                  <div class="question-header">
+                    <span class="question-number">Q{{ i + 1 }}</span>
+                    <span class="question-type">{{ question.typeQuestion }}</span>
+                    <div class="question-actions">
+                      <button class="btn-icon" (click)="editQuestion(question)">
+                        <span class="material-icons">edit</span>
+                      </button>
+                      <button class="btn-icon danger" (click)="deleteQuestion(question)">
+                        <span class="material-icons">delete</span>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="question-content">
+                    <p class="question-text">{{ question.enonce }}</p>
+                    
+                    @if (question.typeQuestion === 'QCM' && hasOptions(question)) {
+                      <div class="question-options">
+                        @for (option of question.options; track $index; let j = $index) {
+                          <div class="option-item" [class.correct]="isOptionCorrect(option)">
+                            <span class="option-letter">{{ getOptionLetter(j) }}</span>
+                            <span class="option-text">{{ getOptionText(option) }}</span>
+                            @if (isOptionCorrect(option)) {
+                              <span class="material-icons correct-icon">check_circle</span>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-state">
+              <div class="empty-icon">
+                <span class="material-icons">quiz</span>
+              </div>
+              <h3>Aucune question</h3>
+              <p>Cette évaluation ne contient pas encore de questions.</p>
+              <button class="btn-primary" (click)="addQuestion()">
+                <span class="material-icons">add</span>
+                Ajouter la première question
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Results Tab -->
+      @if (activeTab() === 'results') {
+        <div class="results-section">
+          <div class="section-header">
+            <h3>Résultats et statistiques</h3>
+          </div>
+
+          @if (evaluation()!.statut === 'PUBLIEE') {
+            <div class="results-placeholder">
+              <div class="placeholder-icon">
+                <span class="material-icons">assessment</span>
+              </div>
+              <h3>Résultats en cours de collecte</h3>
+              <p>Les résultats apparaîtront ici une fois que les étudiants auront commencé à répondre.</p>
+            </div>
+          } @else {
+            <div class="info-message">
+              <span class="material-icons">info</span>
+              <div>
+                <strong>Évaluation non publiée</strong>
+                <p>Publiez l'évaluation pour commencer à collecter les résultats.</p>
+              </div>
+            </div>
+          }
+        </div>
+      }
     </div>
-  } @else {
+  }
+
+  <!-- Error State -->
+  @if (!isLoading() && !evaluation()) {
     <div class="error-state">
-      <span class="material-icons">error</span>
-      <p>Évaluation non trouvée</p>
-      <button class="btn-primary" (click)="goBack()">Retour</button>
+      <div class="error-icon">
+        <span class="material-icons">error</span>
+      </div>
+      <h3>Évaluation introuvable</h3>
+      <p>L'évaluation demandée n'existe pas ou n'est plus accessible.</p>
+      <button class="btn-primary" (click)="goBack()">
+        <span class="material-icons">arrow_back</span>
+        Retour à la liste
+      </button>
     </div>
   }
 </div>

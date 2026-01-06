@@ -8,15 +8,14 @@ async function seedDatabase() {
   const transaction = await db.sequelize.transaction();
 
   try {
-    // Vérifier si des données existent déjà (sans sync supplémentaire)
+    // Synchroniser la base de données d'abord pour s'assurer que les tables existent
+    await db.sequelize.sync();
+    
+    // Vérifier si des données existent déjà
     const userCount = await db.Utilisateur.count();
     if (userCount > 0) {
       await transaction.rollback();
-      return {
-        success: false,
-        message: 'La base de données contient déjà des données.',
-        skipSeed: true
-      };
+      throw new Error('La base de données contient déjà des données.');
     }
 
     // 1. Créer l'école
@@ -303,26 +302,26 @@ router.post('/seed', async (req, res) => {
 // Route de test pour vérifier que les modèles fonctionnent
 router.get('/test', async (req, res) => {
   try {
-    // Tester l'accès aux modèles sans sync supplémentaire
+    // Synchroniser la base de données d'abord
+    await db.sequelize.sync();
+    
+    // Tester l'accès aux modèles
     const models = {
       Utilisateur: await db.Utilisateur.count(),
       Ecole: await db.Ecole.count(),
       AnneeAcademique: await db.AnneeAcademique.count(),
       Classe: await db.Classe.count(),
       Cours: await db.Cours.count(),
-      Evaluation: await db.Evaluation.count(),
-      DeviceToken: await db.DeviceToken.count(),
-      NotificationPreference: await db.NotificationPreference.count()
+      Evaluation: await db.Evaluation.count()
     };
 
     res.json({
       success: true,
-      message: '✅ Modèles accessibles et base de données opérationnelle',
+      message: '✅ Modèles accessibles et base de données synchronisée',
       models,
       database: {
         dialect: db.sequelize.getDialect(),
-        host: db.sequelize.config.host,
-        database: db.sequelize.config.database
+        version: db.sequelize.getDatabaseVersion ? 'Available' : 'Not Available'
       }
     });
   } catch (error) {

@@ -1,24 +1,20 @@
 import { Question } from './question.entity';
 
-// Re-export Question for backward compatibility
-export type { Question } from './question.entity';
-
 export interface EvaluationApiData {
   id?: string | number;
   titre: string;
   description?: string;
-  dateDebut: string | Date;
-  dateFin: string | Date;
-  coursId?: string | number;
-  cours_id?: string | number;
+  dateDebut: string;
+  dateFin: string;
+  coursId: string | number;
   classeIds?: (string | number)[];
   classeId?: string | number;
   statut: 'BROUILLON' | 'PUBLIEE' | 'CLOTUREE' | 'ACTIVE' | 'TERMINEE' | 'ARCHIVEE';
-  dateCreation?: string | Date;
-  dateModification?: string | Date;
+  dateCreation?: string;
   createdAt?: string;
   updatedAt?: string;
   administrateur_id?: string | number;
+  cours_id?: string | number;
   quizzId?: string | number;
 }
 
@@ -37,10 +33,6 @@ export interface Evaluation extends EvaluationApiData {
     id: string | number;
     nom: string;
   };
-  classes?: Array<{
-    id: string | number;
-    nom: string;
-  }>;
   Classes?: Array<{
     id: string | number;
     nom: string;
@@ -62,6 +54,7 @@ export interface Quizz {
   titre: string;
   description?: string;
   instructions?: string;
+  duree?: number;
   evaluationId?: number | string;
   questions?: Question[];
   Questions?: Question[];

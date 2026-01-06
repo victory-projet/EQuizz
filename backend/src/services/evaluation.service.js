@@ -18,6 +18,7 @@ class EvaluationService {
    * @param {string} adminId - ID de l'administrateur qui crée l'évaluation.
    */
   async create(data, adminId) {
+<<<<<<< Updated upstream
     const { classeIds, coursId, ...evaluationData } = data;
     
     // Mapper coursId vers cours_id pour la compatibilité backend
@@ -25,7 +26,11 @@ class EvaluationService {
       evaluationData.cours_id = coursId;
     }
     
+=======
+    const { classeIds, ...evaluationData } = data;
+    
     // Validation des données d'entrée
+>>>>>>> Stashed changes
     if (!classeIds || !Array.isArray(classeIds) || classeIds.length === 0) {
       throw AppError.badRequest('Au moins une classe doit être ciblée.', 'CLASSES_REQUIRED');
     }
@@ -248,40 +253,6 @@ class EvaluationService {
       console.log('📊 Service - Nombre de soumissions trouvées:', submissionsCount);
       
       if (submissionsCount > 0) {
-        throw AppError.badRequest(
-          'Impossible de supprimer une évaluation qui a des soumissions d\'étudiants.', 
-          'HAS_SUBMISSIONS'
-        );
-      }
-    }
-
-    console.log('🚀 Service - Suppression de l\'évaluation...');
-    const deleteResult = await evaluationRepository.delete(id);
-    
-    if (deleteResult === 0) {
-      throw AppError.notFound('Évaluation non trouvée.', 'EVALUATION_NOT_FOUND');
-    }
-
-    console.log('✅ Service - Évaluation supprimée avec succès');
-    return { success: true, message: 'Évaluation supprimée avec succès' };
-
-    console.log('✅ Service - Évaluation trouvée:', {
-      id: evaluation.id,
-      titre: evaluation.titre,
-      statut: evaluation.statut,
-      hasQuizz: !!evaluation.Quizz
-    });
-
-    // Vérifier que l'évaluation peut être supprimée (pas de soumissions)
-    if (evaluation.Quizz) {
-      console.log('🔍 Service - Vérification des soumissions pour le quizz:', evaluation.Quizz.id);
-      const submissionsCount = await db.SessionReponse.count({
-        where: { quizz_id: evaluation.Quizz.id }
-      });
-      
-      console.log('📊 Service - Nombre de soumissions trouvées:', submissionsCount);
-      
-      if (submissionsCount > 0) {
         console.log('❌ Service - Suppression bloquée: évaluation avec soumissions');
         throw AppError.badRequest(
           'Impossible de supprimer une évaluation qui a des soumissions d\'étudiants.', 
@@ -291,10 +262,10 @@ class EvaluationService {
     }
 
     console.log('🗑️ Service - Procédure de suppression...');
-    const deletionResult = await evaluationRepository.delete(id);
-    console.log('✅ Service - Résultat de la suppression:', deletionResult);
+    const result = await evaluationRepository.delete(id);
+    console.log('✅ Service - Résultat de la suppression:', result);
     
-    if (deletionResult === 0) {
+    if (result === 0) {
       console.log('❌ Service - Aucune ligne supprimée');
       throw AppError.notFound('Évaluation non trouvée.', 'EVALUATION_NOT_FOUND');
     }

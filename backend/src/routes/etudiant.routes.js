@@ -14,11 +14,6 @@ router.post('/', etudiantController.create);
 // Obtenir tous les étudiants avec pagination et filtres
 router.get('/', etudiantController.findAll);
 
-// Routes liées aux classes (avant les routes avec :id)
-
-// Obtenir les étudiants d'une classe
-router.get('/classe/:classeId', etudiantController.findByClasse);
-
 // Obtenir un étudiant par ID
 router.get('/:id', etudiantController.findOne);
 
@@ -35,5 +30,10 @@ router.patch('/:id/toggle-status', etudiantController.toggleStatus);
 
 // Changer la classe d'un étudiant
 router.patch('/:id/change-classe', etudiantController.changeClasse);
+
+// Routes liées aux classes
+
+// Obtenir les étudiants d'une classe
+router.get('/classe/:classeId', etudiantController.findByClasse);
 
 module.exports = router;

@@ -50,8 +50,6 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
       cours: data.Cour || data.Cours || data.cours || null,
       // Le backend retourne "Classes" (array) - on prend la première
       classe: data.Classes?.[0] || data.Classe || data.classe || null,
-      classes: data.Classes || data.classes || [],
-      Classes: data.Classes || [],
       // Le backend retourne "Quizz" (majuscule)
       quizz: data.Quizz ? {
         ...data.Quizz,
@@ -100,7 +98,7 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
     );
   }
 
-  addQuestion(quizzId: string | number, question: QuestionFormData): Observable<Question> {
+  addQuestion(quizzId: string | number, question: Partial<Question>): Observable<Question> {
     return this.api.post<Question>(`/evaluations/quizz/${quizzId}/questions`, question);
   }
 
@@ -108,8 +106,8 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
     return this.api.get<Question[]>(`/evaluations/quizz/${quizzId}/questions`);
   }
 
-  updateQuestion(questionId: string | number, question: QuestionFormData): Observable<Question> {
-    return this.api.put<Question>(`/evaluations/questions/${questionId}`, question);
+  updateQuestion(questionId: string | number, question: Partial<Question>): Observable<Question> {
+    return this.api.put<Question>(`/questions/${questionId}`, question);
   }
 
   deleteQuestion(questionId: string | number): Observable<void> {

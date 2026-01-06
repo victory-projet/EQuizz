@@ -1,199 +1,150 @@
 <div class="question-form-container">
-  <div class="form-header">
-    <h3>{{ question ? 'Modifier la question' : 'Nouvelle question' }}</h3>
-    <button class="btn-close" (click)="onCancel()">
-      <span class="material-icons">close</span>
-    </button>
-  </div>
+  <form [formGroup]="questionForm" (ngSubmit)="onSubmit()" class="question-form">
+    
+    <!-- Message d'erreur global -->
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <span class="material-icons">error</span>
+        {{ errorMessage() }}
+      </div>
+    }
 
-  @if (errorMessage()) {
-    <div class="alert alert-error">
-      <span class="material-icons">error</span>
-      {{ errorMessage() }}
-    </div>
-  }
-
-  <form [formGroup]="questionForm" (ngSubmit)="onSubmit()">
     <!-- Type de question -->
     <div class="form-group">
-      <label class="form-label">Type de question *</label>
-      <select class="form-select" formControlName="typeQuestion">
+      <label for="typeQuestion" class="form-label required">
+        Type de question
+      </label>
+      <select 
+        id="typeQuestion" 
+        formControlName="typeQuestion" 
+        class="form-select"
+        [class.error]="questionForm.get('typeQuestion')?.errors && questionForm.get('typeQuestion')?.touched">
+        <option value="">Sélectionnez un type de question</option>
         @for (type of questionTypes; track type.value) {
           <option [value]="type.value">{{ type.label }}</option>
         }
       </select>
+      @if (questionForm.get('typeQuestion')?.errors && questionForm.get('typeQuestion')?.touched) {
+        <div class="field-error">Le type de question est requis</div>
+      }
     </div>
 
-    <!-- Énoncé -->
+    <!-- Énoncé de la question -->
     <div class="form-group">
-      <label class="form-label">Énoncé de la question *</label>
+      <label for="enonce" class="form-label required">
+        Énoncé de la question
+      </label>
       <textarea 
-        class="form-textarea" 
-        rows="4"
-        placeholder="Saisissez votre question ici..."
-        formControlName="enonce"
-        [class.error]="questionForm.get('enonce')?.invalid && questionForm.get('enonce')?.touched"
-      ></textarea>
-      @if (questionForm.get('enonce')?.invalid && questionForm.get('enonce')?.touched) {
+        id="enonce" 
+        formControlName="enonce" 
+        class="form-textarea"
+        [class.error]="questionForm.get('enonce')?.errors && questionForm.get('enonce')?.touched"
+        placeholder="Saisissez l'énoncé de votre question..."
+        rows="4">
+      </textarea>
+      @if (questionForm.get('enonce')?.errors && questionForm.get('enonce')?.touched) {
         <div class="field-error">L'énoncé est requis (minimum 10 caractères)</div>
       }
+      <div class="field-hint">
+        Minimum 10 caractères requis
+      </div>
     </div>
 
     <!-- Options pour choix multiples -->
     @if (isChoixMultiple) {
       <div class="form-group">
-        <label class="form-label">Options de réponse *</label>
-        <div class="options-container" formArrayName="options">
+        <label class="form-label required">
+          Options de réponse
+        </label>
+        <div class="options-container">
           @for (option of options.controls; track $index; let i = $index) {
-            <div class="option-input-group">
-              <span class="option-letter">{{ getCharFromIndex(i) }}.</span>
-              <input 
-                type="text" 
-                class="form-input"
-                placeholder="Option {{ i + 1 }}"
-                [formControlName]="i"
-                [class.error]="option.invalid && option.touched"
-              />
-              @if (options.length > 2) {
-                <button type="button" class="btn-remove" (click)="removeOption(i)">
-                  <span class="material-icons">remove</span>
-                </button>
+            <div class="option-item">
+              <div class="option-input-group">
+                <span class="option-number">{{ i + 1 }}.</span>
+                <input 
+                  type="text" 
+                  [formControl]="$any(option)"
+                  class="form-input option-input"
+                  [class.error]="option.errors && option.touched"
+                  [placeholder]="'Option ' + (i + 1)">
+                @if (options.length > 2) {
+                  <button 
+                    type="button" 
+                    class="btn-remove-option"
+                    (click)="removeOption(i)"
+                    title="Supprimer cette option">
+                    <span class="material-icons">delete</span>
+                  </button>
+                }
+              </div>
+              @if (option.errors && option.touched) {
+                <div class="field-error">Cette option est requise</div>
               }
             </div>
           }
+          
+          <button 
+            type="button" 
+            class="btn-add-option"
+            (click)="addOption()">
+            <span class="material-icons">add</span>
+            Ajouter une option
+          </button>
         </div>
-        <button type="button" class="btn-add-option" (click)="addOption()">
-          <span class="material-icons">add</span>
-          Ajouter une option
-        </button>
-
-        <!-- Bonne réponse pour choix multiples -->
-        <div class="form-group">
-          <label class="form-label">Bonne réponse *</label>
-          <select class="form-select" formControlName="bonneReponse">
-            <option value="">Sélectionnez la bonne réponse</option>
-            @for (option of options.controls; track $index; let i = $index) {
-              @if (option.value) {
-                <option [value]="option.value">{{ getCharFromIndex(i) }}. {{ option.value }}</option>
-              }
-            }
-          </select>
+        <div class="field-hint">
+          Minimum 2 options requises pour les questions à choix multiples
         </div>
       </div>
     }
 
-    <!-- Vrai/Faux -->
-    @if (isVraiFaux) {
-      <div class="form-group">
-        <label class="form-label">Bonne réponse *</label>
-        <div class="radio-group">
-          <label class="radio-option">
-            <input type="radio" formControlName="bonneReponse" value="Vrai" />
-            <span class="radio-label">Vrai</span>
-          </label>
-          <label class="radio-option">
-            <input type="radio" formControlName="bonneReponse" value="Faux" />
-            <span class="radio-label">Faux</span>
-          </label>
-        </div>
-      </div>
-    }
-
-    <!-- Réponse pour autres types -->
-    @if (!isChoixMultiple && !isVraiFaux) {
-      <div class="form-group">
-        <label class="form-label">Réponse attendue (optionnel)</label>
-        <input 
-          type="text" 
-          class="form-input"
-          placeholder="Réponse ou indication pour la correction"
-          formControlName="bonneReponse"
-        />
-      </div>
-    }
-
-    <!-- Points -->
-    <div class="form-group">
-      <label class="form-label">Points *</label>
-      <input 
-        type="number" 
-        class="form-input"
-        min="0.5"
-        max="10"
-        step="0.5"
-        formControlName="points"
-        [class.error]="questionForm.get('points')?.invalid && questionForm.get('points')?.touched"
-      />
-      @if (questionForm.get('points')?.invalid && questionForm.get('points')?.touched) {
-        <div class="field-error">Les points doivent être entre 0.5 et 10</div>
-      }
-    </div>
-
-    <!-- Aperçu -->
-    <div class="preview-section">
-      <h4>Aperçu</h4>
+    <!-- Aperçu de la question -->
+    @if (questionForm.get('enonce')?.value && questionForm.get('typeQuestion')?.value) {
       <div class="question-preview">
-        <div class="preview-header">
-          <span class="question-number">{{ questionForm.get('ordre')?.value || 1 }}</span>
-          <span class="question-points">{{ questionForm.get('points')?.value || 1 }} pts</span>
-        </div>
+        <h4 class="preview-title">Aperçu de la question</h4>
         <div class="preview-content">
-          <p class="preview-question">{{ questionForm.get('enonce')?.value || 'Votre question apparaîtra ici...' }}</p>
+          <div class="preview-question">
+            <strong>{{ questionForm.get('enonce')?.value }}</strong>
+          </div>
           
           @if (isChoixMultiple && options.length > 0) {
             <div class="preview-options">
               @for (option of options.controls; track $index; let i = $index) {
                 @if (option.value) {
-                  <div class="preview-option" [class.correct]="option.value === questionForm.get('bonneReponse')?.value">
-                    <span class="option-letter">{{ getCharFromIndex(i) }}.</span>
-                    <span class="option-text">{{ option.value }}</span>
-                    @if (option.value === questionForm.get('bonneReponse')?.value) {
-                      <span class="material-icons correct-icon">check_circle</span>
-                    }
+                  <div class="preview-option">
+                    <input type="radio" disabled> {{ option.value }}
                   </div>
                 }
               }
             </div>
-          }
-
-          @if (isVraiFaux) {
-            <div class="preview-options">
-              <div class="preview-option" [class.correct]="questionForm.get('bonneReponse')?.value === 'Vrai'">
-                <span class="option-letter">A.</span>
-                <span class="option-text">Vrai</span>
-                @if (questionForm.get('bonneReponse')?.value === 'Vrai') {
-                  <span class="material-icons correct-icon">check_circle</span>
-                }
-              </div>
-              <div class="preview-option" [class.correct]="questionForm.get('bonneReponse')?.value === 'Faux'">
-                <span class="option-letter">B.</span>
-                <span class="option-text">Faux</span>
-                @if (questionForm.get('bonneReponse')?.value === 'Faux') {
-                  <span class="material-icons correct-icon">check_circle</span>
-                }
-              </div>
-            </div>
-          }
-
-          @if (!isChoixMultiple && !isVraiFaux) {
+          } @else if (questionForm.get('typeQuestion')?.value === 'REPONSE_OUVERTE') {
             <div class="preview-open-response">
               <textarea placeholder="Zone de réponse libre..." disabled rows="3"></textarea>
             </div>
           }
         </div>
       </div>
-    </div>
+    }
 
     <!-- Actions -->
     <div class="form-actions">
-      <button type="button" class="btn-secondary" (click)="onCancel()" [disabled]="isLoading()">
+      <button 
+        type="button" 
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        [disabled]="isLoading()">
         Annuler
       </button>
-      <button type="submit" class="btn-primary" [disabled]="questionForm.invalid || isLoading()">
+      <button 
+        type="submit" 
+        class="btn btn-primary"
+        [disabled]="!questionForm.valid || isLoading()">
         @if (isLoading()) {
-          <span class="spinner"></span>
+          <span class="material-icons">hourglass_empty</span>
+          Création...
+        } @else {
+          <span class="material-icons">add</span>
+          Créer la question
         }
-        {{ question ? 'Modifier' : 'Créer' }} la question
       </button>
     </div>
   </form>

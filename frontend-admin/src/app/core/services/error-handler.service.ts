@@ -50,7 +50,6 @@ export class ErrorHandlerService {
   }
 
   /**
->>>>>>> frontend_admin_2
    * Gère les erreurs HTTP et les transforme en erreurs applicatives
    */
   handleHttpError(error: HttpErrorResponse, context?: string): Observable<never> {

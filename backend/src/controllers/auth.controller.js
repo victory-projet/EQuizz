@@ -15,10 +15,6 @@ class AuthController {
 
     const { token, utilisateur } = await authService.login(loginIdentifier, motDePasse);
 
-    // Générer les tokens d'accès et de rafraîchissement
-    const jwtService = require('../services/jwt.service');
-    const tokens = jwtService.generateTokenPair(utilisateur);
-
     // Déterminer le rôle et préparer les informations complètes
     let role = 'ETUDIANT';
     let additionalInfo = {};
@@ -45,8 +41,7 @@ class AuthController {
 
     // Retourner toutes les informations non sensibles
     res.status(200).json({
-      token: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
+      token,
       utilisateur: {
         id: utilisateur.id,
         nom: utilisateur.nom,
@@ -129,14 +124,6 @@ class AuthController {
 
     await utilisateur.update({ nom, prenom, email });
 
-    // Envoyer notification de sécurité
-    try {
-      const notificationService = require('../services/notification.service');
-      await notificationService.notifySecurityAction(userId, 'profile_updated');
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi de la notification de sécurité:', error);
-    }
-
     res.status(200).json({
       id: utilisateur.id,
       nom: utilisateur.nom,
@@ -167,14 +154,6 @@ class AuthController {
     utilisateur.motDePasseHash = newPassword;
     await utilisateur.save();
 
-    // Envoyer notification de sécurité
-    try {
-      const notificationService = require('../services/notification.service');
-      await notificationService.notifySecurityAction(userId, 'password_changed');
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi de la notification de sécurité:', error);
-    }
-
     res.status(200).json({ message: 'Mot de passe modifié avec succès' });
   });
 
@@ -188,37 +167,22 @@ class AuthController {
       });
     }
 
+    // Pour l'instant, on génère simplement un nouveau token
+    // Dans une vraie application, on vérifierait le refresh token
     const jwtService = require('../services/jwt.service');
 
     try {
-      // Vérifier le refresh token
-      const decoded = jwtService.verifyRefreshToken(refreshToken);
+      // Vérifier le token
+      const decoded = jwtService.verifyToken(refreshToken);
 
-      // Récupérer l'utilisateur pour générer un nouveau token
-      const utilisateur = await db.Utilisateur.findByPk(decoded.id, {
-        include: [
-          { model: db.Administrateur, as: 'Administrateur' },
-          { model: db.Enseignant, as: 'Enseignant' },
-          { 
-            model: db.Etudiant, 
-            as: 'Etudiant',
-            include: [{ model: db.Classe, as: 'Classe' }]
-          }
-        ]
+      // Générer un nouveau token
+      const newToken = jwtService.generateToken({
+        id: decoded.id,
+        email: decoded.email
       });
 
-      if (!utilisateur || !utilisateur.estActif) {
-        return res.status(401).json({
-          error: 'Utilisateur non trouvé ou inactif'
-        });
-      }
-
-      // Générer de nouveaux tokens
-      const tokens = jwtService.generateTokenPair(utilisateur);
-
       res.status(200).json({
-        token: tokens.accessToken,
-        refreshToken: tokens.refreshToken
+        token: newToken
       });
     } catch (error) {
       res.status(401).json({

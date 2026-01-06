@@ -159,7 +159,7 @@
                     <span class="number">#{{ i + 1 }}</span>
                   </div>
                   <div class="question-type">
-                    <div class="type-badge" [class]="'type-' + question.typeQuestion.toLowerCase()">
+                    <div class="type-badge" [class]="'type-' + (question.typeQuestion || '').toLowerCase()">
                       <i class="material-icons">{{ getQuestionTypeIcon(question.typeQuestion) }}</i>
                       <span>{{ getQuestionTypeLabel(question.typeQuestion) }}</span>
                     </div>
@@ -180,7 +180,7 @@
                   </button>
                   <button 
                     class="btn-action btn-delete"
-                    (click)="onDeleteQuestion(question.id)"
+                    (click)="onDeleteQuestion(question.id!)"
                     title="Supprimer la question">
                     <i class="material-icons">delete_outline</i>
                   </button>
@@ -198,7 +198,7 @@
                     <i class="material-icons">info_outline</i>
                     <span>{{ getQuestionTypeDescription(question.typeQuestion) }}</span>
                   </div>
-                  @if (question.typeQuestion === 'CHOIX_MULTIPLE') {
+                  @if (question.typeQuestion === 'QCM') {
                     <div class="meta-badge meta-options" [class.warning]="!hasValidOptions(question)">
                       <i class="material-icons">{{ hasValidOptions(question) ? 'checklist' : 'warning' }}</i>
                       <span>{{ getOptionsCount(question) }} option{{ getOptionsCount(question) > 1 ? 's' : '' }}</span>
@@ -207,7 +207,7 @@
                 </div>
 
                 <!-- Options pour choix multiples avec design amélioré -->
-                @if (question.typeQuestion === 'CHOIX_MULTIPLE' && hasValidOptions(question)) {
+                @if (question.typeQuestion === 'QCM' && hasValidOptions(question)) {
                   <div class="question-options">
                     <div class="options-header">
                       <i class="material-icons">checklist</i>
@@ -229,7 +229,7 @@
                 }
 
                 <!-- Message si pas d'options pour choix multiple -->
-                @if (question.typeQuestion === 'CHOIX_MULTIPLE' && !hasValidOptions(question)) {
+                @if (question.typeQuestion === 'QCM' && !hasValidOptions(question)) {
                   <div class="alert alert-warning">
                     <i class="material-icons">warning</i>
                     <div class="alert-content">
@@ -240,7 +240,7 @@
                 }
 
                 <!-- Indication pour réponse ouverte améliorée -->
-                @if (question.typeQuestion === 'REPONSE_OUVERTE') {
+                @if (question.typeQuestion === 'TEXTE_LIBRE') {
                   <div class="open-response-indicator">
                     <div class="indicator-content">
                       <i class="material-icons">edit_note</i>

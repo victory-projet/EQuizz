@@ -40,4 +40,5 @@ router.get('/stats', notificationController.getConnectionStats);
 
 // POST /api/notifications/test - Test de notification (développement seulement)
 router.post('/test', notificationController.testNotification);
+
 module.exports = router;

@@ -1,118 +1,66 @@
-// Script de test pour les questions
-const axios = require('axios');
+// Script de test pour créer des questions de test
+const db = require('./src/models');
 
-const BASE_URL = 'http://localhost:3000/api';
-
-// Configuration pour les tests
-let authToken = '';
-let quizzId = '';
-
-async function login() {
+async function createTestQuestions() {
   try {
-    const response = await axios.post(`${BASE_URL}/auth/login`, {
-      email: 'super.admin@saintjeaningenieur.org',
-      motDePasse: 'Admin123!'
+    // Trouver une évaluation existante avec un quizz
+    const evaluation = await db.Evaluation.findOne({
+      include: [{ model: db.Quizz }],
+      where: { statut: 'BROUILLON' }
     });
-    
-    authToken = response.data.token;
-    console.log('✅ Connexion réussie');
-    return true;
-  } catch (error) {
-    console.error('❌ Erreur de connexion:', error.response?.data || error.message);
-    return false;
-  }
-}
 
-async function getEvaluations() {
-  try {
-    const response = await axios.get(`${BASE_URL}/evaluations`, {
-      headers: { Authorization: `Bearer ${authToken}` }
-    });
-    
-    if (response.data.length > 0) {
-      const evaluation = response.data[0];
-      quizzId = evaluation.Quizz?.id;
-      console.log('✅ Évaluations récupérées, Quiz ID:', quizzId);
-      return true;
-    } else {
-      console.log('⚠️ Aucune évaluation trouvée');
-      return false;
+    if (!evaluation || !evaluation.Quizz) {
+      console.log('❌ Aucune évaluation en brouillon avec quizz trouvée');
+      return;
     }
-  } catch (error) {
-    console.error('❌ Erreur lors de la récupération des évaluations:', error.response?.data || error.message);
-    return false;
-  }
-}
 
-async function createQuestion() {
-  if (!quizzId) {
-    console.log('❌ Pas de Quiz ID disponible');
-    return false;
-  }
-
-  try {
-    const questionData = {
-      enonce: "Quelle est la capitale de la France ?",
-      typeQuestion: "CHOIX_MULTIPLE",
-      options: [
-        { texte: "Paris", estCorrecte: true },
-        { texte: "Lyon", estCorrecte: false },
-        { texte: "Marseille", estCorrecte: false },
-        { texte: "Toulouse", estCorrecte: false }
-      ]
-    };
-
-    const response = await axios.post(`${BASE_URL}/evaluations/quizz/${quizzId}/questions`, questionData, {
-      headers: { Authorization: `Bearer ${authToken}` }
+    console.log('✅ Évaluation trouvée:', {
+      id: evaluation.id,
+      titre: evaluation.titre,
+      quizzId: evaluation.Quizz.id
     });
-    
-    console.log('✅ Question créée:', response.data);
-    return response.data.id;
-  } catch (error) {
-    console.error('❌ Erreur lors de la création de la question:', error.response?.data || error.message);
-    return false;
-  }
-}
 
-async function getQuestions() {
-  if (!quizzId) {
-    console.log('❌ Pas de Quiz ID disponible');
-    return false;
-  }
+    // Créer quelques questions de test
+    const questions = [
+      {
+        enonce: 'Quelle est la différence entre une clé primaire et une clé étrangère ?',
+        typeQuestion: 'REPONSE_OUVERTE',
+        quizz_id: evaluation.Quizz.id
+      },
+      {
+        enonce: 'Quel langage de requête est utilisé pour interroger une base de données relationnelle ?',
+        typeQuestion: 'CHOIX_MULTIPLE',
+        options: ['SQL', 'HTML', 'CSS', 'JavaScript'],
+        quizz_id: evaluation.Quizz.id
+      },
+      {
+        enonce: 'Expliquez le concept de normalisation en base de données.',
+        typeQuestion: 'REPONSE_OUVERTE',
+        quizz_id: evaluation.Quizz.id
+      }
+    ];
 
-  try {
-    const response = await axios.get(`${BASE_URL}/quizz/${quizzId}/questions`, {
-      headers: { Authorization: `Bearer ${authToken}` }
+    // Supprimer les questions existantes pour ce quizz
+    await db.Question.destroy({
+      where: { quizz_id: evaluation.Quizz.id }
     });
+
+    // Créer les nouvelles questions
+    const createdQuestions = await db.Question.bulkCreate(questions);
     
-    console.log('✅ Questions récupérées:', response.data);
-    return true;
+    console.log('✅ Questions créées avec succès:');
+    createdQuestions.forEach((q, index) => {
+      console.log(`  ${index + 1}. ${q.enonce} (${q.typeQuestion})`);
+    });
+
+    console.log(`\n🎯 Vous pouvez maintenant tester avec l'évaluation ID: ${evaluation.id}`);
+    console.log(`🎯 Quizz ID: ${evaluation.Quizz.id}`);
+
   } catch (error) {
-    console.error('❌ Erreur lors de la récupération des questions:', error.response?.data || error.message);
-    return false;
+    console.error('❌ Erreur:', error);
+  } finally {
+    await db.sequelize.close();
   }
 }
 
-async function testQuestions() {
-  console.log('🚀 Test des fonctionnalités de questions...\n');
-
-  // 1. Connexion
-  const loginSuccess = await login();
-  if (!loginSuccess) return;
-
-  // 2. Récupérer les évaluations
-  const evalSuccess = await getEvaluations();
-  if (!evalSuccess) return;
-
-  // 3. Créer une question
-  const questionId = await createQuestion();
-  if (!questionId) return;
-
-  // 4. Récupérer les questions
-  await getQuestions();
-
-  console.log('\n✅ Tests terminés avec succès !');
-}
-
-// Exécuter les tests
-testQuestions().catch(console.error);
+createTestQuestions();

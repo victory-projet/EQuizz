@@ -1,36 +1,29 @@
-﻿import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 // Angular Material imports
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
 // Domain entities and services
 import { Evaluation } from '../../../core/domain/entities/evaluation.entity';
 import { Question } from '../../../core/domain/entities/question.entity';
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
-import { ConfirmationService } from '../../shared/services/confirmation.service';
-
-// Custom components - removed unused imports
 
 @Component({
   selector: 'app-evaluation-detail',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     MatTabsModule,
+    MatIconModule,
     MatCardModule,
     MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatProgressSpinnerModule
   ],
   templateUrl: './evaluation-detail.component.html',
   styleUrls: ['./evaluation-detail.component.scss']
@@ -40,15 +33,13 @@ export class EvaluationDetailComponent implements OnInit {
   isLoading = signal(false);
   errorMessage = signal('');
   successMessage = signal('');
-  activeTab = signal<'info' | 'questions'>('questions');
+  activeTab = signal<'info' | 'questions' | 'results'>('questions');
   
   // États pour le formulaire de question
   editingQuestion = signal<Question | null>(null);
   questions = signal<Question[]>([]);
   showQuestionForm = signal(false);
   showQuestionImport = signal(false);
-
-  private confirmationService = inject(ConfirmationService);
 
   constructor(
     private route: ActivatedRoute,
@@ -69,7 +60,6 @@ export class EvaluationDetailComponent implements OnInit {
 
     this.evaluationUseCase.getEvaluation(id).subscribe({
       next: (evaluation) => {
-        console.log('📥 Évaluation chargée:', evaluation);
         this.evaluation.set(evaluation);
         // Get questions from quizz or Quizz property
         const questions = evaluation.quizz?.questions || evaluation.quizz?.Questions || 
@@ -86,38 +76,15 @@ export class EvaluationDetailComponent implements OnInit {
     });
   }
 
-  setActiveTab(tab: 'info' | 'questions'): void {
+  setActiveTab(tab: 'info' | 'questions' | 'results'): void {
     this.activeTab.set(tab);
   }
 
   goToReport(): void {
     const evaluationId = this.evaluation()?.id;
     if (evaluationId) {
-      this.router.navigate(['/rapports', evaluationId]);
+      this.router.navigate(['/reports', evaluationId]);
     }
-  }
-
-  openQuestionForm(): void {
-    this.editingQuestion.set(null);
-    this.showQuestionForm.set(true);
-  }
-
-  closeQuestionForm(): void {
-    this.showQuestionForm.set(false);
-    this.editingQuestion.set(null);
-  }
-
-  editQuestion(question: Question): void {
-    this.editingQuestion.set(question);
-    this.showQuestionForm.set(true);
-  }
-
-  openQuestionImport(): void {
-    this.showQuestionImport.set(true);
-  }
-
-  closeQuestionImport(): void {
-    this.showQuestionImport.set(false);
   }
 
   onQuestionSaved(question: Question): void {
@@ -139,16 +106,8 @@ export class EvaluationDetailComponent implements OnInit {
     setTimeout(() => this.successMessage.set(''), 3000);
   }
 
-  onQuestionsImported(questions: Question[]): void {
-    const currentQuestions = this.questions();
-    this.questions.set([...currentQuestions, ...questions]);
-    this.showQuestionImport.set(false);
-    this.successMessage.set(`${questions.length} question(s) importée(s) avec succès`);
-    setTimeout(() => this.successMessage.set(''), 3000);
-  }
-
   async deleteQuestion(question: Question): Promise<void> {
-    const confirmed = await this.confirmationService.confirmDelete(`la question "${question.enonce}"`);
+    const confirmed = confirm(`Êtes-vous sûr de vouloir supprimer la question "${question.enonce}" ?`);
     if (!confirmed) return;
 
     this.isLoading.set(true);
@@ -176,7 +135,7 @@ export class EvaluationDetailComponent implements OnInit {
       return;
     }
 
-    const confirmed = await this.confirmationService.confirmPublish(evaluation.titre);
+    const confirmed = confirm(`Êtes-vous sûr de vouloir publier l'évaluation "${evaluation.titre}" ?`);
     if (!confirmed) return;
 
     this.isLoading.set(true);
@@ -197,42 +156,6 @@ export class EvaluationDetailComponent implements OnInit {
   goBack(): void {
     this.router.navigate(['/evaluations']);
   }
-
-  editEvaluation(): void {
-    const evaluationId = this.evaluation()?.id;
-    if (evaluationId) {
-      this.router.navigate(['/evaluations', evaluationId, 'edit']);
-    }
-  }
-
-  viewResults(): void {
-    const evaluationId = this.evaluation()?.id;
-    if (evaluationId) {
-      this.router.navigate(['/evaluations', evaluationId, 'results']);
-    }
-  }
-
-  formatDate(dateStr: string | Date | undefined): string {
-    if (!dateStr) return 'Non définie';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
-
-  getCharFromIndex(index: number): string {
-    return String.fromCharCode(65 + index); // A, B, C, D...
-  }
-
-  stats = signal<{
-    totalParticipants: number;
-    moyenneGenerale: number;
-    tauxCompletion: number;
-  } | null>(null);
 
   getQuestionTypeLabel(type: string): string {
     switch (type) {
@@ -269,14 +192,8 @@ export class EvaluationDetailComponent implements OnInit {
     }
   }
 
-  getOptionText(option: any): string {
-    if (typeof option === 'string') {
-      return option;
-    }
-    if (option && typeof option === 'object') {
-      return option.texte || option.text || String(option);
-    }
-    return String(option || '');
+  formatDate(date: Date | string): string {
+    return new Date(date).toLocaleDateString('fr-FR');
   }
 
   getStringFromCharCode(code: number): string {
@@ -294,5 +211,124 @@ export class EvaluationDetailComponent implements OnInit {
 
   getQuizzId(evaluation: Evaluation): string | number {
     return evaluation.quizz?.id || evaluation.quizzId || '';
+  }
+
+  openQuestionForm(): void {
+    this.editingQuestion.set(null);
+    this.showQuestionForm.set(true);
+  }
+
+  closeQuestionForm(): void {
+    this.showQuestionForm.set(false);
+    this.editingQuestion.set(null);
+  }
+
+  editQuestion(question: Question): void {
+    this.editingQuestion.set(question);
+    this.showQuestionForm.set(true);
+  }
+
+  openQuestionImport(): void {
+    this.showQuestionImport.set(true);
+  }
+
+  closeQuestionImport(): void {
+    this.showQuestionImport.set(false);
+  }
+
+  onQuestionsImported(questions: Question[]): void {
+    const currentQuestions = this.questions();
+    this.questions.set([...currentQuestions, ...questions]);
+    this.showQuestionImport.set(false);
+    this.successMessage.set(`${questions.length} question(s) importée(s) avec succès`);
+    setTimeout(() => this.successMessage.set(''), 3000);
+  }
+
+  // Additional methods for template compatibility
+  selectedQuestion = signal<Question | null>(null);
+  showImportModal = signal(false);
+
+  addQuestion(): void {
+    this.openQuestionForm();
+  }
+
+  editEvaluation(): void {
+    const evaluation = this.evaluation();
+    if (evaluation) {
+      this.router.navigate(['/evaluations', evaluation.id, 'edit']);
+    }
+  }
+
+  deleteQuestionById(questionId: string | number): void {
+    const currentQuestions = this.questions();
+    const question = currentQuestions.find(q => q.id === questionId);
+    if (question) {
+      this.deleteQuestion(question);
+    }
+  }
+
+  getOptionLetter(index: number): string {
+    return String.fromCharCode(65 + index); // A, B, C, D...
+  }
+
+  closeImportModal(): void {
+    this.showImportModal.set(false);
+  }
+
+  // Helper methods for template
+  getQuestionCount(): number {
+    return this.questions().length;
+  }
+
+  getClassesCount(): number {
+    const evaluation = this.evaluation();
+    if (!evaluation) return 0;
+    
+    if (evaluation.Classes && Array.isArray(evaluation.Classes)) {
+      return evaluation.Classes.length;
+    }
+    if (evaluation.classe) {
+      return 1;
+    }
+    return 0;
+  }
+
+  getDuration(): string {
+    const evaluation = this.evaluation();
+    if (!evaluation) return 'N/A';
+    
+    const duration = evaluation.quizz?.duree || 
+                    evaluation.Quizz?.duree || 
+                    (evaluation as any).duree;
+    
+    return duration ? String(duration) : 'N/A';
+  }
+
+  getClasses(): Array<{id: string | number, nom: string}> {
+    const evaluation = this.evaluation();
+    if (!evaluation) return [];
+    
+    if (evaluation.Classes && Array.isArray(evaluation.Classes)) {
+      return evaluation.Classes;
+    }
+    if (evaluation.classe) {
+      return [evaluation.classe];
+    }
+    return [];
+  }
+
+  // Helper methods for question options
+  isOptionCorrect(option: any): boolean {
+    if (typeof option === 'string') return false;
+    return option?.estCorrecte || option?.isCorrect || false;
+  }
+
+  getOptionText(option: any): string {
+    if (typeof option === 'string') return option;
+    return option?.texte || option?.text || String(option || '');
+  }
+
+  hasOptions(question: Question): boolean {
+    return !!(question.options && Array.isArray(question.options) && question.options.length > 0);
   }
 }

@@ -478,6 +478,7 @@ export class NotificationService {
       isArchived: false
     });
   }
+
   // === MÉTHODES D'AIDE POUR L'UI ===
 
   /**

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { UserRepositoryInterface, CreateUserDto, UpdateUserDto } from '../domain/repositories/user.repository.interface';
-import { User, Etudiant } from '../domain/entities/user.entity';
+import { User } from '../domain/entities/user.entity';
 import { StudentService } from '../services/student.service';
 
 @Injectable({
@@ -42,59 +42,7 @@ export class UserUseCase {
     return this.userRepository.importUsers(users);
   }
 
-  // Student-specific methods
-  getStudentsPaginated(params: {
-    page: number;
-    limit: number;
-    search?: string;
-    classeId?: string;
-    statut?: string;
-  }): Observable<{ students: Etudiant[]; pagination: any }> {
-    return this.studentService.getStudentsPaginated(params).pipe(
-      map(response => ({
-        students: response.students.map(student => this.mapStudentToEtudiant(student)),
-        pagination: response.pagination
-      }))
-    );
-  }
-
-  createStudent(data: any): Observable<Etudiant> {
-    return this.studentService.createStudent(data).pipe(
-      map(student => this.mapStudentToEtudiant(student))
-    );
-  }
-
-  updateStudent(id: number, data: any): Observable<Etudiant> {
-    return this.studentService.updateStudent(id, data).pipe(
-      map(student => this.mapStudentToEtudiant(student))
-    );
-  }
-
-  deleteStudent(id: number): Observable<void> {
-    return this.studentService.deleteStudent(id);
-  }
-
-  private mapStudentToEtudiant(student: any): Etudiant {
-    return {
-      id: parseInt(student.id),
-      nom: student.nom,
-      prenom: student.prenom,
-      email: student.email,
-      matricule: student.numeroEtudiant,
-      role: 'ETUDIANT' as const,
-      estActif: student.estActif,
-      dateCreation: new Date(student.createdAt || student.dateInscription),
-      dateModification: new Date(student.updatedAt || student.createdAt || student.dateInscription),
-      classeId: student.classe?.id ? parseInt(student.classe.id) : undefined,
-      classe: student.classe ? {
-        id: parseInt(student.classe.id),
-        nom: student.classe.nom,
-        anneeAcademiqueId: 1, // Default value
-        dateCreation: new Date(),
-        dateModification: new Date()
-      } : undefined,
-      numeroEtudiant: student.numeroEtudiant,
-      statut: student.estActif ? 'ACTIF' : 'INACTIF'
-    };
+  getStudentsPaginated(params: any): Observable<{ data: any[]; pagination: any }> {
+    return this.studentService.getStudentsPaginated(params);
   }
 }
