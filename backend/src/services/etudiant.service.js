@@ -195,6 +195,58 @@ class EtudiantService {
       throw error;
     }
   }
+
+  async toggleStatus(id) {
+    const etudiant = await db.Etudiant.findByPk(id, {
+      include: [{ model: db.Utilisateur }]
+    });
+    
+    if (!etudiant) {
+      throw AppError.notFound('Étudiant non trouvé', 'STUDENT_NOT_FOUND');
+    }
+
+    const newStatus = !etudiant.Utilisateur.estActif;
+    await etudiant.Utilisateur.update({ estActif: newStatus });
+
+    return this.findOne(id);
+  }
+
+  async changeClasse(id, classeId) {
+    const etudiant = await db.Etudiant.findByPk(id);
+    if (!etudiant) {
+      throw AppError.notFound('Étudiant non trouvé', 'STUDENT_NOT_FOUND');
+    }
+
+    // Vérifier que la classe existe si classeId est fourni
+    if (classeId) {
+      const classe = await db.Classe.findByPk(classeId);
+      if (!classe) {
+        throw AppError.notFound('Classe non trouvée', 'CLASS_NOT_FOUND');
+      }
+    }
+
+    await etudiant.update({ classe_id: classeId });
+    return this.findOne(id);
+  }
+
+  async findByClasse(classeId) {
+    const etudiants = await db.Etudiant.findAll({
+      where: { classe_id: classeId },
+      include: [
+        {
+          model: db.Utilisateur,
+          attributes: ['nom', 'prenom', 'email', 'estActif']
+        },
+        {
+          model: db.Classe,
+          attributes: ['nom', 'niveau']
+        }
+      ],
+      order: [[db.Utilisateur, 'nom', 'ASC']]
+    });
+
+    return etudiants;
+  }
 }
 
 module.exports = new EtudiantService();

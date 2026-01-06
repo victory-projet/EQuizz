@@ -1,57 +1,144 @@
-// backend/src/services/anneeAcademique.service.js
-
 const anneeAcademiqueRepository = require('../repositories/anneeAcademique.repository');
-const db = require('../models');
-const { Op } = require('sequelize');
+const AppError = require('../utils/AppError');
 
 class AnneeAcademiqueService {
-  /**
-   * Logique métier pour s'assurer qu'une seule année est courante.
-   */
-  async _ensureSingleCurrentYear(currentYearId) {
-    await db.AnneeAcademique.update(
-      { estCourante: false },
-      { where: { id: { [Op.ne]: currentYearId } } } // Met à jour toutes les autres années
-    );
+  async findAll(options = {}) {
+    try {
+      const { page = 1, limit = 10, search, estActive, estArchive } = options;
+      
+      const where = {};
+      
+      if (search) {
+        where.nom = { [require('sequelize').Op.like]: `%${search}%` };
+      }
+      
+      if (estActive !== undefined) {
+        where.estActive = estActive;
+      }
+      
+      if (estArchive !== undefined) {
+        where.estArchive = estArchive;
+      }
+
+      return await anneeAcademiqueRepository.findAll({
+        where,
+        limit: parseInt(limit),
+        offset: (parseInt(page) - 1) * parseInt(limit),
+        order: [['dateDebut', 'DESC']]
+      });
+    } catch (error) {
+      throw new AppError(`Erreur lors de la récupération des années académiques: ${error.message}`, 500);
+    }
+  }
+
+  async findById(id) {
+    try {
+      const anneeAcademique = await anneeAcademiqueRepository.findById(id, {
+        include: ['Semestres', 'Cours']
+      });
+      
+      if (!anneeAcademique) {
+        throw new AppError('Année académique non trouvée', 404);
+      }
+      
+      return anneeAcademique;
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(`Erreur lors de la récupération de l'année académique: ${error.message}`, 500);
+    }
   }
 
   async create(data) {
-    const annee = await anneeAcademiqueRepository.create(data);
-    if (data.estCourante) {
-      await this._ensureSingleCurrentYear(annee.id);
-    }
-    return annee;
-  }
+    try {
+      // Vérifier si une année avec le même nom existe déjà
+      const existingAnnee = await anneeAcademiqueRepository.findOne({
+        nom: data.nom
+      });
+      
+      if (existingAnnee) {
+        throw new AppError('Une année académique avec ce nom existe déjà', 400);
+      }
 
-  async findAll() {
-    return anneeAcademiqueRepository.findAll();
-  }
+      // Si c'est la première année ou si estActive est true, désactiver les autres
+      if (data.estActive) {
+        await this.setActive(null); // Désactiver toutes
+      }
 
-  async findOne(id) {
-    const annee = await anneeAcademiqueRepository.findById(id);
-    if (!annee) {
-      throw new Error('Année académique non trouvée.');
+      return await anneeAcademiqueRepository.create(data);
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(`Erreur lors de la création de l'année académique: ${error.message}`, 500);
     }
-    return annee;
   }
 
   async update(id, data) {
-    if (data.estCourante === true) {
-      await this._ensureSingleCurrentYear(id);
+    try {
+      const anneeAcademique = await anneeAcademiqueRepository.findById(id);
+      
+      if (!anneeAcademique) {
+        throw new AppError('Année académique non trouvée', 404);
+      }
+
+      // Si on active cette année, désactiver les autres
+      if (data.estActive && !anneeAcademique.estActive) {
+        await this.setActive(id);
+        delete data.estActive; // Éviter la double mise à jour
+      }
+
+      return await anneeAcademiqueRepository.update(id, data);
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(`Erreur lors de la mise à jour de l'année académique: ${error.message}`, 500);
     }
-    const updatedAnnee = await anneeAcademiqueRepository.update(id, data);
-    if (!updatedAnnee) {
-      throw new Error('Année académique non trouvée.');
-    }
-    return updatedAnnee;
   }
 
   async delete(id) {
-    const result = await anneeAcademiqueRepository.delete(id);
-    if (result === 0) {
-      throw new Error('Année académique non trouvée.');
+    try {
+      const anneeAcademique = await anneeAcademiqueRepository.findById(id);
+      
+      if (!anneeAcademique) {
+        throw new AppError('Année académique non trouvée', 404);
+      }
+
+      if (anneeAcademique.estActive) {
+        throw new AppError('Impossible de supprimer l\'année académique active', 400);
+      }
+
+      const deleted = await anneeAcademiqueRepository.delete(id);
+      
+      if (!deleted) {
+        throw new AppError('Erreur lors de la suppression', 500);
+      }
+      
+      return { message: 'Année académique supprimée avec succès' };
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(`Erreur lors de la suppression de l'année académique: ${error.message}`, 500);
     }
-    return { message: 'Année académique supprimée avec succès.' };
+  }
+
+  async setActive(id) {
+    try {
+      if (id) {
+        const anneeAcademique = await anneeAcademiqueRepository.findById(id);
+        if (!anneeAcademique) {
+          throw new AppError('Année académique non trouvée', 404);
+        }
+      }
+
+      return await anneeAcademiqueRepository.setActive(id);
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(`Erreur lors de l'activation de l'année académique: ${error.message}`, 500);
+    }
+  }
+
+  async getActive() {
+    try {
+      return await anneeAcademiqueRepository.findActive();
+    } catch (error) {
+      throw new AppError(`Erreur lors de la récupération de l'année académique active: ${error.message}`, 500);
+    }
   }
 }
 

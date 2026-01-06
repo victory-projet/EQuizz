@@ -21,25 +21,32 @@ const Cours = sequelize.define('Cours', {
     // ex: "Bases de Données"
   },
 
-  estArchive: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-    allowNull: false,
-    // Permet d'archiver un cours sans le supprimer
+  // Clé étrangère vers l'enseignant principal du cours
+  enseignant_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    field: 'enseignant_id'
   },
 
-  // Ajout du champ anneeAcademiqueId pour lier un cours à une année académique
+  // Clé étrangère vers l'année académique
   anneeAcademiqueId: {
     type: DataTypes.UUID,
     allowNull: true,
     field: 'annee_academique_id'
   },
 
-  // Ajout du champ semestreId pour lier un cours à un semestre
+  // Clé étrangère vers le semestre
   semestreId: {
     type: DataTypes.UUID,
     allowNull: true,
     field: 'semestre_id'
+  },
+
+  estArchive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+    // Permet d'archiver un cours sans le supprimer
   }
 
 }, {

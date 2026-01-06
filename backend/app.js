@@ -65,14 +65,11 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/utilisateurs', utilisateurRoutes);
-<<<<<<< Updated upstream
 app.use('/api/cours', coursRoutes);
 app.use('/api/classes', classeRoutes);
-=======
 app.use('/api/etudiants', etudiantRoutes);
 app.use('/api/archivage', archivageRoutes);
 app.use('/api/cours-enseignant', coursEnseignantRoutes);
->>>>>>> Stashed changes
 app.use('/api', questionRoutes);
 
 // Route de test temporaire pour debug de suppression (sans authentification)

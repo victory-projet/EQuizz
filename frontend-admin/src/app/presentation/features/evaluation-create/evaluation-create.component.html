@@ -228,29 +228,7 @@
                     }
                   </div>
 
-                  <div class="form-group">
-                    <label for="duree" class="form-label required">Durée (minutes)</label>
-                    <input 
-                      id="duree"
-                      type="number" 
-                      class="form-input" 
-                      [class.error]="isFieldInvalid('duree')"
-                      placeholder="Ex: 60"
-                      formControlName="duree"
-                      min="5"
-                      max="480"
-                      [attr.aria-describedby]="isFieldInvalid('duree') ? 'duree-error' : 'duree-help'"
-                      required>
-                    <div id="duree-help" class="form-help">
-                      Entre 5 et 480 minutes (8h maximum)
-                    </div>
-                    @if (isFieldInvalid('duree')) {
-                      <div id="duree-error" class="form-error" role="alert">
-                        <span class="material-icons">error</span>
-                        {{ getFieldError('duree') }}
-                      </div>
-                    }
-                  </div>
+                  
                 </div>
               </fieldset>
 
@@ -587,11 +565,6 @@
                 <div class="summary-item">
                   <label>Cours</label>
                   <span class="summary-value">{{ getCoursName(formData.coursId) }}</span>
-                </div>
-                
-                <div class="summary-item">
-                  <label>Durée</label>
-                  <span class="summary-value">{{ formData.duree }} minutes</span>
                 </div>
                 
                 <div class="summary-item">

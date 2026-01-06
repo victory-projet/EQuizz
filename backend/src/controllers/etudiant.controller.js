@@ -43,6 +43,22 @@ class EtudiantController {
     await etudiantService.delete(req.params.id);
     res.status(200).json({ message: 'Étudiant supprimé avec succès' });
   });
+
+  toggleStatus = asyncHandler(async (req, res) => {
+    const etudiant = await etudiantService.toggleStatus(req.params.id);
+    res.status(200).json(etudiant);
+  });
+
+  changeClasse = asyncHandler(async (req, res) => {
+    const { classeId } = req.body;
+    const etudiant = await etudiantService.changeClasse(req.params.id, classeId);
+    res.status(200).json(etudiant);
+  });
+
+  findByClasse = asyncHandler(async (req, res) => {
+    const etudiants = await etudiantService.findByClasse(req.params.classeId);
+    res.status(200).json(etudiants);
+  });
 }
 
 module.exports = new EtudiantController();

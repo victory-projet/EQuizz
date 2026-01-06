@@ -18,7 +18,6 @@ class EvaluationService {
    * @param {string} adminId - ID de l'administrateur qui crée l'évaluation.
    */
   async create(data, adminId) {
-<<<<<<< Updated upstream
     const { classeIds, coursId, ...evaluationData } = data;
     
     // Mapper coursId vers cours_id pour la compatibilité backend
@@ -26,11 +25,7 @@ class EvaluationService {
       evaluationData.cours_id = coursId;
     }
     
-=======
-    const { classeIds, ...evaluationData } = data;
-    
     // Validation des données d'entrée
->>>>>>> Stashed changes
     if (!classeIds || !Array.isArray(classeIds) || classeIds.length === 0) {
       throw AppError.badRequest('Au moins une classe doit être ciblée.', 'CLASSES_REQUIRED');
     }
@@ -87,7 +82,7 @@ class EvaluationService {
       search = '',
       statut = null,
       coursId = null,
-      orderBy = 'dateCreation',
+      orderBy = 'createdAt',
       orderDirection = 'DESC'
     } = options;
 
