@@ -7,6 +7,11 @@ const evaluationController = require('../controllers/evaluation.controller');
 const upload = require('../middlewares/upload.middleware');
 
 // Sécuriser toutes les routes de ce fichier
+router.use((req, res, next) => {
+  console.log('🔍 Evaluation Route - Method:', req.method, 'URL:', req.originalUrl);
+  next();
+});
+
 router.use(authenticate, isAdmin);
 
 // =========================================================

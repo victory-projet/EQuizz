@@ -47,6 +47,16 @@ app.use((req, res, next) => {
 // Middleware pour permettre au serveur de comprendre les requêtes JSON
 app.use(express.json());
 
+// --- Endpoint de santé ---
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // --- Utilisation des Routeurs ---
 app.use('/api/auth', authRoutes);
 app.use('/api/academic', academicRoutes);
