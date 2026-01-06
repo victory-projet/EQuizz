@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Auth - EQuizz</title>
+</head>
+<body>
+    <h1>Debug Authentication</h1>
+    <div id="debug-info"></div>
+    
+    <script>
+        function debugAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            const debugInfo = {
+                tokenExists: !!token,
+                tokenValue: token ? token.substring(0, 50) + '...' : 'null',
+                userExists: !!user,
+                userValue: user,
+                currentUrl: window.location.href,
+                timestamp: new Date().toISOString()
+            };
+            
+            console.log('🔍 Debug Auth Info:', debugInfo);
+            
+            document.getElementById('debug-info').innerHTML = `
+                <h2>Authentication Debug Info</h2>
+                <p><strong>Token exists:</strong> ${debugInfo.tokenExists}</p>
+                <p><strong>Token preview:</strong> ${debugInfo.tokenValue}</p>
+                <p><strong>User exists:</strong> ${debugInfo.userExists}</p>
+                <p><strong>User data:</strong> ${debugInfo.userValue}</p>
+                <p><strong>Current URL:</strong> ${debugInfo.currentUrl}</p>
+                <p><strong>Timestamp:</strong> ${debugInfo.timestamp}</p>
+                
+                <h3>Test API Call</h3>
+                <button onclick="testApiCall()">Test /api/evaluations</button>
+                <div id="api-result"></div>
+            `;
+        }
+        
+        async function testApiCall() {
+            const token = localStorage.getItem('token');
+            const resultDiv = document.getElementById('api-result');
+            
+            try {
+                const response = await fetch('https://equizz-backend.onrender.com/api/evaluations', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    }
+                });
+                
+                const result = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries())
+                };
+                
+                if (response.ok) {
+                    result.data = await response.json();
+                } else {
+                    result.error = await response.text();
+                }
+                
+                resultDiv.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+                console.log('🧪 API Test Result:', result);
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                console.error('🧪 API Test Error:', error);
+            }
+        }
+        
+        // Auto-run debug on page load
+        debugAuth();
+    </script>
+</body>
+</html>
