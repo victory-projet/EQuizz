@@ -16,7 +16,17 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
   create(evaluation: EvaluationApiData): Observable<Evaluation> {
     console.log('📡 Repository - Envoi de la requête POST /evaluations:', evaluation);
     return this.api.post<any>('/evaluations', evaluation).pipe(
-      map((response: any) => this.mapEvaluationFromBackend(response.evaluation || response))
+      map((response: any) => {
+        // Le backend utilise ResponseFormatter.created qui retourne { success: true, data: evaluation, message: '...' }
+        const evaluationData = response.data || response.evaluation || response;
+        console.log('📦 Repository - Données reçues du backend:', {
+          hasData: !!response.data,
+          hasEvaluation: !!response.evaluation,
+          directResponse: !!response.id,
+          actualData: evaluationData
+        });
+        return this.mapEvaluationFromBackend(evaluationData);
+      })
     );
   }
 
@@ -39,7 +49,11 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
 
   findById(id: string | number): Observable<Evaluation> {
     return this.api.get<any>(`/evaluations/${id}`).pipe(
-      map((data: any) => this.mapEvaluationFromBackend(data))
+      map((response: any) => {
+        // Le backend utilise ResponseFormatter.success qui retourne { success: true, data: evaluation, message: '...' }
+        const evaluationData = response.data || response.evaluation || response;
+        return this.mapEvaluationFromBackend(evaluationData);
+      })
     );
   }
 
@@ -56,11 +70,11 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
 
     const mapped = {
       ...data,
-      // Le backend retourne "Cour" (singulier) ou "Cours" (pluriel) selon la relation
-      // Gérer le cas où Cours peut être null
-      cours: data.Cour || data.Cours || data.cours || null,
-      // Le backend retourne "Classes" (array) - on prend la première
+      // Le backend retourne "Cours" avec une majuscule selon la relation Sequelize
+      cours: data.Cours || data.cours || null,
+      // Le backend retourne "Classes" (array) - on prend la première ou toutes selon le contexte
       classe: data.Classes?.[0] || data.Classe || data.classe || null,
+      classes: data.Classes || (data.Classe ? [data.Classe] : []),
       // Le backend retourne "Quizz" (majuscule)
       quizz: data.Quizz ? {
         ...data.Quizz,
@@ -72,13 +86,14 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
           type: q.typeQuestion || q.type
         })) || []
       } : null,
-      // S'assurer que quizzId est bien défini
+      // S'assurer que quizzId est bien défini à partir de la relation Quizz
       quizzId: data.Quizz?.id || data.quizzId || null
     };
 
     console.log('✅ Mapped evaluation:', {
       cours: mapped.cours,
       classe: mapped.classe,
+      classes: mapped.classes?.length || 0,
       quizzId: mapped.quizzId,
       hasQuizz: !!mapped.quizz,
       quizzFromData: mapped.quizz?.id
@@ -89,7 +104,10 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
 
   update(id: string | number, evaluation: Partial<EvaluationApiData>): Observable<Evaluation> {
     return this.api.put<any>(`/evaluations/${id}`, evaluation).pipe(
-      map((response: any) => this.mapEvaluationFromBackend(response.evaluation || response))
+      map((response: any) => {
+        const evaluationData = response.data || response.evaluation || response;
+        return this.mapEvaluationFromBackend(evaluationData);
+      })
     );
   }
 
@@ -99,13 +117,19 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
 
   publish(id: string | number): Observable<Evaluation> {
     return this.api.post<any>(`/evaluations/${id}/publish`, {}).pipe(
-      map((response: any) => this.mapEvaluationFromBackend(response.evaluation || response))
+      map((response: any) => {
+        const evaluationData = response.data || response.evaluation || response;
+        return this.mapEvaluationFromBackend(evaluationData);
+      })
     );
   }
 
   close(id: string | number): Observable<Evaluation> {
     return this.api.post<any>(`/evaluations/${id}/close`, {}).pipe(
-      map((response: any) => this.mapEvaluationFromBackend(response.evaluation || response))
+      map((response: any) => {
+        const evaluationData = response.data || response.evaluation || response;
+        return this.mapEvaluationFromBackend(evaluationData);
+      })
     );
   }
 
@@ -141,7 +165,10 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
 
   duplicateEvaluation(id: string | number): Observable<Evaluation> {
     return this.api.post<any>(`/evaluations/${id}/duplicate`, {}).pipe(
-      map((response: any) => this.mapEvaluationFromBackend(response.evaluation))
+      map((response: any) => {
+        const evaluationData = response.data || response.evaluation || response;
+        return this.mapEvaluationFromBackend(evaluationData);
+      })
     );
   }
 

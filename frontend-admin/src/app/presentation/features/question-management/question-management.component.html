@@ -53,8 +53,7 @@
   @if (showCreateForm()) {
     <div class="form-section">
       <app-question-form
-        [quizzId]="quizzId"
-        (questionCreated)="onQuestionCreated($event)"
+        (questionSaved)="onQuestionCreated($event)"
         (cancelled)="onFormCancelled()">
       </app-question-form>
     </div>

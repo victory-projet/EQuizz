@@ -74,7 +74,19 @@ class EvaluationService {
       }, { transaction });
 
       await transaction.commit();
-      return evaluationRepository.findById(evaluation.id);
+      
+      // Récupérer l'évaluation complète avec toutes ses relations
+      const completeEvaluation = await evaluationRepository.findById(evaluation.id);
+      console.log('📊 Service - Évaluation créée avec relations:', {
+        id: completeEvaluation?.id,
+        titre: completeEvaluation?.titre,
+        hasCours: !!completeEvaluation?.Cours,
+        hasQuizz: !!completeEvaluation?.Quizz,
+        hasClasses: !!completeEvaluation?.Classes,
+        classesCount: completeEvaluation?.Classes?.length || 0
+      });
+      
+      return completeEvaluation;
 
     } catch (error) {
       await transaction.rollback();
@@ -427,7 +439,7 @@ class EvaluationService {
         enonce,
         typeQuestion,
         options,
-        quizz_id: parseInt(quizzId) // S'assurer que c'est un entier valide
+        quizz_id: quizzId // Garder comme UUID string
       });
     });
 

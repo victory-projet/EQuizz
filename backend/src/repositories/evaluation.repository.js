@@ -29,7 +29,8 @@ class EvaluationRepository {
   }
 
   async findById(id) {
-    return db.Evaluation.findByPk(id, {
+    console.log('🔍 Repository - Recherche évaluation avec ID:', id);
+    const evaluation = await db.Evaluation.findByPk(id, {
       include: [
         { 
           model: db.Cours,
@@ -46,6 +47,19 @@ class EvaluationRepository {
         }
       ]
     });
+    
+    console.log('📊 Repository - Évaluation trouvée:', {
+      id: evaluation?.id,
+      titre: evaluation?.titre,
+      hasCours: !!evaluation?.Cours,
+      hasQuizz: !!evaluation?.Quizz,
+      hasClasses: !!evaluation?.Classes,
+      classesCount: evaluation?.Classes?.length || 0,
+      coursData: evaluation?.Cours ? { id: evaluation.Cours.id, nom: evaluation.Cours.nom } : null,
+      quizzData: evaluation?.Quizz ? { id: evaluation.Quizz.id, titre: evaluation.Quizz.titre } : null
+    });
+    
+    return evaluation;
   }
 
   async update(id, data) {

@@ -16,6 +16,18 @@
     </div>
     <div class="header-actions">
       <button 
+        class="btn btn-secondary"
+        (click)="exportAll()"
+        [disabled]="isExporting()">
+        @if (isExporting()) {
+          <i class="material-icons spinning">refresh</i>
+          Export en cours...
+        } @else {
+          <i class="material-icons">cloud_download</i>
+          Exporter tout
+        }
+      </button>
+      <button 
         class="btn btn-primary"
         (click)="onExport()"
         [disabled]="isExporting()">

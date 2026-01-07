@@ -1,5 +1,6 @@
 const { Evaluation, Classe, Enseignant, Utilisateur, AnneeAcademique } = require('../models');
 const ResponseFormatter = require('../utils/ResponseFormatter');
+const reportExportService = require('../services/report-export.service');
 
 class ReportController {
   // Récupérer tous les rapports disponibles
@@ -187,16 +188,157 @@ class ReportController {
   async exportToPDF(req, res) {
     try {
       const { id } = req.params;
+      const { format = 'pdf', includeSentimentAnalysis = true, includeChartData = true, includeDetailedResponses = false } = req.body;
       
-      // Pour le moment, retourner un message simulé
-      res.json({ 
-        message: 'Export PDF en cours de développement',
-        evaluationId: id,
-        status: 'pending'
-      });
+      console.log(`📄 Export ${format.toUpperCase()} demandé pour l'évaluation ${id}`);
+
+      // Récupérer l'évaluation
+      const evaluation = await Evaluation.findByPk(id);
+      if (!evaluation) {
+        return ResponseFormatter.notFound(res, 'Évaluation');
+      }
+
+      // Simuler des données de soumissions pour l'export
+      const mockSubmissions = [
+        {
+          id: 1,
+          etudiant: { nom: 'Dupont', prenom: 'Jean', email: 'jean.dupont@email.com', classe: 'L3 Info' },
+          dateDebut: new Date(),
+          dateFin: new Date(),
+          estTermine: true,
+          reponses: [
+            { question: 'Question 1', reponse: 'Réponse A', typeQuestion: 'QCM' },
+            { question: 'Question 2', reponse: 'Très intéressant', typeQuestion: 'TEXTE_LIBRE' }
+          ]
+        }
+      ];
+
+      const reportExportService = require('../services/report-export.service');
+      
+      let buffer;
+      let filename;
+      let contentType;
+
+      if (format === 'pdf') {
+        buffer = await reportExportService.exportEvaluationToPDF(evaluation, mockSubmissions, {
+          includeSentimentAnalysis,
+          includeChartData,
+          includeDetailedResponses
+        });
+        filename = `evaluation_${id}_report.pdf`;
+        contentType = 'application/pdf';
+      } else if (format === 'excel') {
+        buffer = await reportExportService.exportEvaluationToExcel(evaluation, mockSubmissions, {
+          includeSentimentAnalysis,
+          includeChartData,
+          includeDetailedResponses
+        });
+        filename = `evaluation_${id}_report.xlsx`;
+        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      } else {
+        return ResponseFormatter.error(res, 'Format d\'export non supporté', 400);
+      }
+
+      // Configurer les en-têtes pour le téléchargement
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', buffer.length);
+
+      // Envoyer le fichier
+      res.send(buffer);
+      
+      console.log(`✅ Export ${format.toUpperCase()} généré avec succès: ${filename}`);
+      
     } catch (error) {
-      console.error('Erreur lors de l\'export PDF:', error);
-      res.status(500).json({ message: 'Erreur lors de l\'export PDF' });
+      console.error('❌ Erreur lors de l\'export:', error);
+      return ResponseFormatter.error(res, 'Erreur lors de l\'export du rapport', 500, {
+        message: error.message,
+        stack: error.stack
+      });
+    }
+  }
+
+  // Exporter tout (tous les rapports)
+  async exportAll(req, res) {
+    try {
+      const { format = 'excel', filters = {} } = req.body;
+      
+      console.log(`📊 Export global ${format.toUpperCase()} demandé`);
+
+      // Récupérer toutes les évaluations selon les filtres
+      const whereClause = {};
+      if (filters.dateDebut) {
+        whereClause.dateDebut = { [require('sequelize').Op.gte]: new Date(filters.dateDebut) };
+      }
+      if (filters.dateFin) {
+        whereClause.dateFin = { [require('sequelize').Op.lte]: new Date(filters.dateFin) };
+      }
+
+      const evaluations = await Evaluation.findAll({
+        where: whereClause,
+        attributes: ['id', 'titre', 'description', 'dateDebut', 'dateFin', 'statut', 'created_at'],
+        order: [['created_at', 'DESC']]
+      });
+
+      if (evaluations.length === 0) {
+        return ResponseFormatter.error(res, 'Aucune évaluation trouvée pour les critères spécifiés', 404);
+      }
+
+      const reportExportService = require('../services/report-export.service');
+      
+      // Créer un rapport consolidé
+      const consolidatedData = {
+        titre: 'Rapport Consolidé des Évaluations',
+        dateGeneration: new Date(),
+        evaluations: evaluations.map(eval => ({
+          id: eval.id,
+          titre: eval.titre,
+          description: eval.description,
+          dateDebut: eval.dateDebut,
+          dateFin: eval.dateFin,
+          statut: eval.statut,
+          dateCreation: eval.created_at
+        })),
+        statistiques: {
+          totalEvaluations: evaluations.length,
+          evaluationsActives: evaluations.filter(e => e.statut === 'ACTIVE').length,
+          evaluationsTerminees: evaluations.filter(e => e.statut === 'TERMINEE').length,
+          evaluationsBrouillon: evaluations.filter(e => e.statut === 'BROUILLON').length
+        }
+      };
+
+      let buffer;
+      let filename;
+      let contentType;
+
+      if (format === 'excel') {
+        buffer = await reportExportService.exportConsolidatedToExcel(consolidatedData);
+        filename = `rapport_consolide_${new Date().toISOString().split('T')[0]}.xlsx`;
+        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      } else if (format === 'pdf') {
+        buffer = await reportExportService.exportConsolidatedToPDF(consolidatedData);
+        filename = `rapport_consolide_${new Date().toISOString().split('T')[0]}.pdf`;
+        contentType = 'application/pdf';
+      } else {
+        return ResponseFormatter.error(res, 'Format d\'export non supporté', 400);
+      }
+
+      // Configurer les en-têtes pour le téléchargement
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', buffer.length);
+
+      // Envoyer le fichier
+      res.send(buffer);
+      
+      console.log(`✅ Export consolidé ${format.toUpperCase()} généré avec succès: ${filename}`);
+      
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'export consolidé:', error);
+      return ResponseFormatter.error(res, 'Erreur lors de l\'export consolidé', 500, {
+        message: error.message,
+        stack: error.stack
+      });
     }
   }
 }

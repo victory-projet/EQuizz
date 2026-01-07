@@ -15,7 +15,10 @@ router.get('/evaluations/:id', reportController.getEvaluationReport);
 // Obtenir les options de filtrage (classes, enseignants)
 router.get('/filter-options', reportController.getFilterOptions);
 
-// Exporter un rapport en PDF
-router.post('/evaluations/:id/export-pdf', reportController.exportToPDF);
+// Exporter un rapport en PDF ou Excel
+router.post('/evaluations/:id/export', reportController.exportToPDF);
+
+// Exporter tous les rapports
+router.post('/export-all', authorize(['ADMIN']), reportController.exportAll);
 
 module.exports = router;

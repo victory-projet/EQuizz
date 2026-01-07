@@ -528,35 +528,31 @@
 
 <!-- Question Form Modal -->
 @if (showQuestionForm()) {
-  <div class="question-form-overlay" (click)="closeQuestionForm()">
-    <div class="question-form-modal" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3>Ajouter une question</h3>
-        <button class="btn-icon" (click)="closeQuestionForm()">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
-      <div class="modal-content">
-        <!-- Question form content will be implemented here -->
-        <p>Formulaire de création de question à implémenter</p>
-      </div>
-    </div>
-  </div>
+  <app-question-form
+    [question]="editingQuestion()"
+    [isVisible]="showQuestionForm()"
+    (questionSaved)="onQuestionSaved($event)"
+    (cancelled)="closeQuestionForm()">
+  </app-question-form>
 }
 
 <!-- Import Modal -->
 @if (showImportModal()) {
-  <div class="question-form-overlay" (click)="closeImportModal()">
-    <div class="question-form-modal" (click)="$event.stopPropagation()">
+  <div class="modal-overlay" (click)="closeImportModal()">
+    <div class="modal-content import-modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3>Importer des questions</h3>
         <button class="btn-icon" (click)="closeImportModal()">
           <span class="material-icons">close</span>
         </button>
       </div>
-      <div class="modal-content">
-        <!-- Question import content will be implemented here -->
-        <p>Interface d'import de questions à implémenter</p>
+      <div class="modal-body">
+        <app-question-import
+          [evaluationId]="draftEvaluationId() || ''"
+          [quizzId]="quizzId() || ''"
+          (imported)="onQuestionsImported($event)"
+          (cancelled)="closeImportModal()">
+        </app-question-import>
       </div>
     </div>
   </div>

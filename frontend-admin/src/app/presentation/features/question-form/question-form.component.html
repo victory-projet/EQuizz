@@ -1,151 +1,254 @@
-<div class="question-form-container">
-  <form [formGroup]="questionForm" (ngSubmit)="onSubmit()" class="question-form">
-    
-    <!-- Message d'erreur global -->
+<div class="question-form-modal" *ngIf="isVisible">
+  <div class="modal-overlay" (click)="onCancel()"></div>
+  
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- En-tête du modal -->
+    <div class="modal-header">
+      <div class="modal-title">
+        <span class="material-icons">{{ getQuestionTypeIcon(selectedType) }}</span>
+        <h3>{{ modalTitle }}</h3>
+      </div>
+      <button class="btn-close" (click)="onCancel()" type="button">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <!-- Messages d'erreur -->
     @if (errorMessage()) {
       <div class="alert alert-error">
         <span class="material-icons">error</span>
-        {{ errorMessage() }}
+        <span>{{ errorMessage() }}</span>
       </div>
     }
 
-    <!-- Type de question -->
-    <div class="form-group">
-      <label for="typeQuestion" class="form-label required">
-        Type de question
-      </label>
-      <select 
-        id="typeQuestion" 
-        formControlName="typeQuestion" 
-        class="form-select"
-        [class.error]="questionForm.get('typeQuestion')?.errors && questionForm.get('typeQuestion')?.touched">
-        <option value="">Sélectionnez un type de question</option>
-        @for (type of questionTypes; track type.value) {
-          <option [value]="type.value">{{ type.label }}</option>
-        }
-      </select>
-      @if (questionForm.get('typeQuestion')?.errors && questionForm.get('typeQuestion')?.touched) {
-        <div class="field-error">Le type de question est requis</div>
-      }
-    </div>
+    <!-- Formulaire -->
+    <form [formGroup]="questionForm" (ngSubmit)="onSubmit()" class="question-form">
+      <div class="form-content">
+        
+        <!-- Section: Type de question -->
+        <div class="form-section">
+          <h4 class="section-title">
+            <span class="material-icons">category</span>
+            Type de question
+          </h4>
+          
+          <div class="question-types-grid">
+            @for (type of questionTypes; track type.value) {
+              <label class="question-type-option" 
+                     [class.selected]="selectedType === type.value">
+                <input type="radio" 
+                       formControlName="typeQuestion" 
+                       [value]="type.value"
+                       class="sr-only">
+                <div class="type-card">
+                  <span class="material-icons">{{ type.icon }}</span>
+                  <span class="type-label">{{ type.label }}</span>
+                </div>
+              </label>
+            }
+          </div>
+        </div>
 
-    <!-- Énoncé de la question -->
-    <div class="form-group">
-      <label for="enonce" class="form-label required">
-        Énoncé de la question
-      </label>
-      <textarea 
-        id="enonce" 
-        formControlName="enonce" 
-        class="form-textarea"
-        [class.error]="questionForm.get('enonce')?.errors && questionForm.get('enonce')?.touched"
-        placeholder="Saisissez l'énoncé de votre question..."
-        rows="4">
-      </textarea>
-      @if (questionForm.get('enonce')?.errors && questionForm.get('enonce')?.touched) {
-        <div class="field-error">L'énoncé est requis (minimum 10 caractères)</div>
-      }
-      <div class="field-hint">
-        Minimum 10 caractères requis
-      </div>
-    </div>
-
-    <!-- Options pour choix multiples -->
-    @if (isChoixMultiple) {
-      <div class="form-group">
-        <label class="form-label required">
-          Options de réponse
-        </label>
-        <div class="options-container">
-          @for (option of options.controls; track $index; let i = $index) {
-            <div class="option-item">
-              <div class="option-input-group">
-                <span class="option-number">{{ i + 1 }}.</span>
-                <input 
-                  type="text" 
-                  [formControl]="$any(option)"
-                  class="form-input option-input"
-                  [class.error]="option.errors && option.touched"
-                  [placeholder]="'Option ' + (i + 1)">
-                @if (options.length > 2) {
-                  <button 
-                    type="button" 
-                    class="btn-remove-option"
-                    (click)="removeOption(i)"
-                    title="Supprimer cette option">
-                    <span class="material-icons">delete</span>
-                  </button>
-                }
+        <!-- Section: Énoncé -->
+        <div class="form-section">
+          <h4 class="section-title">
+            <span class="material-icons">edit</span>
+            Énoncé de la question
+          </h4>
+          
+          <div class="form-group">
+            <label for="enonce" class="form-label required">Question</label>
+            <textarea 
+              id="enonce"
+              formControlName="enonce"
+              class="form-textarea"
+              [class.error]="isFieldInvalid('enonce')"
+              placeholder="Saisissez votre question ici..."
+              rows="4"
+              maxlength="500">
+            </textarea>
+            
+            <div class="form-meta">
+              <span class="character-count">{{ characterCount }}/500 caractères</span>
+              <span class="reading-time">~{{ estimatedReadingTime }} min de lecture</span>
+            </div>
+            
+            @if (isFieldInvalid('enonce')) {
+              <div class="form-error">
+                <span class="material-icons">error</span>
+                {{ getFieldError('enonce') }}
               </div>
-              @if (option.errors && option.touched) {
-                <div class="field-error">Cette option est requise</div>
+            }
+          </div>
+        </div>
+
+        <!-- Section: Options (pour QCM, Vrai/Faux, etc.) -->
+        @if (requiresOptions) {
+          <div class="form-section">
+            <h4 class="section-title">
+              <span class="material-icons">list</span>
+              Options de réponse
+            </h4>
+            
+            <div class="options-container">
+              @for (option of options.controls; track $index; let i = $index) {
+                <div class="option-item" [class.correct]="formData.bonneReponse === i">
+                  <div class="option-header">
+                    <span class="option-letter">{{ getOptionLetter(i) }}</span>
+                    <div class="option-actions">
+                      <button type="button" 
+                              class="btn-icon btn-sm"
+                              (click)="moveOptionUp(i)"
+                              [disabled]="i === 0"
+                              title="Déplacer vers le haut">
+                        <span class="material-icons">keyboard_arrow_up</span>
+                      </button>
+                      <button type="button" 
+                              class="btn-icon btn-sm"
+                              (click)="moveOptionDown(i)"
+                              [disabled]="i === options.length - 1"
+                              title="Déplacer vers le bas">
+                        <span class="material-icons">keyboard_arrow_down</span>
+                      </button>
+                      <button type="button" 
+                              class="btn-icon btn-sm btn-danger"
+                              (click)="removeOption(i)"
+                              [disabled]="!canRemoveOption"
+                              title="Supprimer cette option">
+                        <span class="material-icons">delete</span>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="option-content">
+                    <input type="text" 
+                           [formControl]="$any(option)"
+                           class="form-input"
+                           [class.error]="isOptionInvalid(i)"
+                           [placeholder]="'Option ' + getOptionLetter(i)"
+                           maxlength="200">
+                    
+                    <label class="correct-answer-toggle" 
+                           [title]="'Marquer comme bonne réponse'">
+                      <input type="radio" 
+                             name="bonneReponse"
+                             [value]="i"
+                             formControlName="bonneReponse"
+                             class="sr-only">
+                      <span class="material-icons">
+                        {{ formData.bonneReponse === i ? 'radio_button_checked' : 'radio_button_unchecked' }}
+                      </span>
+                      <span class="toggle-text">Bonne réponse</span>
+                    </label>
+                  </div>
+                  
+                  @if (isOptionInvalid(i)) {
+                    <div class="form-error">
+                      <span class="material-icons">error</span>
+                      {{ getOptionError(i) }}
+                    </div>
+                  }
+                </div>
+              }
+              
+              @if (canAddOption) {
+                <button type="button" 
+                        class="btn-add-option"
+                        (click)="addOption()">
+                  <span class="material-icons">add</span>
+                  <span>Ajouter une option</span>
+                </button>
               }
             </div>
-          }
-          
-          <button 
-            type="button" 
-            class="btn-add-option"
-            (click)="addOption()">
-            <span class="material-icons">add</span>
-            Ajouter une option
-          </button>
-        </div>
-        <div class="field-hint">
-          Minimum 2 options requises pour les questions à choix multiples
-        </div>
-      </div>
-    }
+          </div>
+        }
 
-    <!-- Aperçu de la question -->
-    @if (questionForm.get('enonce')?.value && questionForm.get('typeQuestion')?.value) {
-      <div class="question-preview">
-        <h4 class="preview-title">Aperçu de la question</h4>
-        <div class="preview-content">
-          <div class="preview-question">
-            <strong>{{ questionForm.get('enonce')?.value }}</strong>
+        <!-- Section: Configuration avancée -->
+        <div class="form-section">
+          <h4 class="section-title">
+            <span class="material-icons">tune</span>
+            Configuration
+          </h4>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="points" class="form-label required">Points</label>
+              <input type="number" 
+                     id="points"
+                     formControlName="points"
+                     class="form-input"
+                     [class.error]="isFieldInvalid('points')"
+                     min="0.5" 
+                     max="10" 
+                     step="0.5">
+              @if (isFieldInvalid('points')) {
+                <div class="form-error">
+                  <span class="material-icons">error</span>
+                  {{ getFieldError('points') }}
+                </div>
+              }
+            </div>
+            
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" 
+                       formControlName="obligatoire"
+                       class="form-checkbox">
+                <span class="checkbox-text">Question obligatoire</span>
+              </label>
+            </div>
           </div>
           
-          @if (isChoixMultiple && options.length > 0) {
-            <div class="preview-options">
-              @for (option of options.controls; track $index; let i = $index) {
-                @if (option.value) {
-                  <div class="preview-option">
-                    <input type="radio" disabled> {{ option.value }}
-                  </div>
-                }
-              }
+          <div class="form-group">
+            <label for="explication" class="form-label">Explication (optionnelle)</label>
+            <textarea 
+              id="explication"
+              formControlName="explication"
+              class="form-textarea"
+              placeholder="Ajoutez une explication qui sera affichée après la réponse..."
+              rows="3"
+              maxlength="300">
+            </textarea>
+            <div class="form-help">
+              Cette explication sera visible par les étudiants après avoir répondu.
+              {{ formData.explication?.length || 0 }}/300 caractères
             </div>
-          } @else if (questionForm.get('typeQuestion')?.value === 'REPONSE_OUVERTE') {
-            <div class="preview-open-response">
-              <textarea placeholder="Zone de réponse libre..." disabled rows="3"></textarea>
-            </div>
-          }
+          </div>
         </div>
       </div>
-    }
 
-    <!-- Actions -->
-    <div class="form-actions">
-      <button 
-        type="button" 
-        class="btn btn-secondary"
-        (click)="onCancel()"
-        [disabled]="isLoading()">
-        Annuler
-      </button>
-      <button 
-        type="submit" 
-        class="btn btn-primary"
-        [disabled]="!questionForm.valid || isLoading()">
-        @if (isLoading()) {
-          <span class="material-icons">hourglass_empty</span>
-          Création...
-        } @else {
-          <span class="material-icons">add</span>
-          Créer la question
-        }
-      </button>
-    </div>
-  </form>
+      <!-- Actions du formulaire -->
+      <div class="modal-actions">
+        <div class="actions-left">
+          <button type="button" 
+                  class="btn-secondary"
+                  (click)="previewQuestion()"
+                  [disabled]="!questionForm.valid">
+            <span class="material-icons">visibility</span>
+            <span>Aperçu</span>
+          </button>
+        </div>
+        
+        <div class="actions-right">
+          <button type="button" 
+                  class="btn-cancel"
+                  (click)="onCancel()">
+            <span>Annuler</span>
+          </button>
+          
+          <button type="submit" 
+                  class="btn-primary"
+                  [disabled]="!questionForm.valid || isLoading()">
+            @if (isLoading()) {
+              <div class="loading-spinner"></div>
+              <span>Enregistrement...</span>
+            } @else {
+              <span class="material-icons">save</span>
+              <span>{{ submitButtonText }}</span>
+            }
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>

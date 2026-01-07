@@ -622,7 +622,143 @@ class ReportExportService {
   }
 
   /**
-   * Exporte en format PDF (version simplifiée)
+   * Exporte un rapport consolidé en Excel
+   */
+  async exportConsolidatedToExcel(consolidatedData) {
+    const workbook = new ExcelJS.Workbook();
+    
+    // Métadonnées du workbook
+    workbook.creator = 'Système d\'Évaluation';
+    workbook.lastModifiedBy = 'Système d\'Évaluation';
+    workbook.created = new Date();
+    workbook.modified = new Date();
+
+    // Feuille de résumé
+    const summarySheet = workbook.addWorksheet('Résumé Consolidé');
+    
+    // En-tête principal
+    summarySheet.mergeCells('A1:F1');
+    const titleCell = summarySheet.getCell('A1');
+    titleCell.value = consolidatedData.titre;
+    titleCell.style = this.defaultStyles.header;
+    summarySheet.getRow(1).height = 30;
+
+    // Informations générales
+    let currentRow = 3;
+    summarySheet.getCell('A2').value = 'Informations Générales';
+    summarySheet.getCell('A2').style = this.defaultStyles.subHeader;
+    summarySheet.mergeCells('A2:B2');
+
+    const infoData = [
+      ['Date de génération', consolidatedData.dateGeneration.toLocaleDateString('fr-FR')],
+      ['Total évaluations', consolidatedData.statistiques.totalEvaluations],
+      ['Évaluations actives', consolidatedData.statistiques.evaluationsActives],
+      ['Évaluations terminées', consolidatedData.statistiques.evaluationsTerminees],
+      ['Brouillons', consolidatedData.statistiques.evaluationsBrouillon]
+    ];
+
+    infoData.forEach(([label, value]) => {
+      summarySheet.getCell(`A${currentRow}`).value = label;
+      summarySheet.getCell(`B${currentRow}`).value = value;
+      summarySheet.getCell(`A${currentRow}`).style = { font: { bold: true } };
+      currentRow++;
+    });
+
+    // Feuille des évaluations détaillées
+    const detailSheet = workbook.addWorksheet('Évaluations Détaillées');
+    
+    const headers = ['ID', 'Titre', 'Description', 'Date Début', 'Date Fin', 'Statut', 'Date Création'];
+    headers.forEach((header, index) => {
+      const cell = detailSheet.getCell(1, index + 1);
+      cell.value = header;
+      cell.style = this.defaultStyles.header;
+    });
+
+    consolidatedData.evaluations.forEach((evaluation, index) => {
+      const row = detailSheet.getRow(index + 2);
+      row.getCell(1).value = evaluation.id;
+      row.getCell(2).value = evaluation.titre;
+      row.getCell(3).value = evaluation.description || '';
+      row.getCell(4).value = evaluation.dateDebut ? new Date(evaluation.dateDebut).toLocaleDateString('fr-FR') : '';
+      row.getCell(5).value = evaluation.dateFin ? new Date(evaluation.dateFin).toLocaleDateString('fr-FR') : '';
+      row.getCell(6).value = evaluation.statut;
+      row.getCell(7).value = evaluation.dateCreation ? new Date(evaluation.dateCreation).toLocaleDateString('fr-FR') : '';
+      
+      row.eachCell(cell => {
+        cell.style = this.defaultStyles.data;
+      });
+    });
+
+    // Ajuster les largeurs des colonnes
+    detailSheet.getColumn(1).width = 10;
+    detailSheet.getColumn(2).width = 30;
+    detailSheet.getColumn(3).width = 40;
+    detailSheet.getColumn(4).width = 15;
+    detailSheet.getColumn(5).width = 15;
+    detailSheet.getColumn(6).width = 15;
+    detailSheet.getColumn(7).width = 15;
+
+    return await workbook.xlsx.writeBuffer();
+  }
+
+  /**
+   * Exporte un rapport consolidé en PDF
+   */
+  async exportConsolidatedToPDF(consolidatedData) {
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument();
+        const buffers = [];
+
+        doc.on('data', buffers.push.bind(buffers));
+        doc.on('end', () => {
+          const pdfBuffer = Buffer.concat(buffers);
+          resolve(pdfBuffer);
+        });
+
+        // Titre
+        doc.fontSize(20).text(consolidatedData.titre, 50, 50);
+        
+        // Date de génération
+        doc.fontSize(12).text(`Généré le: ${consolidatedData.dateGeneration.toLocaleDateString('fr-FR')}`, 50, 80);
+        
+        // Statistiques générales
+        doc.fontSize(16).text('Statistiques Générales', 50, 120);
+        doc.fontSize(12)
+           .text(`Total évaluations: ${consolidatedData.statistiques.totalEvaluations}`, 50, 150)
+           .text(`Évaluations actives: ${consolidatedData.statistiques.evaluationsActives}`, 50, 170)
+           .text(`Évaluations terminées: ${consolidatedData.statistiques.evaluationsTerminees}`, 50, 190)
+           .text(`Brouillons: ${consolidatedData.statistiques.evaluationsBrouillon}`, 50, 210);
+
+        // Liste des évaluations
+        doc.fontSize(16).text('Liste des Évaluations', 50, 250);
+        
+        let yPosition = 280;
+        consolidatedData.evaluations.forEach((evaluation, index) => {
+          if (yPosition > 700) {
+            doc.addPage();
+            yPosition = 50;
+          }
+          
+          doc.fontSize(12)
+             .text(`${index + 1}. ${evaluation.titre}`, 50, yPosition)
+             .text(`   Statut: ${evaluation.statut}`, 70, yPosition + 15)
+             .text(`   Créé le: ${evaluation.dateCreation ? new Date(evaluation.dateCreation).toLocaleDateString('fr-FR') : 'N/A'}`, 70, yPosition + 30);
+          
+          yPosition += 60;
+        });
+
+        doc.end();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  /**
+   * Exporte un rapport d'évaluation en PDF
+   * @param {object} evaluation - Données de l'évaluation
+   * @param {Array} submissions - Soumissions des étudiants
+   * @param {object} options - Options d'export
+   * @returns {Buffer} Buffer du fichier PDF
    */
   async exportEvaluationToPDF(evaluation, submissions, options = {}) {
     return new Promise((resolve, reject) => {
@@ -636,23 +772,83 @@ class ReportExportService {
           resolve(pdfBuffer);
         });
 
-        // Titre
+        // Titre principal
         doc.fontSize(20).text(`Rapport d'Évaluation - ${evaluation.titre}`, 50, 50);
         
         // Informations générales
         doc.fontSize(14).text('Informations Générales', 50, 100);
         doc.fontSize(12)
-           .text(`Cours: ${evaluation.Cours?.nom || 'N/A'}`, 50, 120)
-           .text(`Date de création: ${new Date(evaluation.createdAt).toLocaleDateString('fr-FR')}`, 50, 140)
-           .text(`Statut: ${evaluation.statut}`, 50, 160)
-           .text(`Nombre de soumissions: ${submissions.length}`, 50, 180);
+           .text(`Cours: ${evaluation.Cours?.nom || 'N/A'}`, 50, 130)
+           .text(`Date de création: ${new Date(evaluation.createdAt).toLocaleDateString('fr-FR')}`, 50, 150)
+           .text(`Statut: ${evaluation.statut}`, 50, 170)
+           .text(`Nombre de questions: ${evaluation.Quizz?.Questions?.length || 0}`, 50, 190)
+           .text(`Nombre de soumissions: ${submissions.length}`, 50, 210);
 
         // Statistiques
         const completedSubmissions = submissions.filter(s => s.estTermine);
-        doc.fontSize(14).text('Statistiques', 50, 220);
+        const avgCompletionTime = this.calculateAverageCompletionTime(completedSubmissions);
+
+        doc.fontSize(14).text('Statistiques', 50, 250);
         doc.fontSize(12)
-           .text(`Soumissions complètes: ${completedSubmissions.length}`, 50, 240)
-           .text(`Taux de completion: ${Math.round((completedSubmissions.length / submissions.length) * 100)}%`, 50, 260);
+           .text(`Soumissions complètes: ${completedSubmissions.length}`, 50, 280)
+           .text(`Soumissions en cours: ${submissions.length - completedSubmissions.length}`, 50, 300)
+           .text(`Temps moyen de completion: ${avgCompletionTime}`, 50, 320)
+           .text(`Taux de completion: ${Math.round((completedSubmissions.length / submissions.length) * 100)}%`, 50, 340);
+
+        // Analyse des sentiments si demandée
+        if (options.includeSentimentAnalysis !== false) {
+          const textResponses = [];
+          submissions.forEach(submission => {
+            if (submission.reponses) {
+              submission.reponses.forEach(reponse => {
+                if (reponse.reponse && typeof reponse.reponse === 'string' && reponse.reponse.length > 10) {
+                  textResponses.push({ contenu: reponse.reponse, id: submission.id });
+                }
+              });
+            }
+          });
+
+          if (textResponses.length > 0) {
+            doc.addPage();
+            doc.fontSize(14).text('Analyse des Sentiments', 50, 50);
+            
+            try {
+              const sentimentAnalysisService = require('./sentiment-analysis.service');
+              const sentimentAnalysis = sentimentAnalysisService.analyzeEvaluationResponses(textResponses);
+              
+              doc.fontSize(12)
+                 .text(`Sentiment global: ${sentimentAnalysis.globalSentiment}`, 50, 80)
+                 .text(`Score moyen: ${sentimentAnalysis.averageScore.toFixed(2)}`, 50, 100)
+                 .text(`Total réponses analysées: ${sentimentAnalysis.totalResponses}`, 50, 120)
+                 .text(`Réponses positives: ${sentimentAnalysis.distribution.POSITIF}`, 50, 140)
+                 .text(`Réponses négatives: ${sentimentAnalysis.distribution.NEGATIF}`, 50, 160)
+                 .text(`Réponses neutres: ${sentimentAnalysis.distribution.NEUTRE}`, 50, 180);
+            } catch (sentimentError) {
+              doc.fontSize(12).text('Analyse des sentiments non disponible', 50, 80);
+            }
+          }
+        }
+
+        // Réponses détaillées si demandées
+        if (options.includeDetailedResponses) {
+          doc.addPage();
+          doc.fontSize(14).text('Réponses Détaillées', 50, 50);
+          
+          let yPosition = 80;
+          submissions.forEach((submission, index) => {
+            if (yPosition > 700) {
+              doc.addPage();
+              yPosition = 50;
+            }
+            
+            doc.fontSize(12)
+               .text(`${index + 1}. ${submission.etudiant.prenom} ${submission.etudiant.nom}`, 50, yPosition)
+               .text(`   Email: ${submission.etudiant.email}`, 70, yPosition + 15)
+               .text(`   Statut: ${submission.estTermine ? 'Terminé' : 'En cours'}`, 70, yPosition + 30);
+            
+            yPosition += 60;
+          });
+        }
 
         doc.end();
       } catch (error) {
@@ -663,3 +859,137 @@ class ReportExportService {
 }
 
 module.exports = new ReportExportService();
+
+  /**
+   * Exporte un rapport consolidé en Excel
+   */
+  async exportConsolidatedToExcel(consolidatedData) {
+    const workbook = new ExcelJS.Workbook();
+    
+    // Métadonnées du workbook
+    workbook.creator = 'Système d\'Évaluation';
+    workbook.lastModifiedBy = 'Système d\'Évaluation';
+    workbook.created = new Date();
+    workbook.modified = new Date();
+
+    // Feuille de résumé
+    const summarySheet = workbook.addWorksheet('Résumé Consolidé');
+    
+    // En-tête principal
+    summarySheet.mergeCells('A1:F1');
+    const titleCell = summarySheet.getCell('A1');
+    titleCell.value = consolidatedData.titre;
+    titleCell.style = this.defaultStyles.header;
+    summarySheet.getRow(1).height = 30;
+
+    // Informations générales
+    let currentRow = 3;
+    summarySheet.getCell('A2').value = 'Informations Générales';
+    summarySheet.getCell('A2').style = this.defaultStyles.subHeader;
+    summarySheet.mergeCells('A2:B2');
+
+    const infoData = [
+      ['Date de génération', consolidatedData.dateGeneration.toLocaleDateString('fr-FR')],
+      ['Total évaluations', consolidatedData.statistiques.totalEvaluations],
+      ['Évaluations actives', consolidatedData.statistiques.evaluationsActives],
+      ['Évaluations terminées', consolidatedData.statistiques.evaluationsTerminees],
+      ['Brouillons', consolidatedData.statistiques.evaluationsBrouillon]
+    ];
+
+    infoData.forEach(([label, value]) => {
+      summarySheet.getCell(`A${currentRow}`).value = label;
+      summarySheet.getCell(`B${currentRow}`).value = value;
+      summarySheet.getCell(`A${currentRow}`).style = { font: { bold: true } };
+      currentRow++;
+    });
+
+    // Feuille des évaluations détaillées
+    const detailSheet = workbook.addWorksheet('Évaluations Détaillées');
+    
+    const headers = ['ID', 'Titre', 'Description', 'Date Début', 'Date Fin', 'Statut', 'Date Création'];
+    headers.forEach((header, index) => {
+      const cell = detailSheet.getCell(1, index + 1);
+      cell.value = header;
+      cell.style = this.defaultStyles.header;
+    });
+
+    consolidatedData.evaluations.forEach((evaluation, index) => {
+      const row = detailSheet.getRow(index + 2);
+      row.getCell(1).value = evaluation.id;
+      row.getCell(2).value = evaluation.titre;
+      row.getCell(3).value = evaluation.description || '';
+      row.getCell(4).value = evaluation.dateDebut ? new Date(evaluation.dateDebut).toLocaleDateString('fr-FR') : '';
+      row.getCell(5).value = evaluation.dateFin ? new Date(evaluation.dateFin).toLocaleDateString('fr-FR') : '';
+      row.getCell(6).value = evaluation.statut;
+      row.getCell(7).value = evaluation.dateCreation ? new Date(evaluation.dateCreation).toLocaleDateString('fr-FR') : '';
+      
+      row.eachCell(cell => {
+        cell.style = this.defaultStyles.data;
+      });
+    });
+
+    // Ajuster les largeurs des colonnes
+    detailSheet.getColumn(1).width = 10;
+    detailSheet.getColumn(2).width = 30;
+    detailSheet.getColumn(3).width = 40;
+    detailSheet.getColumn(4).width = 15;
+    detailSheet.getColumn(5).width = 15;
+    detailSheet.getColumn(6).width = 15;
+    detailSheet.getColumn(7).width = 15;
+
+    return await workbook.xlsx.writeBuffer();
+  }
+
+  /**
+   * Exporte un rapport consolidé en PDF
+   */
+  async exportConsolidatedToPDF(consolidatedData) {
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument();
+        const buffers = [];
+
+        doc.on('data', buffers.push.bind(buffers));
+        doc.on('end', () => {
+          const pdfBuffer = Buffer.concat(buffers);
+          resolve(pdfBuffer);
+        });
+
+        // Titre
+        doc.fontSize(20).text(consolidatedData.titre, 50, 50);
+        
+        // Date de génération
+        doc.fontSize(12).text(`Généré le: ${consolidatedData.dateGeneration.toLocaleDateString('fr-FR')}`, 50, 80);
+        
+        // Statistiques générales
+        doc.fontSize(16).text('Statistiques Générales', 50, 120);
+        doc.fontSize(12)
+           .text(`Total évaluations: ${consolidatedData.statistiques.totalEvaluations}`, 50, 150)
+           .text(`Évaluations actives: ${consolidatedData.statistiques.evaluationsActives}`, 50, 170)
+           .text(`Évaluations terminées: ${consolidatedData.statistiques.evaluationsTerminees}`, 50, 190)
+           .text(`Brouillons: ${consolidatedData.statistiques.evaluationsBrouillon}`, 50, 210);
+
+        // Liste des évaluations
+        doc.fontSize(16).text('Liste des Évaluations', 50, 250);
+        
+        let yPosition = 280;
+        consolidatedData.evaluations.forEach((evaluation, index) => {
+          if (yPosition > 700) {
+            doc.addPage();
+            yPosition = 50;
+          }
+          
+          doc.fontSize(12)
+             .text(`${index + 1}. ${evaluation.titre}`, 50, yPosition)
+             .text(`   Statut: ${evaluation.statut}`, 70, yPosition + 15)
+             .text(`   Créé le: ${evaluation.dateCreation ? new Date(evaluation.dateCreation).toLocaleDateString('fr-FR') : 'N/A'}`, 70, yPosition + 30);
+          
+          yPosition += 60;
+        });
+
+        doc.end();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }

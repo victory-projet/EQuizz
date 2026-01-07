@@ -373,21 +373,110 @@ export class ReportExportComponent implements OnInit {
     this.errorMessage.set('');
 
     try {
-      // Simulate export progress
-      for (let i = 0; i <= 100; i += 10) {
-        this.exportProgress.set(i);
-        await new Promise(resolve => setTimeout(resolve, 200));
+      const options = this.exportOptions();
+      
+      // Simuler le progrès
+      this.exportProgress.set(25);
+      
+      // Appel à l'API d'export
+      const response = await fetch(`/api/reports/evaluations/${this.evaluationId}/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          format: options.format,
+          includeSentimentAnalysis: options.includeSentimentAnalysis,
+          includeChartData: options.includeChartData,
+          includeDetailedResponses: options.includeDetailedResponses
+        })
+      });
+
+      this.exportProgress.set(75);
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
       }
 
-      // Simulate file download
-      const filename = `evaluation_${this.evaluationId}_report.${this.exportOptions().format}`;
-      console.log(`Exporting report: ${filename}`);
+      // Télécharger le fichier
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `evaluation_${this.evaluationId}_report.${options.format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      this.exportProgress.set(100);
+      this.successMessage.set('Export terminé avec succès !');
       
-      // Here you would typically call a service to generate and download the file
+      setTimeout(() => {
+        this.successMessage.set('');
+      }, 3000);
       
     } catch (error: any) {
       this.errorMessage.set('Erreur lors de l\'export du rapport');
       console.error('Export error:', error);
+    } finally {
+      this.isExporting.set(false);
+      this.exportProgress.set(0);
+    }
+  }
+
+  async exportAll() {
+    this.isExporting.set(true);
+    this.exportProgress.set(0);
+    this.errorMessage.set('');
+
+    try {
+      const options = this.exportOptions();
+      
+      // Simuler le progrès
+      this.exportProgress.set(25);
+      
+      // Appel à l'API d'export global
+      const response = await fetch('/api/reports/export-all', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          format: options.format,
+          filters: this.filters()
+        })
+      });
+
+      this.exportProgress.set(75);
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+
+      // Télécharger le fichier
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `rapport_consolide_${new Date().toISOString().split('T')[0]}.${options.format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      this.exportProgress.set(100);
+      this.successMessage.set('Export consolidé terminé avec succès !');
+      
+      setTimeout(() => {
+        this.successMessage.set('');
+      }, 3000);
+      
+    } catch (error: any) {
+      this.errorMessage.set('Erreur lors de l\'export consolidé');
+      console.error('Export all error:', error);
     } finally {
       this.isExporting.set(false);
       this.exportProgress.set(0);

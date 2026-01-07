@@ -7,11 +7,13 @@ import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
 import { Cours, Classe } from '../../../core/domain/entities/academic.entity';
 import { EvaluationApiData } from '../../../core/domain/entities/evaluation.entity';
 import { Question } from '../../../core/domain/entities/question.entity';
+import { QuestionFormComponent } from '../question-form/question-form.component';
+import { QuestionImportComponent } from '../question-import/question-import.component';
 
 @Component({
   selector: 'app-evaluation-create',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, QuestionFormComponent, QuestionImportComponent],
   templateUrl: './evaluation-create.component.html',
   styleUrls: ['./evaluation-create.component.scss']
 })
@@ -30,6 +32,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   // États
   isLoading = signal(false);
   isPublishing = signal(false);
+  isSaving = signal(false);
   
   // Gestion des brouillons
   draftEvaluationId = signal<string | number | null>(null);
@@ -95,10 +98,10 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
 
   private startAutoSave(): void {
     this.autoSaveTimer = setInterval(() => {
-      if (this.autoSaveEnabled() && this.canSaveDraft()) {
+      if (this.autoSaveEnabled() && this.canSaveDraft() && !this.isSaving()) {
         this.autoSave();
       }
-    }, 30000); // Auto-save every 30 seconds
+    }, 45000); // Auto-save every 45 seconds (reduced frequency)
   }
 
   private scheduleAutoSave(): void {
@@ -106,10 +109,10 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
       clearTimeout(this.autoSaveTimer);
     }
     this.autoSaveTimer = setTimeout(() => {
-      if (this.autoSaveEnabled() && this.canSaveDraft()) {
+      if (this.autoSaveEnabled() && this.canSaveDraft() && !this.isSaving()) {
         this.autoSave();
       }
-    }, 3000); // Auto-save after 3 seconds of inactivity
+    }, 5000); // Auto-save after 5 seconds of inactivity (increased delay)
   }
 
   // Validators
@@ -332,7 +335,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
 
   // Auto-save functionality
   private autoSave(): void {
-    if (!this.canSaveDraft()) return;
+    if (!this.canSaveDraft() || this.isSaving()) return;
 
     const formValue = this.evaluationForm.value;
     const evaluationData: EvaluationApiData = {
@@ -387,31 +390,42 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   // CRUD operations
   private updateDraft(evaluationData: EvaluationApiData): void {
     const draftId = this.draftEvaluationId();
-    if (!draftId) return;
+    if (!draftId || this.isSaving()) return;
 
+    this.isSaving.set(true);
     this.evaluationUseCase.updateEvaluation(draftId, evaluationData).subscribe({
       next: (evaluation) => {
         this.handleEvaluationResponse(evaluation);
         this.autoSaveStatus.set(`Sauvegardé à ${new Date().toLocaleTimeString()}`);
         setTimeout(() => this.autoSaveStatus.set(''), 3000);
+        this.isSaving.set(false);
       },
       error: (error) => {
         console.error('❌ Erreur lors de la mise à jour du brouillon:', error);
-        this.errorMessage.set('Erreur lors de la sauvegarde');
+        // Ne pas afficher d'erreur pour les conflits 409 (concurrent updates)
+        if (error.status !== 409) {
+          this.errorMessage.set('Erreur lors de la sauvegarde');
+        }
+        this.isSaving.set(false);
       }
     });
   }
 
   private createDraft(evaluationData: EvaluationApiData): void {
+    if (this.isSaving()) return;
+    
+    this.isSaving.set(true);
     this.evaluationUseCase.createEvaluation(evaluationData).subscribe({
       next: (evaluation) => {
         this.handleEvaluationResponse(evaluation);
         this.autoSaveStatus.set(`Brouillon créé à ${new Date().toLocaleTimeString()}`);
         setTimeout(() => this.autoSaveStatus.set(''), 3000);
+        this.isSaving.set(false);
       },
       error: (error) => {
         console.error('❌ Erreur lors de la création du brouillon:', error);
         this.errorMessage.set('Erreur lors de la création du brouillon');
+        this.isSaving.set(false);
       }
     });
   }
@@ -515,7 +529,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
       // Update existing question
       this.evaluationUseCase.updateQuestion(question.id!, question).subscribe({
         next: (updatedQuestion: Question) => {
-          const currentQuestions = this.questions();
+          const currentQuestions = this.questions() || [];
           const index = currentQuestions.findIndex(q => q.id === question.id);
           if (index > -1) {
             currentQuestions[index] = updatedQuestion;
@@ -533,7 +547,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
       // Create new question
       this.evaluationUseCase.createQuestion(quizzId, question).subscribe({
         next: (createdQuestion: Question) => {
-          const currentQuestions = this.questions();
+          const currentQuestions = this.questions() || [];
           this.questions.set([...currentQuestions, createdQuestion]);
           this.successMessage.set('Question créée avec succès !');
           this.closeQuestionForm();
@@ -555,7 +569,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   deleteQuestion(questionId: string | number): void {
     this.evaluationUseCase.deleteQuestion(questionId).subscribe({
       next: () => {
-        const currentQuestions = this.questions();
+        const currentQuestions = this.questions() || [];
         const updatedQuestions = currentQuestions.filter(q => q.id !== questionId);
         this.questions.set(updatedQuestions);
         this.successMessage.set('Question supprimée avec succès');

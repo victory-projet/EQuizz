@@ -13,6 +13,8 @@ export interface Question {
   ordre: number;
   quizz_id?: string | number;
   quizzId?: string | number;
+  explication?: string;
+  obligatoire?: boolean;
 }
 
 // Enhanced Question interface for manual creation
