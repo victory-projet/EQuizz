@@ -1,0 +1,41 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: equizz_db
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=equizz_db
+      - DB_USER=user
+      - DB_PASSWORD=user_password
+      - DB_DIALECT=mysql
+      - JWT_SECRET=development_secret_key
+      - NODE_ENV=development
+      - PORT=3000
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, isAdmin } = require('../middlewares/auth.middleware');
-const ecoleController = require('../controllers/ecole.controller'); // Nous allons créer ce fichier juste après
+const { validate, ecoleValidationRules } = require('../middlewares/validation.middleware');
+const ecoleController = require('../controllers/ecole.controller');
 const anneeAcademiqueController = require('../controllers/anneeAcademique.controller');
 const semestreController = require('../controllers/semestre.controller');
 const coursController = require('../controllers/cours.controller');
@@ -18,7 +19,7 @@ router.use(authenticate, isAdmin);
 //  Routes pour la gestion des Écoles (CRUD) 
 
 // POST /api/academic/ecoles - Créer une nouvelle école
-router.post('/ecoles', ecoleController.create);
+router.post('/ecoles', ecoleValidationRules(), validate, ecoleController.create);
 
 // GET /api/academic/ecoles - Obtenir la liste de toutes les écoles
 router.get('/ecoles', ecoleController.findAll);
@@ -27,7 +28,7 @@ router.get('/ecoles', ecoleController.findAll);
 router.get('/ecoles/:id', ecoleController.findOne);
 
 // PUT /api/academic/ecoles/:id - Mettre à jour une école par son ID
-router.put('/ecoles/:id', ecoleController.update);
+router.put('/ecoles/:id', ecoleValidationRules(), validate, ecoleController.update);
 
 // DELETE /api/academic/ecoles/:id - Supprimer une école par son ID
 router.delete('/ecoles/:id', ecoleController.delete);
