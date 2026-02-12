@@ -37,5 +37,26 @@ services:
       db:
         condition: service_healthy
 
+  frontend-admin:
+    build:
+      context: ./frontend-admin
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+  mobile-student:
+    build:
+      context: ./mobile-student
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8081:8081"
+      - "19000-19002:19000-19002"
+    depends_on:
+      - backend
+
 volumes:
   mysql_data:
