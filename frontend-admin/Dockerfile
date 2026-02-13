@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copy the rest of the application code
 COPY . .
@@ -19,7 +19,7 @@ RUN npm run build
 FROM nginx:alpine
 
 # Copy the build output from the build stage to the nginx html directory
-COPY --from=build /app/dist/frontend-admin/browser /usr/share/nginx/html
+COPY --from=build /app/dist/frontend-admin /usr/share/nginx/html
 
 EXPOSE 80
 
