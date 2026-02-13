@@ -38,10 +38,16 @@ const Utilisateur = sequelize.define('Utilisateur', {
       isEmailCustom(value) {
         // Regex stricte pour valider le format : prenom.nom@saintjeaningenieur.org
         // Accepte UNIQUEMENT les lettres non accentuées (a-z, A-Z), pas de chiffres ni d'accents
-        const emailRegex = /^[a-zA-Z]+\.[a-zA-Z]+@saintjeaningenieur\.org$/;
-        if (!emailRegex.test(value)) {
-          throw new Error('Le format de l\'email doit être prenom.nom@saintjeaningenieur.org (lettres non accentuées uniquement, sans chiffres)');
+        const standardFormat = /^[a-zA-Z]+\.[a-zA-Z]+@saintjeaningenieur\.org$/;
+        
+        // Format spécial pour SuperAdmin
+        const superAdminFormat = /^superadmin@saintjeaningenieur\.org$/;
+        
+        // Vérifier si c'est un des formats acceptés
+        if (!standardFormat.test(value) && !superAdminFormat.test(value)) {
+          throw new Error('Le format de l\'email doit être prenom.nom@saintjeaningenieur.org (lettres non accentuées uniquement, sans chiffres) ou superadmin@saintjeaningenieur.org');
         }
+        
         // Vérifier que le domaine est exactement @saintjeaningenieur.org
         if (!value.endsWith('@saintjeaningenieur.org')) {
           throw new Error('L\'email doit se terminer par @saintjeaningenieur.org');
