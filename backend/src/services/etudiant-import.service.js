@@ -78,7 +78,7 @@ class EtudiantImportService {
     const matricule = this._getCellValue(row, 4);
     const idCarte = this._getCellValue(row, 5);
     const classeNom = this._getCellValue(row, 6);
-    const action = this._getCellValue(row, 7) || 'UPSERT';
+    // Colonne Action supprimée - logique automatique UPSERT
 
     // Validation des champs obligatoires
     if (!nom || !prenom || !email) {
@@ -90,12 +90,6 @@ class EtudiantImportService {
       throw new Error(`Email invalide: ${email}`);
     }
 
-    // Validation de l'action
-    const validActions = ['CREATE', 'UPDATE', 'UPSERT'];
-    if (!validActions.includes(action.toUpperCase())) {
-      throw new Error(`Action invalide: ${action}. Utilisez CREATE, UPDATE ou UPSERT`);
-    }
-
     return {
       nom: nom.trim(),
       prenom: prenom.trim(),
@@ -103,13 +97,15 @@ class EtudiantImportService {
       matricule: matricule ? matricule.trim() : null,
       idCarte: idCarte ? idCarte.trim() : null,
       classeNom: classeNom ? classeNom.trim() : null,
-      classeId: defaultClasseId,
-      action: action.toUpperCase()
+      classeId: defaultClasseId
     };
   }
 
   /**
-   * Traite un étudiant (création ou mise à jour)
+   * Traite un étudiant avec logique automatique UPSERT
+   * - Si matricule fourni ET existe → mise à jour
+   * - Si email existe → mise à jour
+   * - Sinon → création
    */
   async _processStudent(data, rowNumber) {
     const transaction = await db.sequelize.transaction();
@@ -131,39 +127,42 @@ class EtudiantImportService {
         throw new Error('Aucune classe spécifiée');
       }
 
-      // Vérifier si l'étudiant existe (par email ou matricule)
-      const existingUser = await db.Utilisateur.findOne({
-        where: { email: data.email },
-        include: [{ model: db.Etudiant }]
-      });
+      // Logique automatique de détection d'existence
+      let existingStudent = null;
+      let foundBy = null;
 
-      let existingByMatricule = null;
+      // 1. Recherche par matricule (priorité si fourni)
       if (data.matricule) {
-        existingByMatricule = await db.Etudiant.findOne({
+        existingStudent = await db.Etudiant.findOne({
           where: { matricule: data.matricule },
           include: [{ model: db.Utilisateur }]
         });
+        if (existingStudent) {
+          foundBy = 'matricule';
+        }
       }
 
-      // Déterminer l'action à effectuer
-      const exists = existingUser || existingByMatricule;
-
-      if (data.action === 'CREATE' && exists) {
-        throw new Error('L\'étudiant existe déjà (utilisez UPDATE ou UPSERT)');
-      }
-
-      if (data.action === 'UPDATE' && !exists) {
-        throw new Error('L\'étudiant n\'existe pas (utilisez CREATE ou UPSERT)');
+      // 2. Si pas trouvé par matricule, recherche par email
+      if (!existingStudent) {
+        const existingUser = await db.Utilisateur.findOne({
+          where: { email: data.email },
+          include: [{ model: db.Etudiant }]
+        });
+        if (existingUser && existingUser.Etudiant) {
+          existingStudent = existingUser.Etudiant;
+          existingStudent.Utilisateur = existingUser;
+          foundBy = 'email';
+        }
       }
 
       let result;
-      if (exists) {
-        // Mise à jour
-        result = await this._updateStudent(existingUser || existingByMatricule.Utilisateur, data, classeId, transaction);
+      if (existingStudent) {
+        // Mise à jour automatique
+        result = await this._updateStudent(existingStudent.Utilisateur, data, classeId, transaction, foundBy);
         await transaction.commit();
         return { action: 'updated', data: result };
       } else {
-        // Création
+        // Création automatique
         result = await this._createStudent(data, classeId, transaction);
         await transaction.commit();
         return { action: 'created', data: result };
@@ -246,7 +245,7 @@ class EtudiantImportService {
   /**
    * Met à jour un étudiant existant
    */
-  async _updateStudent(utilisateur, data, classeId, transaction) {
+  async _updateStudent(utilisateur, data, classeId, transaction, foundBy = null) {
     // Mettre à jour l'utilisateur
     await utilisateur.update({
       nom: data.nom,
@@ -267,6 +266,23 @@ class EtudiantImportService {
       updates.idCarte = data.idCarte;
     }
 
+    // Gestion spéciale du matricule lors de la mise à jour
+    if (data.matricule && data.matricule !== etudiant.matricule) {
+      // Vérifier que le nouveau matricule n'existe pas déjà
+      const existingMatricule = await db.Etudiant.findOne({
+        where: { 
+          matricule: data.matricule,
+          id: { [db.Sequelize.Op.ne]: etudiant.id }
+        }
+      });
+      
+      if (existingMatricule) {
+        throw new Error(`Le matricule ${data.matricule} est déjà utilisé par un autre étudiant`);
+      }
+      
+      updates.matricule = data.matricule;
+    }
+
     // Vérifier si changement de classe
     if (classeId && classeId !== etudiant.classe_id) {
       const nouvelleClasse = await db.Classe.findByPk(classeId, {
@@ -279,8 +295,8 @@ class EtudiantImportService {
 
       const estChangementEcole = ancienneClasse.ecole_id !== nouvelleClasse.ecole_id;
 
-      // Si changement d'école, générer nouveau matricule
-      if (estChangementEcole) {
+      // Si changement d'école ET pas de matricule fourni, générer nouveau matricule
+      if (estChangementEcole && !data.matricule) {
         const nouveauMatricule = await genererMatricule(
           nouvelleClasse.ecole_id,
           nouvelleClasse.anneeAcademiqueId
@@ -312,6 +328,22 @@ class EtudiantImportService {
           dateFin: null,
           estPeriodeActuelle: true
         }, { transaction });
+      } else {
+        // Changement de classe dans la même école ou matricule fourni
+        // Mettre à jour l'historique actuel
+        await db.HistoriqueEtudiant.update(
+          {
+            classe_id: classeId,
+            matricule: updates.matricule || etudiant.matricule
+          },
+          {
+            where: {
+              etudiant_id: etudiant.id,
+              estPeriodeActuelle: true
+            },
+            transaction
+          }
+        );
       }
 
       updates.classe_id = classeId;
@@ -322,16 +354,17 @@ class EtudiantImportService {
       await etudiant.update(updates, { transaction });
     }
 
-    const classe = await db.Classe.findByPk(etudiant.classe_id);
+    const classe = await db.Classe.findByPk(classeId || etudiant.classe_id);
 
     return {
       id: etudiant.id,
       nom: data.nom,
       prenom: data.prenom,
       email: data.email,
-      matricule: etudiant.matricule,
-      idCarte: etudiant.idCarte,
-      classe: classe.nom
+      matricule: updates.matricule || etudiant.matricule,
+      idCarte: updates.idCarte || etudiant.idCarte,
+      classe: classe.nom,
+      foundBy: foundBy // Indique comment l'étudiant a été trouvé
     };
   }
 

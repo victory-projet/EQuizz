@@ -1,6 +1,12 @@
 // backend/tests/unit/matriculeGenerator.test.js
 
-const { genererMatricule, genererCodeEcole, extraireAnnee, matriculeExiste } = require('../../src/utils/matriculeGenerator');
+const { 
+  genererMatricule, 
+  genererCodeEcole, 
+  extraireAnnee, 
+  matriculeExiste,
+  validerFormatMatricule 
+} = require('../../src/utils/matriculeGenerator');
 const db = require('../../src/models');
 
 describe('Générateur de Matricule', () => {
@@ -76,9 +82,10 @@ describe('Générateur de Matricule', () => {
       await db.Ecole.destroy({ where: {}, force: true });
     });
 
-    test('devrait générer un matricule au format correct', async () => {
+    test('devrait générer un matricule au format moderne correct', async () => {
       const matricule = await genererMatricule(ecole.id, anneeAcademique.id);
       expect(matricule).toMatch(/^SJING-2024-\d{3}$/);
+      expect(matricule).toBe('SJING-2024-001');
     });
 
     test('devrait générer des matricules séquentiels', async () => {
@@ -138,6 +145,33 @@ describe('Générateur de Matricule', () => {
 
       const existe = await matriculeExiste('SJING-2024-001');
       expect(existe).toBe(true);
+    });
+  });
+
+  describe('validerFormatMatricule', () => {
+    test('devrait valider le format moderne (ECOLE-ANNEE-NUMERO)', () => {
+      expect(validerFormatMatricule('SJING-2024-001')).toBe(true);
+      expect(validerFormatMatricule('POLYT-2025-123')).toBe(true);
+      expect(validerFormatMatricule('ENSM-2023-999')).toBe(true);
+    });
+
+    test('devrait valider les formats legacy pour compatibilité', () => {
+      // Format legacy 1: 7 chiffres (2025001)
+      expect(validerFormatMatricule('2025001')).toBe(true);
+      expect(validerFormatMatricule('2024999')).toBe(true);
+      
+      // Format legacy 2: 4 chiffres + lettre + 3 chiffres (2223i032)
+      expect(validerFormatMatricule('2223i032')).toBe(true);
+      expect(validerFormatMatricule('2024a001')).toBe(true);
+    });
+
+    test('devrait rejeter les formats invalides', () => {
+      expect(validerFormatMatricule('123')).toBe(false);
+      expect(validerFormatMatricule('SJING-24-001')).toBe(false); // Année trop courte
+      expect(validerFormatMatricule('SJING-2024-01')).toBe(false); // Numéro trop court
+      expect(validerFormatMatricule('SJ-2024-001')).toBe(false); // Code école trop court
+      expect(validerFormatMatricule('')).toBe(false);
+      expect(validerFormatMatricule('SJING2024001')).toBe(false); // Sans tirets
     });
   });
 });

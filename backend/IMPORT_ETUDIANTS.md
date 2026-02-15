@@ -2,13 +2,13 @@
 
 ## Format du fichier Excel
 
-Le fichier doit contenir 7 colonnes :
+Le fichier doit contenir 6 colonnes :
 
-| Nom | Prenom | Email | Matricule | IdCarte | Classe | Action |
-|-----|--------|-------|-----------|---------|--------|--------|
-| Dupont | Jean | jean.dupont@mail.com | 2025001 | CARD001 | L1-INFO | CREATE |
-| Martin | Marie | marie.martin@mail.com | 2025002 | | L1-INFO | UPSERT |
-| Durand | Paul | paul.durand@mail.com | | | L2-MATH | CREATE |
+| Nom | Prenom | Email | Matricule | IdCarte | Classe |
+|-----|--------|-------|-----------|---------|--------|
+| Dupont | Jean | jean.dupont@mail.com | SJING-2024-001 | CARD001 | L1-INFO |
+| Martin | Marie | marie.martin@mail.com | SJING-2024-002 | | L1-INFO |
+| Durand | Paul | paul.durand@mail.com | | | L2-MATH |
 
 ### Colonnes
 
@@ -18,13 +18,19 @@ Le fichier doit contenir 7 colonnes :
 - **Matricule** (optionnel) : Généré automatiquement si vide
 - **IdCarte** (optionnel) : Identifiant de carte étudiant
 - **Classe** (optionnel si classeId fourni) : Nom de la classe
-- **Action** (optionnel, défaut: UPSERT) : CREATE, UPDATE ou UPSERT
 
-### Actions
+### Logique Automatique UPSERT
 
-- **CREATE** : Crée uniquement (erreur si existe)
-- **UPDATE** : Met à jour uniquement (erreur si n'existe pas)
-- **UPSERT** : Crée ou met à jour (recommandé)
+Le système détermine automatiquement s'il faut créer ou mettre à jour un étudiant :
+
+1. **Si matricule fourni ET existe** → Mise à jour de l'étudiant avec ce matricule
+2. **Si email existe** → Mise à jour de l'étudiant avec cet email
+3. **Sinon** → Création d'un nouvel étudiant
+
+**Exemples :**
+- Ligne avec `SJING-2024-001` (matricule existant) → Mise à jour
+- Ligne avec `marie@mail.com` (email existant) → Mise à jour  
+- Ligne avec nouvelles données → Création
 
 ## API
 

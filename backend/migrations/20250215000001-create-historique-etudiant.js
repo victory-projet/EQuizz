@@ -75,18 +75,21 @@ module.exports = {
       }
     });
 
-    // Ajouter des index pour améliorer les performances
-    await queryInterface.addIndex('HistoriqueEtudiant', ['etudiant_id'], {
-      name: 'idx_historique_etudiant_id'
-    });
+    // Ajouter des index pour améliorer les performances (seulement si pas SQLite)
+    const dialect = queryInterface.sequelize.getDialect();
+    if (dialect !== 'sqlite') {
+      await queryInterface.addIndex('HistoriqueEtudiant', ['etudiant_id'], {
+        name: 'idx_historique_etudiant_id'
+      });
 
-    await queryInterface.addIndex('HistoriqueEtudiant', ['matricule'], {
-      name: 'idx_historique_matricule'
-    });
+      await queryInterface.addIndex('HistoriqueEtudiant', ['matricule'], {
+        name: 'idx_historique_matricule'
+      });
 
-    await queryInterface.addIndex('HistoriqueEtudiant', ['estPeriodeActuelle'], {
-      name: 'idx_historique_periode_actuelle'
-    });
+      await queryInterface.addIndex('HistoriqueEtudiant', ['estPeriodeActuelle'], {
+        name: 'idx_historique_periode_actuelle'
+      });
+    }
   },
 
   down: async (queryInterface, Sequelize) => {

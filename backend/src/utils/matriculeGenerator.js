@@ -4,8 +4,14 @@ const db = require('../models');
 
 /**
  * Génère un matricule unique pour un étudiant
- * Format: ECOLE-ANNEE-NUMERO
- * Exemple: SJING-2024-001, SJING-2024-002, etc.
+ * Format moderne: ECOLE-ANNEE-NUMERO
+ * Exemples: SJING-2024-001, SJING-2024-002, POLYT-2024-001, etc.
+ * 
+ * Ce format assure:
+ * - Identification claire de l'école d'origine
+ * - Traçabilité par année académique
+ * - Unicité par école et année
+ * - Lisibilité pour les étudiants et l'administration
  * 
  * @param {string} ecoleId - ID de l'école
  * @param {string} anneeAcademiqueId - ID de l'année académique
@@ -49,6 +55,21 @@ async function genererMatricule(ecoleId, anneeAcademiqueId) {
     // 7. Construire le matricule final
     const matricule = `${prefixe}-${numero}`;
 
+    // 8. Vérifier l'unicité (sécurité supplémentaire)
+    const existe = await matriculeExiste(matricule);
+    if (existe) {
+      // Si par hasard le matricule existe déjà, réessayer avec le suivant
+      const countExact = await db.Etudiant.count({
+        where: {
+          matricule: {
+            [db.Sequelize.Op.like]: `${prefixe}-%`
+          }
+        }
+      });
+      const nouveauNumero = String(countExact + 1).padStart(3, '0');
+      return `${prefixe}-${nouveauNumero}`;
+    }
+
     return matricule;
 
   } catch (error) {
@@ -63,6 +84,18 @@ async function genererMatricule(ecoleId, anneeAcademiqueId) {
  * @returns {string} - Code de l'école
  */
 function genererCodeEcole(nomEcole) {
+  // Cas spéciaux pour certaines écoles connues
+  const casSpeciaux = {
+    'SAINT JEAN INGÉNIEUR': 'SJING',
+    'SAINT JEAN INGENIEUR': 'SJING',
+    'POLYTECHNIQUE': 'POLYT'
+  };
+
+  const nomNormalise = nomEcole.toUpperCase();
+  if (casSpeciaux[nomNormalise]) {
+    return casSpeciaux[nomNormalise];
+  }
+
   // Extraire les premières lettres de chaque mot significatif
   const mots = nomEcole
     .toUpperCase()
@@ -73,8 +106,16 @@ function genererCodeEcole(nomEcole) {
     // Si un seul mot, prendre les 5 premières lettres
     return mots[0].substring(0, 5);
   } else if (mots.length === 2) {
-    // Si deux mots, prendre 2-3 lettres de chaque
-    return mots[0].substring(0, 2) + mots[1].substring(0, 3);
+    // Si deux mots, prendre 2-3 lettres de chaque pour faire 5 au total
+    const mot1 = mots[0].substring(0, 2);
+    const mot2 = mots[1].substring(0, 3);
+    return mot1 + mot2;
+  } else if (mots.length === 3) {
+    // Si trois mots, prendre 2-2-1 lettres
+    const mot1 = mots[0].substring(0, 2);
+    const mot2 = mots[1].substring(0, 2);
+    const mot3 = mots[2].substring(0, 1);
+    return mot1 + mot2 + mot3;
   } else {
     // Si plusieurs mots, prendre la première lettre de chaque mot
     return mots.map(mot => mot[0]).join('').substring(0, 5);
@@ -115,9 +156,29 @@ async function matriculeExiste(matricule) {
   return count > 0;
 }
 
+/**
+ * Valide le format d'un matricule
+ * @param {string} matricule - Matricule à valider
+ * @returns {boolean} - True si le format est valide
+ */
+function validerFormatMatricule(matricule) {
+  // Format moderne: ECOLE-ANNEE-NUMERO (ex: SJING-2024-001)
+  // Code école: 2-5 caractères, Année: 4 chiffres, Numéro: 3 chiffres
+  const formatModerne = /^[A-Z]{2,5}-\d{4}-\d{3}$/;
+  
+  // Formats legacy acceptés pour compatibilité
+  const formatLegacy1 = /^\d{7}$/; // 2025001
+  const formatLegacy2 = /^\d{4}[a-z]\d{3}$/; // 2223i032
+  
+  return formatModerne.test(matricule) || 
+         formatLegacy1.test(matricule) || 
+         formatLegacy2.test(matricule);
+}
+
 module.exports = {
   genererMatricule,
   matriculeExiste,
   genererCodeEcole,
-  extraireAnnee
+  extraireAnnee,
+  validerFormatMatricule
 };
