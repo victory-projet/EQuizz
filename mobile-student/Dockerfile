@@ -2,14 +2,11 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Install expo-cli globally
-RUN npm install -g expo-cli
-
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copy the rest of the application code
 COPY . .
