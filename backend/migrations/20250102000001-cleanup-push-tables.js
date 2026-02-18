@@ -1,13 +1,13 @@
 'use strict';
 
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  async up(queryInterface, _Sequelize) {
     console.log('🧹 Nettoyage des tables push notifications existantes...');
-    
+
     try {
       // Désactiver les contraintes de clés étrangères temporairement
       await queryInterface.sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
-      
+
       // Supprimer les tables si elles existent
       await queryInterface.dropTable('NotificationPreference', { cascade: true });
       console.log('✅ Table NotificationPreference supprimée');
@@ -24,11 +24,11 @@ module.exports = {
 
     // Réactiver les contraintes de clés étrangères
     await queryInterface.sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
-    
+
     console.log('✅ Nettoyage terminé');
   },
 
-  async down(queryInterface, Sequelize) {
+  async down(_queryInterface, _Sequelize) {
     // Rien à faire pour le rollback
     console.log('ℹ️  Rollback du nettoyage - rien à faire');
   }
