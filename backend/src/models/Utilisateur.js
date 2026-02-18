@@ -36,15 +36,18 @@ const Utilisateur = sequelize.define('Utilisateur', {
         msg: 'L\'adresse email doit être valide'
       },
       isEmailCustom(value) {
-        // Regex stricte pour valider le format : prenom.nom@saintjeaningenieur.org
-        // Accepte UNIQUEMENT les lettres non accentuées (a-z, A-Z), pas de chiffres ni d'accents
-        const emailRegex = /^[a-zA-Z]+\.[a-zA-Z]+@saintjeaningenieur\.org$/;
-        if (!emailRegex.test(value)) {
-          throw new Error('Le format de l\'email doit être prenom.nom@saintjeaningenieur.org (lettres non accentuées uniquement, sans chiffres)');
+        // Format spécial pour SuperAdmin : accepte @universitesaintjean.org
+        const superAdminFormat = /^[a-zA-Z]+@universitesaintjean\.org$/;
+        if (superAdminFormat.test(value)) {
+          return; // SuperAdmin accepté avec ce domaine
         }
-        // Vérifier que le domaine est exactement @saintjeaningenieur.org
-        if (!value.endsWith('@saintjeaningenieur.org')) {
-          throw new Error('L\'email doit se terminer par @saintjeaningenieur.org');
+        
+        // Format standard pour les autres utilisateurs : prenom.nom@domaine
+        // Accepte UNIQUEMENT les lettres non accentuées (a-z, A-Z) pour le nom/prénom
+        const standardFormat = /^[a-zA-Z]+\.[a-zA-Z]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        
+        if (!standardFormat.test(value)) {
+          throw new Error('Le format de l\'email doit être prenom.nom@domaine.org (lettres non accentuées uniquement, sans chiffres) ou utilisateur@universitesaintjean.org pour SuperAdmin');
         }
       }
     }

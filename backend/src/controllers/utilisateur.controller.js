@@ -71,7 +71,7 @@ exports.getUtilisateurById = async (req, res) => {
 // Créer un nouvel utilisateur
 exports.createUtilisateur = async (req, res) => {
   try {
-    const { nom, prenom, email, motDePasse, role, specialite, matricule } = req.body;
+    const { nom, prenom, email, motDePasse, role, specialite, matricule, adminType, ecoleId } = req.body;
 
     // Vérifier si l'email existe déjà
     const existingUser = await Utilisateur.findOne({ where: { email } });
@@ -104,7 +104,20 @@ exports.createUtilisateur = async (req, res) => {
 
     // Créer le rôle correspondant
     if (role === 'ADMIN') {
-      await Administrateur.create({ id: utilisateur.id });
+      // Déterminer le type d'admin (SUPERADMIN par défaut si non spécifié)
+      const adminTypeValue = adminType || 'ADMIN';
+      
+      // Valider que seul SuperAdmin peut créer des admins scolaires
+      if (adminTypeValue === 'ADMIN' && !ecoleId) {
+        await utilisateur.destroy();
+        return res.status(400).json({ message: 'Un Admin scolaire doit être lié à une école' });
+      }
+
+      await Administrateur.create({ 
+        id: utilisateur.id,
+        type: adminTypeValue,
+        ecole_id: ecoleId || null
+      });
     } else if (role === 'ENSEIGNANT') {
       await Enseignant.create({ 
         id: utilisateur.id,
@@ -164,7 +177,7 @@ exports.createUtilisateur = async (req, res) => {
 exports.updateUtilisateur = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nom, prenom, email, estActif, specialite } = req.body;
+    const { nom, prenom, email, estActif, specialite, adminType, ecoleId } = req.body;
 
     const utilisateur = await Utilisateur.findByPk(id, {
       include: [
@@ -191,6 +204,20 @@ exports.updateUtilisateur = async (req, res) => {
       await utilisateur.Enseignant.update({ specialite });
     }
 
+    // Mettre à jour le type et école de l'admin si c'est un administrateur
+    if (utilisateur.Administrateur) {
+      const updateData = {};
+      if (adminType !== undefined) {
+        updateData.type = adminType;
+      }
+      if (ecoleId !== undefined) {
+        updateData.ecole_id = ecoleId;
+      }
+      if (Object.keys(updateData).length > 0) {
+        await utilisateur.Administrateur.update(updateData);
+      }
+    }
+
     // Récupérer l'utilisateur mis à jour
     const utilisateurMisAJour = await Utilisateur.findByPk(id, {
       include: [
@@ -203,6 +230,8 @@ exports.updateUtilisateur = async (req, res) => {
     const userData = utilisateurMisAJour.toJSON();
     if (userData.Administrateur) {
       userData.role = 'ADMIN';
+      userData.adminType = userData.Administrateur.type;
+      userData.ecoleId = userData.Administrateur.ecole_id;
     } else if (userData.Enseignant) {
       userData.role = 'ENSEIGNANT';
     } else if (userData.Etudiant) {

@@ -156,4 +156,8 @@ DeviceToken.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
 Utilisateur.hasOne(NotificationPreference, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });
 NotificationPreference.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
 
+// --- 8. Relation Admin à École (pour Admin scolaires) ---
+Ecole.hasMany(Administrateur, { foreignKey: { name: 'ecole_id', allowNull: true } });
+Administrateur.belongsTo(Ecole, { foreignKey: 'ecole_id' });
+
 module.exports = db;

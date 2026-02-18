@@ -25,6 +25,10 @@ class AuthController {
 
     if (utilisateur.Administrateur) {
       role = 'ADMIN';
+      additionalInfo = {
+        adminType: utilisateur.Administrateur.type, // SUPERADMIN ou ADMIN
+        ecoleId: utilisateur.Administrateur.ecole_id || null
+      };
     } else if (utilisateur.Enseignant) {
       role = 'ENSEIGNANT';
       additionalInfo = {
@@ -77,6 +81,10 @@ class AuthController {
 
     if (utilisateur.Administrateur) {
       role = 'ADMIN';
+      additionalInfo = {
+        adminType: utilisateur.Administrateur.type, // SUPERADMIN ou ADMIN
+        ecoleId: utilisateur.Administrateur.ecole_id || null
+      };
     } else if (utilisateur.Enseignant) {
       role = 'ENSEIGNANT';
       additionalInfo = {

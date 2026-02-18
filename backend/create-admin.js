@@ -12,7 +12,7 @@ async function createAdmin() {
     const hashedPassword = await bcrypt.hash('admin123', 10);
 
     // Vérifier si l'utilisateur existe déjà
-    let user = await db.Utilisateur.findOne({ where: { email: 'super.admin@saintjeaningenieur.org' } });
+    let user = await db.Utilisateur.findOne({ where: { email: 'super@universitesaintjean.org' } });
     
     if (user) {
       console.log('ℹ️  Utilisateur existe déjà, mise à jour du mot de passe...');
@@ -20,26 +20,26 @@ async function createAdmin() {
       await db.Utilisateur.update(
         { motDePasseHash: hashedPassword },
         { 
-          where: { email: 'super.admin@saintjeaningenieur.org' },
+          where: { email: 'super@universitesaintjean.org' },
           hooks: false // Désactiver les hooks pour éviter le double hash
         }
       );
-      user = await db.Utilisateur.findOne({ where: { email: 'super.admin@saintjeaningenieur.org' } });
+      user = await db.Utilisateur.findOne({ where: { email: 'super@universitesaintjean.org' } });
       console.log('✅ Mot de passe mis à jour');
     } else {
       // Créer l'utilisateur directement avec le mot de passe hashé
       user = await db.Utilisateur.create({
         nom: 'Admin',
         prenom: 'Super',
-        email: 'super.admin@saintjeaningenieur.org',
+        email: 'super@universitesaintjean.org',
         motDePasseHash: hashedPassword,
         estActif: true
-      }, { hooks: false }); // Désactiver les hooks pour éviter le double hash
+      }, { hooks: false }); 
       console.log('✅ Utilisateur créé');
     }
 
     console.log('✅ Utilisateur administrateur créé avec succès !');
-    console.log('📧 Email: super.admin@saintjeaningenieur.org');
+    console.log('📧 Email: super@universitesaintjean.org');
     console.log('🔑 Mot de passe: admin123');
     console.log('👤 ID:', user.id);
 
@@ -51,9 +51,7 @@ async function createAdmin() {
     } else {
       await db.Administrateur.create({
         id: user.id, // L'ID de l'admin doit être le même que l'ID de l'utilisateur
-        nom: 'Admin',
-        prenom: 'Super',
-        email: 'super.admin@saintjeaningenieur.org'
+        type: 'SUPERADMIN'
       });
       console.log('✅ Profil administrateur créé');
     }
