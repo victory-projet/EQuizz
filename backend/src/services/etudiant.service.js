@@ -1,9 +1,8 @@
 // backend/src/services/etudiant.service.js
 
 const db = require('../models');
-const etudiantRepository = require('../repositories/etudiant.repository');
 const AppError = require('../utils/AppError');
-const { genererMatricule, genererMatriculeUniv } = require('../utils/matriculeGenerator');
+const { genererMatriculeUniv } = require('../utils/matriculeGenerator');
 
 class EtudiantService {
   async findAll() {
@@ -231,7 +230,7 @@ class EtudiantService {
       }, { transaction });
 
       // Créer une nouvelle entrée dans l'historique
-      const nouvelHistorique = await db.HistoriqueEtudiant.create({
+      await db.HistoriqueEtudiant.create({
         etudiant_id: id,
         matricule: finalMatricule,
         ecole_id: nouvelleEcoleId,

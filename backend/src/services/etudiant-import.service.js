@@ -3,7 +3,7 @@
 const ExcelJS = require('exceljs');
 const db = require('../models');
 const AppError = require('../utils/AppError');
-const { genererMatricule, genererMatriculeUniv } = require('../utils/matriculeGenerator');
+const { genererMatriculeUniv } = require('../utils/matriculeGenerator');
 
 class EtudiantImportService {
   /**
@@ -45,7 +45,7 @@ class EtudiantImportService {
     for (const { row, rowNumber } of rows) {
       try {
         const rowData = this._parseRow(row, rowNumber, defaultClasseId);
-        const result = await this._processStudent(rowData, rowNumber);
+        const result = await this._processStudent(rowData);
 
         if (result.action === 'created') {
           results.created.push(result.data);
@@ -105,7 +105,7 @@ class EtudiantImportService {
    * - Si email existe → mise à jour
    * - Sinon → création
    */
-  async _processStudent(data, rowNumber) {
+  async _processStudent(data) {
     const transaction = await db.sequelize.transaction();
 
     try {
