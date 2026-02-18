@@ -138,7 +138,7 @@ async function quickTest() {
       estPeriodeActuelle: true
     });
 
-    console.log(`   ✅ Transfert effectué`);
+    console.log('   ✅ Transfert effectué');
     console.log(`   ✅ UUID (inchangé): ${etudiant.id}`);
     console.log(`   ✅ Ancien matricule: ${matricule1}`);
     console.log(`   ✅ Nouveau matricule: ${nouveauMatricule}\n`);

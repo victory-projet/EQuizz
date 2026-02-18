@@ -3,7 +3,7 @@
 const ExcelJS = require('exceljs');
 const db = require('../models');
 const AppError = require('../utils/AppError');
-const { genererMatricule } = require('../utils/matriculeGenerator');
+const { genererMatricule, genererMatriculeUniv } = require('../utils/matriculeGenerator');
 
 class EtudiantImportService {
   /**
@@ -46,7 +46,7 @@ class EtudiantImportService {
       try {
         const rowData = this._parseRow(row, rowNumber, defaultClasseId);
         const result = await this._processStudent(rowData, rowNumber);
-        
+
         if (result.action === 'created') {
           results.created.push(result.data);
           results.stats.created++;
@@ -76,9 +76,7 @@ class EtudiantImportService {
     const prenom = this._getCellValue(row, 2);
     const email = this._getCellValue(row, 3);
     const matricule = this._getCellValue(row, 4);
-    const idCarte = this._getCellValue(row, 5);
-    const classeNom = this._getCellValue(row, 6);
-    // Colonne Action supprimée - logique automatique UPSERT
+    const classeNom = this._getCellValue(row, 5);
 
     // Validation des champs obligatoires
     if (!nom || !prenom || !email) {
@@ -95,7 +93,7 @@ class EtudiantImportService {
       prenom: prenom.trim(),
       email: email.trim().toLowerCase(),
       matricule: matricule ? matricule.trim() : null,
-      idCarte: idCarte ? idCarte.trim() : null,
+      idCarte: null, // Plus importé via Excel selon demande
       classeNom: classeNom ? classeNom.trim() : null,
       classeId: defaultClasseId
     };
@@ -189,19 +187,16 @@ class EtudiantImportService {
       throw new Error('Classe non trouvée');
     }
 
+    // Si le matricule n'est pas fourni dans le fichier, c'est une erreur car le matricule est maintenant manuel
+    if (!data.matricule) {
+      throw new Error('Le matricule est obligatoire pour identifier ou créer un étudiant');
+    }
+
     // Générer ou utiliser le matricule fourni
     let matricule = data.matricule;
-    if (!matricule) {
-      matricule = await genererMatricule(classe.ecole_id, classe.anneeAcademiqueId);
-    } else {
-      // Vérifier l'unicité du matricule
-      const existingMatricule = await db.Etudiant.findOne({
-        where: { matricule }
-      });
-      if (existingMatricule) {
-        throw new Error(`Le matricule ${matricule} existe déjà`);
-      }
-    }
+
+    // Pour une création, on génère TOUJOURS un matriculeUniv permanent
+    const matriculeUniv = await genererMatriculeUniv();
 
     // Créer l'utilisateur
     const utilisateur = await db.Utilisateur.create({
@@ -215,6 +210,7 @@ class EtudiantImportService {
     // Créer l'étudiant
     const etudiant = await db.Etudiant.create({
       id: utilisateur.id,
+      matriculeUniv,
       matricule,
       idCarte: data.idCarte,
       classe_id: classeId
@@ -261,7 +257,7 @@ class EtudiantImportService {
 
     // Préparer les mises à jour
     const updates = {};
-    
+
     if (data.idCarte !== null) {
       updates.idCarte = data.idCarte;
     }
@@ -270,16 +266,16 @@ class EtudiantImportService {
     if (data.matricule && data.matricule !== etudiant.matricule) {
       // Vérifier que le nouveau matricule n'existe pas déjà
       const existingMatricule = await db.Etudiant.findOne({
-        where: { 
+        where: {
           matricule: data.matricule,
           id: { [db.Sequelize.Op.ne]: etudiant.id }
         }
       });
-      
+
       if (existingMatricule) {
         throw new Error(`Le matricule ${data.matricule} est déjà utilisé par un autre étudiant`);
       }
-      
+
       updates.matricule = data.matricule;
     }
 
@@ -295,12 +291,13 @@ class EtudiantImportService {
 
       const estChangementEcole = ancienneClasse.ecole_id !== nouvelleClasse.ecole_id;
 
-      // Si changement d'école ET pas de matricule fourni, générer nouveau matricule
-      if (estChangementEcole && !data.matricule) {
-        const nouveauMatricule = await genererMatricule(
-          nouvelleClasse.ecole_id,
-          nouvelleClasse.anneeAcademiqueId
-        );
+      // Si changement d'école, utiliser le matricule fourni dans le fichier
+      if (estChangementEcole) {
+        if (!data.matricule) {
+          throw new Error(`Un nouveau matricule est requis pour le transfert de ${data.nom} ${data.prenom} vers l'école ${nouvelleClasse.Ecole.nom}`);
+        }
+
+        const nouveauMatricule = data.matricule;
         updates.matricule = nouveauMatricule;
 
         // Clôturer l'historique actuel
@@ -374,15 +371,15 @@ class EtudiantImportService {
   _getCellValue(row, colNumber) {
     const cell = row.getCell(colNumber);
     const value = cell.value;
-    
+
     if (value === null || value === undefined) {
       return null;
     }
-    
+
     if (typeof value === 'object' && value.text) {
       return value.text;
     }
-    
+
     return String(value).trim();
   }
 

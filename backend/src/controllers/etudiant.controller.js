@@ -37,10 +37,11 @@ class EtudiantController {
   });
 
   transferer = asyncHandler(async (req, res) => {
-    const { nouvelleClasseId, dateTransfert } = req.body;
+    const { nouvelleClasseId, nouveauMatricule, dateTransfert } = req.body;
     const resultat = await etudiantService.transferer(
-      req.params.id, 
-      nouvelleClasseId, 
+      req.params.id,
+      nouvelleClasseId,
+      nouveauMatricule,
       dateTransfert ? new Date(dateTransfert) : undefined
     );
     res.status(200).json(resultat);

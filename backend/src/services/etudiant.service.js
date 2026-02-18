@@ -3,7 +3,7 @@
 const db = require('../models');
 const etudiantRepository = require('../repositories/etudiant.repository');
 const AppError = require('../utils/AppError');
-const { genererMatricule } = require('../utils/matriculeGenerator');
+const { genererMatricule, genererMatriculeUniv } = require('../utils/matriculeGenerator');
 
 class EtudiantService {
   async findAll() {
@@ -44,7 +44,7 @@ class EtudiantService {
   }
 
   async create(data) {
-    const { nom, prenom, email, classe_id } = data;
+    const { nom, prenom, email, matricule, classe_id } = data;
 
     // Vérifier si l'email existe déjà
     const existingUser = await db.Utilisateur.findOne({ where: { email } });
@@ -67,8 +67,19 @@ class EtudiantService {
     const transaction = await db.sequelize.transaction();
 
     try {
-      // Générer automatiquement le matricule
-      const matricule = await genererMatricule(classe.ecole_id, classe.anneeAcademiqueId);
+      // Générer automatiquement le matricule universitaire permanent
+      const matriculeUniv = await genererMatriculeUniv();
+
+      // Vérifier si le matricule d'école est fourni (il doit l'être maintenant)
+      if (!matricule) {
+        throw AppError.badRequest('Le matricule d\'école est requis', 'MATRICULE_REQUIRED');
+      }
+
+      // Vérifier si le matricule d'école existe déjà
+      const existingMatricule = await db.Etudiant.findOne({ where: { matricule } });
+      if (existingMatricule) {
+        throw AppError.conflict(`Le matricule ${matricule} est déjà utilisé`, 'MATRICULE_EXISTS');
+      }
 
       // Créer l'utilisateur
       const utilisateur = await db.Utilisateur.create({
@@ -82,6 +93,7 @@ class EtudiantService {
       // Créer l'étudiant
       const etudiant = await db.Etudiant.create({
         id: utilisateur.id,
+        matriculeUniv,
         matricule,
         classe_id
       }, { transaction });
@@ -108,7 +120,7 @@ class EtudiantService {
 
   async update(id, data) {
     const etudiant = await db.Etudiant.findByPk(id);
-    
+
     if (!etudiant) {
       throw AppError.notFound('Étudiant non trouvé', 'STUDENT_NOT_FOUND');
     }
@@ -146,14 +158,15 @@ class EtudiantService {
    * Transfère un étudiant vers une nouvelle classe (même école ou autre école)
    * @param {string} id - UUID de l'étudiant
    * @param {string} nouvelleClasseId - UUID de la nouvelle classe
+   * @param {string} nouveauMatricule - Nouveau matricule manuel (optionnel)
    * @param {Date} dateTransfert - Date du transfert (optionnel, par défaut maintenant)
    * @returns {Promise<Object>} - Étudiant mis à jour avec son historique
    */
-  async transferer(id, nouvelleClasseId, dateTransfert = new Date()) {
+  async transferer(id, nouvelleClasseId, nouveauMatricule = null, dateTransfert = new Date()) {
     const etudiant = await db.Etudiant.findByPk(id, {
       include: [{ model: db.Classe }]
     });
-    
+
     if (!etudiant) {
       throw AppError.notFound('Étudiant non trouvé', 'STUDENT_NOT_FOUND');
     }
@@ -199,26 +212,28 @@ class EtudiantService {
         }
       );
 
-      let nouveauMatricule = etudiant.matricule;
+      let finalMatricule = nouveauMatricule || etudiant.matricule;
 
-      // Si changement d'école, générer un nouveau matricule
-      if (estChangementEcole) {
-        nouveauMatricule = await genererMatricule(
-          nouvelleEcoleId,
-          nouvelleClasse.anneeAcademiqueId
-        );
+      // Si changement d'école et pas de nouveau matricule fourni, c'est peut-être un oubli
+      // mais on va autoriser de garder l'ancien si le user le souhaite (ou s'il a oublié)
+      // Cependant, le matricule doit rester unique.
+      if (finalMatricule !== etudiant.matricule) {
+        const existingMatricule = await db.Etudiant.findOne({ where: { matricule: finalMatricule } });
+        if (existingMatricule) {
+          throw AppError.conflict(`Le matricule ${finalMatricule} est déjà utilisé`, 'MATRICULE_EXISTS');
+        }
       }
 
       // Mettre à jour l'étudiant
       await etudiant.update({
-        matricule: nouveauMatricule,
+        matricule: finalMatricule,
         classe_id: nouvelleClasseId
       }, { transaction });
 
       // Créer une nouvelle entrée dans l'historique
       const nouvelHistorique = await db.HistoriqueEtudiant.create({
         etudiant_id: id,
-        matricule: nouveauMatricule,
+        matricule: finalMatricule,
         ecole_id: nouvelleEcoleId,
         classe_id: nouvelleClasseId,
         dateDebut: dateTransfert,
@@ -229,21 +244,30 @@ class EtudiantService {
       await transaction.commit();
 
       // Retourner l'étudiant avec son historique complet
-      const etudiantMisAJour = await this.findOne(id);
-      const historique = await this.getHistorique(id);
+      // On le fait après le commit car ce sont des lectures, mais on les protège
+      try {
+        const etudiantMisAJour = await this.findOne(id);
+        const historique = await this.getHistorique(id);
 
-      return {
-        etudiant: etudiantMisAJour,
-        historique,
-        transfert: {
-          estChangementEcole,
-          ancienMatricule: estChangementEcole ? etudiant.matricule : null,
-          nouveauMatricule,
-          dateTransfert
-        }
-      };
+        return {
+          etudiant: etudiantMisAJour,
+          historique,
+          transfert: {
+            estChangementEcole,
+            ancienMatricule: estChangementEcole ? etudiant.matricule : null,
+            nouveauMatricule,
+            dateTransfert
+          }
+        };
+      } catch (readError) {
+        console.error('Erreur lors de la lecture des données après transfert:', readError);
+        // Si la lecture échoue après le commit, on retourne au moins l'ID
+        return { id, message: 'Transfert effectué mais erreur lors de la récupération des détails' };
+      }
     } catch (error) {
-      await transaction.rollback();
+      if (transaction && !transaction.finished) {
+        await transaction.rollback();
+      }
       throw error;
     }
   }
@@ -282,7 +306,7 @@ class EtudiantService {
       include: [
         {
           model: db.Ecole,
-          attributes: ['id', 'nom', 'adresse']
+          attributes: ['id', 'nom']
         },
         {
           model: db.Classe,

@@ -28,7 +28,7 @@ async function addHistoriqueTable() {
     // 2. Vérifier si la table existe déjà
     console.log('2️⃣  Vérification de l\'existence de la table...');
     const [results] = await db.sequelize.query(
-      "SHOW TABLES LIKE 'HistoriqueEtudiant'"
+      'SHOW TABLES LIKE \'HistoriqueEtudiant\''
     );
 
     if (results.length > 0) {
@@ -38,7 +38,7 @@ async function addHistoriqueTable() {
       // Afficher la structure
       console.log('3️⃣  Structure de la table existante :');
       const [structure] = await db.sequelize.query(
-        "DESCRIBE HistoriqueEtudiant"
+        'DESCRIBE HistoriqueEtudiant'
       );
       console.table(structure);
       
@@ -53,14 +53,14 @@ async function addHistoriqueTable() {
       // 4. Vérifier la création
       console.log('4️⃣  Vérification de la création...');
       const [newStructure] = await db.sequelize.query(
-        "DESCRIBE HistoriqueEtudiant"
+        'DESCRIBE HistoriqueEtudiant'
       );
       console.table(newStructure);
 
       // 5. Vérifier les index
       console.log('\n5️⃣  Vérification des index...');
       const [indexes] = await db.sequelize.query(
-        "SHOW INDEX FROM HistoriqueEtudiant"
+        'SHOW INDEX FROM HistoriqueEtudiant'
       );
       console.log(`   ✅ ${indexes.length} index créés\n`);
     }

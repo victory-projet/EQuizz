@@ -69,18 +69,7 @@ const HistoriqueEtudiant = sequelize.define('HistoriqueEtudiant', {
 }, {
   tableName: 'HistoriqueEtudiant',
   timestamps: true,
-  paranoid: false,
-  indexes: [
-    {
-      fields: ['etudiant_id']
-    },
-    {
-      fields: ['matricule']
-    },
-    {
-      fields: ['estPeriodeActuelle']
-    }
-  ]
+  paranoid: false
 });
 
 module.exports = HistoriqueEtudiant;
