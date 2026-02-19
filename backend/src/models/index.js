@@ -166,4 +166,8 @@ HistoriqueEtudiant.belongsTo(Ecole, { foreignKey: 'ecole_id' });
 Classe.hasMany(HistoriqueEtudiant, { foreignKey: { name: 'classe_id', allowNull: false } });
 HistoriqueEtudiant.belongsTo(Classe, { foreignKey: 'classe_id' });
 
+// --- 8. Relation Admin à École (pour Admin scolaires) ---
+Ecole.hasMany(Administrateur, { foreignKey: { name: 'ecole_id', allowNull: true } });
+Administrateur.belongsTo(Ecole, { foreignKey: 'ecole_id' });
+
 module.exports = db;

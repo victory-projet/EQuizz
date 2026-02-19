@@ -33,6 +33,22 @@ const isAdmin = (req, res, next) => {
   }
 };
 
+const isSuperAdmin = (req, res, next) => {
+  if (req.user && req.user.adminType === 'SUPERADMIN') {
+    next();
+  } else {
+    next(AppError.forbidden('Accès refusé. Rôle SuperAdmin requis.', 'SUPERADMIN_REQUIRED'));
+  }
+};
+
+const isSchoolAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin' && (req.user.adminType === 'SUPERADMIN' || req.user.adminType === 'ADMIN')) {
+    next();
+  } else {
+    next(AppError.forbidden('Accès refusé. Rôle Admin requis.', 'ADMIN_REQUIRED'));
+  }
+};
+
 // Middleware pour autoriser certains rôles
 const authorize = (roles = []) => {
   return (req, res, next) => {
@@ -55,5 +71,7 @@ const authorize = (roles = []) => {
 module.exports = {
   authenticate,
   isAdmin,
+  isSuperAdmin,
+  isSchoolAdmin,
   authorize,
 };
