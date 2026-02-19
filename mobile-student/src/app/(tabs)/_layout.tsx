@@ -1,11 +1,35 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Alert } from 'react-native';
 import { Tabs } from 'expo-router';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SyncStatusBanner } from '../../presentation/components/SyncStatusBanner';
+import { SQLiteDatabase } from '../../data/database/SQLiteDatabase';
 
 export default function TabLayout() {
+  useEffect(() => {
+    const checkStuckSubmissions = async () => {
+      try {
+        const db = SQLiteDatabase.getInstance();
+        const rows = await db.executeQuery(
+          'SELECT COUNT(*) as count FROM submissions WHERE retry_count >= 3 AND synced = 0'
+        );
+        const count = rows[0]?.count ?? 0;
+        if (count > 0) {
+          Alert.alert(
+            'Soumissions non synchronisées',
+            `${count} soumission(s) n'ont pas pu être envoyées après plusieurs tentatives. Vérifiez votre connexion et relancez l'application.`,
+            [{ text: 'OK' }]
+          );
+        }
+      } catch (error) {
+        console.warn('⚠️ Erreur vérification soumissions bloquées:', error);
+      }
+    };
+
+    checkStuckSubmissions();
+  }, []);
+
   return (
     <View style={{ flex: 1 }}>
       <SyncStatusBanner />
