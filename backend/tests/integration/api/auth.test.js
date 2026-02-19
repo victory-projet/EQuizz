@@ -1,19 +1,19 @@
 // Tests d'intégration pour l'authentification
-const request = require('supertest');
+const _request = require('supertest');
 const { createTestApp } = require('../../helpers/testServer');
 
 describe('API Auth - Integration Tests', () => {
-  let app;
+  let _app;
 
   beforeAll(() => {
-    app = createTestApp();
+    _app = createTestApp();
     // Charger les routes d'authentification
     // app.use('/api/auth', require('../../../src/routes/auth.routes'));
   });
 
   describe('POST /api/auth/login', () => {
     it('devrait authentifier un étudiant avec des identifiants valides', async () => {
-      const credentials = {
+      const _credentials = {
         email: 'pierre.durand@student.fr',
         password: 'password123',
       };
@@ -29,7 +29,7 @@ describe('API Auth - Integration Tests', () => {
     });
 
     it('devrait rejeter des identifiants invalides', async () => {
-      const credentials = {
+      const _credentials = {
         email: 'wrong@email.fr',
         password: 'wrongpassword',
       };

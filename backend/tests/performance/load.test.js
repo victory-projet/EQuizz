@@ -3,10 +3,10 @@ describe('Tests de Performance', () => {
   describe('Chargement des évaluations', () => {
     it('devrait charger 100 évaluations en moins de 1 seconde', async () => {
       const startTime = Date.now();
-      
+
       // Simuler le chargement de 100 évaluations
       // await evaluationService.findAll();
-      
+
       const endTime = Date.now();
       const duration = endTime - startTime;
 
@@ -16,7 +16,7 @@ describe('Tests de Performance', () => {
 
   describe('Soumission de réponses', () => {
     it('devrait traiter 50 soumissions simultanées', async () => {
-      const submissions = Array(50).fill(null).map((_, i) => ({
+      const _submissions = Array(50).fill(null).map((_, i) => ({
         quizzId: 'quizz-001',
         etudiantId: `etu-${i}`,
         reponses: [
@@ -25,13 +25,13 @@ describe('Tests de Performance', () => {
       }));
 
       const startTime = Date.now();
-      
+
       // await Promise.all(
       //   submissions.map(sub => 
       //     quizzService.submitReponses(sub.quizzId, sub.etudiantId, sub.reponses)
       //   )
       // );
-      
+
       const endTime = Date.now();
       const duration = endTime - startTime;
 

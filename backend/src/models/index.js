@@ -24,6 +24,7 @@ const AnalyseReponse = require('./AnalyseReponse');
 const PasswordResetToken = require('./PasswordResetToken');
 const DeviceToken = require('./DeviceToken');
 const NotificationPreference = require('./NotificationPreference');
+const HistoriqueEtudiant = require('./HistoriqueEtudiant');
 
 // --- Centralisation dans un objet 'db' ---
 const db = {};
@@ -50,8 +51,7 @@ db.AnalyseReponse = AnalyseReponse;
 db.PasswordResetToken = PasswordResetToken;
 db.DeviceToken = DeviceToken;
 db.NotificationPreference = NotificationPreference;
-db.DeviceToken = DeviceToken;
-db.NotificationPreference = NotificationPreference;
+db.HistoriqueEtudiant = HistoriqueEtudiant;
 
 // --- Définition de toutes les Relations (Associations) ---
 
@@ -155,6 +155,16 @@ DeviceToken.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
 
 Utilisateur.hasOne(NotificationPreference, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });
 NotificationPreference.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
+
+// --- 8. Historique Étudiant ---
+Etudiant.hasMany(HistoriqueEtudiant, { foreignKey: { name: 'etudiant_id', allowNull: false }, onDelete: 'CASCADE' });
+HistoriqueEtudiant.belongsTo(Etudiant, { foreignKey: 'etudiant_id' });
+
+Ecole.hasMany(HistoriqueEtudiant, { foreignKey: { name: 'ecole_id', allowNull: false } });
+HistoriqueEtudiant.belongsTo(Ecole, { foreignKey: 'ecole_id' });
+
+Classe.hasMany(HistoriqueEtudiant, { foreignKey: { name: 'classe_id', allowNull: false } });
+HistoriqueEtudiant.belongsTo(Classe, { foreignKey: 'classe_id' });
 
 // --- 8. Relation Admin à École (pour Admin scolaires) ---
 Ecole.hasMany(Administrateur, { foreignKey: { name: 'ecole_id', allowNull: true } });

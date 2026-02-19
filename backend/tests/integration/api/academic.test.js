@@ -1,19 +1,19 @@
 // Tests d'intégration pour les endpoints académiques
-const request = require('supertest');
+const _request = require('supertest');
 const { createTestApp, generateTestToken } = require('../../helpers/testServer');
 
 describe('API Academic - Integration Tests', () => {
-  let app;
-  let adminToken;
+  let _app;
+  let _adminToken;
 
   beforeAll(() => {
-    app = createTestApp();
-    adminToken = generateTestToken('ens-001', 'enseignant');
+    _app = createTestApp();
+    _adminToken = generateTestToken('ens-001', 'enseignant');
   });
 
   describe('POST /api/academic/classes', () => {
     it('devrait créer une nouvelle classe', async () => {
-      const classeData = {
+      const _classeData = {
         nom: 'INGE4-B',
         niveau: 'M1',
       };

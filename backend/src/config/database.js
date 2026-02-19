@@ -23,8 +23,9 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 3306,
     dialect: process.env.DB_DIALECT,
+    storage: process.env.DB_DIALECT === 'sqlite' ? process.env.DB_STORAGE : null,
     logging: false,
-    
+
     // Options de connexion pour éviter les timeouts
     pool: {
       max: 5,
@@ -43,12 +44,12 @@ const sequelize = new Sequelize(
     define: {
       // Pour avoir created_at et updated_at au lieu de createdAt et updatedAt
       underscored: true,
-      
+
       // Empêche Sequelize de renommer la table au pluriel
       freezeTableName: true,
 
       // Active la suppression logique (soft delete)
-      paranoid: true, 
+      paranoid: true,
     }
   }
 );

@@ -42,7 +42,7 @@ async function seedDatabase() {
       annee_academique_id: anneeAcademique.id
     }, { transaction });
 
-    const semestre2 = await db.Semestre.create({
+    await db.Semestre.create({
       nom: 'Semestre 2',
       numero: 2,
       dateDebut: '2025-02-01',
