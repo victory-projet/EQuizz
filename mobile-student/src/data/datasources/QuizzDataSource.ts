@@ -223,22 +223,20 @@ export class QuizzDataSourceImpl implements QuizzDataSource {
 
   /**
    * Soumet les réponses d'un quizz avec stratégie offline-first :
-   *  1. Sauvegarde locale dans `submissions` (toujours, garantit zéro perte).
-   *  2. Si en ligne  → envoie directement au serveur.
-   *  3. Si hors ligne → place dans la queue du SyncEngine pour retry automatique.
+   *  1. Si en ligne  → sauvegarde locale pour traçabilité, puis envoie au serveur.
+   *  2. Si hors ligne → place dans la queue du SyncEngine qui gère lui-même la sauvegarde locale.
    *
    * La méthode retourne immédiatement dans tous les cas pour ne pas bloquer l'UI.
    */
   async submitAnswers(quizzId: string, submission: QuizzSubmission): Promise<void> {
     const online = await isOnline();
 
-    // Toujours persister localement en premier
-    await this._saveSubmissionLocally(quizzId, submission);
-
     if (online) {
+      // En ligne : sauvegarde locale pour traçabilité, puis envoi réseau
+      await this._saveSubmissionLocally(quizzId, submission);
       await this._sendSubmissionToServer(quizzId, submission);
     } else {
-      // Mise en file : le SyncEngine enverra dès le retour en ligne
+      // Hors ligne : queueSubmission gère lui-même la sauvegarde locale
       await this.syncEngine.queueSubmission(
         quizzId,
         (submission as any).evaluationId || '',
