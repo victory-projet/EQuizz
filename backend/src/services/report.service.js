@@ -2,11 +2,10 @@
 
 const db = require('../models');
 // Utiliser Gemini si disponible, sinon fallback sur sentiment basique
-const sentimentService = process.env.GOOGLE_AI_API_KEY 
+const sentimentService = process.env.GOOGLE_AI_API_KEY
   ? require('./sentiment-gemini.service')
   : require('./sentiment.service');
 const PDFDocument = require('pdfkit');
-const { Op } = require('sequelize');
 
 class ReportService {
   /**
@@ -28,7 +27,7 @@ class ReportService {
                 {
                   model: db.ReponseEtudiant,
                   include: [
-                    { 
+                    {
                       model: db.SessionReponse,
                       attributes: ['id', 'dateDebut', 'dateFin', 'statut'],  // Seulement les infos de session
                     },
@@ -60,7 +59,7 @@ class ReportService {
 
     // Calculer les statistiques
     const stats = await this.calculateStatistics(evaluation, classeId);
-    
+
     // Analyser les sentiments si pas déjà fait
     await sentimentService.analyzeEvaluationReponses(evaluationId);
 
@@ -128,7 +127,7 @@ class ReportService {
       col: 'id'
     });
 
-    const tauxParticipation = totalEtudiants > 0 
+    const tauxParticipation = totalEtudiants > 0
       ? ((nombreRepondants / totalEtudiants) * 100).toFixed(2)
       : 0;
 
@@ -142,8 +141,8 @@ class ReportService {
   /**
    * Analyse les sentiments des réponses ouvertes
    */
-  async getSentimentAnalysis(evaluationId, classeId = null) {
-  // Récupérer l'évaluation avec les questions de type REPONSE_OUVERTE
+  async getSentimentAnalysis(evaluationId, _classeId = null) {
+    // Récupérer l'évaluation avec les questions de type REPONSE_OUVERTE
     const evaluation = await db.Evaluation.findByPk(evaluationId, {
       include: [
         {
@@ -158,7 +157,7 @@ class ReportService {
                   model: db.ReponseEtudiant,
                   attributes: ['id', 'contenu'],
                   include: [
-                    { 
+                    {
                       model: db.SessionReponse,
                       attributes: ['id']
                     },
@@ -254,7 +253,7 @@ class ReportService {
 
     for (const question of evaluation.Quizz.Questions) {
       let reponses = question.ReponseEtudiants;
-      
+
       if (classeId) {
         reponses = reponses.filter(r => r.Etudiant.Classe.id === classeId);
       }
@@ -282,7 +281,7 @@ class ReportService {
         questionData.options = question.options;
         questionData.distribution = distribution;
         questionData.distributionPct = {};
-        
+
         Object.keys(distribution).forEach(option => {
           questionData.distributionPct[option] = reponses.length > 0
             ? ((distribution[option] / reponses.length) * 100).toFixed(2)
@@ -301,7 +300,7 @@ class ReportService {
    */
   async generatePDF(evaluationId, classeId = null) {
     const report = await this.generateReport(evaluationId, classeId);
-    
+
     return new Promise((resolve, reject) => {
       const doc = new PDFDocument();
       const chunks = [];

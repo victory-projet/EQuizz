@@ -1,5 +1,4 @@
 const { Utilisateur, Administrateur, Enseignant, Etudiant } = require('../models');
-const bcrypt = require('bcryptjs');
 const emailService = require('../services/email.service');
 
 // Récupérer tous les utilisateurs avec leurs rôles
@@ -106,7 +105,7 @@ exports.createUtilisateur = async (req, res) => {
     if (role === 'ADMIN') {
       await Administrateur.create({ id: utilisateur.id });
     } else if (role === 'ENSEIGNANT') {
-      await Enseignant.create({ 
+      await Enseignant.create({
         id: utilisateur.id,
         specialite: specialite || null
       });
@@ -114,15 +113,15 @@ exports.createUtilisateur = async (req, res) => {
       if (!matricule) {
         return res.status(400).json({ message: 'Le matricule est requis pour un étudiant' });
       }
-      
+
       // Vérifier si le matricule existe déjà
       const existingMatricule = await Etudiant.findOne({ where: { matricule } });
       if (existingMatricule) {
         await utilisateur.destroy();
         return res.status(400).json({ message: 'Ce matricule est déjà utilisé' });
       }
-      
-      await Etudiant.create({ 
+
+      await Etudiant.create({
         id: utilisateur.id,
         matricule
       });
@@ -251,11 +250,11 @@ exports.resetPassword = async (req, res) => {
     }
 
     await utilisateur.update({ motDePasseHash: nouveauMotDePasse });
-    
+
     // Envoyer un email avec le nouveau mot de passe
     const userData = utilisateur.toJSON();
     await emailService.sendPasswordResetEmail(userData, nouveauMotDePasse);
-    
+
     res.json({ message: 'Mot de passe réinitialisé avec succès' });
   } catch (error) {
     console.error('Erreur lors de la réinitialisation du mot de passe:', error);
@@ -277,7 +276,7 @@ exports.importUtilisateurs = async (req, res) => {
 
     for (let i = 0; i < users.length; i++) {
       const userData = users[i];
-      
+
       try {
         // Validation des données requises
         if (!userData.nom || !userData.prenom || !userData.email) {
@@ -318,7 +317,7 @@ exports.importUtilisateurs = async (req, res) => {
         if (role === 'ADMIN') {
           await Administrateur.create({ id: utilisateur.id });
         } else if (role === 'ENSEIGNANT') {
-          await Enseignant.create({ 
+          await Enseignant.create({
             id: utilisateur.id,
             specialite: userData.specialite || null
           });
@@ -330,7 +329,7 @@ exports.importUtilisateurs = async (req, res) => {
             const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
             matricule = `${year}${randomNum}`;
           }
-          
+
           // Vérifier l'unicité du matricule
           const existingMatricule = await Etudiant.findOne({ where: { matricule } });
           if (existingMatricule) {
@@ -339,8 +338,8 @@ exports.importUtilisateurs = async (req, res) => {
             const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
             matricule = `${year}${randomNum}`;
           }
-          
-          await Etudiant.create({ 
+
+          await Etudiant.create({
             id: utilisateur.id,
             matricule: matricule
           });

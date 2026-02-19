@@ -25,7 +25,7 @@ const transport = nodemailer.createTransport({
 
 console.log('📧 Test de connexion au serveur email...\n');
 
-transport.verify(function (error, success) {
+transport.verify(function (error, _success) {
   if (error) {
     console.error('❌ Erreur de connexion:', error.message);
     console.error('\n💡 Solutions:');
@@ -36,7 +36,7 @@ transport.verify(function (error, success) {
   } else {
     console.log('✅ Connexion réussie ! Le serveur email est prêt.');
     console.log('\n📤 Envoi d\'un email de test...\n');
-    
+
     // Envoyer un email de test
     transport.sendMail({
       from: '"Test EQuizz" <test@equizz.com>',

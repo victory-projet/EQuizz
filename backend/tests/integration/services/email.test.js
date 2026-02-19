@@ -2,11 +2,11 @@
 const nodemailer = require('nodemailer');
 
 describe('Service Email', () => {
-  let transporter;
+  let _transporter;
 
   beforeAll(() => {
     // Créer un transporteur de test avec Ethereal
-    transporter = nodemailer.createTransport({
+    _transporter = nodemailer.createTransport({
       host: 'smtp.ethereal.email',
       port: 587,
       secure: false,

@@ -45,7 +45,7 @@ describe('Import Excel de Questions', () => {
       };
 
       const result = await evaluationService.importQuestionsFromExcel('quizz-001', buffer);
-      
+
       // Vérifier que les questions ont été créées
       expect(db.Question.bulkCreate).toHaveBeenCalled();
       expect(result.count).toBeGreaterThan(0);

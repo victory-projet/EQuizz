@@ -1,14 +1,13 @@
 const axios = require('axios');
-const db = require('./src/models');
 require('dotenv').config();
 
 const API_URL = 'http://localhost:3000/api';
 
 async function setupTestUser() {
   // Utiliser les identifiants fournis par l'utilisateur
-  return { 
+  return {
     matricule: '2223i032', // Matricule de celestin.simo
-    motDePasse: '3IVci1TKpZ' 
+    motDePasse: '3IVci1TKpZ'
   };
 }
 

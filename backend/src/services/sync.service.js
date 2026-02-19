@@ -40,10 +40,10 @@ class SyncService {
    */
   async _processOperation(operation, etudiantId) {
     switch (operation.type) {
-      case 'submission':
-        return this._processSubmission(operation.payload, etudiantId);
-      default:
-        throw new Error(`Type d'opération non supporté : ${operation.type}`);
+    case 'submission':
+      return this._processSubmission(operation.payload, etudiantId);
+    default:
+      throw new Error(`Type d'opération non supporté : ${operation.type}`);
     }
   }
 
@@ -141,10 +141,10 @@ class SyncService {
       idCarte: utilisateur.Etudiant.idCarte,
       classe: utilisateur.Etudiant.Classe
         ? {
-            id: utilisateur.Etudiant.Classe.id,
-            nom: utilisateur.Etudiant.Classe.nom,
-            niveau: utilisateur.Etudiant.Classe.niveau
-          }
+          id: utilisateur.Etudiant.Classe.id,
+          nom: utilisateur.Etudiant.Classe.nom,
+          niveau: utilisateur.Etudiant.Classe.niveau
+        }
         : null
     };
   }

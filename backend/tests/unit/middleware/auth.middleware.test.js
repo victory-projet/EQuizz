@@ -1,5 +1,6 @@
 // Tests unitaires pour le middleware d'authentification
 const jwt = require('jsonwebtoken');
+const db = require('../../../src/models');
 
 describe('Auth Middleware', () => {
   let req, res, next;
@@ -27,7 +28,7 @@ describe('Auth Middleware', () => {
 
       // Simuler le middleware
       // authMiddleware(req, res, next);
-      
+
       // expect(next).toHaveBeenCalled();
       // expect(req.user).toBeDefined();
     });
@@ -36,16 +37,16 @@ describe('Auth Middleware', () => {
       req.headers.authorization = 'Bearer invalid-token';
 
       // authMiddleware(req, res, next);
-      
+
       // expect(res.status).toHaveBeenCalledWith(401);
       // expect(next).not.toHaveBeenCalled();
     });
 
     it('devrait rejeter une requête sans token', () => {
       // Pas de header Authorization
-      
+
       // authMiddleware(req, res, next);
-      
+
       // expect(res.status).toHaveBeenCalledWith(401);
     });
 
@@ -59,7 +60,7 @@ describe('Auth Middleware', () => {
       req.headers.authorization = `Bearer ${expiredToken}`;
 
       // authMiddleware(req, res, next);
-      
+
       // expect(res.status).toHaveBeenCalledWith(401);
     });
   });
@@ -74,7 +75,7 @@ describe('Auth Middleware', () => {
       req.headers.authorization = `Bearer ${token}`;
 
       // requireRole('enseignant')(req, res, next);
-      
+
       // expect(next).toHaveBeenCalled();
     });
 
@@ -87,7 +88,7 @@ describe('Auth Middleware', () => {
       req.headers.authorization = `Bearer ${token}`;
 
       // requireRole('enseignant')(req, res, next);
-      
+
       // expect(res.status).toHaveBeenCalledWith(403);
     });
   });

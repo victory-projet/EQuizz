@@ -1,7 +1,6 @@
 // backend/src/services/etudiant.service.js
 
 const db = require('../models');
-const etudiantRepository = require('../repositories/etudiant.repository');
 const AppError = require('../utils/AppError');
 
 class EtudiantService {
