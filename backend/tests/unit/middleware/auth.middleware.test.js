@@ -1,5 +1,6 @@
 // Tests unitaires pour le middleware d'authentification
 const jwt = require('jsonwebtoken');
+const db = require('../../../src/models');
 
 describe('Auth Middleware', () => {
   let _req, _res, _next;

@@ -107,7 +107,7 @@ describe('Auth Integration Tests', () => {
         motDePasseHash: 'password123'
       });
 
-      const _etudiant = await db.Etudiant.create({
+      await db.Etudiant.create({
         id: utilisateur.id,
         matricule: '20230001',
         classe_id: classe.id
