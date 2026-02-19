@@ -706,7 +706,7 @@ export class SyncEngine {
   async queueSubmission(quizzId: string, evaluationId: string, userId: string, responses: any[]): Promise<string> {
     // D'abord sauvegarder localement
     const submissionQuery = `
-      INSERT INTO submissions (quizz_id, evaluation_id, user_id, responses, completed_at)
+      INSERT OR REPLACE INTO submissions (quizz_id, evaluation_id, user_id, responses, completed_at)
       VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
     `;
     
