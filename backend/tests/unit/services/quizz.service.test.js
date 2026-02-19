@@ -49,7 +49,7 @@ describe('QuizzService', () => {
   });
 
   describe('submitReponses() - Système d\'anonymat', () => {
-    const mockTransactionImplementation = () => {
+    const _mockTransactionImplementation = () => {
       return jest.fn().mockImplementation(async (callback) => {
         const t = { commit: jest.fn(), rollback: jest.fn() };
         await callback(t);

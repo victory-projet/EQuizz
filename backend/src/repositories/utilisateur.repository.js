@@ -23,6 +23,11 @@ class UtilisateurRepository {
       }, {
         model: db.Administrateur, // On inclut le profil Admin
         required: false,
+        include: [{
+          model: db.Ecole,
+          attributes: ['id', 'nom'],
+          required: false
+        }]
       }, {
         model: db.Enseignant, // On inclut le profil Enseignant
         attributes: ['specialite'],

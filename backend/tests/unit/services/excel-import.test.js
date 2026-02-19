@@ -73,7 +73,7 @@ describe('Import Excel de Questions', () => {
         type: 'OUVERTE',
       });
 
-      const buffer = await workbook.xlsx.writeBuffer();
+      const _buffer = await workbook.xlsx.writeBuffer();
 
       // Test que les questions ouvertes sont créées sans options
     });

@@ -15,6 +15,7 @@ const setupTestDb = async () => {
   });
 
   // Importer tous les modèles
+  require('../../src/models');
 
   // Synchroniser la base de données
   await sequelize.sync({ force: true });

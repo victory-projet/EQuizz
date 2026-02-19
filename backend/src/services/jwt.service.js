@@ -18,6 +18,14 @@ class JwtService {
       type: 'access'
     };
 
+    // Ajouter les informations d'administration si l'utilisateur est admin
+    if (utilisateur.Administrateur) {
+      payload.adminType = utilisateur.Administrateur.type; // SUPERADMIN ou ADMIN
+      if (utilisateur.Administrateur.ecole_id) {
+        payload.ecoleId = utilisateur.Administrateur.ecole_id; // undefined pour SuperAdmin, UUID pour Admin scolaire
+      }
+    }
+
     return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
   }
 

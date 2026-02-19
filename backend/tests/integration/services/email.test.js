@@ -19,7 +19,7 @@ describe('Service Email', () => {
 
   describe('Envoi d\'emails', () => {
     it('devrait envoyer un email de bienvenue', async () => {
-      const mailOptions = {
+      const _mailOptions = {
         from: '"EQuizz" <noreply@equizz.fr>',
         to: 'test@example.com',
         subject: 'Bienvenue sur EQuizz',
@@ -33,7 +33,7 @@ describe('Service Email', () => {
 
     it('devrait envoyer un email de réinitialisation de mot de passe', async () => {
       const resetToken = 'reset-token-123';
-      const mailOptions = {
+      const _mailOptions = {
         from: '"EQuizz" <noreply@equizz.fr>',
         to: 'test@example.com',
         subject: 'Réinitialisation de mot de passe',
@@ -47,7 +47,7 @@ describe('Service Email', () => {
 
   describe('Gestion des erreurs', () => {
     it('devrait gérer les adresses email invalides', async () => {
-      const mailOptions = {
+      const _mailOptions = {
         from: '"EQuizz" <noreply@equizz.fr>',
         to: 'invalid-email',
         subject: 'Test',
