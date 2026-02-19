@@ -21,6 +21,16 @@ const loginValidationRules = () => {
   ];
 };
 
+const ecoleValidationRules = () => {
+  return [
+    body('nom')
+      .trim()
+      .notEmpty().withMessage('Le nom de l\'école est requis.')
+      .isString().withMessage('Le nom doit être une chaîne de caractères.')
+      .isLength({ min: 3, max: 100 }).withMessage('Le nom doit contenir entre 3 et 100 caractères.'),
+  ];
+};
+
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (errors.isEmpty()) {
@@ -33,4 +43,5 @@ module.exports = {
   claimAccountValidationRules,
   validate,
   loginValidationRules,
+  ecoleValidationRules,
 };

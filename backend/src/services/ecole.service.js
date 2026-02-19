@@ -6,8 +6,17 @@ class EcoleService {
     return ecoleRepository.create(data);
   }
 
-  async findAll() {
-    return ecoleRepository.findAll();
+  async findAll(query = {}) {
+    const { page = 1, limit = 10, search, sort, order } = query;
+    const offset = (page - 1) * limit;
+
+    return ecoleRepository.findAll({
+      search,
+      limit,
+      offset,
+      sort,
+      order
+    });
   }
 
   async findOne(id) {

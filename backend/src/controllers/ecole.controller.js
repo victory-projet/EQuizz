@@ -10,8 +10,8 @@ class EcoleController {
   });
 
   findAll = asyncHandler(async (req, res) => {
-    const ecoles = await ecoleService.findAll();
-    res.status(200).json(ecoles);
+    const result = await ecoleService.findAll(req.query);
+    res.status(200).json(result);
   });
 
   findOne = asyncHandler(async (req, res) => {

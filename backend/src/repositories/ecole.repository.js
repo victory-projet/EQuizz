@@ -9,8 +9,28 @@ class EcoleRepository {
 
   // Récupère toutes les écoles (non supprimées logiquement).
 
-  async findAll() {
-    return db.Ecole.findAll();
+  async findAll(options = {}) {
+    const { search, limit, offset, sort = 'nom', order = 'ASC' } = options;
+    const { Op } = require('sequelize');
+
+    const queryOptions = {
+      where: {},
+      order: [[sort, order]]
+    };
+
+    if (search) {
+      queryOptions.where.nom = { [Op.like]: `%${search}%` };
+    }
+
+    if (limit) {
+      queryOptions.limit = parseInt(limit);
+    }
+
+    if (offset) {
+      queryOptions.offset = parseInt(offset);
+    }
+
+    return db.Ecole.findAndCountAll(queryOptions);
   }
 
   // Récupère une école par son identifiant (clé primaire).
@@ -21,15 +41,18 @@ class EcoleRepository {
   // Met à jour les données d'une école existante.
 
   async update(id, data) {
-    const ecole = await this.findById(id);
-    if (ecole) {
-      return ecole.update(data);
+    const [updatedCount] = await db.Ecole.update(data, {
+      where: { id: id }
+    });
+
+    if (updatedCount > 0) {
+      return this.findById(id);
     }
-    return null; 
+    return null;
   }
 
   // Supprime logiquement une école .
-  
+
   async delete(id) {
     return db.Ecole.destroy({
       where: { id: id }
