@@ -9,7 +9,7 @@ describe('Tests d\'Intégration - Transfert d\'Étudiants', () => {
   let adminToken;
   let ecole1, ecole2;
   let anneeAcademique;
-  let classe1, classe2, classe3;
+  let classe1, _classe2, classe3;
   let etudiant;
 
   beforeAll(async () => {
@@ -66,7 +66,7 @@ describe('Tests d\'Intégration - Transfert d\'Étudiants', () => {
       anneeAcademiqueId: anneeAcademique.id
     });
 
-    classe2 = await db.Classe.create({
+    _classe2 = await db.Classe.create({
       nom: 'ING4-B',
       niveau: '4',
       ecole_id: ecole1.id,

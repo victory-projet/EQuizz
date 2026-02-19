@@ -1,14 +1,14 @@
 // Tests d'intégration pour les endpoints étudiants
-const request = require('supertest');
+const _request = require('supertest');
 const { createTestApp, generateTestToken } = require('../../helpers/testServer');
 
 describe('API Student - Integration Tests', () => {
-  let app;
-  let studentToken;
+  let _app;
+  let _studentToken;
 
   beforeAll(() => {
-    app = createTestApp();
-    studentToken = generateTestToken('etu-001', 'etudiant');
+    _app = createTestApp();
+    _studentToken = generateTestToken('etu-001', 'etudiant');
   });
 
   describe('GET /api/student/quizzes', () => {
@@ -24,7 +24,7 @@ describe('API Student - Integration Tests', () => {
 
   describe('POST /api/student/quizzes/:id/submit', () => {
     it('devrait soumettre les réponses de manière anonyme', async () => {
-      const submission = {
+      const _submission = {
         reponses: [
           { question_id: 'q-001', contenu: 'Ma réponse' },
         ],

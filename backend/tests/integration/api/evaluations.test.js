@@ -1,19 +1,19 @@
 // Tests d'intégration pour les évaluations
-const request = require('supertest');
+const _request = require('supertest');
 const { createTestApp, generateTestToken } = require('../../helpers/testServer');
 
 describe('API Evaluations - Integration Tests', () => {
-  let app;
-  let enseignantToken;
+  let _app;
+  let _enseignantToken;
 
   beforeAll(() => {
-    app = createTestApp();
-    enseignantToken = generateTestToken('ens-001', 'enseignant');
+    _app = createTestApp();
+    _enseignantToken = generateTestToken('ens-001', 'enseignant');
   });
 
   describe('POST /api/evaluations', () => {
     it('devrait créer une nouvelle évaluation', async () => {
-      const evaluationData = {
+      const _evaluationData = {
         titre: 'Nouvelle Évaluation',
         cours_id: 'cours-001',
         dateDebut: '2025-12-01',

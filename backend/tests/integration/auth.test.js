@@ -6,7 +6,7 @@ const db = require('../../src/models');
 const { setupTestDatabase, cleanupTestDatabase, clearAllTables } = require('../helpers/db-setup');
 
 describe('Auth Integration Tests', () => {
-  
+
   beforeAll(async () => {
     await setupTestDatabase();
   });
@@ -20,7 +20,7 @@ describe('Auth Integration Tests', () => {
   });
 
   describe('POST /api/auth/login', () => {
-    
+
     it('devrait connecter un utilisateur avec des identifiants valides', async () => {
       // Arrange - Créer un utilisateur de test
       const ecole = await db.Ecole.create({
@@ -87,7 +87,7 @@ describe('Auth Integration Tests', () => {
   });
 
   describe('POST /api/auth/link-card', () => {
-    
+
     it('devrait lier une carte à un compte activé', async () => {
       // Arrange
       const ecole = await db.Ecole.create({
@@ -107,7 +107,7 @@ describe('Auth Integration Tests', () => {
         motDePasseHash: 'password123'
       });
 
-      const etudiant = await db.Etudiant.create({
+      const _etudiant = await db.Etudiant.create({
         id: utilisateur.id,
         matricule: '20230001',
         classe_id: classe.id

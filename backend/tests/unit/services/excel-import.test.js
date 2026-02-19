@@ -45,7 +45,7 @@ describe('Import Excel de Questions', () => {
       };
 
       const result = await evaluationService.importQuestionsFromExcel('quizz-001', buffer);
-      
+
       // Vérifier que les questions ont été créées
       expect(db.Question.bulkCreate).toHaveBeenCalled();
       expect(result.count).toBeGreaterThan(0);
@@ -73,7 +73,7 @@ describe('Import Excel de Questions', () => {
         type: 'OUVERTE',
       });
 
-      const buffer = await workbook.xlsx.writeBuffer();
+      const _buffer = await workbook.xlsx.writeBuffer();
 
       // Test que les questions ouvertes sont créées sans options
     });
