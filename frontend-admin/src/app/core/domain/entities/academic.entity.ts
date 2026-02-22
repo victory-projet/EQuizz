@@ -55,6 +55,8 @@ export interface Classe {
   niveau?: string;
   anneeAcademiqueId?: string | number;
   anneeAcademique?: AnneeAcademique;
+  ecoleId?: string | number;
+  Ecole?: Ecole;
   cours?: Cours[];
   etudiants?: any[];
   dateCreation: Date;
