@@ -86,6 +86,7 @@ class AuthService {
 
     // 1. Trouver l'utilisateur par email
     const utilisateur = await utilisateurRepository.findByEmail(email);
+    console.log('🔍 Utilisateur trouvé:', utilisateur ? { id: utilisateur.id, email: utilisateur.email } : 'null');
     if (!utilisateur) {
       // Pour des raisons de sécurité, on ne révèle pas si l'email existe ou non
       return { success: true, message: 'Si votre email est enregistré, vous recevrez un lien de réinitialisation.' };
@@ -95,8 +96,8 @@ class AuthService {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const recentTokens = await db.PasswordResetToken.count({
       where: {
-        utilisateurId: utilisateur.id,
-        createdAt: { [db.Sequelize.Op.gte]: oneHourAgo }
+        utilisateur_id: utilisateur.id,
+        created_at: { [db.Sequelize.Op.gte]: oneHourAgo }
       }
     });
 
@@ -109,8 +110,9 @@ class AuthService {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 heure
 
     // 4. Sauvegarder le token en base
+    console.log('💾 Création du token avec utilisateurId:', utilisateur.id);
     await db.PasswordResetToken.create({
-      utilisateurId: utilisateur.id,
+      utilisateur_id: utilisateur.id,
       token,
       expiresAt,
       ipAddress
