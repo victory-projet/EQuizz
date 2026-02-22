@@ -146,8 +146,9 @@ Evaluation.belongsToMany(Classe, { through: EvaluationClasse });
 Classe.belongsToMany(Evaluation, { through: EvaluationClasse });
 
 // --- 6. Password Reset Tokens ---
-Utilisateur.hasMany(PasswordResetToken, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });
-PasswordResetToken.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
+// Désactivé temporairement - problème de compatibilité de clé étrangère
+// Utilisateur.hasMany(PasswordResetToken, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });
+// PasswordResetToken.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
 
 // --- 7. Push Notifications ---
 Utilisateur.hasMany(DeviceToken, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });

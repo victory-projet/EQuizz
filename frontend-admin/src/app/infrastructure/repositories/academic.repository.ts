@@ -18,7 +18,17 @@ export class AcademicRepository implements AcademicRepositoryInterface {
   }
 
   getEcoles(): Observable<Ecole[]> {
-    return this.api.get<Ecole[]>('/academic/ecoles');
+    return this.api.get<any>('/academic/ecoles').pipe(
+      map((response: any) => {
+        // Le backend peut retourner soit un tableau, soit un objet {count, rows}
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response && response.rows && Array.isArray(response.rows)) {
+          return response.rows;
+        }
+        return [];
+      })
+    );
   }
 
   getEcole(id: string | number): Observable<Ecole> {
@@ -106,8 +116,17 @@ export class AcademicRepository implements AcademicRepositoryInterface {
 
   getClasses(includeArchived: boolean = false): Observable<Classe[]> {
     const params = includeArchived ? '?includeArchived=true' : '';
-    return this.api.get<any[]>(`/academic/classes${params}`).pipe(
-      map((classes: any[]) => classes.map(c => this.mapClasseFromBackend(c)))
+    return this.api.get<any>(`/academic/classes${params}`).pipe(
+      map((response: any) => {
+        // Le backend peut retourner soit un tableau, soit un objet {count, rows}
+        let classes: any[] = [];
+        if (Array.isArray(response)) {
+          classes = response;
+        } else if (response && response.rows && Array.isArray(response.rows)) {
+          classes = response.rows;
+        }
+        return classes.map(c => this.mapClasseFromBackend(c));
+      })
     );
   }
 
@@ -149,6 +168,11 @@ export class AcademicRepository implements AcademicRepositoryInterface {
       ? data.anneeAcademiqueId 
       : data.annee_academique_id;
     
+    // Gérer le cas où ecoleId peut être en camelCase ou snake_case
+    const ecoleId = (data.ecoleId !== null && data.ecoleId !== undefined)
+      ? data.ecoleId
+      : data.ecole_id;
+    
     const mapped = {
       id: data.id,
       nom: data.nom,
@@ -162,6 +186,16 @@ export class AcademicRepository implements AcademicRepositoryInterface {
         estCourante: data.AnneeAcademique.estCourante || data.AnneeAcademique.est_courante,
         dateCreation: data.AnneeAcademique.createdAt,
         dateModification: data.AnneeAcademique.updatedAt
+      } : undefined,
+      ecoleId: ecoleId,
+      Ecole: data.Ecole ? {
+        id: data.Ecole.id,
+        nom: data.Ecole.nom,
+        adresse: data.Ecole.adresse,
+        telephone: data.Ecole.telephone,
+        email: data.Ecole.email,
+        dateCreation: data.Ecole.createdAt,
+        dateModification: data.Ecole.updatedAt
       } : undefined,
       cours: data.Cours || [],
       etudiants: data.Etudiants || [],

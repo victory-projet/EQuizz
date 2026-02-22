@@ -104,9 +104,18 @@
     </div>
 
     <div class="filter-select">
+      <select (change)="onFilterEcole($any($event.target).value)" [value]="filterEcole()">
+        <option value="ALL">Toutes les écoles</option>
+        @for (ecole of ecoles(); track ecole.id) {
+          <option [value]="ecole.id">{{ ecole.nom }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-select">
       <select (change)="onFilterClasse($any($event.target).value)" [value]="filterClasse()">
         <option value="ALL">Toutes les classes</option>
-        @for (classe of classes(); track classe.id) {
+        @for (classe of filteredClasses(); track classe.id) {
           <option [value]="classe.id">{{ classe.nom }}</option>
         }
       </select>
@@ -174,8 +183,8 @@
         <div class="empty-state">
           <span class="material-icons">school</span>
           <p>Aucun étudiant trouvé</p>
-          @if (searchQuery() || filterClasse() !== 'ALL' || filterStatus() !== 'ALL') {
-            <button class="btn btn-secondary" (click)="searchQuery.set(''); filterClasse.set('ALL'); filterStatus.set('ALL'); applyFilters()">
+          @if (searchQuery() || filterEcole() !== 'ALL' || filterClasse() !== 'ALL' || filterStatus() !== 'ALL') {
+            <button class="btn btn-secondary" (click)="searchQuery.set(''); filterEcole.set('ALL'); filterClasse.set('ALL'); filterStatus.set('ALL'); applyFilters()">
               Réinitialiser les filtres
             </button>
           } @else {
