@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { UserUseCase } from '../../../core/usecases/user.usecase';
 import { Enseignant } from '../../../core/domain/entities/user.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
+import { ArchiveToggleComponent } from '../../shared/components/archive-toggle/archive-toggle.component';
 
 @Component({
   selector: 'app-teachers',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ArchiveToggleComponent],
   templateUrl: './teachers.component.html',
   styleUrls: ['./teachers.component.scss']
 })
@@ -25,6 +26,7 @@ export class TeachersComponent implements OnInit {
   
   searchQuery = signal('');
   filterStatus = signal<string>('ALL');
+  showArchived = signal(false);
 
   formData = {
     nom: '',
@@ -37,8 +39,9 @@ export class TeachersComponent implements OnInit {
   successMessage = signal('');
 
   totalTeachers = computed(() => this.teachers().length);
-  activeTeachers = computed(() => this.teachers().filter(t => t.estActif).length);
-  inactiveTeachers = computed(() => this.teachers().filter(t => !t.estActif).length);
+  activeTeachers = computed(() => this.teachers().filter(t => t.estActif && !t.estArchive).length);
+  inactiveTeachers = computed(() => this.teachers().filter(t => !t.estActif && !t.estArchive).length);
+  archivedTeachers = computed(() => this.teachers().filter(t => t.estArchive).length);
 
   constructor(private userUseCase: UserUseCase) {}
 
@@ -48,7 +51,8 @@ export class TeachersComponent implements OnInit {
 
   loadTeachers(): void {
     this.isLoading.set(true);
-    this.userUseCase.getAllUsers().subscribe({
+    // Charger TOUS les enseignants (y compris archivés)
+    this.userUseCase.getAllUsers(true).subscribe({
       next: (users: any[]) => {
         const teachers = users.filter((u: any) => u.role === 'ENSEIGNANT') as Enseignant[];
         console.log('👨‍🏫 Enseignants chargés:', teachers);
@@ -66,6 +70,13 @@ export class TeachersComponent implements OnInit {
 
   applyFilters(): void {
     let filtered = this.teachers();
+
+    // Filtrage par archivage (par défaut, afficher uniquement les actifs)
+    if (!this.showArchived()) {
+      filtered = filtered.filter(t => !t.estArchive);
+    } else {
+      filtered = filtered.filter(t => t.estArchive);
+    }
 
     if (this.filterStatus() !== 'ALL') {
       const isActive = this.filterStatus() === 'ACTIVE';
@@ -93,6 +104,11 @@ export class TeachersComponent implements OnInit {
 
   onFilterStatus(status: string): void {
     this.filterStatus.set(status);
+    this.applyFilters();
+  }
+
+  onToggleArchived(showArchived: boolean): void {
+    this.showArchived.set(showArchived);
     this.applyFilters();
   }
 

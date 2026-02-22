@@ -23,7 +23,12 @@ class CoursService {
     return coursRepository.create(data);
   }
 
-  async findAll() {
+  async findAll(includeArchived = false) {
+    if (includeArchived) {
+      // Utiliser le scope 'all' pour inclure les archivés
+      return coursRepository.findAllWithScope('all');
+    }
+    // Par défaut, utiliser le scope par défaut (sans archivés)
     return coursRepository.findAll();
   }
 
@@ -51,6 +56,28 @@ class CoursService {
       throw new Error('Cours non trouvé.');
     }
     return { message: 'Cours supprimé avec succès.' };
+  }
+
+  // --- Méthodes d'archivage ---
+
+  async archive(id) {
+    const cours = await coursRepository.findByIdWithScope(id, 'all');
+    if (!cours) {
+      throw new Error('Cours non trouvé.');
+    }
+    
+    const updatedCours = await coursRepository.update(id, { estArchive: true });
+    return updatedCours;
+  }
+
+  async restore(id) {
+    const cours = await coursRepository.findByIdWithScope(id, 'all');
+    if (!cours) {
+      throw new Error('Cours non trouvé.');
+    }
+    
+    const updatedCours = await coursRepository.update(id, { estArchive: false });
+    return updatedCours;
   }
 }
 

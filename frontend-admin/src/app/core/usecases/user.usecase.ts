@@ -9,8 +9,8 @@ import { User } from '../domain/entities/user.entity';
 export class UserUseCase {
   constructor(private userRepository: UserRepositoryInterface) {}
 
-  getAllUsers(): Observable<User[]> {
-    return this.userRepository.getAll();
+  getAllUsers(includeArchived: boolean = false): Observable<User[]> {
+    return this.userRepository.getAll(includeArchived);
   }
 
   getUserById(id: string): Observable<User> {

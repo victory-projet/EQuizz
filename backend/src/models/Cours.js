@@ -36,7 +36,22 @@ const Cours = sequelize.define('Cours', {
   }
 
 }, {
-  freezeTableName: true // Empêche la pluralisation automatique
+  freezeTableName: true,
+  timestamps: true,
+  underscored: true,
+  
+  // Scopes pour filtrer automatiquement les éléments archivés
+  defaultScope: {
+    where: { estArchive: false }
+  },
+  scopes: {
+    archived: { 
+      where: { estArchive: true } 
+    },
+    all: { 
+      where: {} 
+    }
+  }
 });
 
 module.exports = Cours;

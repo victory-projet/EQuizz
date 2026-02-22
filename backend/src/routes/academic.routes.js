@@ -65,6 +65,10 @@ router.get('/cours/:id', coursController.findOne);
 router.put('/cours/:id', coursController.update);
 router.delete('/cours/:id', coursController.delete);
 
+// Routes d'archivage pour les cours
+router.put('/cours/:id/archive', coursController.archive);
+router.put('/cours/:id/restore', coursController.restore);
+
 // --- Routes pour la gestion des Classes (CRUD) ---
 
 router.post('/classes', classeController.create);
@@ -72,6 +76,10 @@ router.get('/classes', classeController.findAll);
 router.get('/classes/:id', classeController.findOne);
 router.put('/classes/:id', classeController.update);
 router.delete('/classes/:id', classeController.delete);
+
+// Routes d'archivage pour les classes
+router.put('/classes/:id/archive', classeController.archive);
+router.put('/classes/:id/restore', classeController.restore);
 
 // --- Routes pour la relation Classe <-> Cours ---
 // POST /api/academic/classes/:classeId/cours/:coursId - Associer un cours à une classe

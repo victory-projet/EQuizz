@@ -20,7 +20,7 @@ export interface UpdateUserDto {
 }
 
 export abstract class UserRepositoryInterface {
-  abstract getAll(): Observable<User[]>;
+  abstract getAll(includeArchived?: boolean): Observable<User[]>;
   abstract getById(id: string): Observable<User>;
   abstract create(data: CreateUserDto): Observable<User>;
   abstract update(id: string, data: UpdateUserDto): Observable<User>;

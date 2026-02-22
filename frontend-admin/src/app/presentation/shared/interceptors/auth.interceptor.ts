@@ -38,7 +38,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   
   if (isProtectedRoute) {
     console.warn('🔒 Tentative d\'accès à une route protégée sans token:', req.url);
-    router.navigate(['/login']);
+    // Ne pas rediriger automatiquement ici pour éviter les boucles
+    // Laisser le composant gérer la redirection
     return throwError(() => new Error('No authentication token'));
   }
   

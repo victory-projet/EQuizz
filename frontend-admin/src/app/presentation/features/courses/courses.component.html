@@ -52,6 +52,16 @@
     </div>
   </div>
 
+  <!-- Archive Toggle -->
+  <app-archive-toggle
+    [showArchived]="showArchived"
+    [archivedCount]="coursArchives()"
+    [activeCount]="coursActifs()"
+    [totalCount]="totalCours()"
+    [label]="'cours'"
+    (toggleArchived)="onToggleArchived($event)"
+  ></app-archive-toggle>
+
   <!-- Search and Filters -->
   <div class="filters-section">
     <div class="search-box">
@@ -62,27 +72,6 @@
         (input)="onSearch($event)"
         [value]="searchQuery()"
       >
-    </div>
-
-    <div class="filter-buttons">
-      <button 
-        class="filter-btn" 
-        [class.active]="filterStatus() === 'ALL'"
-        (click)="onFilterStatus('ALL')">
-        Tous ({{ totalCours() }})
-      </button>
-      <button 
-        class="filter-btn" 
-        [class.active]="filterStatus() === 'ACTIVE'"
-        (click)="onFilterStatus('ACTIVE')">
-        Actifs ({{ coursActifs() }})
-      </button>
-      <button 
-        class="filter-btn" 
-        [class.active]="filterStatus() === 'ARCHIVED'"
-        (click)="onFilterStatus('ARCHIVED')">
-        Archivés ({{ coursArchives() }})
-      </button>
     </div>
   </div>
 

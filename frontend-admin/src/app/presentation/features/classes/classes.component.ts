@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
 import { Classe, AnneeAcademique } from '../../../core/domain/entities/academic.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
+import { ArchiveToggleComponent } from '../../shared/components/archive-toggle/archive-toggle.component';
 
 @Component({
   selector: 'app-classes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ArchiveToggleComponent],
   templateUrl: './classes.component.html',
   styleUrls: ['./classes.component.scss']
 })
@@ -26,6 +27,7 @@ export class ClassesComponent implements OnInit {
   
   searchQuery = signal('');
   filterAnnee = signal<string>('ALL');
+  showArchived = signal(false);
 
   formData = {
     nom: '',
@@ -38,6 +40,8 @@ export class ClassesComponent implements OnInit {
 
   // Computed statistics
   totalClasses = computed(() => this.classes().length);
+  classesActives = computed(() => this.classes().filter(c => !c.estArchive).length);
+  classesArchivees = computed(() => this.classes().filter(c => c.estArchive).length);
 
   constructor(private academicUseCase: AcademicUseCase) {}
 
@@ -48,7 +52,8 @@ export class ClassesComponent implements OnInit {
 
   loadClasses(): void {
     this.isLoading.set(true);
-    this.academicUseCase.getClasses().subscribe({
+    // Charger TOUTES les classes (y compris archivées)
+    this.academicUseCase.getClasses(true).subscribe({
       next: (classes) => {
         this.classes.set(classes);
         this.applyFilters();
@@ -76,6 +81,13 @@ export class ClassesComponent implements OnInit {
   applyFilters(): void {
     let filtered = this.classes();
 
+    // Filter by archive status (par défaut, afficher uniquement les actifs)
+    if (!this.showArchived()) {
+      filtered = filtered.filter(c => !c.estArchive);
+    } else {
+      filtered = filtered.filter(c => c.estArchive);
+    }
+
     // Filter by année académique
     if (this.filterAnnee() !== 'ALL') {
       filtered = filtered.filter(c => c.anneeAcademiqueId?.toString() === this.filterAnnee());
@@ -91,6 +103,26 @@ export class ClassesComponent implements OnInit {
     }
 
     this.filteredClasses.set(filtered);
+  }
+
+  onToggleArchived(showArchived: boolean): void {
+    this.showArchived.set(showArchived);
+    this.applyFilters();
+  }
+
+  toggleArchiveStatus(classe: Classe): void {
+    this.academicUseCase.updateClasse(classe.id, {
+      estArchive: !classe.estArchive
+    }).subscribe({
+      next: () => {
+        this.successMessage.set(`Classe ${classe.estArchive ? 'désarchivée' : 'archivée'} avec succès`);
+        this.loadClasses();
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error) => {
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la modification');
+      }
+    });
   }
 
   onSearch(event: Event): void {

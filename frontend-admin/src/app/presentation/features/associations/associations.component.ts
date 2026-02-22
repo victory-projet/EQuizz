@@ -118,6 +118,7 @@ export class AssociationsComponent implements OnInit {
     this.academicUseCase.getCours().subscribe({
       next: (cours) => {
         const associations: Association[] = cours
+          .filter(c => !c.estArchive) // Exclure les cours archivés
           .filter(c => c.Enseignant) // Seulement les cours avec enseignant
           .map(c => ({
             cours: c,
@@ -182,7 +183,9 @@ export class AssociationsComponent implements OnInit {
     return new Promise((resolve, reject) => {
       this.academicUseCase.getClasses().subscribe({
         next: (classes) => {
-          this.classes.set(classes);
+          // Filtrer les classes archivées pour les formulaires d'association
+          const classesActives = classes.filter(c => !c.estArchive);
+          this.classes.set(classesActives);
           resolve();
         },
         error: reject

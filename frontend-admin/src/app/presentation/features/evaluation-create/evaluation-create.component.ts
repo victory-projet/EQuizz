@@ -140,7 +140,9 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   loadCours(): void {
     this.academicUseCase.getCours().subscribe({
       next: (cours) => {
-        this.cours.set(cours);
+        // Filtrer les cours archivés
+        const coursActifs = cours.filter(c => !c.estArchive);
+        this.cours.set(coursActifs);
       },
       error: (error) => {
         console.error('Erreur lors du chargement des cours:', error);
@@ -151,9 +153,11 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   loadClasses(): void {
     this.academicUseCase.getClasses().subscribe({
       next: (classes) => {
-        console.log('📚 Classes chargées:', classes);
-        console.log('📚 Types des IDs:', classes.map(c => ({ nom: c.nom, id: c.id, type: typeof c.id })));
-        this.classes.set(classes);
+        // Filtrer les classes archivées
+        const classesActives = classes.filter(c => !c.estArchive);
+        console.log('📚 Classes actives chargées:', classesActives);
+        console.log('📚 Types des IDs:', classesActives.map(c => ({ nom: c.nom, id: c.id, type: typeof c.id })));
+        this.classes.set(classesActives);
       },
       error: (error) => {
         console.error('Erreur lors du chargement des classes:', error);

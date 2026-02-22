@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
 import { Cours, AnneeAcademique, Semestre } from '../../../core/domain/entities/academic.entity';
+import { ArchiveToggleComponent } from '../../shared/components/archive-toggle/archive-toggle.component';
 
 @Component({
   selector: 'app-courses',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ArchiveToggleComponent],
   templateUrl: './courses.component.html',
   styleUrls: ['./courses.component.scss']
 })
@@ -24,8 +25,9 @@ export class CoursesComponent implements OnInit {
   selectedCours = signal<Cours | null>(null);
   
   searchQuery = signal('');
-  filterStatus = signal<'ALL' | 'ACTIVE' | 'ARCHIVED'>('ALL');
+  filterStatus = signal<'ALL' | 'ACTIVE' | 'ARCHIVED'>('ACTIVE'); // Par défaut, afficher uniquement les actifs
   filterSemestre = signal<string>('ALL');
+  showArchived = signal(false);
 
   formData = {
     code: '',
@@ -67,7 +69,8 @@ export class CoursesComponent implements OnInit {
 
   loadCours(): void {
     this.isLoading.set(true);
-    this.academicUseCase.getCours().subscribe({
+    // Toujours charger tous les cours (actifs + archivés) pour pouvoir les filtrer côté client
+    this.academicUseCase.getCours(true).subscribe({
       next: (cours) => {
         console.log('📚 Cours chargés:', cours);
         cours.forEach(c => {
@@ -116,10 +119,10 @@ export class CoursesComponent implements OnInit {
   applyFilters(): void {
     let filtered = this.cours();
 
-    // Filter by status
-    if (this.filterStatus() === 'ACTIVE') {
+    // Filter by archive status (par défaut, afficher uniquement les actifs)
+    if (!this.showArchived()) {
       filtered = filtered.filter(c => !c.estArchive);
-    } else if (this.filterStatus() === 'ARCHIVED') {
+    } else {
       filtered = filtered.filter(c => c.estArchive);
     }
 
@@ -133,6 +136,11 @@ export class CoursesComponent implements OnInit {
     }
 
     this.filteredCours.set(filtered);
+  }
+
+  onToggleArchived(showArchived: boolean): void {
+    this.showArchived.set(showArchived);
+    this.applyFilters();
   }
 
   onSearch(event: Event): void {

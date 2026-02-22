@@ -19,6 +19,18 @@ class ClasseRepository {
     });
   }
 
+  async findAllWithScope(scope = 'defaultScope') {
+    return db.Classe.scope(scope).findAll({
+      include: [
+        { model: db.Ecole },
+        { model: db.AnneeAcademique },
+        { model: db.Cours },
+        { model: db.Etudiant }
+      ],
+      order: [['nom', 'ASC']]
+    });
+  }
+
   async findById(id) {
     return db.Classe.findByPk(id, {
       include: [
@@ -30,8 +42,19 @@ class ClasseRepository {
     });
   }
 
+  async findByIdWithScope(id, scope = 'defaultScope') {
+    return db.Classe.scope(scope).findByPk(id, {
+      include: [
+        { model: db.Ecole },
+        { model: db.AnneeAcademique },
+        { model: db.Cours },
+        { model: db.Etudiant }
+      ]
+    });
+  }
+
   async update(id, data) {
-    const classe = await db.Classe.findByPk(id); // On ne veut pas les relations pour un simple update
+    const classe = await db.Classe.scope('all').findByPk(id); // Utiliser scope 'all' pour trouver même les archivés
     if (classe) {
       return classe.update(data);
     }

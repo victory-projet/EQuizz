@@ -18,6 +18,7 @@ export interface Admin extends User {
 export interface Enseignant extends User {
   role: 'ENSEIGNANT';
   specialite?: string;
+  estArchive?: boolean;
 }
 
 export interface Etudiant extends User {
@@ -25,6 +26,7 @@ export interface Etudiant extends User {
   classeId?: number;
   classe?: Classe;
   numeroCarteEtudiant?: string;
+  estArchive?: boolean;
 }
 
 export interface Classe {
@@ -32,6 +34,7 @@ export interface Classe {
   nom: string;
   anneeAcademiqueId: number;
   anneeAcademique?: AnneeAcademique;
+  estArchive?: boolean;
   dateCreation: Date;
   dateModification: Date;
 }

@@ -8,11 +8,12 @@ import { User, Etudiant } from '../../../core/domain/entities/user.entity';
 import { Classe } from '../../../core/domain/entities/academic.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { UserCacheService } from '../../../core/services/user-cache.service';
+import { ArchiveToggleComponent } from '../../shared/components/archive-toggle/archive-toggle.component';
 
 @Component({
   selector: 'app-students',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ArchiveToggleComponent],
   templateUrl: './students.component.html',
   styleUrls: ['./students.component.scss']
 })
@@ -39,6 +40,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
   searchQuery = signal('');
   filterClasse = signal<string>('ALL');
   filterStatus = signal<string>('ALL');
+  showArchived = signal(false);
 
   formData = {
     nom: '',
@@ -115,7 +117,8 @@ export class StudentsComponent implements OnInit, OnDestroy {
   }
 
   loadStudentsDirectly(): void {
-    this.userUseCase.getAllUsers().subscribe({
+    // Charger TOUS les étudiants (y compris archivés)
+    this.userUseCase.getAllUsers(true).subscribe({
       next: (users: User[]) => {
         const students = users.filter((u: User) => u.role === 'ETUDIANT') as Etudiant[];
         console.log('📚 Étudiants chargés:', students);
@@ -135,7 +138,9 @@ export class StudentsComponent implements OnInit, OnDestroy {
   loadClasses(): void {
     this.academicUseCase.getClasses().subscribe({
       next: (classes) => {
-        this.classes.set(classes);
+        // Filtrer les classes archivées pour les formulaires
+        const classesActives = classes.filter(c => !c.estArchive);
+        this.classes.set(classesActives);
       },
       error: (error) => {
         console.error('Erreur lors du chargement des classes:', error);
@@ -145,6 +150,13 @@ export class StudentsComponent implements OnInit, OnDestroy {
 
   applyFilters(): void {
     let filtered = this.students();
+
+    // Filtrage par archivage (par défaut, afficher uniquement les actifs)
+    if (!this.showArchived()) {
+      filtered = filtered.filter(s => !s.estArchive);
+    } else {
+      filtered = filtered.filter(s => s.estArchive);
+    }
 
     if (this.filterClasse() !== 'ALL') {
       filtered = filtered.filter(s => s.classeId?.toString() === this.filterClasse());
@@ -171,6 +183,11 @@ export class StudentsComponent implements OnInit, OnDestroy {
   onSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchQuery.set(input.value);
+    this.applyFilters();
+  }
+
+  onToggleArchived(showArchived: boolean): void {
+    this.showArchived.set(showArchived);
     this.applyFilters();
   }
 

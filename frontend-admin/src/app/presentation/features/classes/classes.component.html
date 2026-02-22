@@ -46,6 +46,16 @@
     }
   </div>
 
+  <!-- Archive Toggle -->
+  <app-archive-toggle
+    [showArchived]="showArchived"
+    [archivedCount]="classesArchivees()"
+    [activeCount]="classesActives()"
+    [totalCount]="totalClasses()"
+    [label]="'classes'"
+    (toggleArchived)="onToggleArchived($event)"
+  ></app-archive-toggle>
+
   <!-- Search and Filters -->
   <div class="filters-section">
     <div class="search-box">
@@ -88,7 +98,7 @@
   @if (!isLoading()) {
     <div class="classes-grid">
       @for (classe of filteredClasses(); track classe.id) {
-        <div class="class-card">
+        <div class="class-card" [class.archived]="classe.estArchive">
           <!-- Card Header -->
           <div class="card-header">
             <div class="class-icon">
@@ -100,6 +110,12 @@
                 <span class="class-niveau">{{ classe.niveau }}</span>
               }
             </div>
+            @if (classe.estArchive) {
+              <span class="archive-badge">
+                <span class="material-icons">archive</span>
+                Archivé
+              </span>
+            }
           </div>
 
           <!-- Card Body -->
@@ -128,6 +144,14 @@
               title="Modifier">
               <span class="material-icons">edit</span>
               Modifier
+            </button>
+
+            <button 
+              class="action-btn btn-archive" 
+              (click)="toggleArchiveStatus(classe)"
+              [title]="classe.estArchive ? 'Désarchiver' : 'Archiver'">
+              <span class="material-icons">{{ classe.estArchive ? 'unarchive' : 'archive' }}</span>
+              {{ classe.estArchive ? 'Désarchiver' : 'Archiver' }}
             </button>
           </div>
         </div>
