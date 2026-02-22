@@ -34,6 +34,13 @@ const Classe = sequelize.define('Classe', {
     defaultValue: false,
     allowNull: false,
     field: 'est_archive'
+  },
+
+  dateImport: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'date_import',
+    comment: 'Date du dernier import Excel'
   }
 
 }, {

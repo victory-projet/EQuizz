@@ -18,6 +18,13 @@ const Etudiant = sequelize.define('Etudiant', {
     unique: true,
   },
 
+  dateImport: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'date_import',
+    comment: 'Date du dernier import Excel'
+  }
+
 });
 
 module.exports = Etudiant;

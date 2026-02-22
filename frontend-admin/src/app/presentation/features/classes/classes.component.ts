@@ -5,11 +5,13 @@ import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
 import { Classe, AnneeAcademique } from '../../../core/domain/entities/academic.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { ArchiveToggleComponent } from '../../shared/components/archive-toggle/archive-toggle.component';
+import { ExcelUploadComponent } from '../../shared/components/excel-upload/excel-upload.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-classes',
   standalone: true,
-  imports: [CommonModule, FormsModule, ArchiveToggleComponent],
+  imports: [CommonModule, FormsModule, ArchiveToggleComponent, ExcelUploadComponent],
   templateUrl: './classes.component.html',
   styleUrls: ['./classes.component.scss']
 })
@@ -28,6 +30,7 @@ export class ClassesComponent implements OnInit {
   searchQuery = signal('');
   filterAnnee = signal<string>('ALL');
   showArchived = signal(false);
+  showImportDialog = signal(false);
 
   formData = {
     nom: '',
@@ -111,11 +114,12 @@ export class ClassesComponent implements OnInit {
   }
 
   toggleArchiveStatus(classe: Classe): void {
+    const newArchiveStatus = !classe.estArchive;
     this.academicUseCase.updateClasse(classe.id, {
-      estArchive: !classe.estArchive
+      estArchive: newArchiveStatus
     }).subscribe({
       next: () => {
-        this.successMessage.set(`Classe ${classe.estArchive ? 'désarchivée' : 'archivée'} avec succès`);
+        this.successMessage.set(`Classe ${newArchiveStatus ? 'archivée' : 'désarchivée'} avec succès`);
         this.loadClasses();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
@@ -259,5 +263,37 @@ export class ClassesComponent implements OnInit {
 
   getClassesByAnnee(anneeId: string | number): number {
     return this.classes().filter(c => c.anneeAcademiqueId?.toString() === anneeId.toString()).length;
+  }
+
+  // === MÉTHODES D'IMPORT/EXPORT ===
+
+  openImportDialog(): void {
+    this.showImportDialog.set(true);
+  }
+
+  closeImportDialog(): void {
+    this.showImportDialog.set(false);
+  }
+
+  onImportComplete(result: any): void {
+    this.successMessage.set(`Import réussi: ${result.created || 0} créés, ${result.updated || 0} mis à jour`);
+    this.closeImportDialog();
+    this.loadClasses();
+    setTimeout(() => this.successMessage.set(''), 5000);
+  }
+
+  onImportError(error: any): void {
+    this.errorMessage.set(error.message || 'Erreur lors de l\'import');
+    setTimeout(() => this.errorMessage.set(''), 5000);
+  }
+
+  exportClasses(): void {
+    const url = `${environment.apiUrl}/data/export/classes`;
+    window.open(url, '_blank');
+  }
+
+  downloadTemplate(): void {
+    const url = `${environment.apiUrl}/data/templates/classes`;
+    window.open(url, '_blank');
   }
 }

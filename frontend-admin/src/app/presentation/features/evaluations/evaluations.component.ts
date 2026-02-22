@@ -312,11 +312,12 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
   }
 
   toggleArchiveStatus(evaluation: Evaluation): void {
+    const newArchiveStatus = !evaluation.estArchive;
     this.evaluationUseCase.updateEvaluation(evaluation.id as any, {
-      estArchive: !evaluation.estArchive
+      estArchive: newArchiveStatus
     }).subscribe({
       next: () => {
-        this.successMessage.set(`Évaluation ${evaluation.estArchive ? 'désarchivée' : 'archivée'} avec succès`);
+        this.successMessage.set(`Évaluation ${newArchiveStatus ? 'archivée' : 'désarchivée'} avec succès`);
         this.loadEvaluations();
         setTimeout(() => this.successMessage.set(''), 3000);
       },

@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
 import { Cours, AnneeAcademique, Semestre } from '../../../core/domain/entities/academic.entity';
 import { ArchiveToggleComponent } from '../../shared/components/archive-toggle/archive-toggle.component';
+import { ExcelUploadComponent } from '../../shared/components/excel-upload/excel-upload.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-courses',
   standalone: true,
-  imports: [CommonModule, FormsModule, ArchiveToggleComponent],
+  imports: [CommonModule, FormsModule, ArchiveToggleComponent, ExcelUploadComponent],
   templateUrl: './courses.component.html',
   styleUrls: ['./courses.component.scss']
 })
@@ -28,6 +30,7 @@ export class CoursesComponent implements OnInit {
   filterStatus = signal<'ALL' | 'ACTIVE' | 'ARCHIVED'>('ACTIVE'); // Par défaut, afficher uniquement les actifs
   filterSemestre = signal<string>('ALL');
   showArchived = signal(false);
+  showImportDialog = signal(false);
 
   formData = {
     code: '',
@@ -278,11 +281,12 @@ export class CoursesComponent implements OnInit {
   }
 
   toggleArchiveStatus(cours: Cours): void {
+    const newArchiveStatus = !cours.estArchive;
     this.academicUseCase.updateCours(cours.id, {
-      estArchive: !cours.estArchive
+      estArchive: newArchiveStatus
     }).subscribe({
       next: () => {
-        this.successMessage.set(`Cours ${cours.estArchive ? 'désarchivé' : 'archivé'} avec succès`);
+        this.successMessage.set(`Cours ${newArchiveStatus ? 'archivé' : 'désarchivé'} avec succès`);
         this.loadCours();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
@@ -290,5 +294,37 @@ export class CoursesComponent implements OnInit {
         this.errorMessage.set(error.error?.message || 'Erreur lors de la modification');
       }
     });
+  }
+
+  // === MÉTHODES D'IMPORT/EXPORT ===
+
+  openImportDialog(): void {
+    this.showImportDialog.set(true);
+  }
+
+  closeImportDialog(): void {
+    this.showImportDialog.set(false);
+  }
+
+  onImportComplete(result: any): void {
+    this.successMessage.set(`Import réussi: ${result.created || 0} créés, ${result.updated || 0} mis à jour`);
+    this.closeImportDialog();
+    this.loadCours();
+    setTimeout(() => this.successMessage.set(''), 5000);
+  }
+
+  onImportError(error: any): void {
+    this.errorMessage.set(error.message || 'Erreur lors de l\'import');
+    setTimeout(() => this.errorMessage.set(''), 5000);
+  }
+
+  exportCourses(): void {
+    const url = `${environment.apiUrl}/data/export/cours`;
+    window.open(url, '_blank');
+  }
+
+  downloadTemplate(): void {
+    const url = `${environment.apiUrl}/data/templates/cours`;
+    window.open(url, '_blank');
   }
 }

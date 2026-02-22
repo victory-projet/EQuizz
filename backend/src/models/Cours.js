@@ -33,6 +33,13 @@ const Cours = sequelize.define('Cours', {
     type: DataTypes.UUID,
     allowNull: true,
     field: 'annee_academique_id'
+  },
+
+  dateImport: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'date_import',
+    comment: 'Date du dernier import Excel'
   }
 
 }, {

@@ -1,0 +1,99 @@
+<div class="excel-import-export-container">
+  <div class="card">
+    <div class="card-header">
+      <h3>📊 Import/Export Excel - {{ entityLabel }}</h3>
+    </div>
+
+    <div class="card-body">
+      <!-- Section Export -->
+      <div class="section export-section">
+        <h4>📤 Exporter les données</h4>
+        <p class="description">Téléchargez les {{ entityLabel }} actuels au format Excel</p>
+        <button 
+          class="btn btn-primary"
+          (click)="exportData()"
+          [disabled]="isExporting">
+          <span *ngIf="!isExporting">📥 Exporter vers Excel</span>
+          <span *ngIf="isExporting">⏳ Export en cours...</span>
+        </button>
+      </div>
+
+      <hr />
+
+      <!-- Section Template -->
+      <div class="section template-section">
+        <h4>📋 Télécharger le template</h4>
+        <p class="description">Téléchargez un fichier Excel pré-formaté avec un exemple</p>
+        <button 
+          class="btn btn-secondary"
+          (click)="downloadTemplate()">
+          📄 Télécharger le template
+        </button>
+      </div>
+
+      <hr />
+
+      <!-- Section Import -->
+      <div class="section import-section">
+        <h4>📥 Importer des données</h4>
+        <p class="description">Importez des {{ entityLabel }} depuis un fichier Excel</p>
+        
+        <div class="file-input-group">
+          <input 
+            type="file" 
+            id="fileInput"
+            accept=".xlsx,.xls"
+            (change)="onFileSelected($event)"
+            class="file-input" />
+          <label for="fileInput" class="file-label">
+            {{ selectedFile ? selectedFile.name : 'Choisir un fichier Excel' }}
+          </label>
+        </div>
+
+        <button 
+          class="btn btn-success"
+          (click)="importData()"
+          [disabled]="!selectedFile || isImporting">
+          <span *ngIf="!isImporting">⬆️ Importer</span>
+          <span *ngIf="isImporting">⏳ Import en cours...</span>
+        </button>
+
+        <!-- Résultats de l'import -->
+        <div *ngIf="importResult" class="import-result">
+          <div class="result-header">
+            <h5>✅ Import terminé</h5>
+          </div>
+          
+          <div class="result-stats">
+            <div class="stat-item success">
+              <span class="stat-label">Total importés:</span>
+              <span class="stat-value">{{ importResult.success }}</span>
+            </div>
+            <div class="stat-item created" *ngIf="importResult.created?.length > 0">
+              <span class="stat-label">Créés:</span>
+              <span class="stat-value">{{ importResult.created.length }}</span>
+            </div>
+            <div class="stat-item updated" *ngIf="importResult.updated?.length > 0">
+              <span class="stat-label">Mis à jour:</span>
+              <span class="stat-value">{{ importResult.updated.length }}</span>
+            </div>
+            <div class="stat-item error" *ngIf="importResult.errors?.length > 0">
+              <span class="stat-label">Erreurs:</span>
+              <span class="stat-value">{{ importResult.errors.length }}</span>
+            </div>
+          </div>
+
+          <!-- Détails des erreurs -->
+          <div *ngIf="importResult.errors?.length > 0" class="error-details">
+            <h6>⚠️ Erreurs détectées:</h6>
+            <ul>
+              <li *ngFor="let error of importResult.errors">
+                Ligne {{ error.row }}: {{ error.error }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

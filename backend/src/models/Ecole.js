@@ -16,6 +16,13 @@ const Ecole = sequelize.define('Ecole', {
     // ex: "Saint Jean Ingenieur"
   },
 
+  dateImport: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'date_import',
+    comment: 'Date du dernier import Excel'
+  }
+
 });
 
 module.exports = Ecole;
