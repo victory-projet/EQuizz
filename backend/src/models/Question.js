@@ -22,6 +22,33 @@ const Question = sequelize.define('Question', {
     type: DataTypes.JSON,
     allowNull: true,
     defaultValue: [],
+    get() {
+      const rawValue = this.getDataValue('options');
+      
+      // Si c'est déjà un tableau, le retourner
+      if (Array.isArray(rawValue)) {
+        return rawValue;
+      }
+      
+      // Si c'est une chaîne, essayer de la parser
+      if (typeof rawValue === 'string') {
+        try {
+          const parsed = JSON.parse(rawValue);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          console.error('Erreur parsing options:', e);
+          return [];
+        }
+      }
+      
+      // Si c'est null ou undefined, retourner un tableau vide
+      if (rawValue === null || rawValue === undefined) {
+        return [];
+      }
+      
+      // Sinon, retourner un tableau vide
+      return [];
+    }
   },
 
   ordre: {
