@@ -267,9 +267,28 @@ class ReportService {
       };
 
       if (question.typeQuestion === 'CHOIX_MULTIPLE') {
+        // S'assurer que options est un tableau
+        let options = question.options;
+        
+        // Si options est une chaîne JSON, la parser
+        if (typeof options === 'string') {
+          try {
+            options = JSON.parse(options);
+          } catch (e) {
+            console.error('Erreur lors du parsing des options:', e);
+            options = [];
+          }
+        }
+        
+        // Si options n'est toujours pas un tableau, utiliser un tableau vide
+        if (!Array.isArray(options)) {
+          console.warn(`Question ${question.id}: options n'est pas un tableau, valeur:`, options);
+          options = [];
+        }
+
         // Calculer la répartition des réponses
         const distribution = {};
-        question.options.forEach(option => {
+        options.forEach(option => {
           distribution[option] = 0;
         });
 
@@ -279,7 +298,7 @@ class ReportService {
           }
         });
 
-        questionData.options = question.options;
+        questionData.options = options;
         questionData.distribution = distribution;
         questionData.distributionPct = {};
         

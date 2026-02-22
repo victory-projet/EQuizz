@@ -10,8 +10,9 @@ import { ApiService } from '../http/api.service';
 export class UserRepository implements UserRepositoryInterface {
   constructor(private api: ApiService) {}
 
-  getAll(): Observable<User[]> {
-    return this.api.get<any[]>('/utilisateurs').pipe(
+  getAll(includeArchived: boolean = false): Observable<User[]> {
+    const params = includeArchived ? '?includeArchived=true' : '';
+    return this.api.get<any[]>(`/utilisateurs${params}`).pipe(
       map(users => users.map(u => this.mapUser(u)))
     );
   }
@@ -64,12 +65,14 @@ export class UserRepository implements UserRepositoryInterface {
         ...baseUser,
         matricule: data.Etudiant.matricule,
         classeId: data.Etudiant.classe_id,
-        numeroCarteEtudiant: data.Etudiant.idCarte
+        numeroCarteEtudiant: data.Etudiant.idCarte,
+        estArchive: data.Etudiant.estArchive || data.Etudiant.est_archive || false
       } as any;
     } else if (data.role === 'ENSEIGNANT' && data.Enseignant) {
       return {
         ...baseUser,
-        specialite: data.Enseignant.specialite
+        specialite: data.Enseignant.specialite,
+        estArchive: data.Enseignant.estArchive || data.Enseignant.est_archive || false
       } as any;
     }
 

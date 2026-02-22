@@ -1,0 +1,25 @@
+<div class="data-management-container">
+  <div class="page-header">
+    <h1>🗂️ Gestion des Données</h1>
+    <p>Importez et exportez vos données au format Excel</p>
+  </div>
+
+  <div class="entity-selector">
+    <label for="entitySelect">Sélectionnez une entité:</label>
+    <select 
+      id="entitySelect"
+      [(ngModel)]="selectedEntity" 
+      class="entity-select">
+      <option *ngFor="let entity of entities" [value]="entity.type">
+        {{ entity.label }}
+      </option>
+    </select>
+  </div>
+
+  <app-excel-import-export
+    [entityType]="selectedEntity"
+    [entityLabel]="getEntityLabel()"
+    [classeId]="selectedClasseId"
+    (importComplete)="onImportComplete($event)">
+  </app-excel-import-export>
+</div>

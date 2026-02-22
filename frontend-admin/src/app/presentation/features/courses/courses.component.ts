@@ -3,11 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
 import { Cours, AnneeAcademique, Semestre } from '../../../core/domain/entities/academic.entity';
+import { ArchiveToggleComponent } from '../../shared/components/archive-toggle/archive-toggle.component';
+import { ExcelUploadComponent } from '../../shared/components/excel-upload/excel-upload.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-courses',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ArchiveToggleComponent, ExcelUploadComponent],
   templateUrl: './courses.component.html',
   styleUrls: ['./courses.component.scss']
 })
@@ -24,8 +27,10 @@ export class CoursesComponent implements OnInit {
   selectedCours = signal<Cours | null>(null);
   
   searchQuery = signal('');
-  filterStatus = signal<'ALL' | 'ACTIVE' | 'ARCHIVED'>('ALL');
+  filterStatus = signal<'ALL' | 'ACTIVE' | 'ARCHIVED'>('ACTIVE'); // Par défaut, afficher uniquement les actifs
   filterSemestre = signal<string>('ALL');
+  showArchived = signal(false);
+  showImportDialog = signal(false);
 
   formData = {
     code: '',
@@ -67,7 +72,8 @@ export class CoursesComponent implements OnInit {
 
   loadCours(): void {
     this.isLoading.set(true);
-    this.academicUseCase.getCours().subscribe({
+    // Toujours charger tous les cours (actifs + archivés) pour pouvoir les filtrer côté client
+    this.academicUseCase.getCours(true).subscribe({
       next: (cours) => {
         console.log('📚 Cours chargés:', cours);
         cours.forEach(c => {
@@ -116,10 +122,10 @@ export class CoursesComponent implements OnInit {
   applyFilters(): void {
     let filtered = this.cours();
 
-    // Filter by status
-    if (this.filterStatus() === 'ACTIVE') {
+    // Filter by archive status (par défaut, afficher uniquement les actifs)
+    if (!this.showArchived()) {
       filtered = filtered.filter(c => !c.estArchive);
-    } else if (this.filterStatus() === 'ARCHIVED') {
+    } else {
       filtered = filtered.filter(c => c.estArchive);
     }
 
@@ -133,6 +139,11 @@ export class CoursesComponent implements OnInit {
     }
 
     this.filteredCours.set(filtered);
+  }
+
+  onToggleArchived(showArchived: boolean): void {
+    this.showArchived.set(showArchived);
+    this.applyFilters();
   }
 
   onSearch(event: Event): void {
@@ -270,11 +281,12 @@ export class CoursesComponent implements OnInit {
   }
 
   toggleArchiveStatus(cours: Cours): void {
+    const newArchiveStatus = !cours.estArchive;
     this.academicUseCase.updateCours(cours.id, {
-      estArchive: !cours.estArchive
+      estArchive: newArchiveStatus
     }).subscribe({
       next: () => {
-        this.successMessage.set(`Cours ${cours.estArchive ? 'désarchivé' : 'archivé'} avec succès`);
+        this.successMessage.set(`Cours ${newArchiveStatus ? 'archivé' : 'désarchivé'} avec succès`);
         this.loadCours();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
@@ -282,5 +294,37 @@ export class CoursesComponent implements OnInit {
         this.errorMessage.set(error.error?.message || 'Erreur lors de la modification');
       }
     });
+  }
+
+  // === MÉTHODES D'IMPORT/EXPORT ===
+
+  openImportDialog(): void {
+    this.showImportDialog.set(true);
+  }
+
+  closeImportDialog(): void {
+    this.showImportDialog.set(false);
+  }
+
+  onImportComplete(result: any): void {
+    this.successMessage.set(`Import réussi: ${result.created || 0} créés, ${result.updated || 0} mis à jour`);
+    this.closeImportDialog();
+    this.loadCours();
+    setTimeout(() => this.successMessage.set(''), 5000);
+  }
+
+  onImportError(error: any): void {
+    this.errorMessage.set(error.message || 'Erreur lors de l\'import');
+    setTimeout(() => this.errorMessage.set(''), 5000);
+  }
+
+  exportCourses(): void {
+    const url = `${environment.apiUrl}/data/export/cours`;
+    window.open(url, '_blank');
+  }
+
+  downloadTemplate(): void {
+    const url = `${environment.apiUrl}/data/templates/cours`;
+    window.open(url, '_blank');
   }
 }

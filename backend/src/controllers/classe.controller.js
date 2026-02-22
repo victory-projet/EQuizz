@@ -10,7 +10,8 @@ class ClasseController {
   });
 
   findAll = asyncHandler(async (req, res) => {
-    const classes = await classeService.findAll();
+    const includeArchived = req.query.includeArchived === 'true';
+    const classes = await classeService.findAll(includeArchived);
     res.status(200).json(classes);
   });
 
@@ -51,6 +52,26 @@ class ClasseController {
     const { classeId, etudiantId } = req.params;
     const result = await classeService.removeEtudiantFromClasse(classeId, etudiantId);
     res.status(200).json(result);
+  });
+
+  // --- Endpoints d'archivage ---
+
+  archive = asyncHandler(async (req, res) => {
+    const classe = await classeService.archive(req.params.id);
+    res.status(200).json({
+      success: true,
+      message: 'Classe archivée avec succès',
+      data: classe
+    });
+  });
+
+  restore = asyncHandler(async (req, res) => {
+    const classe = await classeService.restore(req.params.id);
+    res.status(200).json({
+      success: true,
+      message: 'Classe restaurée avec succès',
+      data: classe
+    });
   });
 }
 

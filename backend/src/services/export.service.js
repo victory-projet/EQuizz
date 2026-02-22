@@ -240,6 +240,160 @@ class ExportService {
 
     return workbook;
   }
+
+  /**
+   * Exporte les écoles
+   */
+  async exportEcoles() {
+    const ecoles = await db.Ecole.findAll({ order: [['nom', 'ASC']] });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Ecoles');
+    
+    sheet.columns = [
+      { header: 'Nom', key: 'nom', width: 30 },
+      { header: 'Date Import', key: 'dateImport', width: 20 }
+    ];
+
+    this._styleHeader(sheet);
+
+    ecoles.forEach(e => {
+      sheet.addRow({
+        nom: e.nom,
+        dateImport: e.dateImport ? new Date(e.dateImport).toLocaleString('fr-FR') : 'N/A'
+      });
+    });
+
+    return workbook;
+  }
+
+  /**
+   * Exporte les classes
+   */
+  async exportClasses() {
+    const classes = await db.Classe.scope('all').findAll({
+      include: [{ model: db.AnneeAcademique }],
+      order: [['nom', 'ASC']]
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Classes');
+    
+    sheet.columns = [
+      { header: 'Nom', key: 'nom', width: 20 },
+      { header: 'Niveau', key: 'niveau', width: 15 },
+      { header: 'Année Académique', key: 'annee', width: 20 },
+      { header: 'Archivé', key: 'archive', width: 10 },
+      { header: 'Date Import', key: 'dateImport', width: 20 }
+    ];
+
+    this._styleHeader(sheet);
+
+    classes.forEach(c => {
+      sheet.addRow({
+        nom: c.nom,
+        niveau: c.niveau,
+        annee: c.AnneeAcademique?.nom || 'N/A',
+        archive: c.estArchive ? 'Oui' : 'Non',
+        dateImport: c.dateImport ? new Date(c.dateImport).toLocaleString('fr-FR') : 'N/A'
+      });
+    });
+
+    return workbook;
+  }
+
+  /**
+   * Exporte les enseignants
+   */
+  async exportEnseignants() {
+    const enseignants = await db.Enseignant.findAll({
+      include: [
+        { 
+          model: db.Utilisateur,
+          include: [{ model: db.Ecole }]
+        }
+      ],
+      order: [[db.Utilisateur, 'nom', 'ASC']]
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Enseignants');
+    
+    sheet.columns = [
+      { header: 'Nom', key: 'nom', width: 20 },
+      { header: 'Prénom', key: 'prenom', width: 20 },
+      { header: 'Email', key: 'email', width: 30 },
+      { header: 'Spécialité', key: 'specialite', width: 25 },
+      { header: 'École', key: 'ecole', width: 25 },
+      { header: 'Date Import', key: 'dateImport', width: 20 }
+    ];
+
+    this._styleHeader(sheet);
+
+    enseignants.forEach(e => {
+      sheet.addRow({
+        nom: e.Utilisateur.nom,
+        prenom: e.Utilisateur.prenom,
+        email: e.Utilisateur.email,
+        specialite: e.specialite || 'N/A',
+        ecole: e.Utilisateur.Ecole?.nom || 'N/A',
+        dateImport: e.dateImport ? new Date(e.dateImport).toLocaleString('fr-FR') : 'N/A'
+      });
+    });
+
+    return workbook;
+  }
+
+  /**
+   * Exporte les cours
+   */
+  async exportCours() {
+    const cours = await db.Cours.findAll({
+      include: [
+        { model: db.Enseignant, include: [{ model: db.Utilisateur }] },
+        { model: db.Semestre }
+      ],
+      order: [['code', 'ASC']]
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Cours');
+    
+    sheet.columns = [
+      { header: 'Code', key: 'code', width: 15 },
+      { header: 'Nom', key: 'nom', width: 30 },
+      { header: 'Email Enseignant', key: 'enseignant', width: 30 },
+      { header: 'Semestre', key: 'semestre', width: 20 },
+      { header: 'Date Import', key: 'dateImport', width: 20 }
+    ];
+
+    this._styleHeader(sheet);
+
+    cours.forEach(c => {
+      sheet.addRow({
+        code: c.code,
+        nom: c.nom,
+        enseignant: c.Enseignant?.Utilisateur?.email || 'N/A',
+        semestre: c.Semestre?.nom || 'N/A',
+        dateImport: c.dateImport ? new Date(c.dateImport).toLocaleString('fr-FR') : 'N/A'
+      });
+    });
+
+    return workbook;
+  }
+
+  /**
+   * Helper pour styler l'en-tête
+   */
+  _styleHeader(sheet) {
+    sheet.getRow(1).font = { bold: true, size: 12 };
+    sheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF667EEA' }
+    };
+    sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  }
 }
 
 module.exports = new ExportService();

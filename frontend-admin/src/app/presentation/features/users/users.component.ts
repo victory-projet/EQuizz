@@ -126,7 +126,8 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   loadUsersDirectly(): void {
-    this.userUseCase.getAllUsers().subscribe({
+    // Charger TOUS les utilisateurs (y compris archivés)
+    this.userUseCase.getAllUsers(true).subscribe({
       next: (users) => {
         // Filtrer pour ne garder que les administrateurs
         const admins = users.filter(u => u.role === 'ADMIN');

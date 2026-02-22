@@ -345,18 +345,17 @@ class DashboardController {
           createdAt: {
             [db.Sequelize.Op.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 derniers jours
           }
-        },
-        include: [{ model: db.AnneeAcademique }]
+        }
+        // Temporairement désactivé pour éviter l'erreur de colonne manquante
+        // include: [{ model: db.AnneeAcademique }]
       });
 
       recentClasses.forEach(classe => {
-        const anneeAcademique = classe.AnneeAcademique?.nom || 'année inconnue';
-        
         activities.push({
           id: `class_created_${classe.id}`,
           type: 'class_created',
           title: 'Nouvelle classe',
-          description: `Classe "${classe.nom}" créée pour ${anneeAcademique}`,
+          description: `Classe "${classe.nom}" créée`,
           user: {
             id: 'system',
             name: 'Système',
@@ -368,7 +367,7 @@ class DashboardController {
           category: 'system',
           metadata: {
             classeId: classe.id,
-            anneeAcademiqueId: classe.annee_academique_id
+            anneeAcademiqueId: classe.anneeAcademiqueId
           }
         });
       });

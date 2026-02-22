@@ -8,11 +8,13 @@ import { User, Etudiant } from '../../../core/domain/entities/user.entity';
 import { Classe } from '../../../core/domain/entities/academic.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { UserCacheService } from '../../../core/services/user-cache.service';
+import { ExcelUploadComponent } from '../../shared/components/excel-upload/excel-upload.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-students',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ExcelUploadComponent],
   templateUrl: './students.component.html',
   styleUrls: ['./students.component.scss']
 })
@@ -39,6 +41,8 @@ export class StudentsComponent implements OnInit, OnDestroy {
   searchQuery = signal('');
   filterClasse = signal<string>('ALL');
   filterStatus = signal<string>('ALL');
+  showArchived = signal(false);
+  showImportDialog = signal(false);
 
   formData = {
     nom: '',
@@ -115,7 +119,8 @@ export class StudentsComponent implements OnInit, OnDestroy {
   }
 
   loadStudentsDirectly(): void {
-    this.userUseCase.getAllUsers().subscribe({
+    // Charger TOUS les étudiants (y compris archivés)
+    this.userUseCase.getAllUsers(true).subscribe({
       next: (users: User[]) => {
         const students = users.filter((u: User) => u.role === 'ETUDIANT') as Etudiant[];
         console.log('📚 Étudiants chargés:', students);
@@ -135,7 +140,9 @@ export class StudentsComponent implements OnInit, OnDestroy {
   loadClasses(): void {
     this.academicUseCase.getClasses().subscribe({
       next: (classes) => {
-        this.classes.set(classes);
+        // Filtrer les classes archivées pour les formulaires
+        const classesActives = classes.filter(c => !c.estArchive);
+        this.classes.set(classesActives);
       },
       error: (error) => {
         console.error('Erreur lors du chargement des classes:', error);
@@ -145,6 +152,13 @@ export class StudentsComponent implements OnInit, OnDestroy {
 
   applyFilters(): void {
     let filtered = this.students();
+
+    // Filtrage par archivage (par défaut, afficher uniquement les actifs)
+    if (!this.showArchived()) {
+      filtered = filtered.filter(s => !s.estArchive);
+    } else {
+      filtered = filtered.filter(s => s.estArchive);
+    }
 
     if (this.filterClasse() !== 'ALL') {
       filtered = filtered.filter(s => s.classeId?.toString() === this.filterClasse());
@@ -171,6 +185,11 @@ export class StudentsComponent implements OnInit, OnDestroy {
   onSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchQuery.set(input.value);
+    this.applyFilters();
+  }
+
+  onToggleArchived(showArchived: boolean): void {
+    this.showArchived.set(showArchived);
     this.applyFilters();
   }
 
@@ -317,6 +336,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
   }
 
   async toggleStatus(student: Etudiant): Promise<void> {
+    const newStatus = !student.estActif;
     const action = student.estActif ? 'désactiver' : 'activer';
     const confirmed = await this.confirmationService.confirm({
       title: `Confirmer ${action === 'désactiver' ? 'la désactivation' : 'l\'activation'}`,
@@ -329,9 +349,9 @@ export class StudentsComponent implements OnInit, OnDestroy {
     
     if (!confirmed) return;
 
-    this.userUseCase.updateUser(student.id.toString(), { estActif: !student.estActif }).subscribe({
+    this.userUseCase.updateUser(student.id.toString(), { estActif: newStatus }).subscribe({
       next: () => {
-        this.successMessage.set(`Étudiant ${student.estActif ? 'désactivé' : 'activé'} avec succès`);
+        this.successMessage.set(`Étudiant ${newStatus ? 'activé' : 'désactivé'} avec succès`);
         this.loadStudents();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
@@ -411,5 +431,37 @@ export class StudentsComponent implements OnInit, OnDestroy {
     if (!this.cacheEnabled()) return 'cache-disabled';
     if (this.isDataFresh()) return 'cache-fresh';
     return 'cache-expired';
+  }
+
+  // === MÉTHODES D'IMPORT/EXPORT ===
+
+  openImportDialog(): void {
+    this.showImportDialog.set(true);
+  }
+
+  closeImportDialog(): void {
+    this.showImportDialog.set(false);
+  }
+
+  onImportComplete(result: any): void {
+    this.successMessage.set(`Import réussi: ${result.created || 0} créés, ${result.updated || 0} mis à jour`);
+    this.closeImportDialog();
+    this.refreshData();
+    setTimeout(() => this.successMessage.set(''), 5000);
+  }
+
+  onImportError(error: any): void {
+    this.errorMessage.set(error.message || 'Erreur lors de l\'import');
+    setTimeout(() => this.errorMessage.set(''), 5000);
+  }
+
+  exportStudents(): void {
+    const url = `${environment.apiUrl}/data/export/etudiants`;
+    window.open(url, '_blank');
+  }
+
+  downloadTemplate(): void {
+    const url = `${environment.apiUrl}/data/templates/etudiants`;
+    window.open(url, '_blank');
   }
 }

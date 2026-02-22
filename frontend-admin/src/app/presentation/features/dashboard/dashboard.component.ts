@@ -284,6 +284,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
+    // Vérifier l'authentification avant de charger les données
+    const token = localStorage.getItem('token');
+    if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+      console.warn('⚠️ Pas de token d\'authentification, redirection vers login');
+      window.location.href = '/login';
+      return;
+    }
+
+    // Démarrer l'auto-refresh du service dashboard
+    this.dashboardService.startAutoRefresh();
+    
     this.loadDashboard();
     this.setupSubscriptions();
     this.loadSystemData();

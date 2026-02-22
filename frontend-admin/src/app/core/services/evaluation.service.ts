@@ -10,6 +10,7 @@ export interface Evaluation {
   statut: 'BROUILLON' | 'PUBLIEE' | 'CLOTUREE';
   cours_id: string;
   administrateur_id: string;
+  estArchive?: boolean;
   dateCreation: string;
   createdAt: string;
   updatedAt: string;

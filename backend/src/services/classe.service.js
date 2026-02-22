@@ -37,7 +37,12 @@ class ClasseService {
     return classeRepository.create(dataWithEcole);
   }
 
-  async findAll() {
+  async findAll(includeArchived = false) {
+    if (includeArchived) {
+      // Utiliser le scope 'all' pour inclure les archivés
+      return classeRepository.findAllWithScope('all');
+    }
+    // Par défaut, utiliser le scope par défaut (sans archivés)
     return classeRepository.findAll();
   }
 
@@ -63,6 +68,28 @@ class ClasseService {
       throw new Error('Classe non trouvée.');
     }
     return { message: 'Classe supprimée avec succès.' };
+  }
+
+  // --- Méthodes d'archivage ---
+
+  async archive(id) {
+    const classe = await classeRepository.findByIdWithScope(id, 'all');
+    if (!classe) {
+      throw new Error('Classe non trouvée.');
+    }
+    
+    const updatedClasse = await classeRepository.update(id, { estArchive: true });
+    return updatedClasse;
+  }
+
+  async restore(id) {
+    const classe = await classeRepository.findByIdWithScope(id, 'all');
+    if (!classe) {
+      throw new Error('Classe non trouvée.');
+    }
+    
+    const updatedClasse = await classeRepository.update(id, { estArchive: false });
+    return updatedClasse;
   }
 
   // --- Logique pour la relation Plusieurs-à-Plusieurs ---

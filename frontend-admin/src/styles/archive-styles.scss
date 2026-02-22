@@ -1,0 +1,126 @@
+// Styles globaux pour l'archivage
+// À importer dans styles.scss
+
+// Badge archivé
+.archive-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);
+  
+  .material-icons {
+    font-size: 16px;
+  }
+}
+
+// Carte archivée
+.archived {
+  opacity: 0.7;
+  border: 2px dashed var(--warning-color, #ff9800) !important;
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.05) 0%, rgba(245, 124, 0, 0.05) 100%);
+  
+  &:hover {
+    opacity: 0.85;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.15);
+  }
+}
+
+// Badge actif (pour contraste)
+.active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+  color: white;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+  
+  .material-icons {
+    font-size: 16px;
+  }
+}
+
+// Menu item pour archivage
+.menu-item.archive-item {
+  .menu-icon.archive-icon {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    
+    .material-icons {
+      color: white;
+    }
+  }
+  
+  &:hover {
+    background: rgba(255, 152, 0, 0.1);
+    
+    .menu-icon.archive-icon {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+    }
+  }
+}
+
+// Bouton d'archivage dans les actions
+.btn-archive {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  .material-icons {
+    font-size: 18px;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Animation pour le toggle
+@keyframes archiveSlide {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.archived {
+  animation: archiveSlide 0.3s ease-out;
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .archived {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(245, 124, 0, 0.1) 100%);
+  }
+  
+  .archive-badge {
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4);
+  }
+}

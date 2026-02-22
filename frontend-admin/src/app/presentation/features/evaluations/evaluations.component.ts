@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,11 +7,12 @@ import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
 import { Evaluation } from '../../../core/domain/entities/evaluation.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { GlobalSearchService } from '../../shared/services/global-search.service';
+import { ArchiveToggleComponent } from '../../shared/components/archive-toggle/archive-toggle.component';
 
 @Component({
   selector: 'app-evaluations',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ArchiveToggleComponent],
   templateUrl: './evaluations.component.html',
   styleUrls: ['./evaluations.component.scss']
 })
@@ -29,12 +30,17 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
   sortOrder = signal<'asc' | 'desc'>('desc');
   showFilters = signal(false);
   showSortMenu = signal(false);
+  showArchived = signal(false);
   
   // Stats
   totalQuiz = signal(0);
   activeQuiz = signal(0);
   draftQuiz = signal(0);
   closedQuiz = signal(0);
+
+  // Computed stats pour l'archivage
+  evaluationsActives = computed(() => this.evaluations().filter(e => !e.estArchive).length);
+  evaluationsArchivees = computed(() => this.evaluations().filter(e => e.estArchive).length);
 
   errorMessage = signal('');
   successMessage = signal('');
@@ -116,6 +122,13 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
 
   applyFilters(): void {
     let filtered = this.evaluations();
+    
+    // Filtrage par archivage (par défaut, afficher uniquement les actifs)
+    if (!this.showArchived()) {
+      filtered = filtered.filter(e => !e.estArchive);
+    } else {
+      filtered = filtered.filter(e => e.estArchive);
+    }
     
     // Filtrage par statut
     if (this.filterStatus() !== 'ALL') {
@@ -291,6 +304,27 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
     this.sortOrder.set('desc');
     this.showFilters.set(false);
     this.applyFilters();
+  }
+
+  onToggleArchived(showArchived: boolean): void {
+    this.showArchived.set(showArchived);
+    this.applyFilters();
+  }
+
+  toggleArchiveStatus(evaluation: Evaluation): void {
+    const newArchiveStatus = !evaluation.estArchive;
+    this.evaluationUseCase.updateEvaluation(evaluation.id as any, {
+      estArchive: newArchiveStatus
+    }).subscribe({
+      next: () => {
+        this.successMessage.set(`Évaluation ${newArchiveStatus ? 'archivée' : 'désarchivée'} avec succès`);
+        this.loadEvaluations();
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error) => {
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la modification');
+      }
+    });
   }
 
   hasActiveFilters(): boolean {

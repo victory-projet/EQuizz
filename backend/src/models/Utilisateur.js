@@ -54,6 +54,13 @@ const Utilisateur = sequelize.define('Utilisateur', {
     type: DataTypes.STRING(255),
     allowNull: true,
   },
+
+  dateImport: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'date_import',
+    comment: 'Date du dernier import Excel'
+  }
 }, {
 // Ajout des Hooks
   hooks: {

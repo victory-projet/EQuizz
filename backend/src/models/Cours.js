@@ -33,10 +33,32 @@ const Cours = sequelize.define('Cours', {
     type: DataTypes.UUID,
     allowNull: true,
     field: 'annee_academique_id'
+  },
+
+  dateImport: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'date_import',
+    comment: 'Date du dernier import Excel'
   }
 
 }, {
-  freezeTableName: true // Empêche la pluralisation automatique
+  freezeTableName: true,
+  timestamps: true,
+  underscored: true,
+  
+  // Scopes pour filtrer automatiquement les éléments archivés
+  defaultScope: {
+    where: { estArchive: false }
+  },
+  scopes: {
+    archived: { 
+      where: { estArchive: true } 
+    },
+    all: { 
+      where: {} 
+    }
+  }
 });
 
 module.exports = Cours;

@@ -28,6 +28,7 @@ const pushNotificationRoutes = require('./src/routes/push-notification.routes');
 const dashboardRoutes = require('./src/routes/dashboard.routes');
 const utilisateurRoutes = require('./src/routes/utilisateur.routes');
 const questionRoutes = require('./src/routes/question.routes');
+const importExportRoutes = require('./src/routes/import-export.routes');
 
 // --- Middlewares Globaux ---
 // Configuration CORS pour autoriser les requêtes depuis le frontend
@@ -69,6 +70,7 @@ app.use('/api/push-notifications', pushNotificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/utilisateurs', utilisateurRoutes);
 app.use('/api', questionRoutes);
+app.use('/api/data', importExportRoutes);
 
 // --- Route 404 pour les endpoints non trouvés ---
 app.use((req, res, next) => {

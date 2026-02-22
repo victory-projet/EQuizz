@@ -80,8 +80,9 @@ export class AcademicRepository implements AcademicRepositoryInterface {
     return this.api.post<Cours>('/academic/cours', cours);
   }
 
-  getCours(): Observable<Cours[]> {
-    return this.api.get<Cours[]>('/academic/cours');
+  getCours(includeArchived: boolean = false): Observable<Cours[]> {
+    const params = includeArchived ? '?includeArchived=true' : '';
+    return this.api.get<Cours[]>(`/academic/cours${params}`);
   }
 
   getCoursById(id: string | number): Observable<Cours> {
@@ -103,8 +104,9 @@ export class AcademicRepository implements AcademicRepositoryInterface {
     );
   }
 
-  getClasses(): Observable<Classe[]> {
-    return this.api.get<any[]>('/academic/classes').pipe(
+  getClasses(includeArchived: boolean = false): Observable<Classe[]> {
+    const params = includeArchived ? '?includeArchived=true' : '';
+    return this.api.get<any[]>(`/academic/classes${params}`).pipe(
       map((classes: any[]) => classes.map(c => this.mapClasseFromBackend(c)))
     );
   }
@@ -163,6 +165,7 @@ export class AcademicRepository implements AcademicRepositoryInterface {
       } : undefined,
       cours: data.Cours || [],
       etudiants: data.Etudiants || [],
+      estArchive: data.estArchive || data.est_archive || false,
       dateCreation: data.createdAt,
       dateModification: data.updatedAt
     };

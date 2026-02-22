@@ -47,8 +47,30 @@ const Evaluation = sequelize.define('Evaluation', {
     defaultValue: 'BROUILLON',
   },
 
+  estArchive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+    field: 'est_archive'
+  }
+
 }, {
-  freezeTableName: true // Empêche la pluralisation automatique
+  freezeTableName: true,
+  timestamps: true,
+  underscored: true,
+  
+  // Scopes pour filtrer automatiquement les éléments archivés
+  defaultScope: {
+    where: { estArchive: false }
+  },
+  scopes: {
+    archived: { 
+      where: { estArchive: true } 
+    },
+    all: { 
+      where: {} 
+    }
+  }
 });
 
 module.exports = Evaluation;

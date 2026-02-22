@@ -13,10 +13,32 @@
       <h2>Gestion des Classes</h2>
       <p>Gérez les classes et leurs étudiants</p>
     </div>
-    <button class="btn btn-primary" (click)="openCreateModal()">
-      <span class="material-icons">add</span>
-      Nouvelle Classe
-    </button>
+    <div class="header-actions">
+      <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle">
+          <span class="material-icons">more_vert</span>
+          Actions
+        </button>
+        <div class="dropdown-menu">
+          <button class="dropdown-item" (click)="openImportDialog()">
+            <span class="material-icons">upload_file</span>
+            Importer depuis Excel
+          </button>
+          <button class="dropdown-item" (click)="exportClasses()">
+            <span class="material-icons">download</span>
+            Exporter vers Excel
+          </button>
+          <button class="dropdown-item" (click)="downloadTemplate()">
+            <span class="material-icons">description</span>
+            Télécharger le modèle
+          </button>
+        </div>
+      </div>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <span class="material-icons">add</span>
+        Nouvelle Classe
+      </button>
+    </div>
   </div>
 
   <!-- Statistics -->
@@ -45,6 +67,16 @@
       }
     }
   </div>
+
+  <!-- Archive Toggle -->
+  <app-archive-toggle
+    [showArchived]="showArchived"
+    [archivedCount]="classesArchivees()"
+    [activeCount]="classesActives()"
+    [totalCount]="totalClasses()"
+    [label]="'classes'"
+    (toggleArchived)="onToggleArchived($event)"
+  ></app-archive-toggle>
 
   <!-- Search and Filters -->
   <div class="filters-section">
@@ -88,7 +120,7 @@
   @if (!isLoading()) {
     <div class="classes-grid">
       @for (classe of filteredClasses(); track classe.id) {
-        <div class="class-card">
+        <div class="class-card" [class.archived]="classe.estArchive">
           <!-- Card Header -->
           <div class="card-header">
             <div class="class-icon">
@@ -100,6 +132,12 @@
                 <span class="class-niveau">{{ classe.niveau }}</span>
               }
             </div>
+            @if (classe.estArchive) {
+              <span class="archive-badge">
+                <span class="material-icons">archive</span>
+                Archivé
+              </span>
+            }
           </div>
 
           <!-- Card Body -->
@@ -128,6 +166,14 @@
               title="Modifier">
               <span class="material-icons">edit</span>
               Modifier
+            </button>
+
+            <button 
+              class="action-btn btn-archive" 
+              (click)="toggleArchiveStatus(classe)"
+              [title]="classe.estArchive ? 'Désarchiver' : 'Archiver'">
+              <span class="material-icons">{{ classe.estArchive ? 'unarchive' : 'archive' }}</span>
+              {{ classe.estArchive ? 'Désarchiver' : 'Archiver' }}
             </button>
           </div>
         </div>
@@ -246,3 +292,27 @@
     </div>
   }
 </div>
+
+<!-- Import Excel Modal -->
+@if (showImportDialog()) {
+  <div class="modal-overlay" (click)="closeImportDialog()">
+    <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Importer des classes depuis Excel</h3>
+        <button class="close-btn" (click)="closeImportDialog()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <app-excel-upload
+          title="Importer des classes"
+          entityType="classes"
+          description="Sélectionnez un fichier Excel contenant les données des classes"
+          (uploadComplete)="onImportComplete($event)"
+          (uploadError)="onImportError($event)">
+        </app-excel-upload>
+      </div>
+    </div>
+  </div>
+}

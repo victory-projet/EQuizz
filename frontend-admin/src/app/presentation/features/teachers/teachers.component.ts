@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { UserUseCase } from '../../../core/usecases/user.usecase';
 import { Enseignant } from '../../../core/domain/entities/user.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
+import { ExcelUploadComponent } from '../../shared/components/excel-upload/excel-upload.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-teachers',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ExcelUploadComponent],
   templateUrl: './teachers.component.html',
   styleUrls: ['./teachers.component.scss']
 })
@@ -25,6 +27,8 @@ export class TeachersComponent implements OnInit {
   
   searchQuery = signal('');
   filterStatus = signal<string>('ALL');
+  showArchived = signal(false);
+  showImportDialog = signal(false);
 
   formData = {
     nom: '',
@@ -37,8 +41,9 @@ export class TeachersComponent implements OnInit {
   successMessage = signal('');
 
   totalTeachers = computed(() => this.teachers().length);
-  activeTeachers = computed(() => this.teachers().filter(t => t.estActif).length);
-  inactiveTeachers = computed(() => this.teachers().filter(t => !t.estActif).length);
+  activeTeachers = computed(() => this.teachers().filter(t => t.estActif && !t.estArchive).length);
+  inactiveTeachers = computed(() => this.teachers().filter(t => !t.estActif && !t.estArchive).length);
+  archivedTeachers = computed(() => this.teachers().filter(t => t.estArchive).length);
 
   constructor(private userUseCase: UserUseCase) {}
 
@@ -48,7 +53,8 @@ export class TeachersComponent implements OnInit {
 
   loadTeachers(): void {
     this.isLoading.set(true);
-    this.userUseCase.getAllUsers().subscribe({
+    // Charger TOUS les enseignants (y compris archivés)
+    this.userUseCase.getAllUsers(true).subscribe({
       next: (users: any[]) => {
         const teachers = users.filter((u: any) => u.role === 'ENSEIGNANT') as Enseignant[];
         console.log('👨‍🏫 Enseignants chargés:', teachers);
@@ -66,6 +72,13 @@ export class TeachersComponent implements OnInit {
 
   applyFilters(): void {
     let filtered = this.teachers();
+
+    // Filtrage par archivage (par défaut, afficher uniquement les actifs)
+    if (!this.showArchived()) {
+      filtered = filtered.filter(t => !t.estArchive);
+    } else {
+      filtered = filtered.filter(t => t.estArchive);
+    }
 
     if (this.filterStatus() !== 'ALL') {
       const isActive = this.filterStatus() === 'ACTIVE';
@@ -93,6 +106,11 @@ export class TeachersComponent implements OnInit {
 
   onFilterStatus(status: string): void {
     this.filterStatus.set(status);
+    this.applyFilters();
+  }
+
+  onToggleArchived(showArchived: boolean): void {
+    this.showArchived.set(showArchived);
     this.applyFilters();
   }
 
@@ -213,9 +231,10 @@ export class TeachersComponent implements OnInit {
   }
 
   toggleStatus(teacher: Enseignant): void {
-    this.userUseCase.updateUser(teacher.id.toString(), { estActif: !teacher.estActif }).subscribe({
+    const newStatus = !teacher.estActif;
+    this.userUseCase.updateUser(teacher.id.toString(), { estActif: newStatus }).subscribe({
       next: () => {
-        this.successMessage.set(`Enseignant ${teacher.estActif ? 'désactivé' : 'activé'} avec succès`);
+        this.successMessage.set(`Enseignant ${newStatus ? 'activé' : 'désactivé'} avec succès`);
         this.loadTeachers();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
@@ -223,5 +242,37 @@ export class TeachersComponent implements OnInit {
         this.errorMessage.set(error.error?.message || 'Erreur lors du changement de statut');
       }
     });
+  }
+
+  // === MÉTHODES D'IMPORT/EXPORT ===
+
+  openImportDialog(): void {
+    this.showImportDialog.set(true);
+  }
+
+  closeImportDialog(): void {
+    this.showImportDialog.set(false);
+  }
+
+  onImportComplete(result: any): void {
+    this.successMessage.set(`Import réussi: ${result.created || 0} créés, ${result.updated || 0} mis à jour`);
+    this.closeImportDialog();
+    this.loadTeachers();
+    setTimeout(() => this.successMessage.set(''), 5000);
+  }
+
+  onImportError(error: any): void {
+    this.errorMessage.set(error.message || 'Erreur lors de l\'import');
+    setTimeout(() => this.errorMessage.set(''), 5000);
+  }
+
+  exportTeachers(): void {
+    const url = `${environment.apiUrl}/data/export/enseignants`;
+    window.open(url, '_blank');
+  }
+
+  downloadTemplate(): void {
+    const url = `${environment.apiUrl}/data/templates/enseignants`;
+    window.open(url, '_blank');
   }
 }
