@@ -52,6 +52,33 @@ const Evaluation = sequelize.define('Evaluation', {
     defaultValue: false,
     allowNull: false,
     field: 'est_archive'
+  },
+
+  superadministrateur_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'Superadministrateur',
+      key: 'id'
+    }
+  },
+
+  administrateur_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'Administrateur',
+      key: 'id'
+    }
+  },
+
+  cours_id: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: 'Cours',
+      key: 'id'
+    }
   }
 
 }, {

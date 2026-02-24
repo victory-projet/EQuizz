@@ -56,7 +56,7 @@
         <span class="nav-text" *ngIf="!isSidebarCollapsed()">Année académique</span>
       </a>
 
-      <a routerLink="/schools" routerLinkActive="active" class="nav-item">
+      <a routerLink="/schools" routerLinkActive="active" class="nav-item" *ngIf="isSuperAdmin()">
         <span class="material-icons">apartment</span>
         <span class="nav-text" *ngIf="!isSidebarCollapsed()">Écoles</span>
       </a>
@@ -76,9 +76,14 @@
         <span class="nav-text" *ngIf="!isSidebarCollapsed()">Enseignants</span>
       </a>
 
-      <a routerLink="/users" routerLinkActive="active" class="nav-item">
-        <span class="material-icons">admin_panel_settings</span>
+      <a routerLink="/admins" routerLinkActive="active" class="nav-item" *ngIf="isSuperAdmin()">
+        <span class="material-icons">manage_accounts</span>
         <span class="nav-text" *ngIf="!isSidebarCollapsed()">Administrateurs</span>
+      </a>
+
+      <a routerLink="/users" routerLinkActive="active" class="nav-item" *ngIf="isSuperAdmin()">
+        <span class="material-icons">admin_panel_settings</span>
+        <span class="nav-text" *ngIf="!isSidebarCollapsed()">Superadministrateurs</span>
       </a>
 
       <a routerLink="/profile" routerLinkActive="active" class="nav-item">
@@ -122,7 +127,7 @@
         <div class="user-profile" (click)="toggleUserMenu()">
           <div class="user-info">
             <span class="user-name">{{ authService.currentUser()?.prenom }} {{ authService.currentUser()?.nom }}</span>
-            <span class="user-role">Admin</span>
+            <span class="user-role">{{ getUserRoleLabel() }}</span>
           </div>
           <div class="user-avatar">
             <span class="material-icons">account_circle</span>

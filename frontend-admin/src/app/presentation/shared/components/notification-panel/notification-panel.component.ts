@@ -488,6 +488,7 @@ export class NotificationPanelComponent implements OnInit, OnDestroy {
 
   getRoleLabel(role: string): string {
     const labels: Record<string, string> = {
+      'SUPER-ADMIN': 'Superadministrateur',
       'ADMIN': 'Administrateur',
       'ENSEIGNANT': 'Enseignant',
       'ETUDIANT': 'Étudiant'

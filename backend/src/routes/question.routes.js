@@ -3,9 +3,9 @@ const router = express.Router();
 const questionController = require('../controllers/question.controller');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 
-// Toutes les routes nécessitent une authentification et le rôle ADMIN
+// Toutes les routes nécessitent une authentification et le rôle ADMIN ou SUPER-ADMIN
 router.use(authenticate);
-router.use(authorize(['ADMIN']));
+router.use(authorize(['SUPER-ADMIN', 'ADMIN']));
 
 // Routes pour les questions d'un quiz spécifique
 router.get('/quizz/:quizz_id/questions', questionController.getQuestionsByQuizz);

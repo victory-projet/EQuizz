@@ -70,6 +70,7 @@ export interface Ecole {
   id: string | number;
   nom: string;
   dateImport?: Date;
+  estActive?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

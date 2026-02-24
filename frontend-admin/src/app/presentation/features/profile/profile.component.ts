@@ -34,8 +34,38 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Charger d'abord depuis localStorage
     this.user.set(this.authService.currentUser());
-    this.loadUserProfile();
+    
+    // Puis recharger depuis le backend pour avoir les données à jour
+    this.loadUserFromBackend();
+  }
+
+  private loadUserFromBackend(): void {
+    this.isLoading.set(true);
+    
+    this.http.get<User>(`${environment.apiUrl}/auth/me`).subscribe({
+      next: (userData) => {
+        // Mettre à jour le signal
+        this.user.set(userData);
+        
+        // Mettre à jour le service auth
+        this.authService.currentUser.set(userData);
+        
+        // Mettre à jour le localStorage
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        // Mettre à jour le formulaire
+        this.loadUserProfile();
+        
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement du profil:', error);
+        this.isLoading.set(false);
+        // En cas d'erreur, on garde les données du localStorage
+      }
+    });
   }
 
   private loadUserProfile(): void {
@@ -101,6 +131,7 @@ export class ProfileComponent implements OnInit {
   getRoleDisplayName(): string {
     const user = this.user();
     switch (user?.role) {
+      case 'SUPER-ADMIN': return 'Superadministrateur';
       case 'ADMIN': return 'Administrateur';
       case 'ENSEIGNANT': return 'Enseignant';
       case 'ETUDIANT': return 'Étudiant';

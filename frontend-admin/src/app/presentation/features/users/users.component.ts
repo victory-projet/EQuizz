@@ -52,7 +52,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     prenom: '',
     email: '',
     motDePasse: '',
-    role: 'ADMIN' as 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT',
+    role: 'SUPER-ADMIN' as 'SUPER-ADMIN' | 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT',
     specialite: '',
     matricule: '',
     generatePassword: false
@@ -126,11 +126,11 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   loadUsersDirectly(): void {
-    // Charger TOUS les utilisateurs (y compris archivés)
-    this.userUseCase.getAllUsers(true).subscribe({
+    // Charger uniquement les utilisateurs actifs (non supprimés)
+    this.userUseCase.getAllUsers(false).subscribe({
       next: (users) => {
-        // Filtrer pour ne garder que les administrateurs
-        const admins = users.filter(u => u.role === 'ADMIN');
+        // Filtrer pour ne garder que les superadministrateurs actifs
+        const admins = users.filter(u => u.role === 'SUPER-ADMIN' && u.estActif);
         this.users.set(admins);
         this.applyFilters();
         this.isLoading.set(false);
@@ -243,7 +243,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       prenom: '',
       email: '',
       motDePasse: '',
-      role: 'ADMIN',
+      role: 'SUPER-ADMIN' as 'SUPER-ADMIN' | 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT',
       specialite: '',
       matricule: '',
       generatePassword: false
@@ -287,7 +287,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       prenom: this.formData.prenom,
       email: this.formData.email,
       motDePasse: this.formData.motDePasse,
-      role: 'ADMIN'
+      role: 'SUPER-ADMIN'
     };
 
     this.isLoading.set(true);
@@ -448,6 +448,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   getRoleBadgeClass(role: string): string {
     switch (role) {
+      case 'SUPER-ADMIN': return 'badge-admin';
       case 'ADMIN': return 'badge-admin';
       case 'ENSEIGNANT': return 'badge-teacher';
       case 'ETUDIANT': return 'badge-student';
@@ -457,7 +458,8 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   getRoleLabel(role: string): string {
     switch (role) {
-      case 'ADMIN': return 'Administrateur';
+      case 'SUPER-ADMIN': return 'Superadmin';
+      case 'ADMIN': return 'Admin';
       case 'ENSEIGNANT': return 'Enseignant';
       case 'ETUDIANT': return 'Étudiant';
       default: return role;
@@ -484,7 +486,7 @@ export class UsersComponent implements OnInit, OnDestroy {
    */
   refreshData(): void {
     if (this.cacheEnabled()) {
-      this.userCacheService.refreshByRole('ADMIN');
+      this.userCacheService.refreshByRole('SUPER-ADMIN');
     } else {
       this.loadUsersDirectly();
     }

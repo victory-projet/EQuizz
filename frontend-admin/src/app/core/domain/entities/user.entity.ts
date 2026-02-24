@@ -5,14 +5,21 @@ export interface User {
   prenom: string;
   email: string;
   matricule?: string;
-  role: 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT';
+  role: 'SUPER-ADMIN' | 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT';
   estActif: boolean;
-  dateCreation: Date;
-  dateModification: Date;
+  ecoleId?: string;  // Pour les administrateurs
+  ecole?: {          // Pour les administrateurs
+    id: string;
+    nom: string;
+  };
+  dateCreation?: Date;
+  dateModification?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Admin extends User {
-  role: 'ADMIN';
+  role: 'SUPER-ADMIN' | 'ADMIN';
 }
 
 export interface Enseignant extends User {

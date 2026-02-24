@@ -43,6 +43,10 @@ export class AcademicRepository implements AcademicRepositoryInterface {
     return this.api.delete<void>(`/academic/ecoles/${id}`);
   }
 
+  toggleActiveEcole(id: string | number): Observable<{ message: string; ecole: Ecole }> {
+    return this.api.patch<{ message: string; ecole: Ecole }>(`/academic/ecoles/${id}/toggle-active`, {});
+  }
+
   // Années Académiques
   createAnneeAcademique(annee: Partial<AnneeAcademique>): Observable<AnneeAcademique> {
     return this.api.post<AnneeAcademique>('/academic/annees-academiques', annee);

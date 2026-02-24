@@ -199,7 +199,7 @@ async function seedDatabase() {
       datePublication: new Date('2025-11-01T08:00:00'),
       typeEvaluation: 'MI_PARCOURS',
       statut: 'PUBLIEE',
-      administrateur_id: adminUser.id,
+      superadministrateur_id: adminUser.id,
       cours_id: cours1.id
     }, { transaction });
 

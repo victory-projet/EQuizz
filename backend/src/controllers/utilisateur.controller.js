@@ -1,15 +1,21 @@
-const { Utilisateur, Administrateur, Enseignant, Etudiant } = require('../models');
+const { Utilisateur, Superadministrateur, Administrateur, Enseignant, Etudiant, Ecole } = require('../models');
 const bcrypt = require('bcryptjs');
 const emailService = require('../services/email.service');
 
 // Récupérer tous les utilisateurs avec leurs rôles
 exports.getAllUtilisateurs = async (req, res) => {
   try {
+    // Tous les admins (super-admin et admin) ont accès à tous les utilisateurs
     const utilisateurs = await Utilisateur.findAll({
       include: [
-        { model: Administrateur },
-        { model: Enseignant },
-        { model: Etudiant }
+        { model: Superadministrateur, as: 'Superadministrateur' },
+        { 
+          model: Administrateur,
+          as: 'Administrateur',
+          include: [{ model: Ecole, as: 'Ecole' }]
+        },
+        { model: Enseignant, as: 'Enseignant' },
+        { model: Etudiant, as: 'Etudiant' }
       ],
       order: [['createdAt', 'DESC']]
     });
@@ -17,8 +23,11 @@ exports.getAllUtilisateurs = async (req, res) => {
     // Ajouter le rôle à chaque utilisateur
     const utilisateursAvecRole = utilisateurs.map(user => {
       const userData = user.toJSON();
-      if (userData.Administrateur) {
+      if (userData.Superadministrateur) {
+        userData.role = 'SUPER-ADMIN';
+      } else if (userData.Administrateur) {
         userData.role = 'ADMIN';
+        userData.ecole = userData.Administrateur.Ecole;
       } else if (userData.Enseignant) {
         userData.role = 'ENSEIGNANT';
       } else if (userData.Etudiant) {
@@ -41,9 +50,14 @@ exports.getUtilisateurById = async (req, res) => {
     const { id } = req.params;
     const utilisateur = await Utilisateur.findByPk(id, {
       include: [
-        { model: Administrateur },
-        { model: Enseignant },
-        { model: Etudiant }
+        { model: Superadministrateur, as: 'Superadministrateur' },
+        { 
+          model: Administrateur,
+          as: 'Administrateur',
+          include: [{ model: Ecole, as: 'Ecole' }]
+        },
+        { model: Enseignant, as: 'Enseignant' },
+        { model: Etudiant, as: 'Etudiant' }
       ]
     });
 
@@ -52,8 +66,11 @@ exports.getUtilisateurById = async (req, res) => {
     }
 
     const userData = utilisateur.toJSON();
-    if (userData.Administrateur) {
+    if (userData.Superadministrateur) {
+      userData.role = 'SUPER-ADMIN';
+    } else if (userData.Administrateur) {
       userData.role = 'ADMIN';
+      userData.ecole = userData.Administrateur.Ecole;
     } else if (userData.Enseignant) {
       userData.role = 'ENSEIGNANT';
     } else if (userData.Etudiant) {
@@ -71,7 +88,7 @@ exports.getUtilisateurById = async (req, res) => {
 // Créer un nouvel utilisateur
 exports.createUtilisateur = async (req, res) => {
   try {
-    const { nom, prenom, email, motDePasse, role, specialite, matricule } = req.body;
+    const { nom, prenom, email, motDePasse, role, specialite, matricule, ecoleId } = req.body;
 
     // Vérifier si l'email existe déjà
     const existingUser = await Utilisateur.findOne({ where: { email } });
@@ -103,8 +120,17 @@ exports.createUtilisateur = async (req, res) => {
     });
 
     // Créer le rôle correspondant
-    if (role === 'ADMIN') {
-      await Administrateur.create({ id: utilisateur.id });
+    if (role === 'SUPER-ADMIN') {
+      await Superadministrateur.create({ id: utilisateur.id });
+    } else if (role === 'ADMIN') {
+      if (!ecoleId) {
+        await utilisateur.destroy();
+        return res.status(400).json({ message: 'L\'ID de l\'école est requis pour un administrateur' });
+      }
+      await Administrateur.create({ 
+        id: utilisateur.id,
+        ecoleId: ecoleId
+      });
     } else if (role === 'ENSEIGNANT') {
       await Enseignant.create({ 
         id: utilisateur.id,
@@ -131,20 +157,27 @@ exports.createUtilisateur = async (req, res) => {
     // Récupérer l'utilisateur complet avec son rôle
     const utilisateurComplet = await Utilisateur.findByPk(utilisateur.id, {
       include: [
-        { model: Administrateur },
-        { model: Enseignant },
-        { model: Etudiant }
+        { model: Superadministrateur, as: 'Superadministrateur' },
+        { 
+          model: Administrateur,
+          as: 'Administrateur',
+          include: [{ model: Ecole, as: 'Ecole' }]
+        },
+        { model: Enseignant, as: 'Enseignant' },
+        { model: Etudiant, as: 'Etudiant' }
       ]
     });
 
     const userData = utilisateurComplet.toJSON();
     userData.role = role;
-    if (role === 'ETUDIANT' && userData.Etudiant) {
+    if (role === 'ADMIN' && userData.Administrateur) {
+      userData.ecole = userData.Administrateur.Ecole;
+    } else if (role === 'ETUDIANT' && userData.Etudiant) {
       userData.matricule = userData.Etudiant.matricule;
     }
 
     // Envoyer un email de bienvenue si c'est un admin ou enseignant avec mot de passe
-    if ((role === 'ADMIN' || role === 'ENSEIGNANT') && motDePasse) {
+    if ((role === 'SUPER-ADMIN' || role === 'ADMIN' || role === 'ENSEIGNANT') && motDePasse) {
       try {
         await emailService.sendWelcomeEmail(userData, motDePasse);
       } catch (emailError) {
@@ -168,9 +201,14 @@ exports.updateUtilisateur = async (req, res) => {
 
     const utilisateur = await Utilisateur.findByPk(id, {
       include: [
-        { model: Administrateur },
-        { model: Enseignant },
-        { model: Etudiant }
+        { model: Superadministrateur, as: 'Superadministrateur' },
+        { 
+          model: Administrateur,
+          as: 'Administrateur',
+          include: [{ model: Ecole, as: 'Ecole' }]
+        },
+        { model: Enseignant, as: 'Enseignant' },
+        { model: Etudiant, as: 'Etudiant' }
       ]
     });
 
@@ -194,15 +232,20 @@ exports.updateUtilisateur = async (req, res) => {
     // Récupérer l'utilisateur mis à jour
     const utilisateurMisAJour = await Utilisateur.findByPk(id, {
       include: [
-        { model: Administrateur },
-        { model: Enseignant },
-        { model: Etudiant }
+        { model: Superadministrateur, as: 'Superadministrateur' },
+        { 
+          model: Administrateur,
+          as: 'Administrateur',
+          include: [{ model: Ecole, as: 'Ecole' }]
+        },
+        { model: Enseignant, as: 'Enseignant' },
+        { model: Etudiant, as: 'Etudiant' }
       ]
     });
 
     const userData = utilisateurMisAJour.toJSON();
-    if (userData.Administrateur) {
-      userData.role = 'ADMIN';
+    if (userData.Superadministrateur) {
+      userData.role = 'SUPER-ADMIN';
     } else if (userData.Enseignant) {
       userData.role = 'ENSEIGNANT';
     } else if (userData.Etudiant) {
@@ -294,14 +337,14 @@ exports.importUtilisateurs = async (req, res) => {
 
         // Déterminer le rôle (par défaut ETUDIANT)
         const role = userData.type?.toUpperCase() || 'ETUDIANT';
-        if (!['ADMIN', 'ENSEIGNANT', 'ETUDIANT'].includes(role)) {
+        if (!['SUPER-ADMIN', 'ADMIN', 'ENSEIGNANT', 'ETUDIANT'].includes(role)) {
           errors.push(`Ligne ${i + 1}: Rôle invalide "${userData.type}"`);
           continue;
         }
 
         // Générer un mot de passe temporaire pour les admins et enseignants
         let motDePasseHash = null;
-        if (role === 'ADMIN' || role === 'ENSEIGNANT') {
+        if (role === 'SUPER-ADMIN' || role === 'ENSEIGNANT') {
           motDePasseHash = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
         }
 
@@ -315,8 +358,8 @@ exports.importUtilisateurs = async (req, res) => {
         });
 
         // Créer le rôle correspondant
-        if (role === 'ADMIN') {
-          await Administrateur.create({ id: utilisateur.id });
+        if (role === 'SUPER-ADMIN') {
+          await Superadministrateur.create({ id: utilisateur.id });
         } else if (role === 'ENSEIGNANT') {
           await Enseignant.create({ 
             id: utilisateur.id,
@@ -349,7 +392,7 @@ exports.importUtilisateurs = async (req, res) => {
         imported++;
 
         // Envoyer un email de bienvenue si c'est un admin ou enseignant avec mot de passe
-        if ((role === 'ADMIN' || role === 'ENSEIGNANT') && motDePasseHash) {
+        if ((role === 'SUPER-ADMIN' || role === 'ENSEIGNANT') && motDePasseHash) {
           try {
             const userData = utilisateur.toJSON();
             userData.role = role;

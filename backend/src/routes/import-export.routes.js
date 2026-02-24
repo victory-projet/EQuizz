@@ -8,7 +8,7 @@ const upload = require('../middlewares/upload.middleware');
 
 // Toutes les routes nécessitent une authentification admin
 router.use(authenticate);
-router.use(authorize(['administrateur']));
+router.use(authorize(['SUPER-ADMIN', 'ADMIN', 'administrateur']));
 
 // Routes de téléchargement de templates
 router.get('/templates/:entityType', importController.downloadTemplate);

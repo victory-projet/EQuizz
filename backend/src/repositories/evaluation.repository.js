@@ -89,7 +89,7 @@ class EvaluationRepository {
       dateDebut: originalEvaluation.dateDebut,
       dateFin: originalEvaluation.dateFin,
       statut: 'BROUILLON', // Toujours créer en brouillon
-      administrateur_id: adminId, // Utiliser l'ID de l'admin connecté
+      superadministrateur_id: adminId, // Utiliser l'ID du superadmin connecté
       cours_id: originalEvaluation.cours_id,
       coursId: originalEvaluation.coursId,
       classeId: originalEvaluation.classeId

@@ -40,10 +40,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     '/courses': 'Cours & UE',
     '/classes': 'Classes',
     '/schools': 'Écoles',
+    '/admins': 'Administrateurs',
     '/associations': 'Associations',
     '/academic-years': 'Année académique',
     '/reports': 'Rapports',
-    '/users': 'Utilisateurs',
+    '/users': 'Superadministrateurs',
     '/students': 'Étudiants',
     '/teachers': 'Enseignants',
     '/notifications': 'Notifications',
@@ -57,14 +58,15 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     '/courses': 'Gestion des cours et unités d\'enseignement',
     '/classes': 'Gestion des classes et groupes d\'étudiants',
     '/schools': 'Gestion des établissements scolaires',
+    '/admins': 'Gestion des administrateurs d\'école',
     '/associations': 'Gestion des associations cours-classes',
     '/academic-years': 'Gestion des années académiques et semestres',
     '/reports': 'Rapports et statistiques d\'évaluation',
-    '/users': 'Gestion des comptes administrateurs',
+    '/users': 'Gestion des comptes superadministrateurs',
     '/students': 'Gestion des comptes étudiants',
     '/teachers': 'Gestion des comptes enseignants',
     '/notifications': 'Centre de notifications système',
-    '/profile': 'Espace compte administrateur',
+    '/profile': 'Espace compte superadministrateur',
     '/messages': 'Centre de messages et notifications'
   };
 
@@ -257,5 +259,25 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   closeUserMenu(): void {
     this.isUserMenuOpen.set(false);
+  }
+
+  isSuperAdmin(): boolean {
+    return this.authService.currentUser()?.role === 'SUPER-ADMIN';
+  }
+
+  getUserRoleLabel(): string {
+    const role = this.authService.currentUser()?.role;
+    switch (role) {
+      case 'SUPER-ADMIN':
+        return 'Superadministrateur';
+      case 'ADMIN':
+        return 'Administrateur';
+      case 'ENSEIGNANT':
+        return 'Enseignant';
+      case 'ETUDIANT':
+        return 'Étudiant';
+      default:
+        return 'Utilisateur';
+    }
   }
 }

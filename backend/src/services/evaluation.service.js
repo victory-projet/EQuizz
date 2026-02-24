@@ -32,19 +32,22 @@ class EvaluationService {
 
       // Vérifier que l'utilisateur existe et récupérer son profil admin
       const utilisateur = await db.Utilisateur.findByPk(adminId, {
-        include: [{ model: db.Administrateur }]
+        include: [
+          { model: db.Superadministrateur, as: 'Superadministrateur' },
+          { model: db.Administrateur, as: 'Administrateur' }
+        ]
       });
       
       if (!utilisateur) {
         throw AppError.notFound('Utilisateur non trouvé.', 'USER_NOT_FOUND');
       }
 
-      if (!utilisateur.Administrateur) {
-        throw AppError.forbidden('Seuls les administrateurs peuvent créer des évaluations.', 'ADMIN_REQUIRED');
+      if (!utilisateur.Superadministrateur) {
+        throw AppError.forbidden('Seuls les superadministrateurs peuvent créer des évaluations.', 'ADMIN_REQUIRED');
       }
 
-      // Ajouter l'ID de l'administrateur aux données
-      evaluationData.administrateur_id = adminId;
+      // Ajouter l'ID du superadministrateur aux données
+      evaluationData.superadministrateur_id = adminId;
 
       const evaluation = await evaluationRepository.create(evaluationData, transaction);
       await evaluation.addClasses(classeIds, { transaction });

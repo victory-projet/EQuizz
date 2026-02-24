@@ -21,6 +21,14 @@ const Ecole = sequelize.define('Ecole', {
     allowNull: true,
     field: 'date_import',
     comment: 'Date du dernier import Excel'
+  },
+
+  estActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    allowNull: false,
+    field: 'est_active',
+    comment: 'Indique si l\'école est active dans le système'
   }
 
 });

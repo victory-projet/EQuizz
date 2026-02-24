@@ -167,6 +167,15 @@
       color: var(--text-disabled);
       margin-bottom: 16px;
     }
+
+    p {
+      margin: 1rem 0;
+    }
+
+    .btn, .btn-primary {
+      margin: 0 auto;
+      display: inline-flex;
+    }
   }
 }
 
@@ -341,11 +350,11 @@
   transition: all 0.2s;
 
   &.btn-primary {
-    background: #4f46e5;
+    background: #3A5689;
     color: white;
 
     &:hover {
-      background: #4338ca;
+      background: #2d4468;
     }
 
     &:disabled {
@@ -727,11 +736,11 @@
     }
     
     &.btn-primary {
-      background: #667eea;
+      background: #3A5689;
       color: white;
       
       &:hover {
-        background: #5a67d8;
+        background: #2d4468;
       }
     }
   }

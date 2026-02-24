@@ -75,6 +75,7 @@
         <thead>
           <tr>
             <th>Nom de l'école</th>
+            <th>Statut</th>
             <th>Date de création</th>
             <th>Date d'import</th>
             <th>Actions</th>
@@ -82,12 +83,17 @@
         </thead>
         <tbody>
           @for (school of filteredSchools(); track school.id) {
-            <tr>
+            <tr [class.inactive-row]="school.estActive === false">
               <td>
                 <div class="school-name">
                   <span class="material-icons">school</span>
                   <strong>{{ school.nom }}</strong>
                 </div>
+              </td>
+              <td>
+                <span class="status-badge" [class.status-active]="school.estActive !== false" [class.status-inactive]="school.estActive === false">
+                  {{ school.estActive === false ? 'Inactive' : 'Active' }}
+                </span>
               </td>
               <td>{{ school.createdAt ? (school.createdAt | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
               <td>{{ school.dateImport ? (school.dateImport | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
@@ -96,8 +102,14 @@
                   <button class="btn-icon" (click)="openEditModal(school)" title="Modifier">
                     <span class="material-icons">edit</span>
                   </button>
-                  <button class="btn-icon btn-danger" (click)="openDeleteModal(school)" title="Supprimer">
-                    <span class="material-icons">delete</span>
+                  <button 
+                    class="btn-icon" 
+                    [class.btn-warning]="school.estActive !== false"
+                    [class.btn-success]="school.estActive === false"
+                    (click)="openToggleActiveModal(school)" 
+                    [title]="school.estActive === false ? 'Activer' : 'Désactiver'"
+                  >
+                    <span class="material-icons">{{ school.estActive === false ? 'check_circle' : 'block' }}</span>
                   </button>
                 </div>
               </td>
@@ -148,20 +160,34 @@
   </div>
 }
 
-<!-- Delete Confirmation Modal -->
-@if (showDeleteModal()) {
+<!-- Toggle Active Confirmation Modal -->
+@if (showToggleActiveModal()) {
   <div class="modal-overlay" (click)="closeModals()">
     <div class="modal-content modal-small" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Confirmer la suppression</h3>
+        <h3>Confirmer le changement de statut</h3>
         <button class="close-btn" (click)="closeModals()">
           <span class="material-icons">close</span>
         </button>
       </div>
 
       <div class="modal-body">
-        <p>Êtes-vous sûr de vouloir supprimer l'école <strong>{{ selectedSchool()?.nom }}</strong> ?</p>
-        <p class="warning-text">Cette action est irréversible.</p>
+        <p>
+          Êtes-vous sûr de vouloir 
+          <strong>{{ selectedSchool()?.estActive === false ? 'activer' : 'désactiver' }}</strong> 
+          l'école <strong>{{ selectedSchool()?.nom }}</strong> ?
+        </p>
+        @if (selectedSchool()?.estActive !== false) {
+          <p class="warning-text">
+            <span class="material-icons">info</span>
+            Les utilisateurs associés à cette école ne pourront plus se connecter.
+          </p>
+        } @else {
+          <p class="success-text">
+            <span class="material-icons">check_circle</span>
+            Les utilisateurs associés à cette école pourront à nouveau se connecter.
+          </p>
+        }
       </div>
 
       <div class="modal-footer">
@@ -169,11 +195,11 @@
           Annuler
         </button>
         <button 
-          class="btn btn-danger" 
-          (click)="deleteSchool()"
+          [class]="selectedSchool()?.estActive === false ? 'btn btn-success' : 'btn btn-warning'"
+          (click)="toggleActiveSchool()"
           [disabled]="loading()"
         >
-          {{ loading() ? 'Suppression...' : 'Supprimer' }}
+          {{ loading() ? 'Traitement...' : (selectedSchool()?.estActive === false ? 'Activer' : 'Désactiver') }}
         </button>
       </div>
     </div>

@@ -20,7 +20,7 @@ export class SchoolsComponent implements OnInit {
   // Modal states
   showAddModal = signal(false);
   showEditModal = signal(false);
-  showDeleteModal = signal(false);
+  showToggleActiveModal = signal(false);
   
   // Form data
   selectedSchool = signal<Ecole | null>(null);
@@ -96,15 +96,15 @@ export class SchoolsComponent implements OnInit {
     this.showEditModal.set(true);
   }
 
-  openDeleteModal(school: Ecole) {
+  openToggleActiveModal(school: Ecole) {
     this.selectedSchool.set(school);
-    this.showDeleteModal.set(true);
+    this.showToggleActiveModal.set(true);
   }
 
   closeModals() {
     this.showAddModal.set(false);
     this.showEditModal.set(false);
-    this.showDeleteModal.set(false);
+    this.showToggleActiveModal.set(false);
     this.selectedSchool.set(null);
     this.resetForm();
   }
@@ -149,6 +149,25 @@ export class SchoolsComponent implements OnInit {
       error: (err) => {
         console.error('Error deleting school:', err);
         this.error.set('Erreur lors de la suppression de l\'école');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  toggleActiveSchool() {
+    const school = this.selectedSchool();
+    if (!school) return;
+    
+    this.loading.set(true);
+    
+    this.academicRepository.toggleActiveEcole(school.id).subscribe({
+      next: () => {
+        this.loadSchools();
+        this.closeModals();
+      },
+      error: (err) => {
+        console.error('Error toggling school status:', err);
+        this.error.set('Erreur lors du changement de statut de l\'école');
         this.loading.set(false);
       }
     });
