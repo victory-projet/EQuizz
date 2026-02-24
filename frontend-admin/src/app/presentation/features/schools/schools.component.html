@@ -1,0 +1,181 @@
+<div class="schools-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h2>Gestion des Écoles</h2>
+      <p>Gérez les établissements scolaires</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openAddModal()">
+        <span class="material-icons">add</span>
+        Ajouter une école
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <span class="material-icons">school</span>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Total des écoles</div>
+        <div class="stat-value">{{ totalSchools() }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card stat-success">
+      <div class="stat-icon">
+        <span class="material-icons">check_circle</span>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Écoles actives</div>
+        <div class="stat-value">{{ activeSchools() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input 
+        type="text" 
+        placeholder="Rechercher une école..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+      />
+    </div>
+  </div>
+
+  <!-- Schools Table -->
+  <div class="table-container">
+    @if (loading()) {
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Chargement des écoles...</p>
+      </div>
+    } @else if (error()) {
+      <div class="error-state">
+        <span class="material-icons">error</span>
+        <p>{{ error() }}</p>
+        <button class="btn btn-primary" (click)="loadSchools()">Réessayer</button>
+      </div>
+    } @else if (filteredSchools().length === 0) {
+      <div class="empty-state">
+        <span class="material-icons">school</span>
+        <p>Aucune école trouvée</p>
+        <button class="btn btn-primary" (click)="openAddModal()">
+          Ajouter une école
+        </button>
+      </div>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nom de l'école</th>
+            <th>Date de création</th>
+            <th>Date d'import</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (school of filteredSchools(); track school.id) {
+            <tr>
+              <td>
+                <div class="school-name">
+                  <span class="material-icons">school</span>
+                  <strong>{{ school.nom }}</strong>
+                </div>
+              </td>
+              <td>{{ school.createdAt ? (school.createdAt | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
+              <td>{{ school.dateImport ? (school.dateImport | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn-icon" (click)="openEditModal(school)" title="Modifier">
+                    <span class="material-icons">edit</span>
+                  </button>
+                  <button class="btn-icon btn-danger" (click)="openDeleteModal(school)" title="Supprimer">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+@if (showAddModal() || showEditModal()) {
+  <div class="modal-overlay" (click)="closeModals()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ showEditModal() ? 'Modifier l\'école' : 'Ajouter une école' }}</h3>
+        <button class="close-btn" (click)="closeModals()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nom de l'école *</label>
+          <input 
+            type="text" 
+            [(ngModel)]="schoolForm.nom"
+            placeholder="Ex: CPGE"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">
+          Annuler
+        </button>
+        <button 
+          class="btn btn-primary" 
+          (click)="saveSchool()"
+          [disabled]="!schoolForm.nom || loading()"
+        >
+          {{ loading() ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteModal()) {
+  <div class="modal-overlay" (click)="closeModals()">
+    <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Confirmer la suppression</h3>
+        <button class="close-btn" (click)="closeModals()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p>Êtes-vous sûr de vouloir supprimer l'école <strong>{{ selectedSchool()?.nom }}</strong> ?</p>
+        <p class="warning-text">Cette action est irréversible.</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">
+          Annuler
+        </button>
+        <button 
+          class="btn btn-danger" 
+          (click)="deleteSchool()"
+          [disabled]="loading()"
+        >
+          {{ loading() ? 'Suppression...' : 'Supprimer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

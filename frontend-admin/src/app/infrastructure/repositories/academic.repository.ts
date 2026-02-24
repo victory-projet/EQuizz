@@ -191,11 +191,9 @@ export class AcademicRepository implements AcademicRepositoryInterface {
       Ecole: data.Ecole ? {
         id: data.Ecole.id,
         nom: data.Ecole.nom,
-        adresse: data.Ecole.adresse,
-        telephone: data.Ecole.telephone,
-        email: data.Ecole.email,
-        dateCreation: data.Ecole.createdAt,
-        dateModification: data.Ecole.updatedAt
+        dateImport: data.Ecole.dateImport || data.Ecole.date_import,
+        createdAt: data.Ecole.createdAt,
+        updatedAt: data.Ecole.updatedAt
       } : undefined,
       cours: data.Cours || [],
       etudiants: data.Etudiants || [],

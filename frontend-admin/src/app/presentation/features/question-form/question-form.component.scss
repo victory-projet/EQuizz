@@ -13,14 +13,16 @@
 }
 
 .modal-content {
-  background: white;
-  border-radius: 12px;
+  background: var(--modal-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
   max-width: 700px;
   width: 100%;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--modal-shadow);
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
 }
 
 .modal-header {

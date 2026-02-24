@@ -69,9 +69,7 @@ export interface Classe {
 export interface Ecole {
   id: string | number;
   nom: string;
-  adresse?: string;
-  telephone?: string;
-  email?: string;
-  dateCreation: Date;
-  dateModification: Date;
+  dateImport?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

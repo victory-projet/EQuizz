@@ -178,9 +178,15 @@
 }
 
 .stat-card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
   padding: 20px;
   display: flex;
   align-items: center;
@@ -219,9 +225,11 @@
 }
 
 .section-card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
+}
   padding: 24px;
   margin-bottom: 24px;
 
@@ -288,9 +296,10 @@
 }
 
 .sentiment-card {
-  background: white;
+  background: var(--card-bg);
   border: 2px solid;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
+  transition: background-color var(--theme-transition), border-color var(--theme-transition);
   padding: 24px;
   text-align: center;
 

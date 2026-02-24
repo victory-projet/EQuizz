@@ -82,8 +82,8 @@
       .btn-icon {
         width: 2.5rem;
         height: 2.5rem;
-        border: 1px solid var(--border-color, #dee2e6);
-        background: var(--white, #ffffff);
+        border: 1px solid var(--border-primary);
+        background: var(--surface-primary);
         border-radius: 6px;
         cursor: pointer;
         display: flex;
@@ -93,15 +93,15 @@
 
         .material-icons {
           font-size: 1.2rem;
-          color: var(--text-secondary, #6c757d);
+          color: var(--text-secondary);
         }
 
         &:hover {
-          background: var(--primary-light, #e3f2fd);
-          border-color: var(--primary, #2196f3);
+          background: var(--primary-light);
+          border-color: var(--primary);
 
           .material-icons {
-            color: var(--primary, #2196f3);
+            color: var(--primary);
           }
         }
 
@@ -324,19 +324,19 @@
 
             .material-icons {
               font-size: 1rem;
-              color: var(--text-secondary, #6c757d);
+              color: var(--text-secondary);
             }
 
             &:hover {
-              background: var(--success-light, #d4edda);
+              background: var(--success-light);
 
               .material-icons {
-                color: var(--success, #28a745);
+                color: var(--success);
               }
             }
 
             &.btn-danger:hover {
-              background: var(--danger-light, #f8d7da);
+              background: var(--danger-light);
 
               .material-icons {
                 color: var(--danger, #dc3545);
