@@ -3,10 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
 interface OnboardingSlide {
-  icon: string;
   title: string;
   description: string;
-  color: string;
+  image: string;
 }
 
 @Component({
@@ -21,34 +20,29 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
   slides: OnboardingSlide[] = [
     {
-      icon: 'dashboard',
       title: 'Bienvenue sur EQuizz',
       description: 'La plateforme complète pour gérer et analyser les évaluations des enseignements de votre établissement.',
-      color: '#667eea'
+      image: '/H1.png'
     },
     {
-      icon: 'description',
       title: 'Créez des Évaluations',
       description: 'Concevez facilement des questionnaires personnalisés avec différents types de questions : choix multiples, reponses ouvertes.',
-      color: '#10b981'
+      image: '/H2.png'
     },
     {
-      icon: 'groups',
       title: 'Gérez vos Utilisateurs',
       description: 'Administrez les étudiants, enseignants et classes. Importez des données en masse via Excel pour gagner du temps.',
-      color: '#f59e0b'
+      image: '/U1.png'
     },
     {
-      icon: 'bar_chart',
       title: 'Analysez les Résultats',
       description: 'Consultez des rapports détaillés avec graphiques interactifs. Exportez les données en PDF.',
-      color: '#3b82f6'
+      image: '/U2.png'
     },
     {
-      icon: 'rocket_launch',
       title: 'Prêt à Commencer !',
       description: 'Connectez-vous pour accéder à votre tableau de bord et commencer à créer vos premières évaluations.',
-      color: '#ec4899'
+      image: '/U3.png'
     }
   ];
 
@@ -67,8 +61,6 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   nextSlide(): void {
     if (this.currentSlide() < this.slides.length - 1) {
       this.currentSlide.update(v => v + 1);
-    } else {
-      this.finish();
     }
   }
 

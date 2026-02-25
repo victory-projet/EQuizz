@@ -1,19 +1,10 @@
 <div class="login-container">
-  <!-- Background Image -->
-  <div class="background-image"></div>
-  
-  <!-- Overlay -->
-  <div class="overlay"></div>
-
-  <!-- Login Card -->
-  <div class="login-card">
+  <!-- Left Side - Form -->
+  <div class="login-left">
     <!-- Logo -->
     <div class="logo-container">
-      <div class="logo">
-        <span class="material-icons">school</span>
-      </div>
-      <h1 class="app-name">EQuizz</h1>
-      <p class="app-tagline">Plateforme d'évaluation des enseignements</p>
+      <img src="/Equizz.png" alt="Equizz Logo" class="logo-image">
+      <p class="app-tagline">La plateforme d'évaluation de vos enseignants</p>
     </div>
 
     <!-- Login Form -->
@@ -32,7 +23,6 @@
 
         <!-- Email Field -->
         <div class="form-group">
-          <label for="email">Adresse email</label>
           <div class="input-wrapper">
             <span class="material-icons input-icon">email</span>
             <input
@@ -40,7 +30,7 @@
               id="email"
               name="email"
               [(ngModel)]="credentials.email"
-              placeholder="votre.email@example.com"
+              placeholder="Email"
               required
               autocomplete="email"
             />
@@ -49,7 +39,6 @@
 
         <!-- Password Field -->
         <div class="form-group">
-          <label for="password">Mot de passe</label>
           <div class="input-wrapper">
             <span class="material-icons input-icon">lock</span>
             <input
@@ -57,7 +46,7 @@
               id="password"
               name="password"
               [(ngModel)]="credentials.motDePasse"
-              placeholder="••••••••"
+              placeholder="Mot de passe"
               required
               autocomplete="current-password"
             />
@@ -105,15 +94,9 @@
             <span class="spinner"></span>
             <span>Connexion en cours...</span>
           } @else {
-            <span>Se connecter</span>
-            <span class="material-icons">arrow_forward</span>
+            <span>Se Connecter</span>
           }
         </button>
-
-        <!-- Footer -->
-        <div class="form-footer">
-          <p>© 2025 EQuizz. Tous droits réservés.</p>
-        </div>
       </form>
     }
 
@@ -152,7 +135,6 @@
 
         <!-- Email Field -->
         <div class="form-group">
-          <label for="forgot-email">Adresse email</label>
           <div class="input-wrapper">
             <span class="material-icons input-icon">email</span>
             <input
@@ -160,7 +142,7 @@
               id="forgot-email"
               name="forgot-email"
               [(ngModel)]="forgotPasswordEmail"
-              placeholder="votre.email@example.com"
+              placeholder="Email"
               required
               autocomplete="email"
             />
@@ -183,5 +165,11 @@
         </button>
       </form>
     }
+  </div>
+
+  <!-- Right Side - Image -->
+  <div class="login-right">
+    <div class="image-overlay"></div>
+    <img src="/Vector 2.png" alt="Decorative wave" class="decorative-wave">
   </div>
 </div>

@@ -1,0 +1,176 @@
+// Global Color Overrides
+// This file overrides old colors with new brand colors across all components
+
+// Override Material Design colors if using Angular Material
+.mat-primary {
+  background-color: var(--color-primary, #1b1464) !important;
+  color: var(--text-on-primary, #FFFFFF) !important;
+}
+
+.mat-accent {
+  background-color: var(--color-accent, #fbb03b) !important;
+  color: var(--text-on-accent, #1b1464) !important;
+}
+
+// Override common button classes
+.btn-primary,
+button.primary,
+.primary-button {
+  background: var(--color-primary, #1b1464) !important;
+  color: var(--text-on-primary, #FFFFFF) !important;
+  
+  &:hover:not(:disabled) {
+    background: var(--color-primary-light, #2a1f8f) !important;
+  }
+}
+
+.btn-accent,
+button.accent,
+.accent-button {
+  background: var(--color-accent, #fbb03b) !important;
+  color: var(--text-on-accent, #1b1464) !important;
+  
+  &:hover:not(:disabled) {
+    background: var(--color-accent-dark, #e89f2a) !important;
+  }
+}
+
+// Override common text colors
+.text-primary-color {
+  color: var(--color-primary, #1b1464) !important;
+}
+
+.text-accent-color {
+  color: var(--color-accent, #fbb03b) !important;
+}
+
+// Override common background colors
+.bg-primary {
+  background-color: var(--color-primary, #1b1464) !important;
+}
+
+.bg-accent {
+  background-color: var(--color-accent, #fbb03b) !important;
+}
+
+.bg-secondary {
+  background-color: var(--color-secondary-light, #F5F5F5) !important;
+}
+
+// Override common border colors
+.border-primary {
+  border-color: var(--color-primary, #1b1464) !important;
+}
+
+.border-accent {
+  border-color: var(--color-accent, #fbb03b) !important;
+}
+
+// Override active/selected states
+.active,
+.selected,
+[aria-selected="true"] {
+  background-color: var(--color-primary-hover, rgba(27, 20, 100, 0.1)) !important;
+  border-left-color: var(--color-accent, #fbb03b) !important;
+}
+
+// Override hover states
+*:hover:not(button):not(a):not(input):not(select):not(textarea) {
+  &.hoverable {
+    background-color: var(--sidebar-hover, rgba(115, 173, 255, 0.2)) !important;
+  }
+}
+
+// Override focus states
+*:focus-visible {
+  outline-color: var(--color-primary, #1b1464) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-hover, rgba(27, 20, 100, 0.1)) !important;
+}
+
+// Override spinner/loader colors
+.spinner,
+.loader,
+[class*="spinner"],
+[class*="loader"] {
+  border-top-color: var(--color-primary, #1b1464) !important;
+}
+
+// Override progress bars
+.progress-bar,
+[class*="progress"] {
+  background-color: var(--color-primary, #1b1464) !important;
+}
+
+// Override badges
+.badge-primary {
+  background-color: rgba(27, 20, 100, 0.1) !important;
+  color: var(--color-primary, #1b1464) !important;
+}
+
+.badge-accent {
+  background-color: var(--color-accent-hover, rgba(251, 176, 59, 0.2)) !important;
+  color: var(--color-accent-dark, #e89f2a) !important;
+}
+
+// Override icons with primary color
+.icon-primary,
+.material-icons.primary {
+  color: var(--color-primary, #1b1464) !important;
+}
+
+.icon-accent,
+.material-icons.accent {
+  color: var(--color-accent, #fbb03b) !important;
+}
+
+// Override links
+a:not(.btn):not([class*="button"]) {
+  color: var(--color-primary, #1b1464) !important;
+  
+  &:hover {
+    color: var(--color-accent, #fbb03b) !important;
+  }
+}
+
+// Override form controls focus
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-primary, #1b1464) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-hover, rgba(27, 20, 100, 0.1)) !important;
+}
+
+// Override checkboxes and radios
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  background-color: var(--color-primary, #1b1464) !important;
+  border-color: var(--color-primary, #1b1464) !important;
+}
+
+// Override tabs
+.tab.active,
+.tab-active,
+[role="tab"][aria-selected="true"] {
+  background-color: var(--color-primary, #1b1464) !important;
+  color: var(--text-on-primary, #FFFFFF) !important;
+  border-bottom-color: var(--color-accent, #fbb03b) !important;
+}
+
+// Override cards with primary header
+.card-header.primary {
+  background-color: var(--color-primary, #1b1464) !important;
+  color: var(--text-on-primary, #FFFFFF) !important;
+}
+
+// Override alerts
+.alert-primary {
+  background-color: rgba(27, 20, 100, 0.1) !important;
+  border-color: var(--color-primary, #1b1464) !important;
+  color: var(--color-primary, #1b1464) !important;
+}
+
+.alert-warning {
+  background-color: var(--color-accent-hover, rgba(251, 176, 59, 0.2)) !important;
+  border-color: var(--color-accent, #fbb03b) !important;
+  color: var(--color-accent-dark, #e89f2a) !important;
+}

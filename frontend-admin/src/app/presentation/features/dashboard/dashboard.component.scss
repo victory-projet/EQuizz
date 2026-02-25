@@ -17,7 +17,7 @@
     width: 40px;
     height: 40px;
     border: 3px solid #e5e7eb;
-    border-top-color: #667eea;
+    border-top-color: var(--color-primary, #1b1464);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin-bottom: 16px;
@@ -25,7 +25,7 @@
 
   .material-icons {
     font-size: 64px;
-    color: #ef4444;
+    color: var(--color-danger, #dc2626);
     margin-bottom: 16px;
   }
 
@@ -90,13 +90,13 @@
       }
 
       &:hover {
-        border-color: #667eea;
-        color: #667eea;
+        border-color: var(--color-primary, #1b1464);
+        color: var(--color-primary, #1b1464);
       }
     }
 
     .btn-filter {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: var(--color-primary, #1b1464);
       color: white;
       border: none;
 

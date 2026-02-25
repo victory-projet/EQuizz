@@ -1,0 +1,80 @@
+// Color Mixins for consistent application across components
+
+// Primary button mixin
+@mixin btn-primary {
+  background: var(--color-primary, #1b1464);
+  color: var(--text-on-primary, #FFFFFF);
+  border: none;
+  
+  &:hover:not(:disabled) {
+    background: var(--color-primary-light, #2a1f8f);
+  }
+}
+
+// Accent button mixin
+@mixin btn-accent {
+  background: var(--color-accent, #fbb03b);
+  color: var(--text-on-accent, #1b1464);
+  border: none;
+  
+  &:hover:not(:disabled) {
+    background: var(--color-accent-dark, #e89f2a);
+  }
+}
+
+// Card mixin
+@mixin card {
+  background: var(--color-secondary, #FFFFFF);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+}
+
+// Input focus mixin
+@mixin input-focus {
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary, #1b1464);
+    box-shadow: 0 0 0 3px var(--color-primary-hover, rgba(27, 20, 100, 0.1));
+  }
+}
+
+// Badge primary mixin
+@mixin badge-primary {
+  background: rgba(27, 20, 100, 0.1);
+  color: var(--color-primary, #1b1464);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+// Badge accent mixin
+@mixin badge-accent {
+  background: var(--color-accent-hover, rgba(251, 176, 59, 0.2));
+  color: var(--color-accent-dark, #e89f2a);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+// Hover lift effect
+@mixin hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(27, 20, 100, 0.12);
+  }
+}
+
+// Text primary
+@mixin text-primary {
+  color: var(--text-primary, #1b1464);
+}
+
+// Text secondary
+@mixin text-secondary {
+  color: var(--text-secondary, #6b7280);
+}

@@ -1,131 +1,77 @@
 .login-container {
-  position: relative;
-  min-height: 100vh;
   display: flex;
-  align-items: center;
+  min-height: 100vh;
+  background: white;
+
+  @media (max-width: 968px) {
+    flex-direction: column;
+  }
+}
+
+// Left Side - Form
+.login-left {
+  flex: 0 0 50%;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
-  padding: 20px;
-  overflow: hidden;
-}
-
-// Background Image
-.background-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('/iusj.webp');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: 0;
-  
-  // Fallback gradient if image doesn't load
-  background-color: #4A5F7F;
-}
-
-// Overlay for better readability
-.overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(102, 126, 234, 0.85) 0%,
-    rgba(118, 75, 162, 0.85) 100%
-  );
-  z-index: 1;
-  backdrop-filter: blur(2px);
-}
-
-// Login Card
-.login-card {
+  align-items: center;
+  padding: 60px 80px;
+  background: white;
   position: relative;
-  z-index: 2;
-  background: rgba(255, 255, 255, 0.98);
-  border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  padding: 48px;
-  width: 100%;
-  max-width: 480px;
-  backdrop-filter: blur(10px);
-  animation: slideUp 0.6s ease-out;
 
-  @media (max-width: 768px) {
-    padding: 32px 24px;
-    border-radius: 16px;
+  @media (max-width: 1200px) {
+    padding: 40px 60px;
   }
-}
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  @media (max-width: 968px) {
+    flex: 1;
+    width: 100%;
+    padding: 40px 30px;
+    min-height: 100vh;
   }
 }
 
 // Logo Container
 .logo-container {
-  text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 50px;
+  width: 100%;
+  max-width: 420px;
 
-  .logo {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  .logo-image {
+    width: 280px;
+    height: auto;
+    margin-bottom: 12px;
 
-    .material-icons {
-      font-size: 48px;
-      color: white;
+    @media (max-width: 768px) {
+      width: 220px;
     }
-  }
-
-  .app-name {
-    font-size: 32px;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin: 0 0 8px 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .app-tagline {
     font-size: 14px;
     color: #6b7280;
     margin: 0;
+    font-weight: 400;
   }
 }
 
 // Form
 .login-form {
+  width: 100%;
+  max-width: 420px;
+
   .form-title {
-    font-size: 24px;
-    font-weight: 600;
+    font-size: 28px;
+    font-weight: 700;
     color: #1a1a1a;
     margin: 0 0 8px 0;
-    text-align: center;
   }
 
   .form-subtitle {
     font-size: 14px;
     color: #6b7280;
     margin: 0 0 32px 0;
-    text-align: center;
   }
 }
 
@@ -136,7 +82,7 @@
   gap: 8px;
   background: transparent;
   border: none;
-  color: #667eea;
+  color: var(--color-primary, #1b1464);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -146,7 +92,7 @@
 
   &:hover {
     gap: 12px;
-    color: #764ba2;
+    color: var(--color-accent, #fbb03b);
   }
 
   .material-icons {
@@ -160,7 +106,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  border-radius: 12px;
+  border-radius: 8px;
   margin-bottom: 24px;
   font-size: 14px;
   animation: slideDown 0.3s ease-out;
@@ -195,7 +141,7 @@
 
 // Form Group
 .form-group {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 
   label {
     display: block;
@@ -223,8 +169,8 @@
   input {
     width: 100%;
     padding: 14px 16px 14px 48px;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
     font-size: 15px;
     color: #1a1a1a;
     background: white;
@@ -236,8 +182,8 @@
 
     &:focus {
       outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+      border-color: var(--color-primary, #1b1464);
+      box-shadow: 0 0 0 3px var(--color-primary-hover, rgba(27, 20, 100, 0.1));
     }
 
     &:disabled {
@@ -251,15 +197,14 @@
     right: 12px;
     background: transparent;
     border: none;
-    color: #9ca3af;
+    color: var(--color-primary, #1b1464);
     cursor: pointer;
     padding: 8px;
-    border-radius: 8px;
+    border-radius: 6px;
     transition: all 0.2s;
 
     &:hover {
       background: #f3f4f6;
-      color: #667eea;
     }
 
     .material-icons {
@@ -273,7 +218,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -292,8 +237,8 @@
     pointer-events: none;
 
     &:checked + .checkbox-custom {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-color: #667eea;
+      background: var(--color-primary, #1b1464);
+      border-color: var(--color-primary, #1b1464);
 
       &::after {
         opacity: 1;
@@ -303,10 +248,10 @@
   }
 
   .checkbox-custom {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border: 2px solid #d1d5db;
-    border-radius: 6px;
+    border-radius: 4px;
     position: relative;
     transition: all 0.2s;
     flex-shrink: 0;
@@ -315,7 +260,7 @@
       content: '';
       position: absolute;
       top: 2px;
-      left: 6px;
+      left: 5px;
       width: 4px;
       height: 8px;
       border: solid white;
@@ -332,7 +277,7 @@
   }
 
   &:hover .checkbox-custom {
-    border-color: #667eea;
+    border-color: var(--color-primary, #1b1464);
   }
 }
 
@@ -340,7 +285,7 @@
 .link-button {
   background: transparent;
   border: none;
-  color: #667eea;
+  color: var(--color-primary, #1b1464);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -348,7 +293,7 @@
   transition: all 0.2s;
 
   &:hover {
-    color: #764ba2;
+    color: var(--color-accent, #fbb03b);
     text-decoration: underline;
   }
 }
@@ -357,10 +302,10 @@
 .submit-button {
   width: 100%;
   padding: 16px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary, #1b1464);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
@@ -368,22 +313,19 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transition: all 0.2s;
 
   &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+    background: var(--color-primary-light, #2a1f8f);
   }
 
   &:active:not(:disabled) {
-    transform: translateY(0);
+    transform: scale(0.98);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
   }
 
   .material-icons {
@@ -407,44 +349,67 @@
   }
 }
 
-// Form Footer
-.form-footer {
-  margin-top: 32px;
-  text-align: center;
+// Right Side - Image
+.login-right {
+  flex: 0 0 50%;
+  width: 50%;
+  position: relative;
+  background-image: url('/iusj.webp');
+  background-size: cover;
+  background-position: right center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
 
-  p {
-    font-size: 12px;
-    color: #9ca3af;
-    margin: 0;
+  @media (max-width: 968px) {
+    display: none;
+  }
+
+  // Blue overlay
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.65) 0%, rgba(147, 51, 234, 0.45) 100%);
+    z-index: 1;
+  }
+
+  // Decorative wave image at bottom
+  .decorative-wave {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: auto;
+    height: 200px;
+    z-index: 2;
+    object-fit: contain;
+
+    @media (max-width: 1200px) {
+      height: 150px;
+    }
+  }
+
+  // Orange decorative element (fallback if image doesn't load)
+  .image-overlay {
+    display: none;
   }
 }
 
 // Responsive
 @media (max-width: 768px) {
-  .login-card {
-    max-width: 100%;
+  .login-left {
+    padding: 30px 20px;
   }
 
   .logo-container {
-    margin-bottom: 32px;
-
-    .logo {
-      width: 64px;
-      height: 64px;
-
-      .material-icons {
-        font-size: 40px;
-      }
-    }
-
-    .app-name {
-      font-size: 28px;
-    }
+    margin-bottom: 40px;
   }
 
   .login-form {
     .form-title {
-      font-size: 20px;
+      font-size: 24px;
     }
   }
 
