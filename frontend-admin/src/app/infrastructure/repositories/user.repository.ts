@@ -60,7 +60,16 @@ export class UserRepository implements UserRepositoryInterface {
     };
 
     // Ajouter les propriétés spécifiques selon le rôle
-    if (data.role === 'ETUDIANT' && data.Etudiant) {
+    if (data.role === 'ADMIN' && data.ecole) {
+      return {
+        ...baseUser,
+        ecoleId: data.ecole.id,
+        ecole: {
+          id: data.ecole.id,
+          nom: data.ecole.nom
+        }
+      } as any;
+    } else if (data.role === 'ETUDIANT' && data.Etudiant) {
       return {
         ...baseUser,
         matricule: data.Etudiant.matricule,

@@ -7,7 +7,6 @@ async function setupTestDatabase() {
   try {
     // Synchroniser la base de données (force: true pour recréer les tables)
     await db.sequelize.sync({ force: true });
-    console.log('✅ Base de données de test synchronisée');
   } catch (error) {
     console.error('❌ Erreur sync base de données:', error);
     throw error;
@@ -18,26 +17,34 @@ async function cleanupTestDatabase() {
   try {
     // Fermer la connexion
     await db.sequelize.close();
-    console.log('✅ Connexion base de données fermée');
   } catch (error) {
     console.error('❌ Erreur fermeture base de données:', error);
   }
 }
 
 async function clearAllTables() {
+  const isSqlite = db.sequelize.getDialect() === 'sqlite';
+  const models = Object.values(db.sequelize.models);
+
   try {
-    // Supprimer toutes les données de toutes les tables
-    await db.sequelize.truncate({ cascade: true, restartIdentity: true });
-  } catch (error) {
-    // Si truncate ne fonctionne pas, essayer de supprimer manuellement
-    const models = Object.keys(db.sequelize.models);
-    for (const modelName of models) {
-      try {
-        await db[modelName].destroy({ where: {}, force: true });
-      } catch (err) {
-        // Ignorer les erreurs de contraintes
-      }
+    if (isSqlite) {
+      await db.sequelize.query('PRAGMA foreign_keys = OFF');
     }
+
+    // Deleting in reverse order might help with constraints if foreign_keys wasn't OFF
+    // But since it's OFF, we can just delete all.
+    for (const model of models) {
+      await model.destroy({ where: {}, force: true, truncate: !isSqlite && model.name !== 'Utilisateur' });
+    }
+
+    if (isSqlite) {
+      await db.sequelize.query('PRAGMA foreign_keys = ON');
+    }
+  } catch (error) {
+    if (isSqlite) {
+      await db.sequelize.query('PRAGMA foreign_keys = ON');
+    }
+    throw error;
   }
 }
 

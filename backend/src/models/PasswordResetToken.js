@@ -8,14 +8,9 @@ const PasswordResetToken = sequelize.define('PasswordResetToken', {
     autoIncrement: true
   },
   utilisateurId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING(36), // UUID
     allowNull: false,
-    field: 'utilisateur_id',
-    references: {
-      model: 'utilisateurs',
-      key: 'id'
-    },
-    onDelete: 'CASCADE'
+    field: 'utilisateur_id'
   },
   token: {
     type: DataTypes.STRING(255),
@@ -51,7 +46,8 @@ const PasswordResetToken = sequelize.define('PasswordResetToken', {
 }, {
   tableName: 'password_reset_tokens',
   timestamps: true,
-  underscored: true
+  underscored: true,
+  paranoid: false
 });
 
 module.exports = PasswordResetToken;

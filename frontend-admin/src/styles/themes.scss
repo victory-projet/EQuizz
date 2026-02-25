@@ -1,221 +1,448 @@
-// Thèmes pour l'application EQuizz Admin
+// ============================================
+// SYSTÈME DE THÈMES AMÉLIORÉ - EQuizz Admin
+// ============================================
 
-// Variables communes
+// Variables communes (indépendantes du thème)
 :root {
-  // Transitions
-  --theme-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  // Ombres
-  --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  --shadow-medium: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
-  --shadow-heavy: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  // Transitions fluides
+  --theme-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --theme-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --theme-transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   
   // Rayons de bordure
-  --border-radius-small: 4px;
-  --border-radius-medium: 8px;
-  --border-radius-large: 12px;
-  --border-radius-xl: 16px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+  
+  // Espacements
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  
+  // Tailles de police
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+  --text-4xl: 36px;
 }
 
-// Thème clair
+// ============================================
+// THÈME CLAIR
+// ============================================
 .light-theme {
-  // Couleurs principales
-  --primary-color: #1976d2;
-  --primary-light: #42a5f5;
-  --primary-dark: #1565c0;
-  --primary-background: #e3f2fd;
-  --primary-background-light: #f3f9ff;
+  // Couleurs principales (Brand)
+  --primary-50: #e8edf3;
+  --primary-100: #c5d1e0;
+  --primary-200: #9fb3cc;
+  --primary-300: #7895b8;
+  --primary-400: #5c7ea8;
+  --primary-500: #4A5F7F;
+  --primary-600: #4A5F7F;
+  --primary-700: #3d4f68;
+  --primary-800: #2f3e51;
+  --primary-900: #1f2a38;
+  
+  --primary: var(--primary-600);
+  --primary-light: var(--primary-50);
+  --primary-hover: var(--primary-700);
+  --primary-active: var(--primary-800);
   
   // Couleurs d'accent
-  --accent-color: #ff4081;
-  --accent-light: #ff79b0;
-  --accent-dark: #c60055;
+  --accent-50: #fce4ec;
+  --accent-500: #ff4081;
+  --accent-600: #f50057;
+  --accent: var(--accent-500);
   
   // Couleurs de statut
-  --success-color: #4caf50;
-  --success-light: #81c784;
-  --success-dark: #388e3c;
-  --success-background: #e8f5e8;
+  --success: #10b981;
+  --success-light: #d1fae5;
+  --success-dark: #059669;
   
-  --warning-color: #ff9800;
-  --warning-light: #ffb74d;
-  --warning-dark: #f57c00;
-  --warning-background: #fff3e0;
+  --warning: #f59e0b;
+  --warning-light: #fef3c7;
+  --warning-dark: #d97706;
   
-  --error-color: #f44336;
-  --error-light: #e57373;
-  --error-dark: #d32f2f;
-  --error-background: #ffebee;
+  --error: #ef4444;
+  --error-light: #fee2e2;
+  --error-dark: #dc2626;
   
-  --info-color: #2196f3;
-  --info-light: #64b5f6;
-  --info-dark: #1976d2;
-  --info-background: #e3f2fd;
+  --info: #3b82f6;
+  --info-light: #dbeafe;
+  --info-dark: #2563eb;
   
   // Couleurs de fond
-  --background-primary: #ffffff;
-  --background-secondary: #f8f9fa;
-  --background-tertiary: #f1f3f4;
-  --background-elevated: #ffffff;
-  --background-overlay: rgba(0, 0, 0, 0.5);
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --bg-elevated: #ffffff;
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+  --bg-hover: #f9fafb;
+  --bg-active: #f3f4f6;
   
-  // Couleurs de surface
+  // Couleurs de surface (pour les cartes, modales, etc.)
   --surface-primary: #ffffff;
-  --surface-secondary: #f5f5f5;
-  --surface-tertiary: #eeeeee;
-  --surface-hover: #f5f5f5;
+  --surface-secondary: #f9fafb;
+  --surface-tertiary: #f3f4f6;
+  --surface-hover: rgba(0, 0, 0, 0.04);
+  --surface-active: rgba(0, 0, 0, 0.08);
   --surface-selected: #e3f2fd;
-  --surface-disabled: #fafafa;
+  --surface-disabled: #f9fafb;
   
   // Couleurs de texte
-  --text-primary: #212121;
-  --text-secondary: #757575;
-  --text-tertiary: #9e9e9e;
-  --text-disabled: #bdbdbd;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  --text-disabled: #d1d5db;
+  --text-inverse: #ffffff;
   --text-on-primary: #ffffff;
-  --text-on-secondary: #ffffff;
-  --text-on-surface: #212121;
+  --text-on-accent: #ffffff;
+  --text-link: var(--primary-600);
+  --text-link-hover: var(--primary-700);
   
   // Couleurs de bordure
-  --border-primary: #e0e0e0;
-  --border-secondary: #eeeeee;
-  --border-focus: #1976d2;
-  --border-error: #f44336;
+  --border-primary: #e5e7eb;
+  --border-secondary: #f3f4f6;
+  --border-focus: var(--primary-500);
+  --border-error: var(--error);
+  --border-hover: #d1d5db;
   
-  // Couleurs d'interaction
-  --hover-background: rgba(0, 0, 0, 0.04);
-  --active-background: rgba(0, 0, 0, 0.08);
-  --focus-background: rgba(25, 118, 210, 0.12);
-  --selected-background: rgba(25, 118, 210, 0.08);
+  // Ombres
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   
-  // Ombres spécifiques au thème clair
-  --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --elevated-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-  --modal-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  // Ombres colorées
+  --shadow-primary: 0 4px 12px rgba(33, 150, 243, 0.15);
+  --shadow-success: 0 4px 12px rgba(16, 185, 129, 0.15);
+  --shadow-warning: 0 4px 12px rgba(245, 158, 11, 0.15);
+  --shadow-error: 0 4px 12px rgba(239, 68, 68, 0.15);
+  
+  // Couleurs spécifiques aux composants
+  --input-bg: #ffffff;
+  --input-border: var(--border-primary);
+  --input-focus-border: var(--primary-500);
+  --input-disabled-bg: #f9fafb;
+  
+  --card-bg: #ffffff;
+  --card-border: var(--border-primary);
+  --card-shadow: var(--shadow-sm);
+  
+  --modal-bg: #ffffff;
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+  --modal-shadow: var(--shadow-2xl);
+  
+  --sidebar-bg: linear-gradient(180deg, #4A5F7F 0%, #5B7396 100%);
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.1);
+  --sidebar-item-active: rgba(255, 255, 255, 0.15);
+  --sidebar-text: #ffffff;
+  --sidebar-text-secondary: rgba(255, 255, 255, 0.8);
+  
+  --header-bg: #ffffff;
+  --header-border: var(--border-primary);
+  --header-shadow: var(--shadow-sm);
+  
+  --table-header-bg: #f9fafb;
+  --table-row-hover: #f9fafb;
+  --table-border: var(--border-primary);
+  
+  --scrollbar-track: #f3f4f6;
+  --scrollbar-thumb: #d1d5db;
+  --scrollbar-thumb-hover: #9ca3af;
 }
 
-// Thème sombre
+// ============================================
+// THÈME SOMBRE
+// ============================================
 .dark-theme {
-  // Couleurs principales
-  --primary-color: #90caf9;
-  --primary-light: #bbdefb;
-  --primary-dark: #64b5f6;
-  --primary-background: #1a237e;
-  --primary-background-light: #283593;
+  // Couleurs principales (Brand) - versions plus claires pour le dark mode
+  --primary-50: #0d47a1;
+  --primary-100: #1565c0;
+  --primary-200: #1976d2;
+  --primary-300: #1e88e5;
+  --primary-400: #2196f3;
+  --primary-500: #42a5f5;
+  --primary-600: #64b5f6;
+  --primary-700: #90caf9;
+  --primary-800: #bbdefb;
+  --primary-900: #e3f2fd;
+  
+  --primary: var(--primary-600);
+  --primary-light: var(--primary-50);
+  --primary-hover: var(--primary-700);
+  --primary-active: var(--primary-800);
   
   // Couleurs d'accent
-  --accent-color: #f48fb1;
-  --accent-light: #f8bbd9;
-  --accent-dark: #f06292;
+  --accent-50: #880e4f;
+  --accent-500: #f48fb1;
+  --accent-600: #f8bbd0;
+  --accent: var(--accent-500);
   
   // Couleurs de statut
-  --success-color: #81c784;
-  --success-light: #a5d6a7;
-  --success-dark: #66bb6a;
-  --success-background: #1b5e20;
+  --success: #34d399;
+  --success-light: #064e3b;
+  --success-dark: #6ee7b7;
   
-  --warning-color: #ffb74d;
-  --warning-light: #ffcc02;
-  --warning-dark: #ffa726;
-  --warning-background: #e65100;
+  --warning: #fbbf24;
+  --warning-light: #78350f;
+  --warning-dark: #fcd34d;
   
-  --error-color: #e57373;
-  --error-light: #ef5350;
-  --error-dark: #f44336;
-  --error-background: #b71c1c;
+  --error: #f87171;
+  --error-light: #7f1d1d;
+  --error-dark: #fca5a5;
   
-  --info-color: #64b5f6;
-  --info-light: #90caf9;
-  --info-dark: #42a5f5;
-  --info-background: #0d47a1;
+  --info: #60a5fa;
+  --info-light: #1e3a8a;
+  --info-dark: #93c5fd;
   
-  // Couleurs de fond
-  --background-primary: #121212;
-  --background-secondary: #1e1e1e;
-  --background-tertiary: #2d2d2d;
-  --background-elevated: #1f1f1f;
-  --background-overlay: rgba(0, 0, 0, 0.7);
+  // Couleurs de fond - Palette sombre cohérente
+  --bg-primary: #0f1419;
+  --bg-secondary: #1a1f2e;
+  --bg-tertiary: #252d3d;
+  --bg-elevated: #1e2533;
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  --bg-hover: #252d3d;
+  --bg-active: #2d3548;
   
   // Couleurs de surface
-  --surface-primary: #1e1e1e;
-  --surface-secondary: #2d2d2d;
-  --surface-tertiary: #3d3d3d;
-  --surface-hover: #2d2d2d;
-  --surface-selected: #1a237e;
-  --surface-disabled: #2d2d2d;
+  --surface-primary: #1a1f2e;
+  --surface-secondary: #252d3d;
+  --surface-tertiary: #2d3548;
+  --surface-hover: rgba(255, 255, 255, 0.05);
+  --surface-active: rgba(255, 255, 255, 0.1);
+  --surface-selected: rgba(100, 181, 246, 0.15);
+  --surface-disabled: #252d3d;
   
   // Couleurs de texte
-  --text-primary: #ffffff;
-  --text-secondary: #b3b3b3;
-  --text-tertiary: #808080;
-  --text-disabled: #666666;
-  --text-on-primary: #000000;
-  --text-on-secondary: #000000;
-  --text-on-surface: #ffffff;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  --text-disabled: #6b7280;
+  --text-inverse: #111827;
+  --text-on-primary: #0f1419;
+  --text-on-accent: #0f1419;
+  --text-link: var(--primary-600);
+  --text-link-hover: var(--primary-700);
   
   // Couleurs de bordure
-  --border-primary: #404040;
-  --border-secondary: #333333;
-  --border-focus: #90caf9;
-  --border-error: #e57373;
+  --border-primary: #374151;
+  --border-secondary: #2d3548;
+  --border-focus: var(--primary-600);
+  --border-error: var(--error);
+  --border-hover: #4b5563;
   
-  // Couleurs d'interaction
-  --hover-background: rgba(255, 255, 255, 0.08);
-  --active-background: rgba(255, 255, 255, 0.12);
-  --focus-background: rgba(144, 202, 249, 0.12);
-  --selected-background: rgba(144, 202, 249, 0.08);
+  // Ombres - Plus prononcées en mode sombre
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   
-  // Ombres spécifiques au thème sombre
-  --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  --elevated-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-  --modal-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+  // Ombres colorées
+  --shadow-primary: 0 4px 12px rgba(100, 181, 246, 0.2);
+  --shadow-success: 0 4px 12px rgba(52, 211, 153, 0.2);
+  --shadow-warning: 0 4px 12px rgba(251, 191, 36, 0.2);
+  --shadow-error: 0 4px 12px rgba(248, 113, 113, 0.2);
+  
+  // Couleurs spécifiques aux composants
+  --input-bg: #1a1f2e;
+  --input-border: var(--border-primary);
+  --input-focus-border: var(--primary-600);
+  --input-disabled-bg: #252d3d;
+  
+  --card-bg: #1a1f2e;
+  --card-border: var(--border-primary);
+  --card-shadow: var(--shadow-md);
+  
+  --modal-bg: #1e2533;
+  --modal-overlay: rgba(0, 0, 0, 0.75);
+  --modal-shadow: var(--shadow-2xl);
+  
+  --sidebar-bg: #000000;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.05);
+  --sidebar-item-active: rgba(100, 181, 246, 0.15);
+  --sidebar-text: #ffffff;
+  --sidebar-text-secondary: rgba(255, 255, 255, 0.7);
+  
+  --header-bg: #1a1f2e;
+  --header-border: var(--border-primary);
+  --header-shadow: var(--shadow-sm);
+  
+  --table-header-bg: #252d3d;
+  --table-row-hover: #252d3d;
+  --table-border: var(--border-primary);
+  
+  --scrollbar-track: #252d3d;
+  --scrollbar-thumb: #4b5563;
+  --scrollbar-thumb-hover: #6b7280;
 }
 
-// Transitions pour les changements de thème
+// ============================================
+// TRANSITIONS FLUIDES
+// ============================================
 * {
-  transition: background-color var(--theme-transition),
-              color var(--theme-transition),
-              border-color var(--theme-transition),
-              box-shadow var(--theme-transition);
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
-// Styles pour les composants Material avec thèmes
-.light-theme {
-  .mat-mdc-card {
-    background-color: var(--surface-primary);
-    color: var(--text-primary);
+// Désactiver les transitions pendant le changement de thème
+body.theme-transitioning * {
+  transition: none !important;
+}
+
+// ============================================
+// STYLES GLOBAUX AVEC VARIABLES DE THÈME
+// ============================================
+
+// Arrière-plan de l'application
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+// Cartes
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  
+  &:hover {
+    box-shadow: var(--shadow-md);
+  }
+}
+
+// Surfaces
+.surface {
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+}
+
+// Inputs
+input, textarea, select {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-primary);
+  
+  &::placeholder {
+    color: var(--text-tertiary);
   }
   
-  .mat-mdc-button {
-    &.mat-primary {
-      background-color: var(--primary-color);
-      color: var(--text-on-primary);
+  &:focus {
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+  }
+  
+  &:disabled {
+    background-color: var(--input-disabled-bg);
+    color: var(--text-disabled);
+  }
+}
+
+// Tables
+table {
+  background-color: var(--card-bg);
+  border-color: var(--table-border);
+  
+  thead {
+    background-color: var(--table-header-bg);
+    
+    th {
+      color: var(--text-secondary);
+      border-bottom-color: var(--border-primary);
     }
   }
   
-  .mat-mdc-form-field {
-    .mat-mdc-text-field-wrapper {
-      background-color: var(--surface-primary);
+  tbody {
+    tr {
+      border-bottom-color: var(--table-border);
+      
+      &:hover {
+        background-color: var(--table-row-hover);
+      }
+      
+      td {
+        color: var(--text-primary);
+      }
     }
   }
 }
 
-.dark-theme {
-  .mat-mdc-card {
-    background-color: var(--surface-primary);
-    color: var(--text-primary);
-  }
+// Modales
+.modal-overlay {
+  background-color: var(--modal-overlay);
+}
+
+.modal-content {
+  background-color: var(--modal-bg);
+  box-shadow: var(--modal-shadow);
+  color: var(--text-primary);
+}
+
+// Scrollbar personnalisée
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
   
-  .mat-mdc-button {
-    &.mat-primary {
-      background-color: var(--primary-color);
-      color: var(--text-on-primary);
-    }
-  }
-  
-  .mat-mdc-form-field {
-    .mat-mdc-text-field-wrapper {
-      background-color: var(--surface-primary);
-    }
+  &:hover {
+    background-color: var(--scrollbar-thumb-hover);
   }
 }
+
+// Support pour Firefox
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+// ============================================
+// UTILITAIRES DE THÈME
+// ============================================
+
+// Classes utilitaires pour les couleurs de fond
+.bg-primary { background-color: var(--bg-primary); }
+.bg-secondary { background-color: var(--bg-secondary); }
+.bg-tertiary { background-color: var(--bg-tertiary); }
+.bg-elevated { background-color: var(--bg-elevated); }
+
+// Classes utilitaires pour les couleurs de texte
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-disabled { color: var(--text-disabled); }
+
+// Classes utilitaires pour les bordures
+.border-primary { border-color: var(--border-primary); }
+.border-secondary { border-color: var(--border-secondary); }
+
+// Classes utilitaires pour les ombres
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-xl { box-shadow: var(--shadow-xl); }
+.shadow-2xl { box-shadow: var(--shadow-2xl); }

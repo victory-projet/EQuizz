@@ -9,7 +9,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
   if (userStr && userStr !== 'undefined' && userStr !== 'null') {
     try {
       const user = JSON.parse(userStr);
-      if (user && user.role === 'ADMIN') {
+      if (user && (user.role === 'SUPER-ADMIN' || user.role === 'ADMIN')) {
         return true;
       }
     } catch (e) {

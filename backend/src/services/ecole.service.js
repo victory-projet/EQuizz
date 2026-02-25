@@ -6,8 +6,17 @@ class EcoleService {
     return ecoleRepository.create(data);
   }
 
-  async findAll() {
-    return ecoleRepository.findAll();
+  async findAll(query = {}) {
+    const { page = 1, limit = 10, search, sort, order } = query;
+    const offset = (page - 1) * limit;
+
+    return ecoleRepository.findAll({
+      search,
+      limit,
+      offset,
+      sort,
+      order
+    });
   }
 
   async findOne(id) {
@@ -32,6 +41,21 @@ class EcoleService {
       throw AppError.notFound('École non trouvée.', 'ECOLE_NOT_FOUND');
     }
     return { message: 'École supprimée avec succès.' };
+  }
+
+  async toggleActive(id) {
+    const ecole = await ecoleRepository.findById(id);
+    if (!ecole) {
+      throw AppError.notFound('École non trouvée.', 'ECOLE_NOT_FOUND');
+    }
+
+    const newStatus = !ecole.estActive;
+    const updatedEcole = await ecoleRepository.update(id, { estActive: newStatus });
+    
+    return {
+      message: `École ${newStatus ? 'activée' : 'désactivée'} avec succès.`,
+      ecole: updatedEcole
+    };
   }
 }
 

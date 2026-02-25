@@ -54,7 +54,7 @@ export class UserCacheService {
     
     return this.cacheService.getOrFetch(
       this.CACHE_KEYS.ALL_USERS,
-      () => this.userUseCase.getAllUsers(),
+      () => this.userUseCase.getAllUsers(true), // Inclure les archivés
       finalConfig
     ).pipe(
       tap(users => {
@@ -73,7 +73,7 @@ export class UserCacheService {
     return this.cacheService.getOrFetch(
       this.CACHE_KEYS.ADMINS,
       () => this.getAllUsers().pipe(
-        map(users => users.filter(u => u.role === 'ADMIN'))
+        map(users => users.filter(u => u.role === 'SUPER-ADMIN' && u.estActif))
       ),
       finalConfig
     ).pipe(
@@ -189,9 +189,9 @@ export class UserCacheService {
   /**
    * Actualise les données d'un rôle spécifique
    */
-  refreshByRole(role: 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT'): void {
+  refreshByRole(role: 'SUPER-ADMIN' | 'ENSEIGNANT' | 'ETUDIANT'): void {
     switch (role) {
-      case 'ADMIN':
+      case 'SUPER-ADMIN':
         this.cacheService.delete(this.CACHE_KEYS.ADMINS);
         this.getAdmins().subscribe();
         break;
@@ -282,7 +282,7 @@ export class UserCacheService {
   }
 
   private updateRoleBasedCache(users: User[]): void {
-    const admins = users.filter(u => u.role === 'ADMIN');
+    const admins = users.filter(u => u.role === 'SUPER-ADMIN');
     const teachers = users.filter(u => u.role === 'ENSEIGNANT');
     const students = users.filter(u => u.role === 'ETUDIANT');
 

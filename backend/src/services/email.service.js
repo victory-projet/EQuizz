@@ -393,8 +393,8 @@ class EmailService {
       return { success: true, message: 'SendGrid non configuré en mode développement' };
     }
 
-    const roleLabel = user.role === 'ADMIN' ? 'Administrateur' : 'Enseignant';
-    const roleIcon = user.role === 'ADMIN' ? '👨‍💼' : '👨‍🏫';
+    const roleLabel = (user.role === 'SUPER-ADMIN') ? 'Administrateur' : 'Enseignant';
+    const roleIcon = (user.role === 'SUPER-ADMIN') ? '👨‍💼' : '👨‍🏫';
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
 
     const msg = {

@@ -6,9 +6,10 @@ export interface CreateUserDto {
   prenom: string;
   email: string;
   motDePasse?: string; // Optionnel pour les étudiants
-  role: 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT';
+  role: 'SUPER-ADMIN' | 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT';
   specialite?: string;
   matricule?: string;
+  ecoleId?: string; // Pour les administrateurs
 }
 
 export interface UpdateUserDto {
@@ -17,6 +18,7 @@ export interface UpdateUserDto {
   email?: string;
   estActif?: boolean;
   specialite?: string;
+  ecoleId?: string; // Pour les administrateurs
 }
 
 export abstract class UserRepositoryInterface {
