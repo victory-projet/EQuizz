@@ -429,8 +429,6 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
         // Messages d'erreur spécifiques
         if (errorMsg.includes('non trouvée')) {
           errorMsg = 'Cette évaluation n\'existe plus ou a déjà été supprimée.';
-        } else if (errorMsg.includes('soumissions')) {
-          errorMsg = 'Impossible de supprimer une évaluation qui a des soumissions d\'étudiants.';
         }
         
         this.errorMessage.set(errorMsg);
@@ -481,10 +479,6 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
     this.showCardMenu.set(null);
   }
 
-  viewSubmissions(evaluation: Evaluation): void {
-    this.router.navigate(['/evaluations', evaluation.id, 'submissions']);
-  }
-
   viewResults(evaluation: Evaluation): void {
     this.router.navigate(['/evaluations', evaluation.id, 'results']);
   }
@@ -493,11 +487,6 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
     // TODO: Implémenter l'export des résultats
     this.successMessage.set('Export des résultats en cours de développement...');
     setTimeout(() => this.successMessage.set(''), 3000);
-  }
-
-  getSubmissionsCount(evaluation: Evaluation): number {
-    // TODO: Récupérer le nombre réel de soumissions depuis l'API
-    return (evaluation as any).submissionsCount || 0;
   }
 
   getStatusBadgeClass(status: string): string {

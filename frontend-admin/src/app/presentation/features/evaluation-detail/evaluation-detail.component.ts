@@ -2,37 +2,23 @@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
 import { EvaluationUseCase } from '../../../core/usecases/evaluation.usecase';
 import { Evaluation, Question } from '../../../core/domain/entities/evaluation.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { QuestionFormComponent } from '../question-form/question-form.component';
 import { QuestionImportComponent } from '../question-import/question-import.component';
-import { SentimentAnalysisComponent } from '../../shared/components/sentiment-analysis/sentiment-analysis.component';
-import { ReportExportComponent } from '../../shared/components/report-export/report-export.component';
 
 @Component({
   selector: 'app-evaluation-detail',
   standalone: true,
   imports: [
     CommonModule, 
-    FormsModule, 
-    MatTabsModule,
-    MatCardModule,
-    MatButtonModule,
+    FormsModule,
     MatIconModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
     QuestionFormComponent, 
-    QuestionImportComponent,
-    SentimentAnalysisComponent,
-    ReportExportComponent
+    QuestionImportComponent
   ],
   templateUrl: './evaluation-detail.component.html',
   styleUrls: ['./evaluation-detail.component.scss']
@@ -49,7 +35,6 @@ export class EvaluationDetailComponent implements OnInit {
   successMessage = signal('');
 
   private confirmationService = inject(ConfirmationService);
-  private snackBar = inject(MatSnackBar);
 
   constructor(
     private route: ActivatedRoute,
@@ -236,5 +221,22 @@ export class EvaluationDetailComponent implements OnInit {
 
   getQuizzId(evaluation: Evaluation): string | number {
     return evaluation.quizz?.id || evaluation.quizzId || '';
+  }
+
+  isCorrectOption(question: Question, optionIndex: number): boolean {
+    // Check if this option is marked as correct
+    if (question.reponseCorrecte !== undefined && question.reponseCorrecte !== null) {
+      // If reponseCorrecte is a number (index)
+      if (typeof question.reponseCorrecte === 'number') {
+        return question.reponseCorrecte === optionIndex;
+      }
+      // If reponseCorrecte is a string (letter like 'A', 'B', etc.)
+      if (typeof question.reponseCorrecte === 'string') {
+        const correctLetter = question.reponseCorrecte.toUpperCase();
+        const optionLetter = String.fromCharCode(65 + optionIndex);
+        return correctLetter === optionLetter;
+      }
+    }
+    return false;
   }
 }
