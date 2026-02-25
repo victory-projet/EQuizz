@@ -6,7 +6,7 @@ const Administrateur = sequelize.define('Administrateur', {
     type: DataTypes.UUID,
     primaryKey: true,
     references: {
-      model: 'Utilisateurs',
+      model: 'utilisateurs',
       key: 'id'
     },
     onDelete: 'CASCADE',
@@ -19,7 +19,7 @@ const Administrateur = sequelize.define('Administrateur', {
     allowNull: false,
     field: 'ecole_id',
     references: {
-      model: 'Ecoles',
+      model: 'ecoles',
       key: 'id'
     },
     onDelete: 'RESTRICT',
