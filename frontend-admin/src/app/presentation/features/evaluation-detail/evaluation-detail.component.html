@@ -2,234 +2,219 @@
   <!-- Loading -->
   @if (isLoading()) {
     <div class="loading">
-      <mat-spinner diameter="40"></mat-spinner>
+      <div class="spinner"></div>
       <p>Chargement...</p>
     </div>
   }
 
   <!-- Content -->
   @if (!isLoading() && evaluation()) {
-    <!-- Header -->
-    <div class="page-header">
-      <div class="header-content">
-        <button mat-icon-button class="btn-back" (click)="goBack()">
-          <mat-icon>arrow_back</mat-icon>
+    <!-- Hero Card -->
+    <div class="hero-card">
+      <div class="hero-header">
+        <button class="btn-back" (click)="goBack()">
+          <span class="material-icons">arrow_back</span>
         </button>
-        <div class="title-section">
-          <h1 class="page-title">{{ evaluation()!.titre }}</h1>
-          <div class="evaluation-meta">
-            <span class="badge" [ngClass]="getStatusBadgeClass(evaluation()!.statut)">
+        
+        <div class="hero-content">
+          <div class="status-row">
+            <span class="status-pill" [ngClass]="getStatusBadgeClass(evaluation()!.statut)">
+              <span class="status-dot"></span>
               {{ getStatusLabel(evaluation()!.statut) }}
             </span>
-            <span class="meta-item">
-              <mat-icon>book</mat-icon>
-              {{ evaluation()!.cours?.nom || 'Cours non défini' }}
-            </span>
-            <span class="meta-item">
-              <mat-icon>calendar_today</mat-icon>
-              {{ formatDate(evaluation()!.dateDebut) }} - {{ formatDate(evaluation()!.dateFin) }}
-            </span>
+            <span class="mode-badge">BROUILLON</span>
+          </div>
+          
+          <h1 class="hero-title">{{ evaluation()!.titre }}</h1>
+          
+          <div class="hero-meta">
+            <div class="meta-item">
+              <span class="material-icons">book</span>
+              <span>{{ evaluation()!.cours?.nom || 'Bases de Données Avancées' }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="material-icons">calendar_today</span>
+              <span>{{ formatDate(evaluation()!.dateDebut) }} - {{ formatDate(evaluation()!.dateFin) }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="material-icons">quiz</span>
+              <span>{{ questions().length }} questions</span>
+            </div>
+          </div>
+          
+          <div class="classes-chips">
+            <div class="class-chip">
+              <span class="material-icons">people</span>
+              ING4 ISI EN
+            </div>
+            <div class="class-chip">
+              <span class="material-icons">people</span>
+              ING4 ISI FR
+            </div>
+            <div class="class-chip">
+              <span class="material-icons">people</span>
+              ING5 ISI FR
+            </div>
           </div>
         </div>
-      </div>
-      <div class="header-actions">
-        @if (evaluation()!.statut === 'BROUILLON') {
-          <button mat-raised-button color="primary" (click)="publishEvaluation()">
-            <mat-icon>send</mat-icon> Publier
+
+        <div class="hero-actions">
+          @if (evaluation()!.statut === 'BROUILLON') {
+            <button class="btn-action btn-publish" (click)="publishEvaluation()">
+              <span class="material-icons">send</span>
+              Publier
+            </button>
+          }
+          <button class="btn-action btn-edit">
+            <span class="material-icons">edit</span>
+            Modifier
           </button>
-        }
+          <button class="btn-action btn-more">
+            <span class="material-icons">more_vert</span>
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Messages -->
     @if (successMessage()) {
-      <div class="alert alert-success">{{ successMessage() }}</div>
+      <div class="alert alert-success">
+        <span class="material-icons">check_circle</span>
+        {{ successMessage() }}
+      </div>
     }
     @if (errorMessage()) {
-      <div class="alert alert-error">{{ errorMessage() }}</div>
+      <div class="alert alert-error">
+        <span class="material-icons">error</span>
+        {{ errorMessage() }}
+      </div>
     }
 
-    <!-- Description -->
+    <!-- Description Section -->
     @if (evaluation()!.description) {
-      <mat-card class="description-card">
-        <mat-card-header>
-          <mat-card-title>Description</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p>{{ evaluation()!.description }}</p>
-        </mat-card-content>
-      </mat-card>
+      <div class="description-section">
+        <div class="section-header-inline">
+          <span class="material-icons">description</span>
+          <h3>DESCRIPTION</h3>
+        </div>
+        <p>{{ evaluation()!.description }}</p>
+      </div>
     }
 
-    <!-- Tabs -->
-    <mat-tab-group class="evaluation-tabs" animationDuration="300ms">
-      <!-- Questions Tab -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>quiz</mat-icon>
-          Questions ({{ questions().length }})
-        </ng-template>
-        
-        <div class="tab-content">
-          <div class="section-header">
-            <h2>Gestion des Questions</h2>
-            @if (evaluation()!.statut === 'BROUILLON') {
-              <div class="section-actions">
-                <button mat-stroked-button (click)="openQuestionImport()">
-                  <mat-icon>upload_file</mat-icon> Importer Excel
-                </button>
-                <button mat-raised-button color="primary" (click)="openQuestionForm()">
-                  <mat-icon>add</mat-icon> Ajouter une question
-                </button>
-              </div>
-            }
-          </div>
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ questions().length }}</div>
+        <div class="stat-label">QUESTIONS</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">3</div>
+        <div class="stat-label">CLASSES</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">0</div>
+        <div class="stat-label">RÉPONSES REÇUES</div>
+      </div>
+    </div>
 
-          <!-- Questions List -->
-          @if (questions().length > 0) {
-            <div class="questions-list">
-              @for (question of questions(); track question.id; let i = $index) {
-                <mat-card class="question-card">
-                  <mat-card-header>
-                    <div class="question-header-content">
-                      <span class="question-number">{{ i + 1 }}</span>
-                      <span class="question-type">{{ getQuestionTypeLabel(getQuestionType(question)) }}</span>
-                    </div>
-                    @if (evaluation()!.statut === 'BROUILLON') {
-                      <div class="question-actions">
-                        <button mat-icon-button (click)="editQuestion(question)" matTooltip="Modifier">
-                          <mat-icon>edit</mat-icon>
-                        </button>
-                        <button mat-icon-button color="warn" (click)="deleteQuestion(question)" matTooltip="Supprimer">
-                          <mat-icon>delete</mat-icon>
-                        </button>
-                      </div>
-                    }
-                  </mat-card-header>
-                  
-                  <mat-card-content>
-                    <h4>{{ question.enonce }}</h4>
-                    
-                    @if (isMultipleChoice(question) && question.options) {
-                      <div class="question-options">
-                        @for (option of question.options; track option + '_' + $index; let j = $index) {
-                          <div class="option">
-                            <span class="option-letter">{{ getStringFromCharCode(65 + j) }}</span>
-                            <span class="option-text">{{ getOptionText(option) }}</span>
-                          </div>
+    <!-- Questions Section -->
+    <div class="questions-section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="material-icons">quiz</span>
+          <h2>Questions ({{ questions().length }})</h2>
+        </div>
+        @if (evaluation()!.statut === 'BROUILLON') {
+          <div class="section-actions">
+            <button class="btn-secondary" (click)="openQuestionImport()">
+              <span class="material-icons">upload_file</span>
+              Importer Excel
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- Questions List -->
+      @if (questions().length > 0) {
+        <div class="questions-list">
+          @for (question of questions(); track question.id; let i = $index) {
+            <div class="question-item">
+              <div class="question-number-badge">
+                Q{{ i + 1 }}
+              </div>
+              
+              <div class="question-type-badge" [ngClass]="'type-' + getQuestionType(question).toLowerCase().replace('_', '-')">
+                {{ getQuestionTypeLabel(getQuestionType(question)) }}
+              </div>
+              
+              <div class="question-content">
+                <h4>{{ question.enonce }}</h4>
+                
+                @if (isMultipleChoice(question) && question.options) {
+                  <div class="question-options">
+                    @for (option of question.options; track option + '_' + $index; let j = $index) {
+                      <div class="option" [class.correct]="isCorrectOption(question, j)">
+                        <span class="option-text">{{ getOptionText(option) }}</span>
+                        @if (isCorrectOption(question, j)) {
+                          <span class="correct-badge">
+                            <span class="material-icons">check_circle</span>
+                          </span>
                         }
                       </div>
                     }
-                  </mat-card-content>
-                </mat-card>
-              }
-            </div>
-          } @else {
-            <div class="empty-state">
-              <mat-icon class="empty-icon">help_outline</mat-icon>
-              <h3>Aucune question</h3>
-              <p>Commencez par ajouter votre première question</p>
-              @if (evaluation()!.statut === 'BROUILLON') {
-                <div class="empty-actions">
-                  <button mat-stroked-button (click)="openQuestionImport()">
-                    <mat-icon>upload_file</mat-icon> Importer Excel
-                  </button>
-                  <button mat-raised-button color="primary" (click)="openQuestionForm()">
-                    <mat-icon>add</mat-icon> Ajouter une question
-                  </button>
-                </div>
-              }
-            </div>
-          }
-        </div>
-      </mat-tab>
-
-      <!-- Sentiment Analysis Tab -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>psychology</mat-icon>
-          Analyse des Sentiments
-        </ng-template>
-        
-        <div class="tab-content">
-          @if (evaluation(); as eval) {
-            @if (eval.id) {
-              <app-sentiment-analysis 
-                [evaluationId]="eval.id.toString()"
-                [autoLoad]="true">
-              </app-sentiment-analysis>
-            }
-          }
-        </div>
-      </mat-tab>
-
-      <!-- Report Export Tab -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>assessment</mat-icon>
-          Rapports & Export
-        </ng-template>
-        
-        <div class="tab-content">
-          @if (evaluation(); as eval) {
-            @if (eval.id) {
-              <app-report-export 
-                [evaluationId]="eval.id.toString()">
-              </app-report-export>
-            }
-          }
-        </div>
-      </mat-tab>
-
-      <!-- Statistics Tab -->
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <mat-icon>analytics</mat-icon>
-          Statistiques
-        </ng-template>
-        
-        <div class="tab-content">
-          <mat-card>
-            <mat-card-header>
-              <mat-card-title>Statistiques de l'Évaluation</mat-card-title>
-              <mat-card-subtitle>Métriques et indicateurs de performance</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="stats-grid">
-                <div class="stat-item">
-                  <mat-icon>quiz</mat-icon>
-                  <div class="stat-content">
-                    <span class="stat-value">{{ questions().length }}</span>
-                    <span class="stat-label">Questions</span>
                   </div>
-                </div>
-                
-                <div class="stat-item">
-                  <mat-icon>schedule</mat-icon>
-                  <div class="stat-content">
-                    <span class="stat-value">{{ formatDate(evaluation()!.dateCreation) }}</span>
-                    <span class="stat-label">Date de création</span>
-                  </div>
-                </div>
-                
-                <div class="stat-item">
-                  <mat-icon>visibility</mat-icon>
-                  <div class="stat-content">
-                    <span class="stat-value">{{ getStatusLabel(evaluation()!.statut) }}</span>
-                    <span class="stat-label">Statut</span>
-                  </div>
-                </div>
+                }
               </div>
               
-              <div class="stats-note">
-                <mat-icon>info</mat-icon>
-                <p>Les statistiques détaillées seront disponibles après la publication de l'évaluation et la collecte des réponses des étudiants.</p>
+              <div class="question-points">
+                4 pts
               </div>
-            </mat-card-content>
-          </mat-card>
+              
+              @if (evaluation()!.statut === 'BROUILLON') {
+                <div class="question-actions">
+                  <button class="btn-icon" (click)="editQuestion(question)" title="Modifier">
+                    <span class="material-icons">edit</span>
+                  </button>
+                  <button class="btn-icon btn-danger" (click)="deleteQuestion(question)" title="Supprimer">
+                    <span class="material-icons">delete</span>
+                  </button>
+                  <button class="btn-icon" title="Plus d'options">
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+              }
+            </div>
+          }
         </div>
-      </mat-tab>
-    </mat-tab-group>
+        
+        @if (evaluation()!.statut === 'BROUILLON') {
+          <button class="btn-add-question" (click)="openQuestionForm()">
+            <span class="material-icons">add</span>
+            Ajouter une question
+          </button>
+        }
+      } @else {
+        <div class="empty-state">
+          <div class="empty-icon">
+            <span class="material-icons">help_outline</span>
+          </div>
+          <h3>Aucune question pour le moment</h3>
+          <p>Commencez par ajouter votre première question pour construire votre évaluation</p>
+          @if (evaluation()!.statut === 'BROUILLON') {
+            <div class="empty-actions">
+              <button class="btn-secondary" (click)="openQuestionImport()">
+                <span class="material-icons">upload_file</span>
+                Importer Excel
+              </button>
+              <button class="btn-primary" (click)="openQuestionForm()">
+                <span class="material-icons">add</span>
+                Ajouter une question
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
   }
 
   <!-- Question Form Modal -->

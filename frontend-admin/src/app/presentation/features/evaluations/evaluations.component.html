@@ -435,9 +435,6 @@
                     </button>
                   }
                   @if (evaluation.statut === 'PUBLIEE') {
-                    <button class="menu-item" (click)="viewSubmissions(evaluation); hideCardMenu()">
-                      <span class="material-icons">assignment_turned_in</span> Voir les soumissions
-                    </button>
                     <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
                       <span class="material-icons">content_copy</span> Dupliquer
                     </button>
@@ -447,9 +444,6 @@
                     </button>
                   }
                   @if (evaluation.statut === 'CLOTUREE') {
-                    <button class="menu-item" (click)="viewSubmissions(evaluation); hideCardMenu()">
-                      <span class="material-icons">assignment_turned_in</span> Voir les soumissions
-                    </button>
                     <button class="menu-item" (click)="exportResults(evaluation); hideCardMenu()">
                       <span class="material-icons">download</span> Exporter les résultats
                     </button>
@@ -494,12 +488,6 @@
                 <span class="material-icons">people</span>
                 <span>{{ getClassesCount(evaluation) }} classe(s)</span>
               </div>
-              @if (evaluation.statut === 'PUBLIEE' || evaluation.statut === 'CLOTUREE') {
-                <div class="stat-item">
-                  <span class="material-icons">assignment_turned_in</span>
-                  <span>{{ getSubmissionsCount(evaluation) }} soumissions</span>
-                </div>
-              }
             </div>
           </div>
 
@@ -533,9 +521,6 @@
               <button class="btn-outline" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
                 <span class="material-icons">visibility</span> Voir
               </button>
-              <button class="btn-secondary" (click)="viewSubmissions(evaluation); $event.stopPropagation()">
-                <span class="material-icons">assignment_turned_in</span> Soumissions
-              </button>
               <button class="btn-primary" (click)="closeEvaluation(evaluation); $event.stopPropagation()">
                 <span class="material-icons">lock</span> Fermer
               </button>
@@ -543,9 +528,6 @@
             @if (evaluation.statut === 'CLOTUREE') {
               <button class="btn-outline" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
                 <span class="material-icons">visibility</span> Voir
-              </button>
-              <button class="btn-secondary" (click)="viewSubmissions(evaluation); $event.stopPropagation()">
-                <span class="material-icons">assignment_turned_in</span> Soumissions
               </button>
               <button class="btn-primary" (click)="viewResults(evaluation); $event.stopPropagation()">
                 <span class="material-icons">bar_chart</span> Rapport

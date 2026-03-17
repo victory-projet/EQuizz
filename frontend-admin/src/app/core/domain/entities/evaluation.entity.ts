@@ -50,7 +50,9 @@ export interface Question {
   type: 'QCM' | 'ECHELLE' | 'OUI_NON' | 'TEXTE_LIBRE' | 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE';  // Support des deux formats
   typeQuestion?: 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE';  // Format backend
   options?: string[];
+  reponseCorrecte?: number | string;  // Index ou lettre de la réponse correcte
   ordre: number;
+  points?: number;  // Points attribués à la question
   quizzId: number | string;  // Peut être un nombre ou un UUID
   dateCreation: Date;
   dateModification: Date;

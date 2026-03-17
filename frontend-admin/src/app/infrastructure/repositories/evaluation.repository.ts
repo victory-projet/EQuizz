@@ -102,10 +102,6 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
     return this.api.upload<Question[]>(`/evaluations/quizz/${quizzId}/import`, formData);
   }
 
-  getSubmissions(evaluationId: string | number): Observable<SessionReponse[]> {
-    return this.api.get<SessionReponse[]>(`/evaluations/${evaluationId}/submissions`);
-  }
-
   duplicateEvaluation(id: string | number): Observable<Evaluation> {
     return this.api.post<any>(`/evaluations/${id}/duplicate`, {}).pipe(
       map((response: any) => this.mapEvaluationFromBackend(response.evaluation))

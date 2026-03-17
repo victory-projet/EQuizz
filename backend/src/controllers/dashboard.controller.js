@@ -165,7 +165,7 @@ class DashboardController {
       const rapportsEnAttente = await db.Evaluation.count({
         where: {
           statut: 'CLOTUREE',
-          createdAt: {
+          created_at: {
             [db.Sequelize.Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // 7 derniers jours
           }
         }
@@ -234,7 +234,7 @@ class DashboardController {
       // 1. Évaluations récemment créées
       const recentEvaluations = await db.Evaluation.findAll({
         limit: Math.ceil(parseInt(limit) / 3),
-        order: [['createdAt', 'DESC']],
+        order: [['created_at', 'DESC']],
         include: [
           { model: db.Cours, required: false },
           { 
@@ -302,9 +302,9 @@ class DashboardController {
       // 2. Utilisateurs récemment créés
       const recentUsers = await db.Utilisateur.findAll({
         limit: Math.ceil(parseInt(limit) / 3),
-        order: [['createdAt', 'DESC']],
+        order: [['created_at', 'DESC']],
         where: {
-          createdAt: {
+          created_at: {
             [db.Sequelize.Op.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 derniers jours
           }
         }
@@ -356,9 +356,9 @@ class DashboardController {
       // 3. Classes récemment créées
       const recentClasses = await db.Classe.findAll({
         limit: Math.ceil(parseInt(limit) / 3),
-        order: [['createdAt', 'DESC']],
+        order: [['created_at', 'DESC']],
         where: {
-          createdAt: {
+          created_at: {
             [db.Sequelize.Op.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 derniers jours
           }
         }

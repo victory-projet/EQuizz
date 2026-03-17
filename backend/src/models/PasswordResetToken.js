@@ -31,14 +31,23 @@ const PasswordResetToken = sequelize.define('PasswordResetToken', {
     type: DataTypes.STRING(45),
     allowNull: true,
     field: 'ip_address'
+  },
+  // Définir explicitement les champs de timestamp
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    field: 'created_at'
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    field: 'updated_at'
   }
 }, {
   tableName: 'password_reset_tokens',
   timestamps: true,
   underscored: true,
-  paranoid: false,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  paranoid: false
 });
 
 module.exports = PasswordResetToken;

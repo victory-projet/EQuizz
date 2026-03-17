@@ -37,6 +37,12 @@ const Ecole = sequelize.define('Ecole', {
     comment: 'Indique si l\'école est active dans le système'
   }
 
+}, {
+  tableName: 'ecoles',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  underscored: true
 });
 
 module.exports = Ecole;

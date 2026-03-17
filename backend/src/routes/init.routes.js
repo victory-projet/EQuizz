@@ -24,6 +24,8 @@ async function seedDatabase() {
       nom: 'Saint Jean Ingenieur',
       domaine: 'saintjeaningenieur.org'
     }, { transaction });
+    
+    console.log('✅ École créée avec ID:', ecole.id);
 
     // 2. Créer l'année académique
     const anneeAcademique = await db.AnneeAcademique.create({
@@ -58,18 +60,38 @@ async function seedDatabase() {
       { nom: 'ING3 GC FR', niveau: 'ING3', ecole_id: ecole.id, annee_academique_id: anneeAcademique.id }
     ], { transaction });
 
-    // 5. Créer les utilisateurs (Administrateurs)
-    const adminUser = await db.Utilisateur.create({
+    // 5. Créer les utilisateurs (Superadministrateur et Administrateur)
+    
+    // Créer un superadministrateur
+    const superadminUser = await db.Utilisateur.create({
       nom: 'admin',
       prenom: 'super',
-      email: 'super@universitesaintjean.org',
+      email: 'super.admin@universitesaintjean.org',
       motDePasseHash: 'Admin123!'
     }, { transaction });
 
-    await db.Administrateur.create({
-      id: adminUser.id,
-      type: 'SUPERADMIN'
+    const superadmin = await db.Superadministrateur.create({
+      id: superadminUser.id,
+      profil: null
     }, { transaction });
+
+    // Créer un administrateur d'école
+    const adminUser = await db.Utilisateur.create({
+      nom: 'directeur',
+      prenom: 'jean',
+      email: 'jean.directeur@saintjeaningenieur.org',
+      motDePasseHash: 'Admin123!'
+    }, { transaction });
+
+    console.log('Création admin avec adminUser.id:', adminUser.id, 'et ecole.id:', ecole.id);
+    
+    const admin = await db.Administrateur.create({
+      id: adminUser.id,
+      ecoleId: ecole.id,
+      ecole_id: ecole.id
+    }, { transaction });
+    
+    console.log('✅ Administrateur créé avec ecole_id:', admin.ecole_id);
 
     // 6. Créer les enseignants
     const enseignantUser1 = await db.Utilisateur.create({
@@ -192,7 +214,7 @@ async function seedDatabase() {
       classe_id: classes[0].id
     }, { transaction });
 
-    // 10. Créer une évaluation
+    // 10. Créer une évaluation (créée par le superadministrateur)
     const evaluation = await db.Evaluation.create({
       titre: 'Évaluation Mi-Parcours - Bases de Données',
       description: 'Évaluation de satisfaction du cours de Bases de Données Avancées',
@@ -201,7 +223,7 @@ async function seedDatabase() {
       datePublication: new Date('2025-11-01T08:00:00'),
       typeEvaluation: 'MI_PARCOURS',
       statut: 'PUBLIEE',
-      superadministrateur_id: adminUser.id,
+      superadministrateur_id: superadminUser.id,
       cours_id: cours1.id
     }, { transaction });
 
@@ -265,17 +287,36 @@ async function seedDatabase() {
         questions: 5
       },
       credentials: {
+        superadmin: {
+          email: superadminUser.email,
+          password: 'Admin123!',
+          id: superadminUser.id,
+          nom: superadminUser.nom,
+          prenom: superadminUser.prenom
+        },
         admin: {
-          email: 'super@universitesaintjean.org',
-          password: 'Admin123!'
+          email: adminUser.email,
+          password: 'Admin123!',
+          id: adminUser.id,
+          nom: adminUser.nom,
+          prenom: adminUser.prenom,
+          ecoleId: ecole.id
         },
         enseignant: {
-          email: 'marie.dupont@saintjeaningenieur.org',
-          password: 'Prof123!'
+          email: enseignantUser1.email,
+          password: 'Prof123!',
+          id: enseignantUser1.id,
+          nom: enseignantUser1.nom,
+          prenom: enseignantUser1.prenom
         },
         etudiant: {
-          email: 'gills.sims@saintjeaningenieur.org',
-          password: 'Etudiant123!'
+          email: etudiantUser1.email,
+          password: 'Etudiant123!',
+          id: etudiantUser1.id,
+          nom: etudiantUser1.nom,
+          prenom: etudiantUser1.prenom,
+          matricule: 'ING4-2024-001',
+          classeId: classes[0].id
         }
       }
     };

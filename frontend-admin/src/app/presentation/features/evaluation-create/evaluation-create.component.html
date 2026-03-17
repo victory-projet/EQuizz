@@ -29,18 +29,30 @@
   <!-- Progress Steps -->
   <div class="steps-container">
     <div class="step" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1">
-      <div class="step-number">1</div>
-      <div class="step-label">Informations de base</div>
+      <div class="step-number">
+        @if (currentStep() > 1) {
+          <span class="material-icons">check</span>
+        } @else {
+          1
+        }
+      </div>
+      <div class="step-label">Informations</div>
     </div>
     <div class="step-line" [class.completed]="currentStep() > 1"></div>
     <div class="step" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2">
-      <div class="step-number">2</div>
-      <div class="step-label">Ajout de questions</div>
+      <div class="step-number">
+        @if (currentStep() > 2) {
+          <span class="material-icons">check</span>
+        } @else {
+          2
+        }
+      </div>
+      <div class="step-label">Questions</div>
     </div>
     <div class="step-line" [class.completed]="currentStep() > 2"></div>
     <div class="step" [class.active]="currentStep() === 3">
       <div class="step-number">3</div>
-      <div class="step-label">Révision et publication</div>
+      <div class="step-label">Révision</div>
     </div>
   </div>
 
@@ -48,34 +60,62 @@
   @if (currentStep() === 1) {
     <div class="form-container">
       <div class="form-card">
-        <h2 class="form-title">Informations de base</h2>
+        <div class="form-header">
+          <div>
+            <h2 class="form-title">Informations de base</h2>
+            <p class="form-subtitle">Définissez les paramètres globaux de votre évaluation.</p>
+          </div>
+          <div class="step-badge">ÉTAPE 1 SUR 3</div>
+        </div>
         
         <div class="form-group">
-          <label class="form-label">Titre de l'évaluation *</label>
+          <label class="form-label">Titre de l'évaluation</label>
           <input 
             type="text" 
             class="form-input" 
-            placeholder="Ex: Évaluation Mi-parcours - Algorithmique"
+            placeholder="Ex: Examen Final de Mathématiques - Algèbre"
             [(ngModel)]="formData.titre"
             (input)="onFormChange()"
-            required>
-            [(ngModel)]="formData.titre"
+            required
           />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Description</label>
-          <textarea 
-            class="form-textarea" 
-            rows="4"
-            placeholder="Décrivez brièvement le contenu et les objectifs de cette évaluation..."
-            [(ngModel)]="formData.description"
-          ></textarea>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Date de début *</label>
+            <label class="form-label">Cours / Unité d'enseignement</label>
+            <select class="form-select" [(ngModel)]="formData.coursId" [disabled]="formData.classeIds.length === 0">
+              <option [ngValue]="null">Sélectionnez un cours</option>
+              @for (c of filteredCours(); track c.id) {
+                <option [ngValue]="c.id">{{ c.nom }}</option>
+              }
+            </select>
+            @if (formData.classeIds.length === 0) {
+              <p class="form-hint-inline">
+                <span class="material-icons">info</span>
+                Veuillez d'abord sélectionner au moins une classe
+              </p>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Classes concernées</label>
+            <div class="classes-chips">
+              @for (classe of classes(); track classe.id) {
+                <div 
+                  class="class-chip" 
+                  [class.selected]="isClasseSelected(classe.id)"
+                  (click)="toggleClasse(classe.id)"
+                >
+                  {{ classe.nom }}
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date et heure de début</label>
             <input 
               type="datetime-local" 
               class="form-input"
@@ -84,7 +124,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Date de fin *</label>
+            <label class="form-label">Date et heure de fin</label>
             <input 
               type="datetime-local" 
               class="form-input"
@@ -94,69 +134,22 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Classes * (sélection multiple)</label>
-          <p class="form-hint">Sélectionnez d'abord les classes pour filtrer les cours disponibles</p>
-          <div class="classes-grid">
-            @for (classe of classes(); track classe.id) {
-              <div 
-                class="class-card" 
-                [class.selected]="isClasseSelected(classe.id)"
-                (click)="toggleClasse(classe.id)"
-              >
-                <span class="material-icons check-icon">
-                  {{ isClasseSelected(classe.id) ? 'check_circle' : 'radio_button_unchecked' }}
-                </span>
-                <span class="class-name">{{ classe.nom }}</span>
-              </div>
-            }
-          </div>
-          @if (formData.classeIds.length > 0) {
-            <div class="selected-info">
-              {{ formData.classeIds.length }} classe(s) sélectionnée(s)
-            </div>
-          }
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Cours / Unité d'Enseignement *</label>
-            @if (formData.classeIds.length === 0) {
-              <p class="form-warning">
-                <span class="material-icons">info</span>
-                Veuillez d'abord sélectionner au moins une classe
-              </p>
-            }
-            <select class="form-select" [(ngModel)]="formData.coursId" [disabled]="formData.classeIds.length === 0">
-              <option [ngValue]="null">Sélectionnez un cours</option>
-              @for (c of filteredCours(); track c.id) {
-                <option [ngValue]="c.id">{{ c.nom }} ({{ c.code }})</option>
-              }
-            </select>
-            @if (formData.classeIds.length > 0 && filteredCours().length === 0) {
-              <p class="form-info">
-                <span class="material-icons">warning</span>
-                Aucun cours n'est associé aux classes sélectionnées
-              </p>
-            }
-          </div>
-
-        </div>
-
-        <div class="info-box">
-          <span class="material-icons">info</span>
-          <div>
-            <strong>Note :</strong> L'évaluation sera créée en mode brouillon. 
-            Vous pourrez ajouter des questions avant de la publier.
-          </div>
+          <label class="form-label">Description / Instructions</label>
+          <textarea 
+            class="form-textarea" 
+            rows="4"
+            placeholder="Donnez des instructions claires aux étudiants..."
+            [(ngModel)]="formData.description"
+          ></textarea>
         </div>
       </div>
 
       <!-- Navigation Buttons -->
       <div class="form-actions">
-        <button class="btn-secondary" (click)="cancel()">
+        <button class="btn-cancel" (click)="cancel()">
           Annuler
         </button>
-        <button class="btn-primary" (click)="nextStep()" [disabled]="isLoading()">
+        <button class="btn-next" (click)="nextStep()" [disabled]="isLoading()">
           @if (isLoading()) {
             <span>Création...</span>
           } @else {
@@ -167,7 +160,655 @@
       </div>
     </div>
   }
+
+  <!-- Step 2: Add Questions -->
+  @if (currentStep() === 2) {
+    <div class="form-container">
+      
+      <!-- Écran A: Choix du mode -->
+      @if (!questionMode()) {
+        <div class="form-card">
+          <div class="form-header">
+            <div>
+              <h2 class="form-title">Ajout de questions</h2>
+              <p class="form-subtitle">Choisissez comment vous souhaitez ajouter vos questions</p>
+            </div>
+            <div class="step-badge">ÉTAPE 2 SUR 3</div>
+          </div>
+
+          <div class="mode-selection">
+            <div 
+              class="mode-card" 
+              [class.selected]="selectedMode() === 'manual'"
+              (click)="selectMode('manual')"
+            >
+              <div class="mode-icon mode-icon-manual">
+                <span class="material-icons">edit_note</span>
+              </div>
+              <h3>Créer manuellement</h3>
+              <p>Ajoutez vos questions une par une avec un éditeur intuitif</p>
+              <div class="mode-features">
+                <span class="feature-tag">Choix multiple</span>
+                <span class="feature-tag">Réponse ouverte</span>
+              </div>
+            </div>
+
+            <div 
+              class="mode-card" 
+              [class.selected]="selectedMode() === 'import'"
+              (click)="selectMode('import')"
+            >
+              <div class="mode-icon mode-icon-import">
+                <span class="material-icons">upload_file</span>
+              </div>
+              <h3>Importer depuis un fichier</h3>
+              <p>Importez vos questions depuis un fichier CSV ou JSON</p>
+              <div class="mode-features">
+                <span class="feature-tag tag-csv">CSV</span>
+                <span class="feature-tag tag-json">JSON</span>
+                <span class="feature-tag tag-excel">Excel</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-cancel" (click)="previousStep()">
+            <span class="material-icons">arrow_back</span>
+            Retour
+          </button>
+          <button class="btn-next" (click)="confirmMode()" [disabled]="!selectedMode()">
+            Continuer
+            <span class="material-icons">arrow_forward</span>
+          </button>
+        </div>
+      }
+
+      <!-- Écran B: Import de fichier -->
+      @if (questionMode() === 'import') {
+        <div class="form-card">
+          <div class="form-header">
+            <div>
+              <h2 class="form-title">Importer des questions</h2>
+              <p class="form-subtitle">Téléversez un fichier contenant vos questions</p>
+            </div>
+            <div class="step-badge">ÉTAPE 2 SUR 3</div>
+          </div>
+
+          <!-- Onglets de format -->
+          <div class="format-tabs">
+            <button 
+              class="format-tab" 
+              [class.active]="importFormat() === 'csv'"
+              (click)="setImportFormat('csv')"
+            >
+              <span class="material-icons">table_chart</span>
+              CSV
+            </button>
+            <button 
+              class="format-tab" 
+              [class.active]="importFormat() === 'json'"
+              (click)="setImportFormat('json')"
+            >
+              <span class="material-icons">code</span>
+              JSON
+            </button>
+            <button 
+              class="format-tab" 
+              [class.active]="importFormat() === 'excel'"
+              (click)="setImportFormat('excel')"
+            >
+              <span class="material-icons">description</span>
+              Excel
+            </button>
+          </div>
+
+          <!-- Zone de glisser-déposer -->
+          <div 
+            class="dropzone"
+            [class.dragover]="isDragging()"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+            (click)="fileInput.click()"
+          >
+            <input 
+              #fileInput 
+              type="file" 
+              hidden 
+              [accept]="getAcceptedFileTypes()"
+              (change)="onFileSelected($event)"
+            />
+            
+            @if (!uploadedFile()) {
+              <div class="dropzone-content">
+                <span class="material-icons dropzone-icon">cloud_upload</span>
+                <h3>Glissez-déposez votre fichier ici</h3>
+                <p>ou cliquez pour parcourir</p>
+                <div class="dropzone-formats">
+                  Format accepté: {{ importFormat().toUpperCase() }}
+                </div>
+              </div>
+            } @else {
+              <div class="file-preview">
+                <span class="material-icons file-icon">insert_drive_file</span>
+                <div class="file-info">
+                  <h4>{{ uploadedFile()?.name }}</h4>
+                  <p>{{ formatFileSize(uploadedFile()?.size) }}</p>
+                </div>
+                <button class="btn-remove" (click)="removeFile($event)">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+            }
+          </div>
+
+          <!-- Aperçu des questions détectées -->
+          @if (detectedQuestions() > 0) {
+            <div class="import-preview">
+              <span class="material-icons">check_circle</span>
+              <strong>{{ detectedQuestions() }} question(s)</strong> détectée(s) dans le fichier
+            </div>
+          }
+
+          <!-- Exemple de format -->
+          <div class="format-example">
+            <button class="btn-example" (click)="toggleFormatExample()">
+              <span class="material-icons">help_outline</span>
+              Voir un exemple de format {{ importFormat().toUpperCase() }}
+            </button>
+            
+            @if (showFormatExample()) {
+              <div class="example-content">
+                <pre>{{ getFormatExample() }}</pre>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-cancel" (click)="backToModeSelection()">
+            <span class="material-icons">arrow_back</span>
+            Retour
+          </button>
+          <button class="btn-next" (click)="processImport()" [disabled]="!uploadedFile() || isProcessing()">
+            @if (isProcessing()) {
+              <span>Traitement...</span>
+            } @else {
+              <span>Importer</span>
+              <span class="material-icons">check</span>
+            }
+          </button>
+        </div>
+      }
+
+      <!-- Écran C: Création manuelle -->
+      @if (questionMode() === 'manual') {
+        <div class="form-card">
+          <div class="form-header">
+            <div>
+              <h2 class="form-title">Gestion des questions</h2>
+              <p class="form-subtitle">{{ questions().length }} question(s) ajoutée(s)</p>
+            </div>
+            <div class="step-badge">ÉTAPE 2 SUR 3</div>
+          </div>
+
+          <!-- Onglets de filtrage -->
+          <div class="filter-tabs">
+            <button 
+              class="filter-tab" 
+              [class.active]="questionFilter() === 'all'"
+              (click)="setQuestionFilter('all')"
+            >
+              Toutes ({{ questions().length }})
+            </button>
+            <button 
+              class="filter-tab" 
+              [class.active]="questionFilter() === 'CHOIX_MULTIPLE'"
+              (click)="setQuestionFilter('CHOIX_MULTIPLE')"
+            >
+              Choix multiple ({{ countByType('CHOIX_MULTIPLE') }})
+            </button>
+            <button 
+              class="filter-tab" 
+              [class.active]="questionFilter() === 'REPONSE_OUVERTE'"
+              (click)="setQuestionFilter('REPONSE_OUVERTE')"
+            >
+              Réponse ouverte ({{ countByType('REPONSE_OUVERTE') }})
+            </button>
+          </div>
+
+          <!-- Liste des questions -->
+          <div class="questions-list">
+            @if (filteredQuestions().length === 0) {
+              <div class="empty-state">
+                <span class="material-icons">quiz</span>
+                <h3>Aucune question pour le moment</h3>
+                <p>Commencez par ajouter votre première question</p>
+              </div>
+            } @else {
+              @for (question of filteredQuestions(); track question.id) {
+                <div class="question-card" [class.expanded]="expandedQuestion() === question.id">
+                  <div class="question-header" (click)="toggleQuestion(question.id)">
+                    <div class="question-info">
+                      <span class="question-type-badge" [ngClass]="'badge-' + question.typeQuestion.toLowerCase().replace('_', '-')">
+                        {{ getTypeLabel(question.typeQuestion) }}
+                      </span>
+                      <span class="question-title">{{ question.enonce }}</span>
+                    </div>
+                    <div class="question-actions">
+                      <button class="btn-icon" (click)="editQuestion(question, $event)" title="Éditer">
+                        <span class="material-icons">edit</span>
+                      </button>
+                      <button class="btn-icon" (click)="duplicateQuestion(question, $event)" title="Dupliquer">
+                        <span class="material-icons">content_copy</span>
+                      </button>
+                      <button class="btn-icon btn-danger" (click)="deleteQuestion(question.id, $event)" title="Supprimer">
+                        <span class="material-icons">delete</span>
+                      </button>
+                      <span class="material-icons expand-icon">
+                        {{ expandedQuestion() === question.id ? 'expand_less' : 'expand_more' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  @if (expandedQuestion() === question.id) {
+                    <div class="question-details">
+                      @if (question.typeQuestion === 'CHOIX_MULTIPLE' && question.options) {
+                        <div class="options-list">
+                          @for (option of question.options; track $index) {
+                            <div class="option-item" [class.correct]="$index === question.reponseCorrecteIndex">
+                              <span class="material-icons">
+                                {{ $index === question.reponseCorrecteIndex ? 'check_circle' : 'radio_button_unchecked' }}
+                              </span>
+                              <span>{{ option }}</span>
+                            </div>
+                          }
+                        </div>
+                      }
+                      @if (question.typeQuestion === 'REPONSE_OUVERTE') {
+                        <div class="open-response-info">
+                          <span class="material-icons">edit_note</span>
+                          Les étudiants pourront saisir une réponse libre
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            }
+          </div>
+
+          <!-- Bouton d'ajout flottant -->
+          <button class="btn-add-question" (click)="openAddQuestionModal()">
+            <span class="material-icons">add</span>
+            Ajouter une question
+          </button>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-cancel" (click)="backToModeSelection()">
+            <span class="material-icons">arrow_back</span>
+            Retour
+          </button>
+          <button class="btn-next" (click)="nextStep()" [disabled]="questions().length === 0">
+            Continuer
+            <span class="material-icons">arrow_forward</span>
+          </button>
+        </div>
+      }
+
+    </div>
+  }
+
+  <!-- Step 3: Review & Publish -->
+  @if (currentStep() === 3) {
+    <div class="form-container">
+      <div class="review-header">
+        <button class="btn-back-step" (click)="previousStep()">
+          <span class="material-icons">arrow_back</span>
+          Retour à l'étape 2
+        </button>
+      </div>
+
+      <!-- Info Banner -->
+      <div class="info-banner">
+        <span class="material-icons">info</span>
+        <p>Vérifiez toutes les informations avant de publier. Une fois publiée, l'évaluation sera immédiatement visible par les classes concernées.</p>
+      </div>
+
+      <div class="review-layout">
+        <!-- Left Column -->
+        <div class="review-main">
+          <!-- Informations de base -->
+          <div class="review-section">
+            <div class="section-header-review">
+              <h3>INFORMATIONS DE BASE</h3>
+              <button class="btn-edit-section" (click)="goToStep(1)">
+                <span class="material-icons">edit</span>
+                Modifier
+              </button>
+            </div>
+
+            <div class="info-grid">
+              <div class="info-item">
+                <label>TITRE</label>
+                <p>{{ formData.titre }}</p>
+              </div>
+              <div class="info-item">
+                <label>DESCRIPTION</label>
+                <p>{{ formData.description || 'Aucune description' }}</p>
+              </div>
+              <div class="info-item">
+                <label>COURS / UE</label>
+                <p>Bases de Données Avancées</p>
+              </div>
+              <div class="info-item">
+                <label>CLASSES</label>
+                <div class="classes-pills">
+                  <span class="class-pill">ING4 ISI EN</span>
+                  <span class="class-pill">ING4 ISI FR</span>
+                  <span class="class-pill">ING5 ISI FR</span>
+                </div>
+              </div>
+              <div class="info-item">
+                <label>DATE DE DÉBUT</label>
+                <p>{{ formData.dateDebut }}</p>
+              </div>
+              <div class="info-item">
+                <label>DATE DE FIN</label>
+                <p>{{ formData.dateFin }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Résumé des questions -->
+          <div class="review-section">
+            <div class="section-header-review">
+              <h3>RÉSUMÉ DES QUESTIONS</h3>
+              <button class="btn-edit-section" (click)="goToStep(2)">
+                <span class="material-icons">edit</span>
+                Modifier
+              </button>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-mini-grid">
+              <div class="stat-mini-card">
+                <div class="stat-mini-value">{{ questions().length }}</div>
+                <div class="stat-mini-label">QUESTIONS</div>
+              </div>
+              <div class="stat-mini-card">
+                <div class="stat-mini-value">~30</div>
+                <div class="stat-mini-label">MIN ESTIMÉES</div>
+              </div>
+            </div>
+
+            <!-- Répartition par type -->
+            <div class="type-distribution">
+              <h4>RÉPARTITION PAR TYPE</h4>
+              <div class="distribution-bars">
+                <div class="distribution-item">
+                  <div class="distribution-label">
+                    <span>Choix multiple</span>
+                    <span class="distribution-count">3</span>
+                  </div>
+                  <div class="distribution-bar">
+                    <div class="distribution-fill distribution-fill-qcm" style="width: 60%"></div>
+                  </div>
+                </div>
+                <div class="distribution-item">
+                  <div class="distribution-label">
+                    <span>Réponse ouverte</span>
+                    <span class="distribution-count">3</span>
+                  </div>
+                  <div class="distribution-bar">
+                    <div class="distribution-fill distribution-fill-open" style="width: 40%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Liste des questions -->
+          <div class="review-section">
+            <div class="section-header-review">
+              <h3>LISTE DES QUESTIONS</h3>
+              <button class="btn-edit-section" (click)="goToStep(2)">
+                <span class="material-icons">edit</span>
+                Modifier
+              </button>
+            </div>
+
+            <div class="questions-review-list">
+              @for (question of questions(); track question.id; let i = $index) {
+                <div class="question-review-item">
+                  <div class="question-review-number">Q{{ i + 1 }}</div>
+                  <div class="question-review-type type-qcm">QCM</div>
+                  <div class="question-review-text">{{ question.enonce }}</div>
+                  <span class="material-icons question-review-check">check_circle</span>
+                </div>
+              }
+            </div>
+
+            <div class="warning-box">
+              <span class="material-icons">warning</span>
+              <div>
+                <strong>Grille de correction</strong>
+                <p>Q5 est une question ouverte sans barème (question ouverte). Vous pourrez l'ajouter après publication.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="review-sidebar">
+          <!-- Validation -->
+          <div class="validation-card">
+            <h3>VALIDATION</h3>
+            <div class="validation-items">
+              <div class="validation-item valid">
+                <span class="material-icons">check_circle</span>
+                <div>
+                  <strong>Titre renseigné</strong>
+                  <p>{{ formData.titre }}</p>
+                </div>
+              </div>
+              <div class="validation-item valid">
+                <span class="material-icons">check_circle</span>
+                <div>
+                  <strong>Dates définies</strong>
+                  <p>01/11 → 31/12/2025</p>
+                </div>
+              </div>
+              <div class="validation-item valid">
+                <span class="material-icons">check_circle</span>
+                <div>
+                  <strong>Classes assignées</strong>
+                  <p>3 classe(s) sélectionnée(s)</p>
+                </div>
+              </div>
+              <div class="validation-item valid">
+                <span class="material-icons">check_circle</span>
+                <div>
+                  <strong>Questions ajoutées</strong>
+                  <p>{{ questions().length }} questions</p>
+                </div>
+              </div>
+              <div class="validation-item warning">
+                <span class="material-icons">warning</span>
+                <div>
+                  <strong>Grille de correction</strong>
+                  <p>Q5 sans barème (question ouverte)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mode de publication -->
+          <div class="publish-mode-card">
+            <h3>MODE DE PUBLICATION</h3>
+            <div class="publish-options">
+              <label class="publish-option selected">
+                <input type="radio" name="publishMode" value="now" checked />
+                <div class="publish-option-content">
+                  <div class="publish-option-icon">
+                    <span class="material-icons">send</span>
+                  </div>
+                  <div>
+                    <strong>Publier maintenant</strong>
+                    <p>L'évaluation sera immédiatement visible par les étudiants.</p>
+                  </div>
+                </div>
+              </label>
+
+              <label class="publish-option">
+                <input type="radio" name="publishMode" value="schedule" />
+                <div class="publish-option-content">
+                  <div class="publish-option-icon">
+                    <span class="material-icons">schedule</span>
+                  </div>
+                  <div>
+                    <strong>Planifier la publication</strong>
+                    <p>Choisissez une date et heure de mise en ligne automatique.</p>
+                  </div>
+                </div>
+              </label>
+
+              <label class="publish-option">
+                <input type="radio" name="publishMode" value="draft" />
+                <div class="publish-option-content">
+                  <div class="publish-option-icon">
+                    <span class="material-icons">save</span>
+                  </div>
+                  <div>
+                    <strong>Enregistrer en brouillon</strong>
+                    <p>Sauvegardez sans publier. Vous pourrez le faire plus tard.</p>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions-review">
+        <button class="btn-cancel" (click)="previousStep()">
+          <span class="material-icons">arrow_back</span>
+          Retour
+        </button>
+        <button class="btn-draft">
+          <span class="material-icons">save</span>
+          Enregistrer brouillon
+        </button>
+        <button class="btn-publish">
+          <span class="material-icons">send</span>
+          Publier l'évaluation
+        </button>
+      </div>
+    </div>
+  }
 </div>
+
+<!-- Modal d'ajout de question -->
+@if (showAddQuestionModal()) {
+  <div class="modal-overlay" (click)="closeAddQuestionModal()">
+    <div class="modal-content question-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingQuestion() ? 'Modifier' : 'Ajouter' }} une question</h2>
+        <button class="btn-close" (click)="closeAddQuestionModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Type de question -->
+        <div class="form-group">
+          <label class="form-label">Type de question</label>
+          <select class="form-select" [(ngModel)]="newQuestion.typeQuestion" (change)="onQuestionTypeChange()">
+            <option value="CHOIX_MULTIPLE">Choix multiple</option>
+            <option value="REPONSE_OUVERTE">Réponse ouverte</option>
+          </select>
+        </div>
+
+        <!-- Énoncé -->
+        <div class="form-group">
+          <label class="form-label">Énoncé de la question</label>
+          <textarea 
+            class="form-textarea" 
+            rows="3"
+            placeholder="Saisissez votre question..."
+            [(ngModel)]="newQuestion.enonce"
+          ></textarea>
+        </div>
+
+        <!-- Options pour CHOIX_MULTIPLE -->
+        @if (newQuestion.typeQuestion === 'CHOIX_MULTIPLE') {
+          <div class="form-group">
+            <label class="form-label">Options de réponse</label>
+            <p class="form-hint">Sélectionnez la réponse correcte avec le bouton radio</p>
+            <div class="options-editor">
+              @for (option of newQuestion.options; track $index; let i = $index) {
+                <div class="option-row">
+                  <input 
+                    type="radio" 
+                    name="correct-option"
+                    [checked]="newQuestion.reponseCorrecteIndex === i"
+                    (change)="setCorrectOption(i)"
+                  />
+                  <input 
+                    type="text" 
+                    class="form-input" 
+                    placeholder="Option {{ i + 1 }}"
+                    [(ngModel)]="newQuestion.options[i]"
+                  />
+                  @if (newQuestion.options.length > 2) {
+                    <button class="btn-icon btn-danger" (click)="removeOption(i)">
+                      <span class="material-icons">close</span>
+                    </button>
+                  }
+                </div>
+              }
+              <button class="btn-add-option" (click)="addOption()">
+                <span class="material-icons">add</span>
+                Ajouter une option
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Info pour REPONSE_OUVERTE -->
+        @if (newQuestion.typeQuestion === 'REPONSE_OUVERTE') {
+          <div class="info-box">
+            <span class="material-icons">info</span>
+            <div>
+              Les étudiants pourront saisir une réponse libre pour cette question.
+            </div>
+          </div>
+        }
+
+        <!-- Ordre -->
+        <div class="form-group">
+          <label class="form-label">Ordre d'affichage</label>
+          <input 
+            type="number" 
+            class="form-input" 
+            min="1"
+            [(ngModel)]="newQuestion.ordre"
+          />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeAddQuestionModal()">
+          Annuler
+        </button>
+        <button class="btn-next" (click)="saveQuestion()" [disabled]="!isQuestionValid()">
+          {{ editingQuestion() ? 'Modifier' : 'Ajouter' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- Method Selection Modal -->
 @if (showMethodModal()) {

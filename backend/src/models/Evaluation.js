@@ -58,7 +58,7 @@ const Evaluation = sequelize.define('Evaluation', {
     type: DataTypes.UUID,
     allowNull: true,
     references: {
-      model: 'Superadministrateur',
+      model: 'superadministrateurs',
       key: 'id'
     }
   },
@@ -67,7 +67,7 @@ const Evaluation = sequelize.define('Evaluation', {
     type: DataTypes.UUID,
     allowNull: true,
     references: {
-      model: 'Administrateur',
+      model: 'administrateurs',
       key: 'id'
     }
   },
@@ -76,12 +76,13 @@ const Evaluation = sequelize.define('Evaluation', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'Cours',
+      model: 'cours',
       key: 'id'
     }
   }
 
 }, {
+  tableName: 'evaluations',
   freezeTableName: true,
   timestamps: true,
   underscored: true,

@@ -58,7 +58,14 @@ const Utilisateur = sequelize.define('Utilisateur', {
     comment: 'Date du dernier import Excel'
   }
 }, {
-// Ajout des Hooks
+  tableName: 'utilisateurs',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  underscored: true,
+  paranoid: true,
+  deletedAt: 'deleted_at',
+  // Ajout des Hooks
   hooks: {
     beforeSave: async (utilisateur) => {
       if (utilisateur.changed('motDePasseHash') && utilisateur.motDePasseHash) {

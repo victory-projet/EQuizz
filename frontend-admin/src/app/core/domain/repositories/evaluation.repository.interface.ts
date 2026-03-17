@@ -18,9 +18,6 @@ export abstract class EvaluationRepositoryInterface {
   abstract deleteQuestion(questionId: string | number): Observable<void>;
   abstract importQuestions(quizzId: string | number, file: File): Observable<Question[]>;
 
-  // Soumissions
-  abstract getSubmissions(evaluationId: string | number): Observable<SessionReponse[]>;
-
   // Duplication
   abstract duplicateEvaluation(id: string | number): Observable<Evaluation>;
 }

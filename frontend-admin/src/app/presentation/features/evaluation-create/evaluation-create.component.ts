@@ -47,6 +47,38 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   errorMessage = signal('');
   successMessage = signal('');
 
+  // Step 3: Review & Publish
+  publishMode = signal<'now' | 'schedule' | 'draft'>('now');
+  scheduledDate = signal('');
+  showSuccessModal = signal(false);
+
+  // Step 2: Questions
+  questionMode = signal<'manual' | 'import' | null>(null);
+  selectedMode = signal<'manual' | 'import' | null>(null);
+  
+  // Import
+  importFormat = signal<'csv' | 'json' | 'excel'>('excel');
+  uploadedFile = signal<File | null>(null);
+  isDragging = signal(false);
+  detectedQuestions = signal(0);
+  showFormatExample = signal(false);
+  isProcessing = signal(false);
+  
+  // Manual creation
+  questions = signal<any[]>([]);
+  questionFilter = signal<'all' | 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE'>('all');
+  expandedQuestion = signal<number | null>(null);
+  showAddQuestionModal = signal(false);
+  editingQuestion = signal<any | null>(null);
+  
+  newQuestion: any = {
+    typeQuestion: 'CHOIX_MULTIPLE',
+    enonce: '',
+    ordre: 1,
+    options: ['', ''],
+    reponseCorrecteIndex: 0
+  };
+
   private autoSaveInterval: any;
 
   constructor(
@@ -59,6 +91,73 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
     this.loadCours();
     this.loadClasses();
     this.initializeAutoSave();
+    
+    // Données de test pour visualiser l'étape 3 (à supprimer en production)
+    this.addTestData();
+  }
+
+  addTestData(): void {
+    // Remplir le formulaire avec des données de test
+    this.formData.titre = 'Examen Final de Mathématiques - Algèbre';
+    this.formData.description = 'Évaluation portant sur les chapitres 1 à 5 du programme d\'algèbre.';
+    this.formData.dateDebut = new Date().toISOString().slice(0, 16);
+    this.formData.dateFin = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
+    
+    // Ajouter des questions de test
+    this.questions.set([
+      {
+        id: 1,
+        typeQuestion: 'CHOIX_MULTIPLE',
+        enonce: 'Quelle est la solution de l\'équation 2x + 5 = 13 ?',
+        ordre: 1,
+        points: 2,
+        options: ['x = 3', 'x = 4', 'x = 5', 'x = 6'],
+        reponseCorrecteIndex: 1
+      },
+      {
+        id: 2,
+        typeQuestion: 'CHOIX_MULTIPLE',
+        enonce: 'Quel est le résultat de (a + b)² ?',
+        ordre: 2,
+        points: 3,
+        options: ['a² + b²', 'a² + 2ab + b²', 'a² - b²', '2a + 2b'],
+        reponseCorrecteIndex: 1
+      },
+      {
+        id: 3,
+        typeQuestion: 'REPONSE_OUVERTE',
+        enonce: 'Démontrez le théorème de Pythagore en utilisant une figure géométrique.',
+        ordre: 3,
+        points: 5,
+        options: []
+      },
+      {
+        id: 4,
+        typeQuestion: 'CHOIX_MULTIPLE',
+        enonce: 'Quelle est la forme factorisée de x² - 9 ?',
+        ordre: 4,
+        points: 2,
+        options: ['(x - 3)(x - 3)', '(x + 3)(x + 3)', '(x - 3)(x + 3)', 'x(x - 9)'],
+        reponseCorrecteIndex: 2
+      },
+      {
+        id: 5,
+        typeQuestion: 'REPONSE_OUVERTE',
+        enonce: 'Résolvez le système d\'équations : 2x + y = 7 et x - y = 2',
+        ordre: 5,
+        points: 4,
+        options: []
+      },
+      {
+        id: 6,
+        typeQuestion: 'CHOIX_MULTIPLE',
+        enonce: 'Quelle est la valeur de √64 ?',
+        ordre: 6,
+        points: 1,
+        options: ['6', '7', '8', '9'],
+        reponseCorrecteIndex: 2
+      }
+    ]);
   }
 
   ngOnDestroy(): void {
@@ -256,12 +355,17 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
         return;
       }
       
-      // Si on a déjà un brouillon, le mettre à jour, sinon le créer
-      if (this.draftEvaluationId()) {
-        this.updateDraftAndProceed();
-      } else {
-        this.createDraftEvaluation();
+      // Passer directement à l'étape 2 (choix du mode)
+      this.currentStep.set(2);
+      this.questionMode.set(null);
+      this.selectedMode.set(null);
+    } else if (this.currentStep() === 2) {
+      // Passer à l'étape 3 (révision)
+      if (this.questions().length === 0) {
+        this.errorMessage.set('Veuillez ajouter au moins une question');
+        return;
       }
+      this.currentStep.set(3);
     }
   }
 
@@ -337,7 +441,13 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
 
   previousStep(): void {
     if (this.currentStep() > 1) {
-      this.currentStep.set(this.currentStep() - 1);
+      if (this.currentStep() === 2 && this.questionMode()) {
+        // Si on est dans un mode de question, revenir au choix du mode
+        this.backToModeSelection();
+      } else {
+        // Sinon, revenir à l'étape précédente
+        this.currentStep.set(this.currentStep() - 1);
+      }
     }
   }
 
@@ -403,5 +513,383 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
     return this.formData.classeIds.some(id => 
       String(id) === String(classeId)
     );
+  }
+
+  // ============================================
+  // STEP 2: QUESTIONS METHODS
+  // ============================================
+
+  // Mode Selection
+  selectMode(mode: 'manual' | 'import'): void {
+    this.selectedMode.set(mode);
+  }
+
+  confirmMode(): void {
+    this.questionMode.set(this.selectedMode());
+    this.currentStep.set(2);
+  }
+
+  backToModeSelection(): void {
+    this.questionMode.set(null);
+    this.selectedMode.set(null);
+    this.uploadedFile.set(null);
+    this.detectedQuestions.set(0);
+  }
+
+  // Import Methods
+  setImportFormat(format: 'csv' | 'json' | 'excel'): void {
+    this.importFormat.set(format);
+    this.uploadedFile.set(null);
+    this.detectedQuestions.set(0);
+  }
+
+  getAcceptedFileTypes(): string {
+    const format = this.importFormat();
+    if (format === 'csv') return '.csv';
+    if (format === 'json') return '.json';
+    if (format === 'excel') return '.xlsx,.xls';
+    return '';
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(true);
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.handleFile(files[0]);
+    }
+  }
+
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.handleFile(file);
+    }
+  }
+
+  handleFile(file: File): void {
+    const format = this.importFormat();
+    const validExtensions: { [key: string]: string[] } = {
+      csv: ['.csv'],
+      json: ['.json'],
+      excel: ['.xlsx', '.xls']
+    };
+
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (!validExtensions[format].includes(fileExtension)) {
+      this.errorMessage.set(`Format de fichier invalide. Attendu: ${format.toUpperCase()}`);
+      return;
+    }
+
+    this.uploadedFile.set(file);
+    this.errorMessage.set('');
+    
+    // Simuler la détection de questions (à remplacer par une vraie logique)
+    setTimeout(() => {
+      this.detectedQuestions.set(Math.floor(Math.random() * 20) + 5);
+    }, 500);
+  }
+
+  removeFile(event: Event): void {
+    event.stopPropagation();
+    this.uploadedFile.set(null);
+    this.detectedQuestions.set(0);
+  }
+
+  formatFileSize(bytes: number | undefined): string {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  toggleFormatExample(): void {
+    this.showFormatExample.set(!this.showFormatExample());
+  }
+
+  getFormatExample(): string {
+    const format = this.importFormat();
+    if (format === 'excel') {
+      return `Colonnes Excel requises:
+Colonne A: Enonce (texte de la question)
+Colonne B: Type (CHOIX_MULTIPLE ou REPONSE_OUVERTE)
+Colonne C: Options (séparées par ; pour CHOIX_MULTIPLE)
+
+Exemple:
+Enonce                                    | Type              | Options
+Quelle est la capitale de la France?     | CHOIX_MULTIPLE    | Paris;Lyon;Marseille;Bordeaux
+Expliquez le théorème de Pythagore       | REPONSE_OUVERTE   |`;
+    } else if (format === 'csv') {
+      return `enonce,typeQuestion,options
+"Quelle est la capitale de la France?",CHOIX_MULTIPLE,"Paris;Lyon;Marseille;Bordeaux"
+"Expliquez le théorème de Pythagore",REPONSE_OUVERTE,""`;
+    } else if (format === 'json') {
+      return `[
+  {
+    "enonce": "Quelle est la capitale de la France?",
+    "typeQuestion": "CHOIX_MULTIPLE",
+    "options": ["Paris", "Lyon", "Marseille", "Bordeaux"]
+  },
+  {
+    "enonce": "Expliquez le théorème de Pythagore",
+    "typeQuestion": "REPONSE_OUVERTE",
+    "options": []
+  }
+]`;
+    }
+    return '';
+  }
+
+  processImport(): void {
+    this.isProcessing.set(true);
+    
+    // Simuler le traitement (à remplacer par une vraie logique)
+    setTimeout(() => {
+      this.successMessage.set(`${this.detectedQuestions()} questions importées avec succès`);
+      this.isProcessing.set(false);
+      this.questionMode.set('manual'); // Passer en mode manuel pour voir les questions
+    }, 2000);
+  }
+
+  // Manual Creation Methods
+  setQuestionFilter(filter: 'all' | 'CHOIX_MULTIPLE' | 'REPONSE_OUVERTE'): void {
+    this.questionFilter.set(filter);
+  }
+
+  filteredQuestions(): any[] {
+    const filter = this.questionFilter();
+    if (filter === 'all') return this.questions();
+    return this.questions().filter(q => q.typeQuestion === filter);
+  }
+
+  countByType(type: string): number {
+    return this.questions().filter(q => q.typeQuestion === type).length;
+  }
+
+  toggleQuestion(id: number): void {
+    if (this.expandedQuestion() === id) {
+      this.expandedQuestion.set(null);
+    } else {
+      this.expandedQuestion.set(id);
+    }
+  }
+
+  getTypeLabel(type: string): string {
+    const labels: { [key: string]: string } = {
+      'CHOIX_MULTIPLE': 'Choix multiple',
+      'REPONSE_OUVERTE': 'Réponse ouverte'
+    };
+    return labels[type] || type;
+  }
+
+  openAddQuestionModal(): void {
+    this.editingQuestion.set(null);
+    this.resetNewQuestion();
+    this.showAddQuestionModal.set(true);
+  }
+
+  closeAddQuestionModal(): void {
+    this.showAddQuestionModal.set(false);
+    this.editingQuestion.set(null);
+  }
+
+  resetNewQuestion(): void {
+    this.newQuestion = {
+      typeQuestion: 'CHOIX_MULTIPLE',
+      enonce: '',
+      ordre: this.questions().length + 1,
+      options: ['', ''],
+      reponseCorrecteIndex: 0
+    };
+  }
+
+  onQuestionTypeChange(): void {
+    if (this.newQuestion.typeQuestion === 'CHOIX_MULTIPLE' && (!this.newQuestion.options || this.newQuestion.options.length === 0)) {
+      this.newQuestion.options = ['', ''];
+      this.newQuestion.reponseCorrecteIndex = 0;
+    } else if (this.newQuestion.typeQuestion === 'REPONSE_OUVERTE') {
+      this.newQuestion.options = [];
+      delete this.newQuestion.reponseCorrecteIndex;
+    }
+  }
+
+  addOption(): void {
+    if (!this.newQuestion.options) {
+      this.newQuestion.options = [];
+    }
+    this.newQuestion.options.push('');
+  }
+
+  removeOption(index: number): void {
+    if (this.newQuestion.options && this.newQuestion.options.length > 2) {
+      this.newQuestion.options.splice(index, 1);
+      // Ajuster l'index de la réponse correcte si nécessaire
+      if (this.newQuestion.reponseCorrecteIndex >= this.newQuestion.options.length) {
+        this.newQuestion.reponseCorrecteIndex = this.newQuestion.options.length - 1;
+      }
+    }
+  }
+
+  setCorrectOption(index: number): void {
+    this.newQuestion.reponseCorrecteIndex = index;
+  }
+
+  isQuestionValid(): boolean {
+    if (!this.newQuestion.enonce || !this.newQuestion.enonce.trim()) return false;
+
+    if (this.newQuestion.typeQuestion === 'CHOIX_MULTIPLE') {
+      if (!this.newQuestion.options || this.newQuestion.options.length < 2) return false;
+      if (this.newQuestion.options.some((opt: string) => !opt.trim())) return false;
+      if (this.newQuestion.reponseCorrecteIndex === undefined || this.newQuestion.reponseCorrecteIndex < 0) return false;
+    }
+
+    return true;
+  }
+
+  saveQuestion(): void {
+    if (!this.isQuestionValid()) return;
+
+    const question = {
+      id: this.editingQuestion() ? this.editingQuestion().id : Date.now(),
+      ...this.newQuestion
+    };
+
+    if (this.editingQuestion()) {
+      // Modifier une question existante
+      const index = this.questions().findIndex(q => q.id === this.editingQuestion().id);
+      if (index > -1) {
+        const updatedQuestions = [...this.questions()];
+        updatedQuestions[index] = question;
+        this.questions.set(updatedQuestions);
+        this.successMessage.set('Question modifiée avec succès');
+      }
+    } else {
+      // Ajouter une nouvelle question
+      this.questions.set([...this.questions(), question]);
+      this.successMessage.set('Question ajoutée avec succès');
+    }
+
+    this.closeAddQuestionModal();
+  }
+
+  editQuestion(question: any, event: Event): void {
+    event.stopPropagation();
+    this.editingQuestion.set(question);
+    this.newQuestion = { ...question };
+    if (question.options) {
+      this.newQuestion.options = [...question.options];
+    }
+    this.showAddQuestionModal.set(true);
+  }
+
+  duplicateQuestion(question: any, event: Event): void {
+    event.stopPropagation();
+    const duplicate = {
+      ...question,
+      id: Date.now(),
+      enonce: question.enonce + ' (copie)',
+      ordre: this.questions().length + 1
+    };
+    if (question.options) {
+      duplicate.options = [...question.options];
+    }
+    this.questions.set([...this.questions(), duplicate]);
+    this.successMessage.set('Question dupliquée avec succès');
+  }
+
+  deleteQuestion(id: number, event: Event): void {
+    event.stopPropagation();
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette question ?')) {
+      this.questions.set(this.questions().filter(q => q.id !== id));
+      this.successMessage.set('Question supprimée avec succès');
+      if (this.expandedQuestion() === id) {
+        this.expandedQuestion.set(null);
+      }
+    }
+  }
+
+  // ============================================
+  // STEP 3: REVIEW & PUBLISH METHODS
+  // ============================================
+
+  setPublishMode(mode: 'now' | 'schedule' | 'draft'): void {
+    this.publishMode.set(mode);
+  }
+
+  getValidationChecks(): Array<{label: string, valid: boolean, warning?: boolean}> {
+    return [
+      { label: 'Titre défini', valid: !!this.formData.titre.trim() },
+      { label: 'Dates configurées', valid: !!this.formData.dateDebut && !!this.formData.dateFin },
+      { label: 'Classes sélectionnées', valid: this.formData.classeIds.length > 0 },
+      { label: 'Questions ajoutées', valid: this.questions().length > 0, warning: this.questions().length < 5 },
+      { label: 'Cours assigné', valid: !!this.formData.coursId }
+    ];
+  }
+
+  getTotalPoints(): number {
+    return this.questions().reduce((sum, q) => sum + (q.points || 0), 0);
+  }
+
+  publishEvaluation(): void {
+    this.isLoading.set(true);
+    
+    const statut = this.publishMode() === 'draft' ? 'BROUILLON' : 'PUBLIE';
+    
+    const evaluationData: EvaluationApiData = {
+      titre: this.formData.titre,
+      description: this.formData.description,
+      dateDebut: this.publishMode() === 'schedule' && this.scheduledDate() 
+        ? new Date(this.scheduledDate()).toISOString()
+        : new Date(this.formData.dateDebut).toISOString(),
+      dateFin: new Date(this.formData.dateFin).toISOString(),
+      cours_id: this.formData.coursId ?? undefined,
+      classeIds: this.formData.classeIds,
+      statut: statut as any
+    };
+
+    // Simuler la publication (à remplacer par un vrai appel API)
+    setTimeout(() => {
+      this.isLoading.set(false);
+      this.showSuccessModal.set(true);
+    }, 1500);
+  }
+
+  viewEvaluation(): void {
+    this.showSuccessModal.set(false);
+    const evalId = this.createdEvaluationId();
+    if (evalId) {
+      this.router.navigate(['/evaluations', evalId]);
+    }
+  }
+
+  createNewEvaluation(): void {
+    this.showSuccessModal.set(false);
+    window.location.reload();
+  }
+
+  goToDashboard(): void {
+    this.showSuccessModal.set(false);
+    this.router.navigate(['/evaluations']);
+  }
+
+  goToStep(step: number): void {
+    if (step >= 1 && step <= 3) {
+      this.currentStep.set(step);
+    }
   }
 }
