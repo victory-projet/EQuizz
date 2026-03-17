@@ -26,7 +26,11 @@ module.exports = [
       'linebreak-style': 'off', // Désactive la vérification des fins de ligne (compatible Windows/Unix)
       'quotes': ['error', 'single'], // Force l'utilisation de guillemets simples (')
       'semi': ['error', 'always'], // Force l'ajout de points-virgules à la fin des lignes
-      'no-unused-vars': ['warn'], // Affiche un avertissement pour les variables non utilisées (au lieu d'une erreur)
+      'no-unused-vars': ['warn', {
+        'argsIgnorePattern': '^_',
+        'varsIgnorePattern': '^_',
+        'caughtErrorsIgnorePattern': '^_'
+      }], // Affiche un avertissement pour les variables non utilisées (au lieu d'une erreur)
     },
   }
 ];

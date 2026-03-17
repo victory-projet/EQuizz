@@ -31,6 +31,18 @@ router.get('/quizzes/:id', quizzController.getQuizzDetails);
 router.post('/quizzes/:id/submit', quizzController.submitReponses);
 
 // =========================================================
+// --- Routes de synchronisation mobile ---
+// =========================================================
+
+const syncController = require('../controllers/sync.controller');
+
+// POST /api/student/sync/upload - Upload batch d'opérations depuis le mobile
+router.post('/sync/upload', syncController.upload);
+
+// GET /api/student/sync/download?since=<timestamp> - Delta download vers le mobile
+router.get('/sync/download', syncController.download);
+
+// =========================================================
 // --- Routes pour les notifications ---
 // =========================================================
 

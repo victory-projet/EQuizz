@@ -3,7 +3,7 @@ const AppError = require('../utils/AppError');
 /**
  * Middleware de gestion globale des erreurs
  */
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res, _next) => {
   console.error('❌ Error:', {
     name: err.name,
     message: err.message,
