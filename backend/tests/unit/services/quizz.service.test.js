@@ -39,7 +39,7 @@ describe('QuizzService', () => {
 
     it('devrait lever une erreur si étudiant non trouvé', async () => {
       const etudiantRepository = require('../../../src/repositories/etudiant.repository');
-      
+
       etudiantRepository.findById = jest.fn().mockResolvedValue(null);
 
       await expect(
@@ -49,7 +49,7 @@ describe('QuizzService', () => {
   });
 
   describe('submitReponses() - Système d\'anonymat', () => {
-    const mockTransactionImplementation = () => {
+    const _mockTransactionImplementation = () => {
       return jest.fn().mockImplementation(async (callback) => {
         const t = { commit: jest.fn(), rollback: jest.fn() };
         await callback(t);
@@ -76,7 +76,7 @@ describe('QuizzService', () => {
   describe('getQuizzDetails()', () => {
     it('devrait retourner les détails du quizz avec questions', async () => {
       const quizzRepository = require('../../../src/repositories/quizz.repository');
-      
+
       const mockQuizz = {
         id: 'quizz-001',
         titre: 'Quiz Test',
@@ -90,7 +90,7 @@ describe('QuizzService', () => {
       };
 
       quizzRepository.findQuizzWithQuestionsById = jest.fn().mockResolvedValue(mockQuizz);
-      
+
       db.SessionToken = {
         findOne: jest.fn().mockResolvedValue(null),
       };

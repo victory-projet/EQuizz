@@ -21,7 +21,8 @@ async function seedDatabase() {
 
     // 1. Créer l'école
     const ecole = await db.Ecole.create({
-      nom: 'Saint Jean Ingenieur'
+      nom: 'Saint Jean Ingenieur',
+      domaine: 'saintjeaningenieur.org'
     }, { transaction });
 
     // 2. Créer l'année académique
@@ -41,7 +42,7 @@ async function seedDatabase() {
       annee_academique_id: anneeAcademique.id
     }, { transaction });
 
-    const semestre2 = await db.Semestre.create({
+    await db.Semestre.create({
       nom: 'Semestre 2',
       numero: 2,
       dateDebut: '2025-02-01',
@@ -61,12 +62,13 @@ async function seedDatabase() {
     const adminUser = await db.Utilisateur.create({
       nom: 'admin',
       prenom: 'super',
-      email: 'super.admin@saintjeaningenieur.org',
+      email: 'super@universitesaintjean.org',
       motDePasseHash: 'Admin123!'
     }, { transaction });
 
     await db.Administrateur.create({
-      id: adminUser.id
+      id: adminUser.id,
+      type: 'SUPERADMIN'
     }, { transaction });
 
     // 6. Créer les enseignants
@@ -264,7 +266,7 @@ async function seedDatabase() {
       },
       credentials: {
         admin: {
-          email: 'super.admin@saintjeaningenieur.org',
+          email: 'super@universitesaintjean.org',
           password: 'Admin123!'
         },
         enseignant: {

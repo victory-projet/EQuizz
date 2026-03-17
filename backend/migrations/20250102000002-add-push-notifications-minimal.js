@@ -3,7 +3,7 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     console.log('📱 Création des tables push notifications avec index minimaux...');
-    
+
     // Table DeviceToken
     await queryInterface.createTable('DeviceToken', {
       id: {
@@ -157,7 +157,7 @@ module.exports = {
     console.log('✅ Tables de push notifications créées avec index minimal');
   },
 
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface, _Sequelize) {
     // Supprimer l'index
     try {
       await queryInterface.removeIndex('DeviceToken', 'dt_user_idx');

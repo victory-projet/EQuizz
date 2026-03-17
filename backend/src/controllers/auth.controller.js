@@ -13,7 +13,7 @@ class AuthController {
     const { email, matricule, motDePasse } = req.body;
     const loginIdentifier = email || matricule;
 
-    const { token, utilisateur } = await authService.login(loginIdentifier, motDePasse);
+    const { utilisateur } = await authService.login(loginIdentifier, motDePasse);
 
     // Générer les tokens d'accès et de rafraîchissement
     const jwtService = require('../services/jwt.service');
@@ -222,8 +222,8 @@ class AuthController {
             include: [{ model: db.Ecole, as: 'Ecole' }]
           },
           { model: db.Enseignant, as: 'Enseignant' },
-          { 
-            model: db.Etudiant, 
+          {
+            model: db.Etudiant,
             as: 'Etudiant',
             include: [{ model: db.Classe, as: 'Classe' }]
           }

@@ -16,6 +16,12 @@ const Ecole = sequelize.define('Ecole', {
     // ex: "Saint Jean Ingenieur"
   },
 
+  domaine: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    comment: 'Domaine email de l\'école (ex: saintjeaningenieur.org)'
+  },
+
   dateImport: {
     type: DataTypes.DATE,
     allowNull: true,

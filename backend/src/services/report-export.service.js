@@ -2,9 +2,6 @@
 
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
-const fs = require('fs');
-const path = require('path');
-const AppError = require('../utils/AppError');
 const sentimentAnalysisService = require('./sentiment-analysis.service');
 
 class ReportExportService {
@@ -50,7 +47,7 @@ class ReportExportService {
    */
   async exportEvaluationToExcel(evaluation, submissions, options = {}) {
     const workbook = new ExcelJS.Workbook();
-    
+
     // Métadonnées du workbook
     workbook.creator = 'Système d\'Évaluation';
     workbook.lastModifiedBy = 'Système d\'Évaluation';
@@ -59,18 +56,18 @@ class ReportExportService {
 
     // Feuille de résumé
     await this.createSummarySheet(workbook, evaluation, submissions);
-    
+
     // Feuille des réponses détaillées
     await this.createDetailedResponsesSheet(workbook, evaluation, submissions);
-    
+
     // Feuille d'analyse des sentiments
     if (options.includeSentimentAnalysis !== false) {
       await this.createSentimentAnalysisSheet(workbook, submissions);
     }
-    
+
     // Feuille des statistiques
     await this.createStatisticsSheet(workbook, evaluation, submissions);
-    
+
     // Feuille des graphiques (données pour graphiques)
     if (options.includeChartData !== false) {
       await this.createChartDataSheet(workbook, submissions);
@@ -297,7 +294,7 @@ class ReportExportService {
       worksheet.getCell(`A${currentRow}`).value = label;
       worksheet.getCell(`B${currentRow}`).value = value;
       worksheet.getCell(`A${currentRow}`).style = { font: { bold: true } };
-      
+
       // Coloration conditionnelle pour le sentiment global
       if (label === 'Sentiment Global') {
         const cell = worksheet.getCell(`B${currentRow}`);
@@ -309,7 +306,7 @@ class ReportExportService {
           cell.style = this.defaultStyles.neutral;
         }
       }
-      
+
       currentRow++;
     });
 
@@ -342,7 +339,7 @@ class ReportExportService {
     sentimentAnalysis.detailedAnalysis.forEach((analysis, index) => {
       const response = textResponses[index];
       const row = worksheet.getRow(currentRow);
-      
+
       row.getCell(1).value = response.studentName;
       row.getCell(2).value = response.studentEmail;
       row.getCell(3).value = response.question.substring(0, 50) + '...';
@@ -455,7 +452,7 @@ class ReportExportService {
 
     // Distribution des soumissions par jour
     const submissionsByDay = this.groupSubmissionsByDay(submissions);
-    
+
     worksheet.getCell('A1').value = 'Distribution des Soumissions par Jour';
     worksheet.getCell('A1').style = this.defaultStyles.subHeader;
     worksheet.mergeCells('A1:B1');
@@ -517,7 +514,7 @@ class ReportExportService {
    */
   calculateTimeStats(submissions) {
     const completedSubmissions = submissions.filter(s => s.estTermine && s.dateDebut && s.dateFin);
-    
+
     if (completedSubmissions.length === 0) {
       return {
         'Temps moyen de completion': 'N/A',
@@ -550,7 +547,7 @@ class ReportExportService {
   calculateQuestionStats(questions, submissions) {
     return questions.map(question => {
       const responseCount = submissions.reduce((count, submission) => {
-        const hasResponse = submission.reponses && 
+        const hasResponse = submission.reponses &&
           submission.reponses.some(r => r.questionId === question.id);
         return count + (hasResponse ? 1 : 0);
       }, 0);
@@ -568,7 +565,7 @@ class ReportExportService {
    */
   groupSubmissionsByDay(submissions) {
     const groups = {};
-    
+
     submissions.forEach(submission => {
       const date = new Date(submission.dateDebut).toLocaleDateString('fr-FR');
       groups[date] = (groups[date] || 0) + 1;
@@ -613,18 +610,18 @@ class ReportExportService {
   calculateMedian(numbers) {
     const sorted = [...numbers].sort((a, b) => a - b);
     const middle = Math.floor(sorted.length / 2);
-    
+
     if (sorted.length % 2 === 0) {
       return (sorted[middle - 1] + sorted[middle]) / 2;
     }
-    
+
     return sorted[middle];
   }
 
   /**
    * Exporte en format PDF (version simplifiée)
    */
-  async exportEvaluationToPDF(evaluation, submissions, options = {}) {
+  async exportEvaluationToPDF(evaluation, submissions, _options = {}) {
     return new Promise((resolve, reject) => {
       try {
         const doc = new PDFDocument();
@@ -638,7 +635,7 @@ class ReportExportService {
 
         // Titre
         doc.fontSize(20).text(`Rapport d'Évaluation - ${evaluation.titre}`, 50, 50);
-        
+
         // Informations générales
         doc.fontSize(14).text('Informations Générales', 50, 100);
         doc.fontSize(12)

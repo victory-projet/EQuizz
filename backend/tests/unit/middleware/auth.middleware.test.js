@@ -1,18 +1,19 @@
 // Tests unitaires pour le middleware d'authentification
 const jwt = require('jsonwebtoken');
+const db = require('../../../src/models');
 
 describe('Auth Middleware', () => {
-  let req, res, next;
+  let _req, _res, _next;
 
   beforeEach(() => {
-    req = {
+    _req = {
       headers: {},
     };
-    res = {
+    _res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     };
-    next = jest.fn();
+    _next = jest.fn();
   });
 
   describe('Vérification du token JWT', () => {
@@ -23,29 +24,29 @@ describe('Auth Middleware', () => {
         { expiresIn: '1h' }
       );
 
-      req.headers.authorization = `Bearer ${token}`;
+      _req.headers.authorization = `Bearer ${token}`;
 
       // Simuler le middleware
       // authMiddleware(req, res, next);
-      
+
       // expect(next).toHaveBeenCalled();
       // expect(req.user).toBeDefined();
     });
 
     it('devrait rejeter un token invalide', () => {
-      req.headers.authorization = 'Bearer invalid-token';
+      _req.headers.authorization = 'Bearer invalid-token';
 
       // authMiddleware(req, res, next);
-      
+
       // expect(res.status).toHaveBeenCalledWith(401);
       // expect(next).not.toHaveBeenCalled();
     });
 
     it('devrait rejeter une requête sans token', () => {
       // Pas de header Authorization
-      
+
       // authMiddleware(req, res, next);
-      
+
       // expect(res.status).toHaveBeenCalledWith(401);
     });
 
@@ -56,10 +57,10 @@ describe('Auth Middleware', () => {
         { expiresIn: '-1h' } // Expiré il y a 1 heure
       );
 
-      req.headers.authorization = `Bearer ${expiredToken}`;
+      _req.headers.authorization = `Bearer ${expiredToken}`;
 
       // authMiddleware(req, res, next);
-      
+
       // expect(res.status).toHaveBeenCalledWith(401);
     });
   });
@@ -71,10 +72,10 @@ describe('Auth Middleware', () => {
         process.env.JWT_SECRET
       );
 
-      req.headers.authorization = `Bearer ${token}`;
+      _req.headers.authorization = `Bearer ${token}`;
 
       // requireRole('enseignant')(req, res, next);
-      
+
       // expect(next).toHaveBeenCalled();
     });
 
@@ -84,10 +85,10 @@ describe('Auth Middleware', () => {
         process.env.JWT_SECRET
       );
 
-      req.headers.authorization = `Bearer ${token}`;
+      _req.headers.authorization = `Bearer ${token}`;
 
       // requireRole('enseignant')(req, res, next);
-      
+
       // expect(res.status).toHaveBeenCalledWith(403);
     });
   });

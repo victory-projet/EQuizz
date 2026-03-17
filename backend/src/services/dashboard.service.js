@@ -173,7 +173,7 @@ class DashboardService {
 
       if (totalEtudiants > 0) {
         let repondants = evaluation.Quizz.SessionReponses;
-        
+
         // Filtre les répondants par classe si nécessaire
         if (filters.classeId && filters.classeId !== 'all') {
           repondants = repondants.filter(s => {
@@ -294,13 +294,13 @@ class DashboardService {
 
     evaluations.forEach(evaluation => {
       const weekKey = this.getWeekKey(evaluation.dateDebut);
-      
+
       if (!weeklyData.has(weekKey)) {
         weeklyData.set(weekKey, { totalEtudiants: 0, totalRepondants: 0 });
       }
 
       const data = weeklyData.get(weekKey);
-      
+
       const totalEtudiants = evaluation.Classes.reduce(
         (sum, classe) => sum + classe.Etudiants.length,
         0
@@ -556,7 +556,7 @@ class DashboardService {
   /**
    * Calcule les tendances (variations par rapport au mois précédent)
    */
-  async calculateTrends(filters = {}) {
+  async calculateTrends(_filters = {}) {
     const now = new Date();
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -633,7 +633,7 @@ class DashboardService {
   /**
    * Récupère les alertes importantes
    */
-  async getAlerts(filters = {}) {
+  async getAlerts(_filters = {}) {
     const alerts = [];
 
     // Alerte 1: Rapports prêts
@@ -715,7 +715,7 @@ class DashboardService {
     if (evaluationsProcheFin.length > 0) {
       const evaluation = evaluationsProcheFin[0];
       const heuresRestantes = Math.round((new Date(evaluation.dateFin) - new Date()) / (1000 * 60 * 60));
-      
+
       alerts.push({
         type: 'info',
         title: 'Fin du Quota horaires en approche',

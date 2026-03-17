@@ -1,13 +1,13 @@
 // Tests end-to-end pour le workflow étudiant
-const request = require('supertest');
+const _request = require('supertest');
 const { createTestApp } = require('../helpers/testServer');
 
 describe('Student Workflow - E2E Tests', () => {
-  let app;
-  let studentToken;
+  let _app;
+  let _studentToken;
 
   beforeAll(() => {
-    app = createTestApp();
+    _app = createTestApp();
   });
 
   it('devrait permettre à un étudiant de passer un quizz complet', async () => {

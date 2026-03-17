@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, isAdmin, isSuperAdmin } = require('../middlewares/auth.middleware');
 const { validate, ecoleValidationRules } = require('../middlewares/validation.middleware');
+const upload = require('../middlewares/upload.middleware');
 const ecoleController = require('../controllers/ecole.controller');
 const anneeAcademiqueController = require('../controllers/anneeAcademique.controller');
 const semestreController = require('../controllers/semestre.controller');
@@ -103,6 +104,20 @@ router.get('/etudiants', etudiantController.findAll);
 router.get('/etudiants/:id', etudiantController.findOne);
 router.put('/etudiants/:id', etudiantController.update);
 router.delete('/etudiants/:id', etudiantController.delete);
+
+// --- Route pour l'historique d'un étudiant ---
+router.get('/etudiants/:id/historique', etudiantController.getHistorique);
+
+// --- Route pour le transfert d'un étudiant ---
+// POST /api/academic/etudiants/:id/transfert - Transférer un étudiant vers une nouvelle classe
+router.post('/etudiants/:id/transfert', etudiantController.transferer);
+
+// --- Routes pour l'import Excel d'étudiants ---
+// POST /api/academic/etudiants/import - Importer des étudiants depuis Excel
+router.post('/etudiants/import', upload.single('file'), etudiantController.importFromExcel);
+
+// POST /api/academic/etudiants/validate - Valider un fichier Excel avant import
+router.post('/etudiants/validate', upload.single('file'), etudiantController.validateExcel);
 
 // --- Routes pour la gestion des Enseignants (CRUD) ---
 router.post('/enseignants', enseignantController.create);

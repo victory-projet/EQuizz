@@ -127,12 +127,12 @@ exports.createUtilisateur = async (req, res) => {
         await utilisateur.destroy();
         return res.status(400).json({ message: 'L\'ID de l\'école est requis pour un administrateur' });
       }
-      await Administrateur.create({ 
+      await Administrateur.create({
         id: utilisateur.id,
         ecoleId: ecoleId
       });
     } else if (role === 'ENSEIGNANT') {
-      await Enseignant.create({ 
+      await Enseignant.create({
         id: utilisateur.id,
         specialite: specialite || null
       });
@@ -140,15 +140,15 @@ exports.createUtilisateur = async (req, res) => {
       if (!matricule) {
         return res.status(400).json({ message: 'Le matricule est requis pour un étudiant' });
       }
-      
+
       // Vérifier si le matricule existe déjà
       const existingMatricule = await Etudiant.findOne({ where: { matricule } });
       if (existingMatricule) {
         await utilisateur.destroy();
         return res.status(400).json({ message: 'Ce matricule est déjà utilisé' });
       }
-      
-      await Etudiant.create({ 
+
+      await Etudiant.create({
         id: utilisateur.id,
         matricule
       });
@@ -197,7 +197,7 @@ exports.createUtilisateur = async (req, res) => {
 exports.updateUtilisateur = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nom, prenom, email, estActif, specialite } = req.body;
+    const { nom, prenom, email, estActif, specialite, adminType, ecoleId } = req.body;
 
     const utilisateur = await Utilisateur.findByPk(id, {
       include: [
@@ -229,6 +229,20 @@ exports.updateUtilisateur = async (req, res) => {
       await utilisateur.Enseignant.update({ specialite });
     }
 
+    // Mettre à jour le type et école de l'admin si c'est un administrateur
+    if (utilisateur.Administrateur) {
+      const updateData = {};
+      if (adminType !== undefined) {
+        updateData.type = adminType;
+      }
+      if (ecoleId !== undefined) {
+        updateData.ecole_id = ecoleId;
+      }
+      if (Object.keys(updateData).length > 0) {
+        await utilisateur.Administrateur.update(updateData);
+      }
+    }
+
     // Récupérer l'utilisateur mis à jour
     const utilisateurMisAJour = await Utilisateur.findByPk(id, {
       include: [
@@ -246,6 +260,9 @@ exports.updateUtilisateur = async (req, res) => {
     const userData = utilisateurMisAJour.toJSON();
     if (userData.Superadministrateur) {
       userData.role = 'SUPER-ADMIN';
+    } else if (userData.Administrateur) {
+      userData.role = 'ADMIN';
+      userData.ecole = userData.Administrateur.Ecole;
     } else if (userData.Enseignant) {
       userData.role = 'ENSEIGNANT';
     } else if (userData.Etudiant) {
@@ -294,11 +311,11 @@ exports.resetPassword = async (req, res) => {
     }
 
     await utilisateur.update({ motDePasseHash: nouveauMotDePasse });
-    
+
     // Envoyer un email avec le nouveau mot de passe
     const userData = utilisateur.toJSON();
     await emailService.sendPasswordResetEmail(userData, nouveauMotDePasse);
-    
+
     res.json({ message: 'Mot de passe réinitialisé avec succès' });
   } catch (error) {
     console.error('Erreur lors de la réinitialisation du mot de passe:', error);
@@ -320,7 +337,7 @@ exports.importUtilisateurs = async (req, res) => {
 
     for (let i = 0; i < users.length; i++) {
       const userData = users[i];
-      
+
       try {
         // Validation des données requises
         if (!userData.nom || !userData.prenom || !userData.email) {
@@ -361,7 +378,7 @@ exports.importUtilisateurs = async (req, res) => {
         if (role === 'SUPER-ADMIN') {
           await Superadministrateur.create({ id: utilisateur.id });
         } else if (role === 'ENSEIGNANT') {
-          await Enseignant.create({ 
+          await Enseignant.create({
             id: utilisateur.id,
             specialite: userData.specialite || null
           });
@@ -373,7 +390,7 @@ exports.importUtilisateurs = async (req, res) => {
             const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
             matricule = `${year}${randomNum}`;
           }
-          
+
           // Vérifier l'unicité du matricule
           const existingMatricule = await Etudiant.findOne({ where: { matricule } });
           if (existingMatricule) {
@@ -382,8 +399,8 @@ exports.importUtilisateurs = async (req, res) => {
             const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
             matricule = `${year}${randomNum}`;
           }
-          
-          await Etudiant.create({ 
+
+          await Etudiant.create({
             id: utilisateur.id,
             matricule: matricule
           });
