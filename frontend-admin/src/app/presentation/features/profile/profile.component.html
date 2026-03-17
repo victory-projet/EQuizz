@@ -144,12 +144,12 @@
       
       <div class="info-item">
         <label>Date de création</label>
-        <span>{{ formatDate(user()?.dateCreation) }}</span>
+        <span>{{ formatDate(user()?.createdAt) }}</span>
       </div>
       
       <div class="info-item">
         <label>Dernière mise à jour</label>
-        <span>{{ formatDate(user()?.dateModification) }}</span>
+        <span>{{ formatDate(user()?.updatedAt) }}</span>
       </div>
     </div>
   </div>

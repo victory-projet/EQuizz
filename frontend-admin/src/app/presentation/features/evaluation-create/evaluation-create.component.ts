@@ -20,6 +20,8 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   
   // Data
   cours = signal<Cours[]>([]);
+  allCours = signal<Cours[]>([]); // Tous les cours
+  filteredCours = signal<Cours[]>([]); // Cours filtrés par classe
   classes = signal<Classe[]>([]);
   isLoading = signal(false);
   
@@ -34,7 +36,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
     description: '',
     dateDebut: '',
     dateFin: '',
-    coursId: 0,
+    coursId: null as number | null,
     classeIds: [] as (number | string)[]
   };
 
@@ -75,7 +77,11 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   }
 
   hasMinimalData(): boolean {
-    return this.formData.titre.trim().length > 0;
+    // Pour la sauvegarde automatique, on a besoin au minimum d'un titre, d'un cours et d'une classe
+    return this.formData.titre.trim().length > 0 && 
+           this.formData.coursId !== null && 
+           this.formData.coursId !== 0 &&
+           this.formData.classeIds.length > 0;
   }
 
   saveDraft(): void {
@@ -140,7 +146,11 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   loadCours(): void {
     this.academicUseCase.getCours().subscribe({
       next: (cours) => {
-        this.cours.set(cours);
+        // Filtrer les cours archivés
+        const coursActifs = cours.filter(c => !c.estArchive);
+        this.allCours.set(coursActifs);
+        this.cours.set(coursActifs);
+        this.filteredCours.set(coursActifs);
       },
       error: (error) => {
         console.error('Erreur lors du chargement des cours:', error);
@@ -151,14 +161,63 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
   loadClasses(): void {
     this.academicUseCase.getClasses().subscribe({
       next: (classes) => {
-        console.log('📚 Classes chargées:', classes);
-        console.log('📚 Types des IDs:', classes.map(c => ({ nom: c.nom, id: c.id, type: typeof c.id })));
-        this.classes.set(classes);
+        // Filtrer les classes archivées
+        const classesActives = classes.filter(c => !c.estArchive);
+        console.log('📚 Classes actives chargées:', classesActives);
+        console.log('📚 Types des IDs:', classesActives.map(c => ({ nom: c.nom, id: c.id, type: typeof c.id })));
+        this.classes.set(classesActives);
       },
       error: (error) => {
         console.error('Erreur lors du chargement des classes:', error);
       }
     });
+  }
+
+  /**
+   * Filtre les cours en fonction des classes sélectionnées
+   */
+  filterCoursByClasses(): void {
+    if (this.formData.classeIds.length === 0) {
+      // Si aucune classe n'est sélectionnée, afficher tous les cours
+      this.filteredCours.set(this.allCours());
+      return;
+    }
+
+    // Récupérer les classes sélectionnées avec leurs cours
+    const selectedClasses = this.classes().filter(c => 
+      this.formData.classeIds.some(id => String(id) === String(c.id))
+    );
+
+    // Extraire tous les cours des classes sélectionnées
+    const coursIds = new Set<string | number>();
+    selectedClasses.forEach(classe => {
+      if (classe.cours && classe.cours.length > 0) {
+        classe.cours.forEach(cours => {
+          coursIds.add(String(cours.id));
+        });
+      }
+    });
+
+    // Si aucun cours n'est associé aux classes, afficher tous les cours
+    if (coursIds.size === 0) {
+      console.warn('⚠️ Aucun cours associé aux classes sélectionnées, affichage de tous les cours');
+      this.filteredCours.set(this.allCours());
+      return;
+    }
+
+    // Filtrer les cours
+    const filtered = this.allCours().filter(c => 
+      coursIds.has(String(c.id))
+    );
+
+    console.log('📚 Cours filtrés:', filtered.map(c => c.nom));
+    this.filteredCours.set(filtered);
+
+    // Si le cours actuellement sélectionné n'est plus dans la liste filtrée, le désélectionner
+    if (this.formData.coursId && !filtered.some(c => String(c.id) === String(this.formData.coursId))) {
+      console.log('⚠️ Le cours sélectionné n\'est pas disponible pour les classes choisies');
+      this.formData.coursId = null;
+    }
   }
 
   validateStep1(): boolean {
@@ -178,7 +237,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
       this.errorMessage.set('La date de fin doit être après la date de début');
       return false;
     }
-    if (!this.formData.coursId) {
+    if (!this.formData.coursId || this.formData.coursId === 0) {
       this.errorMessage.set('Le cours est requis');
       return false;
     }
@@ -214,7 +273,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
       description: this.formData.description,
       dateDebut: new Date(this.formData.dateDebut).toISOString(),
       dateFin: new Date(this.formData.dateFin).toISOString(),
-      cours_id: this.formData.coursId,
+      cours_id: this.formData.coursId ?? undefined,
       classeIds: this.formData.classeIds,
       statut: 'BROUILLON' as const
     };
@@ -250,7 +309,7 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
       dateDebut: new Date(this.formData.dateDebut).toISOString(),
       dateFin: new Date(this.formData.dateFin).toISOString(),
       // Le service attend snake_case pour cours_id
-      cours_id: this.formData.coursId,
+      cours_id: this.formData.coursId ?? undefined,
       classeIds: this.formData.classeIds,
       statut: 'BROUILLON' as const
     };
@@ -335,6 +394,9 @@ export class EvaluationCreateComponent implements OnInit, OnDestroy {
     }
     console.log('📋 Classes sélectionnées:', this.formData.classeIds);
     console.log('📋 Types:', this.formData.classeIds.map(id => typeof id));
+    
+    // Filtrer les cours en fonction des classes sélectionnées
+    this.filterCoursByClasses();
   }
 
   isClasseSelected(classeId: string | number): boolean {

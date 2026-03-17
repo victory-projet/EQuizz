@@ -305,9 +305,10 @@ npm run db:sync
 
 Après avoir exécuté `POST /api/init/seed` :
 
-**Administrateur**
-- Email : `super.admin@saintjeaningenieur.org`
-- Mot de passe : `Admin123!`
+**Superadministrateur**
+- Email : `super.admin@universitesaintjean.org`
+- Mot de passe : `admin123`
+- Rôle : SUPER-ADMIN
 
 **Enseignant**
 - Email : `marie.dupont@saintjeaningenieur.org`

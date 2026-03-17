@@ -38,13 +38,13 @@ $primary-color: #3A5689;
   .header-left {
     h2 {
       margin: 0 0 0.5rem 0;
-      color: $primary-color;
+      color: #3A5689;
       font-size: 1.75rem;
     }
 
     p {
       margin: 0;
-      color: #666;
+      color: var(--text-secondary);
     }
   }
 }

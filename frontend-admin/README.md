@@ -126,6 +126,13 @@ npm start
 
 L'application sera accessible sur `http://localhost:4200`
 
+### Identifiants de Connexion
+
+**Superadministrateur**
+- Email : `super.admin@universitesaintjean.org`
+- Mot de passe : `admin123`
+- Rôle : SUPER-ADMIN
+
 ## 💻 Développement
 
 ### Commandes Disponibles

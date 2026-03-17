@@ -230,6 +230,7 @@ class DashboardController {
     try {
       const activities = [];
 
+      console.log('🔍 Fetching recent evaluations...');
       // 1. Évaluations récemment créées
       const recentEvaluations = await db.Evaluation.findAll({
         limit: Math.ceil(parseInt(limit) / 3),
@@ -237,15 +238,26 @@ class DashboardController {
         include: [
           { model: db.Cours, required: false },
           { 
-            model: db.Administrateur, 
-            include: [{ model: db.Utilisateur }] 
+            model: db.Administrateur,
+            as: 'Administrateur',
+            required: false,
+            include: [{ model: db.Utilisateur, required: false }] 
+          },
+          {
+            model: db.Superadministrateur,
+            as: 'Superadministrateur',
+            required: false,
+            include: [{ model: db.Utilisateur, required: false }]
           }
         ]
       });
 
+      console.log(`✅ Found ${recentEvaluations.length} recent evaluations`);
+
       recentEvaluations.forEach(evaluation => {
         const coursNom = evaluation.Cour?.nom || evaluation.Cours?.nom || 'un cours';
-        const adminNom = evaluation.Administrateur?.Utilisateur?.nom || 'Administrateur';
+        const admin = evaluation.Administrateur || evaluation.Superadministrateur;
+        const adminNom = admin?.Utilisateur?.nom || 'Administrateur';
         
         let activityType = 'evaluation_created';
         let title = 'Évaluation créée';
@@ -270,7 +282,7 @@ class DashboardController {
           title: title,
           description: `"${evaluation.titre}" pour ${coursNom}`,
           user: {
-            id: evaluation.Administrateur?.Utilisateur?.id || 'system',
+            id: admin?.Utilisateur?.id || 'system',
             name: adminNom,
             role: 'administrateur'
           },
@@ -286,6 +298,7 @@ class DashboardController {
         });
       });
 
+      console.log('🔍 Fetching recent users...');
       // 2. Utilisateurs récemment créés
       const recentUsers = await db.Utilisateur.findAll({
         limit: Math.ceil(parseInt(limit) / 3),
@@ -296,6 +309,8 @@ class DashboardController {
           }
         }
       });
+
+      console.log(`✅ Found ${recentUsers.length} recent users`);
 
       recentUsers.forEach(user => {
         let userType = 'utilisateur';
@@ -310,7 +325,7 @@ class DashboardController {
           userType = 'étudiant';
           icon = 'person';
           color = '#3F51B5';
-        } else if (user.role === 'ADMIN') {
+        } else if (user.role === 'SUPER-ADMIN') {
           userType = 'administrateur';
           icon = 'admin_panel_settings';
           color = '#E91E63';
@@ -337,6 +352,7 @@ class DashboardController {
         });
       });
 
+      console.log('🔍 Fetching recent classes...');
       // 3. Classes récemment créées
       const recentClasses = await db.Classe.findAll({
         limit: Math.ceil(parseInt(limit) / 3),
@@ -345,18 +361,19 @@ class DashboardController {
           createdAt: {
             [db.Sequelize.Op.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 derniers jours
           }
-        },
-        include: [{ model: db.AnneeAcademique }]
+        }
+        // Temporairement désactivé pour éviter l'erreur de colonne manquante
+        // include: [{ model: db.AnneeAcademique }]
       });
 
+      console.log(`✅ Found ${recentClasses.length} recent classes`);
+
       recentClasses.forEach(classe => {
-        const anneeAcademique = classe.AnneeAcademique?.nom || 'année inconnue';
-        
         activities.push({
           id: `class_created_${classe.id}`,
           type: 'class_created',
           title: 'Nouvelle classe',
-          description: `Classe "${classe.nom}" créée pour ${anneeAcademique}`,
+          description: `Classe "${classe.nom}" créée`,
           user: {
             id: 'system',
             name: 'Système',
@@ -368,7 +385,7 @@ class DashboardController {
           category: 'system',
           metadata: {
             classeId: classe.id,
-            anneeAcademiqueId: classe.annee_academique_id
+            anneeAcademiqueId: classe.anneeAcademiqueId
           }
         });
       });
@@ -378,9 +395,12 @@ class DashboardController {
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
         .slice(0, parseInt(limit));
 
+      console.log(`✅ Returning ${sortedActivities.length} activities`);
       res.status(200).json(sortedActivities);
     } catch (error) {
-      console.error('Erreur lors de la récupération des activités récentes:', error);
+      console.error('❌ Erreur lors de la récupération des activités récentes:', error);
+      console.error('   Message:', error.message);
+      console.error('   Stack:', error.stack);
       // Retourner une activité d'erreur
       res.status(200).json([{
         id: 'error_activity',

@@ -14,7 +14,9 @@ class JwtService {
       id: utilisateur.id,
       email: utilisateur.email,
       // On détermine le rôle de l'utilisateur en regardant quel profil est attaché
-      role: utilisateur.Administrateur ? 'admin' : (utilisateur.Enseignant ? 'enseignant' : 'etudiant'),
+      role: utilisateur.Superadministrateur ? 'super-admin' : 
+            (utilisateur.Administrateur ? 'admin' : 
+            (utilisateur.Enseignant ? 'enseignant' : 'etudiant')),
       type: 'access'
     };
 

@@ -18,7 +18,7 @@
         <span class="material-icons">more_vert</span>
         Actions
       </button>
-      <button class="btn btn-primary" (click)="openCreateModal()">
+      <button class="btn-primary" (click)="openCreateModal()">
         <span class="material-icons">add</span>
         Nouvel Administrateur
       </button>
@@ -123,11 +123,6 @@
         <div class="spinner"></div>
         <p>Chargement...</p>
       </div>
-    } @else if (filteredUsers().length === 0) {
-      <div class="empty-state">
-        <span class="material-icons">people_outline</span>
-        <p>Aucun utilisateur trouvé</p>
-      </div>
     } @else {
       <table class="users-table">
         <thead>
@@ -195,6 +190,22 @@
           }
         </tbody>
       </table>
+
+      @if (filteredUsers().length === 0) {
+        <div class="empty-state">
+          <span class="material-icons">person</span>
+          <p>Aucun superadministrateur trouvé</p>
+          @if (searchQuery()) {
+            <button class="btn btn-secondary" (click)="searchQuery.set(''); applyFilters()">
+              Réinitialiser les filtres
+            </button>
+          } @else {
+            <button class="btn-primary" (click)="openCreateModal()">
+              Créer le premier superadministrateur
+            </button>
+          }
+        </div>
+      }
 
       <!-- Pagination -->
       @if (filteredUsers().length > 0) {
@@ -298,7 +309,7 @@
                 [disabled]="!!selectedUser()"
                 required
               >
-              <small>Format: prenom.nom&#64;saintjeaningenieur.org</small>
+              <small>Format: prenom.nom&#64;universitesaintjean.org (superadmin)</small>
             </div>
 
             @if (!selectedUser()) {

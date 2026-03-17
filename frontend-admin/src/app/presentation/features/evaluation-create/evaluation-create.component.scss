@@ -15,13 +15,13 @@
   .page-title {
     font-size: 28px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: var(--primary);
     margin: 0 0 8px 0;
   }
 
   .page-subtitle {
     font-size: 14px;
-    color: #6b7280;
+    color: var(--text-secondary);
     margin: 0;
   }
 }
@@ -514,4 +514,54 @@
 
 .auto-save-indicator {
   animation: fadeIn 0.3s ease-out;
+}
+
+// Form hints and warnings
+.form-hint {
+  font-size: 13px;
+  color: #718096;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #FFF3CD;
+  border: 1px solid #FFE69C;
+  border-radius: 6px;
+  color: #856404;
+  font-size: 14px;
+  margin-bottom: 12px;
+  
+  .material-icons {
+    font-size: 18px;
+  }
+}
+
+.form-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #E3F2FD;
+  border: 1px solid #90CAF9;
+  border-radius: 6px;
+  color: #1565C0;
+  font-size: 14px;
+  margin-top: 8px;
+  
+  .material-icons {
+    font-size: 18px;
+  }
+}
+
+.form-select:disabled {
+  background-color: #F7FAFC;
+  cursor: not-allowed;
+  opacity: 0.6;
 }

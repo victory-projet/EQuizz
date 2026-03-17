@@ -18,7 +18,17 @@ export class AcademicRepository implements AcademicRepositoryInterface {
   }
 
   getEcoles(): Observable<Ecole[]> {
-    return this.api.get<Ecole[]>('/academic/ecoles');
+    return this.api.get<any>('/academic/ecoles').pipe(
+      map((response: any) => {
+        // Le backend peut retourner soit un tableau, soit un objet {count, rows}
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response && response.rows && Array.isArray(response.rows)) {
+          return response.rows;
+        }
+        return [];
+      })
+    );
   }
 
   getEcole(id: string | number): Observable<Ecole> {
@@ -31,6 +41,10 @@ export class AcademicRepository implements AcademicRepositoryInterface {
 
   deleteEcole(id: string | number): Observable<void> {
     return this.api.delete<void>(`/academic/ecoles/${id}`);
+  }
+
+  toggleActiveEcole(id: string | number): Observable<{ message: string; ecole: Ecole }> {
+    return this.api.patch<{ message: string; ecole: Ecole }>(`/academic/ecoles/${id}/toggle-active`, {});
   }
 
   // Années Académiques
@@ -80,8 +94,9 @@ export class AcademicRepository implements AcademicRepositoryInterface {
     return this.api.post<Cours>('/academic/cours', cours);
   }
 
-  getCours(): Observable<Cours[]> {
-    return this.api.get<Cours[]>('/academic/cours');
+  getCours(includeArchived: boolean = false): Observable<Cours[]> {
+    const params = includeArchived ? '?includeArchived=true' : '';
+    return this.api.get<Cours[]>(`/academic/cours${params}`);
   }
 
   getCoursById(id: string | number): Observable<Cours> {
@@ -103,9 +118,19 @@ export class AcademicRepository implements AcademicRepositoryInterface {
     );
   }
 
-  getClasses(): Observable<Classe[]> {
-    return this.api.get<any[]>('/academic/classes').pipe(
-      map((classes: any[]) => classes.map(c => this.mapClasseFromBackend(c)))
+  getClasses(includeArchived: boolean = false): Observable<Classe[]> {
+    const params = includeArchived ? '?includeArchived=true' : '';
+    return this.api.get<any>(`/academic/classes${params}`).pipe(
+      map((response: any) => {
+        // Le backend peut retourner soit un tableau, soit un objet {count, rows}
+        let classes: any[] = [];
+        if (Array.isArray(response)) {
+          classes = response;
+        } else if (response && response.rows && Array.isArray(response.rows)) {
+          classes = response.rows;
+        }
+        return classes.map(c => this.mapClasseFromBackend(c));
+      })
     );
   }
 
@@ -147,6 +172,11 @@ export class AcademicRepository implements AcademicRepositoryInterface {
       ? data.anneeAcademiqueId 
       : data.annee_academique_id;
     
+    // Gérer le cas où ecoleId peut être en camelCase ou snake_case
+    const ecoleId = (data.ecoleId !== null && data.ecoleId !== undefined)
+      ? data.ecoleId
+      : data.ecole_id;
+    
     const mapped = {
       id: data.id,
       nom: data.nom,
@@ -161,8 +191,17 @@ export class AcademicRepository implements AcademicRepositoryInterface {
         dateCreation: data.AnneeAcademique.createdAt,
         dateModification: data.AnneeAcademique.updatedAt
       } : undefined,
+      ecoleId: ecoleId,
+      Ecole: data.Ecole ? {
+        id: data.Ecole.id,
+        nom: data.Ecole.nom,
+        dateImport: data.Ecole.dateImport || data.Ecole.date_import,
+        createdAt: data.Ecole.createdAt,
+        updatedAt: data.Ecole.updatedAt
+      } : undefined,
       cours: data.Cours || [],
       etudiants: data.Etudiants || [],
+      estArchive: data.estArchive || data.est_archive || false,
       dateCreation: data.createdAt,
       dateModification: data.updatedAt
     };

@@ -1,4 +1,6 @@
 // Domain Entity - Evaluation
+// Updated: Added estArchive property to Evaluation interface
+// Force recompilation timestamp: 2026-02-22T09:07:00
 export interface Evaluation {
   id: number | string;  // Peut être un nombre ou un UUID
   titre: string;
@@ -12,6 +14,7 @@ export interface Evaluation {
   classe?: any;
   quizzId?: number | string;  // Peut être un nombre ou un UUID
   quizz?: Quizz;
+  estArchive?: boolean;
   dateCreation: Date;
   dateModification: Date;
 }

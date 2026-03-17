@@ -10,8 +10,9 @@ import { ApiService } from '../http/api.service';
 export class UserRepository implements UserRepositoryInterface {
   constructor(private api: ApiService) {}
 
-  getAll(): Observable<User[]> {
-    return this.api.get<any[]>('/utilisateurs').pipe(
+  getAll(includeArchived: boolean = false): Observable<User[]> {
+    const params = includeArchived ? '?includeArchived=true' : '';
+    return this.api.get<any[]>(`/utilisateurs${params}`).pipe(
       map(users => users.map(u => this.mapUser(u)))
     );
   }
@@ -59,17 +60,28 @@ export class UserRepository implements UserRepositoryInterface {
     };
 
     // Ajouter les propriétés spécifiques selon le rôle
-    if (data.role === 'ETUDIANT' && data.Etudiant) {
+    if (data.role === 'ADMIN' && data.ecole) {
+      return {
+        ...baseUser,
+        ecoleId: data.ecole.id,
+        ecole: {
+          id: data.ecole.id,
+          nom: data.ecole.nom
+        }
+      } as any;
+    } else if (data.role === 'ETUDIANT' && data.Etudiant) {
       return {
         ...baseUser,
         matricule: data.Etudiant.matricule,
         classeId: data.Etudiant.classe_id,
-        numeroCarteEtudiant: data.Etudiant.idCarte
+        numeroCarteEtudiant: data.Etudiant.idCarte,
+        estArchive: data.Etudiant.estArchive || data.Etudiant.est_archive || false
       } as any;
     } else if (data.role === 'ENSEIGNANT' && data.Enseignant) {
       return {
         ...baseUser,
-        specialite: data.Enseignant.specialite
+        specialite: data.Enseignant.specialite,
+        estArchive: data.Enseignant.estArchive || data.Enseignant.est_archive || false
       } as any;
     }
 

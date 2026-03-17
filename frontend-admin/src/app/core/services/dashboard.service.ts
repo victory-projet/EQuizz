@@ -105,7 +105,8 @@ export class DashboardService {
   private readonly METRICS_INTERVAL = 60000; // 1 minute
 
   constructor() {
-    this.startAutoRefresh();
+    // Ne pas démarrer l'auto-refresh automatiquement
+    // Il sera démarré manuellement quand l'utilisateur est authentifié
   }
 
   // === DONNÉES PRINCIPALES DU DASHBOARD ===
@@ -320,7 +321,18 @@ export class DashboardService {
 
   // === MÉTHODES PRIVÉES ===
 
-  private startAutoRefresh(): void {
+  /**
+   * Démarre l'actualisation automatique des données
+   * À appeler manuellement quand l'utilisateur est authentifié
+   */
+  startAutoRefresh(): void {
+    // Vérifier si un token existe avant de démarrer
+    const token = localStorage.getItem('token');
+    if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+      console.warn('⚠️ Impossible de démarrer l\'auto-refresh sans token d\'authentification');
+      return;
+    }
+
     // Actualisation des données principales
     timer(0, this.REFRESH_INTERVAL).pipe(
       switchMap(() => this.getDashboardData())

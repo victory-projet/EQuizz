@@ -1,0 +1,206 @@
+.excel-import-export-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  
+  h3 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+}
+
+.card-body {
+  padding: 30px;
+}
+
+.section {
+  margin-bottom: 20px;
+  
+  h4 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+  }
+  
+  .description {
+    color: #666;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+  }
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 30px 0;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  &:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.btn-primary {
+  background: #667eea;
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background: #5568d3;
+  }
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background: #5a6268;
+  }
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+  margin-top: 15px;
+  
+  &:hover:not(:disabled) {
+    background: #218838;
+  }
+}
+
+.file-input-group {
+  margin-bottom: 15px;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-label {
+  display: inline-block;
+  padding: 12px 24px;
+  background: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #495057;
+  
+  &:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+  }
+}
+
+.import-result {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #28a745;
+}
+
+.result-header {
+  h5 {
+    margin: 0 0 15px 0;
+    color: #28a745;
+    font-size: 1.1rem;
+  }
+}
+
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.stat-item {
+  padding: 12px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  &.success {
+    background: #d4edda;
+    border-left: 3px solid #28a745;
+  }
+  
+  &.created {
+    background: #d1ecf1;
+    border-left: 3px solid #17a2b8;
+  }
+  
+  &.updated {
+    background: #fff3cd;
+    border-left: 3px solid #ffc107;
+  }
+  
+  &.error {
+    background: #f8d7da;
+    border-left: 3px solid #dc3545;
+  }
+  
+  .stat-label {
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .stat-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+  }
+}
+
+.error-details {
+  margin-top: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #f8d7da;
+  
+  h6 {
+    color: #dc3545;
+    margin-bottom: 10px;
+  }
+  
+  ul {
+    margin: 0;
+    padding-left: 20px;
+    
+    li {
+      color: #721c24;
+      margin-bottom: 5px;
+    }
+  }
+}

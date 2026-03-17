@@ -9,9 +9,11 @@ class StudentController {
       include: [
         {
           model: Etudiant,
+          as: 'Etudiant',
           include: [
             {
               model: Classe,
+              as: 'Classe',
               attributes: ['id', 'nom', 'niveau']
             }
           ]

@@ -23,11 +23,16 @@ class AuthController {
     let role = 'ETUDIANT';
     let additionalInfo = {};
 
-    if (utilisateur.Administrateur) {
+    if (utilisateur.Superadministrateur) {
+      role = 'SUPER-ADMIN';
+    } else if (utilisateur.Administrateur) {
       role = 'ADMIN';
       additionalInfo = {
-        adminType: utilisateur.Administrateur.type, // SUPERADMIN ou ADMIN
-        ecoleId: utilisateur.Administrateur.ecole_id || null
+        ecoleId: utilisateur.Administrateur.ecoleId,
+        ecole: utilisateur.Administrateur.Ecole ? {
+          id: utilisateur.Administrateur.Ecole.id,
+          nom: utilisateur.Administrateur.Ecole.nom
+        } : null
       };
     } else if (utilisateur.Enseignant) {
       role = 'ENSEIGNANT';
@@ -79,11 +84,16 @@ class AuthController {
     let role = 'ETUDIANT';
     let additionalInfo = {};
 
-    if (utilisateur.Administrateur) {
+    if (utilisateur.Superadministrateur) {
+      role = 'SUPER-ADMIN';
+    } else if (utilisateur.Administrateur) {
       role = 'ADMIN';
       additionalInfo = {
-        adminType: utilisateur.Administrateur.type, // SUPERADMIN ou ADMIN
-        ecoleId: utilisateur.Administrateur.ecole_id || null
+        ecoleId: utilisateur.Administrateur.ecoleId,
+        ecole: utilisateur.Administrateur.Ecole ? {
+          id: utilisateur.Administrateur.Ecole.id,
+          nom: utilisateur.Administrateur.Ecole.nom
+        } : null
       };
     } else if (utilisateur.Enseignant) {
       role = 'ENSEIGNANT';
@@ -205,7 +215,12 @@ class AuthController {
       // Récupérer l'utilisateur pour générer un nouveau token
       const utilisateur = await db.Utilisateur.findByPk(decoded.id, {
         include: [
-          { model: db.Administrateur, as: 'Administrateur' },
+          { model: db.Superadministrateur, as: 'Superadministrateur' },
+          { 
+            model: db.Administrateur,
+            as: 'Administrateur',
+            include: [{ model: db.Ecole, as: 'Ecole' }]
+          },
           { model: db.Enseignant, as: 'Enseignant' },
           {
             model: db.Etudiant,

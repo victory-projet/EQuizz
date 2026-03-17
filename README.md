@@ -10,6 +10,13 @@ Ce dépôt contient :
 *   **`/frontend-admin`**: L'application web d'administration développée avec Angular. Elle permet aux administrateurs de gérer la plateforme.
 *   **`/mobile-student`**: L'application mobile pour les étudiants, développée avec React Native et Expo.
 
+## Identifiants de Connexion
+
+### Superadministrateur
+- **Email**: `super.admin@universitesaintjean.org`
+- **Mot de passe**: `admin123`
+- **Rôle**: SUPER-ADMIN
+
 ## Instructions pour les Développeurs
 
 Chaque sous-projet contient son propre `README.md` avec les instructions détaillées pour l'installation, la configuration et le lancement.

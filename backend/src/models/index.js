@@ -5,6 +5,7 @@ const { Sequelize, DataTypes } = require('sequelize');
 
 // --- Importation de tous les modèles ---
 const Utilisateur = require('./Utilisateur');
+const Superadministrateur = require('./Superadministrateur');
 const Administrateur = require('./Administrateur');
 const Enseignant = require('./Enseignant');
 const Etudiant = require('./Etudiant');
@@ -32,6 +33,7 @@ const db = {};
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 db.Utilisateur = Utilisateur;
+db.Superadministrateur = Superadministrateur;
 db.Administrateur = Administrateur;
 db.Enseignant = Enseignant;
 db.Etudiant = Etudiant;
@@ -56,16 +58,23 @@ db.HistoriqueEtudiant = HistoriqueEtudiant;
 // --- Définition de toutes les Relations (Associations) ---
 
 // --- 1. Héritage des Utilisateurs (Relations 1-à-1) ---
-Utilisateur.hasOne(Administrateur, { foreignKey: 'id', onDelete: 'CASCADE' });
+Utilisateur.hasOne(Superadministrateur, { foreignKey: 'id', as: 'Superadministrateur', onDelete: 'CASCADE' });
+Superadministrateur.belongsTo(Utilisateur, { foreignKey: 'id' });
+
+Utilisateur.hasOne(Administrateur, { foreignKey: 'id', as: 'Administrateur', onDelete: 'CASCADE' });
 Administrateur.belongsTo(Utilisateur, { foreignKey: 'id' });
 
-Utilisateur.hasOne(Enseignant, { foreignKey: 'id', onDelete: 'CASCADE' });
+Utilisateur.hasOne(Enseignant, { foreignKey: 'id', as: 'Enseignant', onDelete: 'CASCADE' });
 Enseignant.belongsTo(Utilisateur, { foreignKey: 'id' });
 
-Utilisateur.hasOne(Etudiant, { foreignKey: 'id', onDelete: 'CASCADE' });
+Utilisateur.hasOne(Etudiant, { foreignKey: 'id', as: 'Etudiant', onDelete: 'CASCADE' });
 Etudiant.belongsTo(Utilisateur, { foreignKey: 'id' });
 
 // --- 2. Structure Académique ---
+// Relation Administrateur - Ecole
+Ecole.hasMany(Administrateur, { foreignKey: { name: 'ecole_id', allowNull: false } });
+Administrateur.belongsTo(Ecole, { foreignKey: 'ecole_id', as: 'Ecole' });
+
 Ecole.hasMany(Classe, { foreignKey: { name: 'ecole_id', allowNull: false } });
 Classe.belongsTo(Ecole, { foreignKey: 'ecole_id' });
 
@@ -94,7 +103,10 @@ Classe.belongsToMany(Cours, { through: CoursClasse });
 
 
 // --- 3. Processus d'Évaluation (Composition) ---
-Administrateur.hasMany(Evaluation, { foreignKey: { name: 'administrateur_id', allowNull: false } });
+Superadministrateur.hasMany(Evaluation, { foreignKey: { name: 'superadministrateur_id', allowNull: true } });
+Evaluation.belongsTo(Superadministrateur, { foreignKey: 'superadministrateur_id' });
+
+Administrateur.hasMany(Evaluation, { foreignKey: { name: 'administrateur_id', allowNull: true } });
 Evaluation.belongsTo(Administrateur, { foreignKey: 'administrateur_id' });
 
 Cours.hasMany(Evaluation, { foreignKey: { name: 'cours_id', allowNull: false } });
@@ -146,8 +158,9 @@ Evaluation.belongsToMany(Classe, { through: EvaluationClasse });
 Classe.belongsToMany(Evaluation, { through: EvaluationClasse });
 
 // --- 6. Password Reset Tokens ---
-Utilisateur.hasMany(PasswordResetToken, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });
-PasswordResetToken.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
+// Désactivé temporairement - problème de compatibilité de clé étrangère
+// Utilisateur.hasMany(PasswordResetToken, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });
+// PasswordResetToken.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
 
 // --- 7. Push Notifications ---
 Utilisateur.hasMany(DeviceToken, { foreignKey: { name: 'utilisateur_id', allowNull: false }, onDelete: 'CASCADE' });

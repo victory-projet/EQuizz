@@ -12,7 +12,7 @@ async function createAdmin() {
     const hashedPassword = await bcrypt.hash('admin123', 10);
 
     // Vérifier si l'utilisateur existe déjà
-    let user = await db.Utilisateur.findOne({ where: { email: 'super@universitesaintjean.org' } });
+    let user = await db.Utilisateur.findOne({ where: { email: 'super.admin@universitesaintjean.org' } });
     
     if (user) {
       console.log('ℹ️  Utilisateur existe déjà, mise à jour du mot de passe...');
@@ -20,18 +20,18 @@ async function createAdmin() {
       await db.Utilisateur.update(
         { motDePasseHash: hashedPassword },
         { 
-          where: { email: 'super@universitesaintjean.org' },
+          where: { email: 'super.admin@universitesaintjean.org' },
           hooks: false // Désactiver les hooks pour éviter le double hash
         }
       );
-      user = await db.Utilisateur.findOne({ where: { email: 'super@universitesaintjean.org' } });
+      user = await db.Utilisateur.findOne({ where: { email: 'super.admin@universitesaintjean.org' } });
       console.log('✅ Mot de passe mis à jour');
     } else {
       // Créer l'utilisateur directement avec le mot de passe hashé
       user = await db.Utilisateur.create({
-        nom: 'Admin',
-        prenom: 'Super',
-        email: 'super@universitesaintjean.org',
+        nom: 'admin',
+        prenom: 'super',
+        email: 'super.admin@universitesaintjean.org',
         motDePasseHash: hashedPassword,
         estActif: true
       }, { hooks: false }); 
@@ -39,21 +39,20 @@ async function createAdmin() {
     }
 
     console.log('✅ Utilisateur administrateur créé avec succès !');
-    console.log('📧 Email: super@universitesaintjean.org');
+    console.log('📧 Email: super.admin@universitesaintjean.org');
     console.log('🔑 Mot de passe: admin123');
     console.log('👤 ID:', user.id);
 
-    // Créer un administrateur associé
-    const admin = await db.Administrateur.findOne({ where: { id: user.id } });
+    // Créer un superadministrateur associé
+    const admin = await db.Superadministrateur.findOne({ where: { id: user.id } });
     
     if (admin) {
-      console.log('ℹ️  Profil administrateur existe déjà');
+      console.log('ℹ️  Profil superadministrateur existe déjà');
     } else {
-      await db.Administrateur.create({
-        id: user.id, // L'ID de l'admin doit être le même que l'ID de l'utilisateur
-        type: 'SUPERADMIN'
+      await db.Superadministrateur.create({
+        id: user.id
       });
-      console.log('✅ Profil administrateur créé');
+      console.log('✅ Profil superadministrateur créé');
     }
 
     process.exit(0);

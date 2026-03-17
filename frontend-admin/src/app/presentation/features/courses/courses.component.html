@@ -13,10 +13,32 @@
       <h2>Gestion des Cours & UE</h2>
       <p>Gérez vos unités d'enseignement et cours</p>
     </div>
-    <button class="btn btn-primary" (click)="openCreateModal()">
-      <span class="material-icons">add</span>
-      Ajouter un Cours
-    </button>
+    <div class="header-actions">
+      <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle">
+          <span class="material-icons">more_vert</span>
+          Actions
+        </button>
+        <div class="dropdown-menu">
+          <button class="dropdown-item" (click)="openImportDialog()">
+            <span class="material-icons">upload_file</span>
+            Importer depuis Excel
+          </button>
+          <button class="dropdown-item" (click)="exportCourses()">
+            <span class="material-icons">download</span>
+            Exporter vers Excel
+          </button>
+          <button class="dropdown-item" (click)="downloadTemplate()">
+            <span class="material-icons">description</span>
+            Télécharger le modèle
+          </button>
+        </div>
+      </div>
+      <button class="btn-primary" (click)="openCreateModal()">
+        <span class="material-icons">add</span>
+        Ajouter un Cours
+      </button>
+    </div>
   </div>
 
   <!-- Statistics Cards -->
@@ -52,6 +74,16 @@
     </div>
   </div>
 
+  <!-- Archive Toggle -->
+  <app-archive-toggle
+    [showArchived]="showArchived"
+    [archivedCount]="coursArchives()"
+    [activeCount]="coursActifs()"
+    [totalCount]="totalCours()"
+    [label]="'cours'"
+    (toggleArchived)="onToggleArchived($event)"
+  ></app-archive-toggle>
+
   <!-- Search and Filters -->
   <div class="filters-section">
     <div class="search-box">
@@ -62,27 +94,6 @@
         (input)="onSearch($event)"
         [value]="searchQuery()"
       >
-    </div>
-
-    <div class="filter-buttons">
-      <button 
-        class="filter-btn" 
-        [class.active]="filterStatus() === 'ALL'"
-        (click)="onFilterStatus('ALL')">
-        Tous ({{ totalCours() }})
-      </button>
-      <button 
-        class="filter-btn" 
-        [class.active]="filterStatus() === 'ACTIVE'"
-        (click)="onFilterStatus('ACTIVE')">
-        Actifs ({{ coursActifs() }})
-      </button>
-      <button 
-        class="filter-btn" 
-        [class.active]="filterStatus() === 'ARCHIVED'"
-        (click)="onFilterStatus('ARCHIVED')">
-        Archivés ({{ coursArchives() }})
-      </button>
     </div>
   </div>
 
@@ -317,3 +328,27 @@
     </div>
   }
 </div>
+
+<!-- Import Excel Modal -->
+@if (showImportDialog()) {
+  <div class="modal-overlay" (click)="closeImportDialog()">
+    <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Importer des cours depuis Excel</h3>
+        <button class="close-btn" (click)="closeImportDialog()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <app-excel-upload
+          title="Importer des cours"
+          entityType="cours"
+          description="Sélectionnez un fichier Excel contenant les données des cours"
+          (uploadComplete)="onImportComplete($event)"
+          (uploadError)="onImportError($event)">
+        </app-excel-upload>
+      </div>
+    </div>
+  </div>
+}

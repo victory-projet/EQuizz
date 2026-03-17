@@ -4,11 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
 import { Classe, AnneeAcademique } from '../../../core/domain/entities/academic.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
+import { ArchiveToggleComponent } from '../../shared/components/archive-toggle/archive-toggle.component';
+import { ExcelUploadComponent } from '../../shared/components/excel-upload/excel-upload.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-classes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ArchiveToggleComponent, ExcelUploadComponent],
   templateUrl: './classes.component.html',
   styleUrls: ['./classes.component.scss']
 })
@@ -26,6 +29,8 @@ export class ClassesComponent implements OnInit {
   
   searchQuery = signal('');
   filterAnnee = signal<string>('ALL');
+  showArchived = signal(false);
+  showImportDialog = signal(false);
 
   formData = {
     nom: '',
@@ -38,6 +43,8 @@ export class ClassesComponent implements OnInit {
 
   // Computed statistics
   totalClasses = computed(() => this.classes().length);
+  classesActives = computed(() => this.classes().filter(c => !c.estArchive).length);
+  classesArchivees = computed(() => this.classes().filter(c => c.estArchive).length);
 
   constructor(private academicUseCase: AcademicUseCase) {}
 
@@ -48,7 +55,8 @@ export class ClassesComponent implements OnInit {
 
   loadClasses(): void {
     this.isLoading.set(true);
-    this.academicUseCase.getClasses().subscribe({
+    // Charger TOUTES les classes (y compris archivées)
+    this.academicUseCase.getClasses(true).subscribe({
       next: (classes) => {
         this.classes.set(classes);
         this.applyFilters();
@@ -76,6 +84,13 @@ export class ClassesComponent implements OnInit {
   applyFilters(): void {
     let filtered = this.classes();
 
+    // Filter by archive status (par défaut, afficher uniquement les actifs)
+    if (!this.showArchived()) {
+      filtered = filtered.filter(c => !c.estArchive);
+    } else {
+      filtered = filtered.filter(c => c.estArchive);
+    }
+
     // Filter by année académique
     if (this.filterAnnee() !== 'ALL') {
       filtered = filtered.filter(c => c.anneeAcademiqueId?.toString() === this.filterAnnee());
@@ -91,6 +106,27 @@ export class ClassesComponent implements OnInit {
     }
 
     this.filteredClasses.set(filtered);
+  }
+
+  onToggleArchived(showArchived: boolean): void {
+    this.showArchived.set(showArchived);
+    this.applyFilters();
+  }
+
+  toggleArchiveStatus(classe: Classe): void {
+    const newArchiveStatus = !classe.estArchive;
+    this.academicUseCase.updateClasse(classe.id, {
+      estArchive: newArchiveStatus
+    }).subscribe({
+      next: () => {
+        this.successMessage.set(`Classe ${newArchiveStatus ? 'archivée' : 'désarchivée'} avec succès`);
+        this.loadClasses();
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (error) => {
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la modification');
+      }
+    });
   }
 
   onSearch(event: Event): void {
@@ -227,5 +263,37 @@ export class ClassesComponent implements OnInit {
 
   getClassesByAnnee(anneeId: string | number): number {
     return this.classes().filter(c => c.anneeAcademiqueId?.toString() === anneeId.toString()).length;
+  }
+
+  // === MÉTHODES D'IMPORT/EXPORT ===
+
+  openImportDialog(): void {
+    this.showImportDialog.set(true);
+  }
+
+  closeImportDialog(): void {
+    this.showImportDialog.set(false);
+  }
+
+  onImportComplete(result: any): void {
+    this.successMessage.set(`Import réussi: ${result.created || 0} créés, ${result.updated || 0} mis à jour`);
+    this.closeImportDialog();
+    this.loadClasses();
+    setTimeout(() => this.successMessage.set(''), 5000);
+  }
+
+  onImportError(error: any): void {
+    this.errorMessage.set(error.message || 'Erreur lors de l\'import');
+    setTimeout(() => this.errorMessage.set(''), 5000);
+  }
+
+  exportClasses(): void {
+    const url = `${environment.apiUrl}/data/export/classes`;
+    window.open(url, '_blank');
+  }
+
+  downloadTemplate(): void {
+    const url = `${environment.apiUrl}/data/templates/classes`;
+    window.open(url, '_blank');
   }
 }

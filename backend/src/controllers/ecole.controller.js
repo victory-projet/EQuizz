@@ -32,6 +32,12 @@ class EcoleController {
     const result = await ecoleService.delete(id);
     res.status(200).json(result);
   });
+
+  toggleActive = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const result = await ecoleService.toggleActive(id);
+    res.status(200).json(result);
+  });
 }
 
 module.exports = new EcoleController();

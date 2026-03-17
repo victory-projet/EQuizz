@@ -21,6 +21,17 @@ class CoursRepository {
     });
   }
 
+  async findAllWithScope(scope = 'defaultScope') {
+    return db.Cours.scope(scope).findAll({
+      include: [
+        { model: db.Enseignant, include: [db.Utilisateur] },
+        { model: db.Semestre },
+        { model: db.AnneeAcademique }
+      ],
+      order: [['nom', 'ASC']]
+    });
+  }
+
   /**
    * Trouve un cours par son ID, en incluant les informations associées.
    */
@@ -34,8 +45,18 @@ class CoursRepository {
     });
   }
 
+  async findByIdWithScope(id, scope = 'defaultScope') {
+    return db.Cours.scope(scope).findByPk(id, {
+      include: [
+        { model: db.Enseignant, include: [db.Utilisateur] },
+        { model: db.Semestre },
+        { model: db.AnneeAcademique }
+      ]
+    });
+  }
+
   async update(id, data) {
-    const cours = await this.findById(id);
+    const cours = await db.Cours.scope('all').findByPk(id); // Utiliser scope 'all' pour trouver même les archivés
     if (cours) {
       return cours.update(data);
     }

@@ -77,6 +77,16 @@
     </div>
   </div>
 
+  <!-- Archive Toggle -->
+  <app-archive-toggle
+    [showArchived]="showArchived"
+    [archivedCount]="evaluationsArchivees()"
+    [activeCount]="evaluationsActives()"
+    [totalCount]="totalQuiz()"
+    [label]="'évaluations'"
+    (toggleArchived)="onToggleArchived($event)"
+  ></app-archive-toggle>
+
   <!-- Filters -->
   <div class="filters-section">
     <div class="search-box">
@@ -368,12 +378,18 @@
   @if (!isLoading()) {
     <div class="evaluations-grid">
       @for (evaluation of filteredEvaluations(); track evaluation.id) {
-        <div class="evaluation-card">
+        <div class="evaluation-card" [class.archived]="evaluation.estArchive">
           <div class="card-header">
             <span class="badge modern-badge" [ngClass]="getStatusBadgeClass(evaluation.statut)">
               <span class="badge-icon material-icons">{{ getStatusIcon(evaluation.statut) }}</span>
               <span class="badge-text">{{ getStatusLabel(evaluation.statut) }}</span>
             </span>
+            @if (evaluation.estArchive) {
+              <span class="archive-badge">
+                <span class="material-icons">archive</span>
+                Archivé
+              </span>
+            }
             <div class="card-actions">
               <button class="btn-icon" [title]="'Actions pour ' + evaluation.titre" (click)="toggleCardMenu(evaluation.id)">
                 <span class="material-icons">more_vert</span>
@@ -399,6 +415,15 @@
                         <span class="menu-subtitle">Créer une copie</span>
                       </div>
                     </button>
+                    <button class="menu-item archive-item" (click)="toggleArchiveStatus(evaluation); hideCardMenu()" [title]="evaluation.estArchive ? 'Désarchiver' : 'Archiver'">
+                      <div class="menu-icon archive-icon">
+                        <span class="material-icons">{{ evaluation.estArchive ? 'unarchive' : 'archive' }}</span>
+                      </div>
+                      <div class="menu-content">
+                        <span class="menu-title">{{ evaluation.estArchive ? 'Désarchiver' : 'Archiver' }}</span>
+                        <span class="menu-subtitle">{{ evaluation.estArchive ? 'Restaurer' : 'Masquer' }}</span>
+                      </div>
+                    </button>
                     <button class="menu-item delete-item" (click)="deleteEvaluation(evaluation); hideCardMenu()" title="Supprimer définitivement cette évaluation">
                       <div class="menu-icon delete-icon">
                         <span class="material-icons">delete</span>
@@ -416,6 +441,10 @@
                     <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
                       <span class="material-icons">content_copy</span> Dupliquer
                     </button>
+                    <button class="menu-item archive-item" (click)="toggleArchiveStatus(evaluation); hideCardMenu()">
+                      <span class="material-icons">{{ evaluation.estArchive ? 'unarchive' : 'archive' }}</span> 
+                      {{ evaluation.estArchive ? 'Désarchiver' : 'Archiver' }}
+                    </button>
                   }
                   @if (evaluation.statut === 'CLOTUREE') {
                     <button class="menu-item" (click)="viewSubmissions(evaluation); hideCardMenu()">
@@ -426,6 +455,10 @@
                     </button>
                     <button class="menu-item" (click)="duplicateEvaluation(evaluation); hideCardMenu()">
                       <span class="material-icons">content_copy</span> Dupliquer
+                    </button>
+                    <button class="menu-item archive-item" (click)="toggleArchiveStatus(evaluation); hideCardMenu()">
+                      <span class="material-icons">{{ evaluation.estArchive ? 'unarchive' : 'archive' }}</span> 
+                      {{ evaluation.estArchive ? 'Désarchiver' : 'Archiver' }}
                     </button>
                   }
                 </div>

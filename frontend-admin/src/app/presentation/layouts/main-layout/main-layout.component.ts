@@ -28,16 +28,23 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   searchSuggestions = signal<string[]>([]);
   isMobile = signal(false);
   currentSearchConfig = signal<SearchConfig | null>(null);
+  
+  // Date et heure
+  currentDate = signal('');
+  currentTime = signal('');
+  private timeInterval: any;
 
   private pageTitles: { [key: string]: string } = {
     '/dashboard': 'Tableau de bord',
     '/evaluations': 'Évaluations',
     '/courses': 'Cours & UE',
     '/classes': 'Classes',
+    '/schools': 'Écoles',
+    '/admins': 'Administrateurs',
     '/associations': 'Associations',
     '/academic-years': 'Année académique',
     '/reports': 'Rapports',
-    '/users': 'Utilisateurs',
+    '/users': 'Superadministrateurs',
     '/students': 'Étudiants',
     '/teachers': 'Enseignants',
     '/notifications': 'Notifications',
@@ -50,14 +57,16 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     '/evaluations': 'Gestion des évaluations et questionnaires',
     '/courses': 'Gestion des cours et unités d\'enseignement',
     '/classes': 'Gestion des classes et groupes d\'étudiants',
+    '/schools': 'Gestion des établissements scolaires',
+    '/admins': 'Gestion des administrateurs d\'école',
     '/associations': 'Gestion des associations cours-classes',
     '/academic-years': 'Gestion des années académiques et semestres',
     '/reports': 'Rapports et statistiques d\'évaluation',
-    '/users': 'Gestion des comptes administrateurs',
+    '/users': 'Gestion des comptes superadministrateurs',
     '/students': 'Gestion des comptes étudiants',
     '/teachers': 'Gestion des comptes enseignants',
     '/notifications': 'Centre de notifications système',
-    '/profile': 'Espace compte administrateur',
+    '/profile': 'Espace compte superadministrateur',
     '/messages': 'Centre de messages et notifications'
   };
 
@@ -84,11 +93,38 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Initialiser la configuration de recherche pour la route actuelle
     this.updateSearchConfig(this.router.url);
+    
+    // Initialiser et mettre à jour la date et l'heure
+    this.updateDateTime();
+    this.timeInterval = setInterval(() => {
+      this.updateDateTime();
+    }, 1000); // Mettre à jour chaque seconde
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    
+    // Nettoyer l'intervalle
+    if (this.timeInterval) {
+      clearInterval(this.timeInterval);
+    }
+  }
+  
+  private updateDateTime(): void {
+    const now = new Date();
+    
+    // Format de la date: "Lundi 24 Février 2026"
+    const options: Intl.DateTimeFormatOptions = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    };
+    this.currentDate.set(now.toLocaleDateString('fr-FR', options));
+    
+    // Format de l'heure: "14:30:45"
+    this.currentTime.set(now.toLocaleTimeString('fr-FR'));
   }
 
   @HostListener('window:resize')
@@ -223,5 +259,25 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   closeUserMenu(): void {
     this.isUserMenuOpen.set(false);
+  }
+
+  isSuperAdmin(): boolean {
+    return this.authService.currentUser()?.role === 'SUPER-ADMIN';
+  }
+
+  getUserRoleLabel(): string {
+    const role = this.authService.currentUser()?.role;
+    switch (role) {
+      case 'SUPER-ADMIN':
+        return 'Superadministrateur';
+      case 'ADMIN':
+        return 'Administrateur';
+      case 'ENSEIGNANT':
+        return 'Enseignant';
+      case 'ETUDIANT':
+        return 'Étudiant';
+      default:
+        return 'Utilisateur';
+    }
   }
 }

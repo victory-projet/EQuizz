@@ -27,8 +27,39 @@ const Classe = sequelize.define('Classe', {
     type: DataTypes.UUID,
     allowNull: true,
     field: 'annee_academique_id'
+  },
+
+  estArchive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+    field: 'est_archive'
+  },
+
+  dateImport: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'date_import',
+    comment: 'Date du dernier import Excel'
   }
 
+}, {
+  freezeTableName: true,
+  timestamps: true,
+  underscored: true,
+  
+  // Scopes pour filtrer automatiquement les éléments archivés
+  defaultScope: {
+    where: { estArchive: false }
+  },
+  scopes: {
+    archived: { 
+      where: { estArchive: true } 
+    },
+    all: { 
+      where: {} 
+    }
+  }
 });
 
 module.exports = Classe;

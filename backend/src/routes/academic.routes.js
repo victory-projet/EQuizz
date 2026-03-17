@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate, isAdmin } = require('../middlewares/auth.middleware');
+const { authenticate, isAdmin, isSuperAdmin } = require('../middlewares/auth.middleware');
 const { validate, ecoleValidationRules } = require('../middlewares/validation.middleware');
 const upload = require('../middlewares/upload.middleware');
 const ecoleController = require('../controllers/ecole.controller');
@@ -17,22 +17,25 @@ router.get('/classes/public', classeController.findAll);
 // Sécurisation Globale des Routes Académiques 
 router.use(authenticate, isAdmin);
 
-//  Routes pour la gestion des Écoles (CRUD) 
+//  Routes pour la gestion des Écoles (CRUD) - Réservées aux SUPER-ADMINS
 
-// POST /api/academic/ecoles - Créer une nouvelle école
-router.post('/ecoles', ecoleValidationRules(), validate, ecoleController.create);
+// POST /api/academic/ecoles - Créer une nouvelle école (SUPER-ADMIN uniquement)
+router.post('/ecoles', isSuperAdmin, ecoleValidationRules(), validate, ecoleController.create);
 
-// GET /api/academic/ecoles - Obtenir la liste de toutes les écoles
-router.get('/ecoles', ecoleController.findAll);
+// GET /api/academic/ecoles - Obtenir la liste de toutes les écoles (SUPER-ADMIN uniquement)
+router.get('/ecoles', isSuperAdmin, ecoleController.findAll);
 
-// GET /api/academic/ecoles/:id - Obtenir une école par son ID
-router.get('/ecoles/:id', ecoleController.findOne);
+// GET /api/academic/ecoles/:id - Obtenir une école par son ID (SUPER-ADMIN uniquement)
+router.get('/ecoles/:id', isSuperAdmin, ecoleController.findOne);
 
-// PUT /api/academic/ecoles/:id - Mettre à jour une école par son ID
-router.put('/ecoles/:id', ecoleValidationRules(), validate, ecoleController.update);
+// PUT /api/academic/ecoles/:id - Mettre à jour une école par son ID (SUPER-ADMIN uniquement)
+router.put('/ecoles/:id', isSuperAdmin, ecoleValidationRules(), validate, ecoleController.update);
 
-// DELETE /api/academic/ecoles/:id - Supprimer une école par son ID
-router.delete('/ecoles/:id', ecoleController.delete);
+// PATCH /api/academic/ecoles/:id/toggle-active - Activer/Désactiver une école (SUPER-ADMIN uniquement)
+router.patch('/ecoles/:id/toggle-active', isSuperAdmin, ecoleController.toggleActive);
+
+// DELETE /api/academic/ecoles/:id - Supprimer une école par son ID (SUPER-ADMIN uniquement)
+router.delete('/ecoles/:id', isSuperAdmin, ecoleController.delete);
 
 
 // --- Routes pour la gestion des Années Académiques (CRUD) ---
@@ -67,6 +70,10 @@ router.get('/cours/:id', coursController.findOne);
 router.put('/cours/:id', coursController.update);
 router.delete('/cours/:id', coursController.delete);
 
+// Routes d'archivage pour les cours
+router.put('/cours/:id/archive', coursController.archive);
+router.put('/cours/:id/restore', coursController.restore);
+
 // --- Routes pour la gestion des Classes (CRUD) ---
 
 router.post('/classes', classeController.create);
@@ -74,6 +81,10 @@ router.get('/classes', classeController.findAll);
 router.get('/classes/:id', classeController.findOne);
 router.put('/classes/:id', classeController.update);
 router.delete('/classes/:id', classeController.delete);
+
+// Routes d'archivage pour les classes
+router.put('/classes/:id/archive', classeController.archive);
+router.put('/classes/:id/restore', classeController.restore);
 
 // --- Routes pour la relation Classe <-> Cours ---
 // POST /api/academic/classes/:classeId/cours/:coursId - Associer un cours à une classe

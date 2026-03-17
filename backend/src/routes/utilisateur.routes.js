@@ -3,11 +3,9 @@ const router = express.Router();
 const utilisateurController = require('../controllers/utilisateur.controller');
 const { authenticate, authorize, isSuperAdmin, isSchoolAdmin } = require('../middlewares/auth.middleware');
 
-// Toutes les routes nécessitent une authentification
+// Toutes les routes nécessitent une authentification et le rôle ADMIN ou SUPER-ADMIN
 router.use(authenticate);
-
-// Routes protégées par rôle Admin (SUPERADMIN ou ADMIN scolaire)
-router.use(authorize(['ADMIN']));
+router.use(authorize(['SUPER-ADMIN', 'ADMIN']));
 
 // Routes CRUD standards (accessibles par tout admin)
 router.get('/', utilisateurController.getAllUtilisateurs);

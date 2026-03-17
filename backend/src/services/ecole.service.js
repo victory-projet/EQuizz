@@ -42,6 +42,21 @@ class EcoleService {
     }
     return { message: 'École supprimée avec succès.' };
   }
+
+  async toggleActive(id) {
+    const ecole = await ecoleRepository.findById(id);
+    if (!ecole) {
+      throw AppError.notFound('École non trouvée.', 'ECOLE_NOT_FOUND');
+    }
+
+    const newStatus = !ecole.estActive;
+    const updatedEcole = await ecoleRepository.update(id, { estActive: newStatus });
+    
+    return {
+      message: `École ${newStatus ? 'activée' : 'désactivée'} avec succès.`,
+      ecole: updatedEcole
+    };
+  }
 }
 
 module.exports = new EcoleService();

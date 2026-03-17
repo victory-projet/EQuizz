@@ -78,8 +78,8 @@ export class AcademicUseCase {
     return this.academicRepository.createCours(cours);
   }
 
-  getCours(): Observable<Cours[]> {
-    return this.academicRepository.getCours();
+  getCours(includeArchived: boolean = false): Observable<Cours[]> {
+    return this.academicRepository.getCours(includeArchived);
   }
 
   getCoursById(id: string | number): Observable<Cours> {
@@ -99,8 +99,8 @@ export class AcademicUseCase {
     return this.academicRepository.createClasse(classe);
   }
 
-  getClasses(): Observable<Classe[]> {
-    return this.academicRepository.getClasses();
+  getClasses(includeArchived: boolean = false): Observable<Classe[]> {
+    return this.academicRepository.getClasses(includeArchived);
   }
 
   getClasse(id: string | number): Observable<Classe> {

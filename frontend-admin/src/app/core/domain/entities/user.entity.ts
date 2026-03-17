@@ -5,19 +5,27 @@ export interface User {
   prenom: string;
   email: string;
   matricule?: string;
-  role: 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT';
+  role: 'SUPER-ADMIN' | 'ADMIN' | 'ENSEIGNANT' | 'ETUDIANT';
   estActif: boolean;
-  dateCreation: Date;
-  dateModification: Date;
+  ecoleId?: string;  // Pour les administrateurs
+  ecole?: {          // Pour les administrateurs
+    id: string;
+    nom: string;
+  };
+  dateCreation?: Date;
+  dateModification?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Admin extends User {
-  role: 'ADMIN';
+  role: 'SUPER-ADMIN' | 'ADMIN';
 }
 
 export interface Enseignant extends User {
   role: 'ENSEIGNANT';
   specialite?: string;
+  estArchive?: boolean;
 }
 
 export interface Etudiant extends User {
@@ -25,6 +33,7 @@ export interface Etudiant extends User {
   classeId?: number;
   classe?: Classe;
   numeroCarteEtudiant?: string;
+  estArchive?: boolean;
 }
 
 export interface Classe {
@@ -32,6 +41,7 @@ export interface Classe {
   nom: string;
   anneeAcademiqueId: number;
   anneeAcademique?: AnneeAcademique;
+  estArchive?: boolean;
   dateCreation: Date;
   dateModification: Date;
 }

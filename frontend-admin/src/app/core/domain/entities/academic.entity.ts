@@ -1,4 +1,6 @@
 // Domain Entity - Academic
+// Updated: Added estArchive property to Classe interface
+// Force recompilation timestamp: 2026-02-22T09:07:00
 export interface AnneeAcademique {
   id: string | number;
   libelle: string;
@@ -55,8 +57,11 @@ export interface Classe {
   niveau?: string;
   anneeAcademiqueId?: string | number;
   anneeAcademique?: AnneeAcademique;
+  ecoleId?: string | number;
+  Ecole?: Ecole;
   cours?: Cours[];
   etudiants?: any[];
+  estArchive?: boolean;
   dateCreation: Date;
   dateModification: Date;
 }
@@ -64,9 +69,8 @@ export interface Classe {
 export interface Ecole {
   id: string | number;
   nom: string;
-  adresse?: string;
-  telephone?: string;
-  email?: string;
-  dateCreation: Date;
-  dateModification: Date;
+  dateImport?: Date;
+  estActive?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

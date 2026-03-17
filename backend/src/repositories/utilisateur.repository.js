@@ -14,14 +14,17 @@ class UtilisateurRepository {
       },
       include: [{
         model: db.Etudiant,
+        as: 'Etudiant',
         attributes: ['matricule', 'idCarte'], // Inclure tous les attributs nécessaires
         include: [{
           model: db.Classe,
+          as: 'Classe',
           attributes: ['id', 'nom', 'niveau']
         }],
         required: false, // On met 'false' car un admin n'a pas de profil étudiant
       }, {
-        model: db.Administrateur, // On inclut le profil Admin
+        model: db.Superadministrateur,
+        as: 'Superadministrateur', // On inclut le profil Superadmin
         required: false,
         include: [{
           model: db.Ecole,
@@ -29,7 +32,17 @@ class UtilisateurRepository {
           required: false
         }]
       }, {
-        model: db.Enseignant, // On inclut le profil Enseignant
+        model: db.Administrateur,
+        as: 'Administrateur', // On inclut le profil Administrateur
+        include: [{
+          model: db.Ecole,
+          as: 'Ecole',
+          attributes: ['id', 'nom']
+        }],
+        required: false,
+      }, {
+        model: db.Enseignant,
+        as: 'Enseignant', // On inclut le profil Enseignant
         attributes: ['specialite'],
         required: false,
       }]

@@ -10,7 +10,7 @@ class NotificationController {
     
     try {
       // Si l'utilisateur est un admin, retourner les notifications système
-      if (req.user.role === 'admin') {
+      if (req.user.role === 'super-admin' || req.user.role === 'admin') {
         // Pour les admins, on peut retourner un aperçu des notifications récentes du système
         const recentNotifications = await db.Notification.findAll({
           limit: limit ? parseInt(limit) : 20,
@@ -83,7 +83,7 @@ class NotificationController {
 
   markAsRead = asyncHandler(async (req, res) => {
     // Si l'utilisateur est un admin, retourner une réponse vide
-    if (req.user.role === 'admin') {
+    if (req.user.role === 'super-admin' || req.user.role === 'admin') {
       return res.status(200).json({ success: true, message: 'Aucune notification à marquer pour les administrateurs' });
     }
     
@@ -96,7 +96,7 @@ class NotificationController {
 
   markAllAsRead = asyncHandler(async (req, res) => {
     // Si l'utilisateur est un admin, retourner une réponse vide
-    if (req.user.role === 'admin') {
+    if (req.user.role === 'super-admin' || req.user.role === 'admin') {
       return res.status(200).json({ success: true, message: 'Aucune notification à marquer pour les administrateurs' });
     }
     
@@ -111,7 +111,7 @@ class NotificationController {
     
     try {
       // Pour les admins, calculer un résumé basé sur toutes les notifications du système
-      if (req.user.role === 'admin') {
+      if (req.user.role === 'super-admin' || req.user.role === 'admin') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         

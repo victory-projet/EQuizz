@@ -1,5 +1,3 @@
-// backend/src/models/Administrateur.js
-
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
@@ -7,29 +5,51 @@ const Administrateur = sequelize.define('Administrateur', {
   id: {
     type: DataTypes.UUID,
     primaryKey: true,
+    references: {
+      model: 'Utilisateurs',
+      key: 'id'
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+    comment: 'Clé primaire et étrangère vers Utilisateur'
   },
   
-  type: {
-    type: DataTypes.ENUM('SUPERADMIN', 'ADMIN'),
-    defaultValue: 'ADMIN',
+  ecoleId: {
+    type: DataTypes.UUID,
     allowNull: false,
-    comment: 'SUPERADMIN: accès à tout le système. ADMIN: accès limité à son école'
+    field: 'ecole_id',
+    references: {
+      model: 'Ecoles',
+      key: 'id'
+    },
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+    comment: 'École à laquelle l\'administrateur appartient'
   },
 
-  ecole_id: {
-    type: DataTypes.UUID,
-    allowNull: true,
-    comment: 'NULL pour SuperAdmin, UUID pour Admin scolaire'
-  },
-  
   profil: {
     type: DataTypes.STRING,
-    allowNull: true, 
+    allowNull: true,
     validate: {
-      isUrl: true, 
+      isUrl: true,
     }
   },
 
+  dateNomination: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    defaultValue: DataTypes.NOW,
+    field: 'date_nomination',
+    comment: 'Date de nomination en tant qu\'administrateur'
+  }
+}, {
+  tableName: 'administrateurs',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  underscored: true,
+  paranoid: false,
+  comment: 'Table des administrateurs d\'école'
 });
 
 module.exports = Administrateur;
