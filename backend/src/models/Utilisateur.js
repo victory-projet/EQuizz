@@ -32,16 +32,17 @@ const Utilisateur = sequelize.define('Utilisateur', {
     unique: true,
     validate: {
       isEmailCustom(value) {
-        const superAdminFormat = /^[a-zA-Z]+\.[a-zA-Z]+@universitesaintjean\.org$/;
-        if (superAdminFormat.test(value)) {
-          return;
-        }
-
+        // Validation format prenom.nom@... (lettres uniquement, sans chiffres, sans accents)
         const standardFormat = /^[a-zA-Z]+\.[a-zA-Z]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
         if (!standardFormat.test(value)) {
-          throw new Error('Le format de l\'email doit être prenom.nom@domaine.org (lettres non accentuées uniquement, sans chiffres) ou prenom.nom@universitesaintjean.org pour SuperAdmin');
+          throw new Error('Le format de l\'email doit être prenom.nom@domaine.org (lettres non accentuées uniquement)');
         }
+
+        const domain = value.split('@')[1];
+        const isSJDomain = domain === 'universitesaintjean.org';
+
+        // Note: La validation du rôle par domaine est faite dans un hook beforeValidate 
+        // car 'this.role' n'est pas fiable ici selon les versions de Sequelize
       }
     }
   },
@@ -56,6 +57,11 @@ const Utilisateur = sequelize.define('Utilisateur', {
     allowNull: true,
     field: 'date_import',
     comment: 'Date du dernier import Excel'
+  },
+
+  role: {
+    type: DataTypes.ENUM('SUPER-ADMIN', 'ADMIN', 'ENSEIGNANT', 'ETUDIANT'),
+    allowNull: true, // Peut être null pendant la phase initiale ou pour certains tests
   }
 }, {
   tableName: 'utilisateurs',
@@ -67,6 +73,23 @@ const Utilisateur = sequelize.define('Utilisateur', {
   deletedAt: 'deleted_at',
   // Ajout des Hooks
   hooks: {
+    beforeValidate: (utilisateur) => {
+      if (utilisateur.email) {
+        const domain = utilisateur.email.split('@')[1];
+        const isSJDomain = domain === 'universitesaintjean.org';
+
+        // Si c'est un Super-Admin, il DOIT avoir le domaine saintjean
+        if (utilisateur.role === 'SUPER-ADMIN' && !isSJDomain) {
+          throw new Error('Les Super-Administrateurs doivent utiliser un email @universitesaintjean.org');
+        }
+        
+        // Si ce n'est PAS un Super-Admin (donc Admin, Enseignant, Etudiant ou indéfini), il ne doit PAS avoir le domaine saintjean
+        // On permet isSJDomain UNIQUEMENT si le rôle est explicitement SUPER-ADMIN
+        if (isSJDomain && utilisateur.role !== 'SUPER-ADMIN') {
+          throw new Error('Le domaine @universitesaintjean.org est réservé aux Super-Administrateurs');
+        }
+      }
+    },
     beforeSave: async (utilisateur) => {
       if (utilisateur.changed('motDePasseHash') && utilisateur.motDePasseHash) {
         const salt = await bcrypt.genSalt(10);

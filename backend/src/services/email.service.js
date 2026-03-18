@@ -1,41 +1,53 @@
 // backend/src/services/email.service.js
 
-// 1. Importer le package SendGrid
-const sgMail = require('@sendgrid/mail');
-require('dotenv').config();
+const nodemailer = require('nodemailer');
+const { getSecret } = require('../utils/secrets');
 
 // 2. Vérifier si les emails sont désactivés
 const emailsDisabled = process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true';
 
-// 3. Configurer la clé API seulement si les emails sont activés
-if (!emailsDisabled && process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-}
-
-const verifiedSender = process.env.SENDGRID_VERIFIED_SENDER;
-
 class EmailService {
-  async sendAccountClaimEmail(etudiant, password) {
-    // Vérifier si les emails sont désactivés
+  constructor() {
+    if (!emailsDisabled) {
+      this.transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: getSecret('SMTP_USER', process.env.SMTP_USER),
+          pass: getSecret('SMTP_PASS', process.env.SMTP_PASS)
+        }
+      });
+      console.log('📧 Service email (Gmail) initialisé');
+    }
+  }
+
+  async _sendMail(msg) {
     if (emailsDisabled) {
-      console.log('📧 Email désactivé - sendAccountClaimEmail pour:', etudiant.Utilisateur.email);
-      return { success: true, message: 'Email désactivé en mode développement' };
+      console.log('📧 Email désactivé - Envoi simulé à:', msg.to);
+      return { success: true, message: 'Email désactivé' };
     }
 
-    // Vérifier si la clé API SendGrid est configurée
-    if (!process.env.SENDGRID_API_KEY || !verifiedSender) {
-      console.log('📧 SendGrid non configuré - sendAccountClaimEmail pour:', etudiant.Utilisateur.email);
-      return { success: true, message: 'SendGrid non configuré en mode développement' };
+    try {
+      const info = await this.transporter.sendMail({
+        from: msg.from || getSecret('SMTP_USER', process.env.SMTP_USER),
+        to: msg.to,
+        subject: msg.subject,
+        html: msg.html
+      });
+      console.log('✅ Email envoyé:', info.messageId);
+      return info;
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'envoi de l\'email:', error);
+      throw new Error('Le service d\'email n\'a pas pu envoyer le message.');
     }
+  }
 
-    // L'objet etudiant contient : { Utilisateur: {...}, matricule, ... }
+  async sendAccountClaimEmail(etudiant, password) {
     const utilisateur = etudiant.Utilisateur;
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     
-    // 3. Définir le message au format attendu par SendGrid
     const msg = {
       to: utilisateur.email,
-      from: verifiedSender,
+      from: `"EQuizz Platform" <${getSecret('SMTP_USER', process.env.SMTP_USER)}>`,
       subject: 'Bienvenue sur EQuizz - Vos identifiants de connexion',
       html: `
         <!DOCTYPE html>
@@ -142,37 +154,14 @@ class EmailService {
       `,
     };
 
-    // 4. Envoyer l'email
-    try {
-      await sgMail.send(msg);
-      console.log(`✅ Email d'activation envoyé avec succès à ${utilisateur.email}`);
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'envoi de l\'email via SendGrid:', error);
-      if (error.response) {
-        console.error(error.response.body);
-      }
-      throw new Error('Le service d\'email n\'a pas pu envoyer le message.');
-    }
+    return this._sendMail(msg);
   }
 
   async sendNotificationEmail(email, titre, message) {
-    // Vérifier si les emails sont désactivés
-    if (emailsDisabled) {
-      console.log('📧 Email désactivé - sendNotificationEmail pour:', email);
-      return { success: true, message: 'Email désactivé en mode développement' };
-    }
-
-    // Vérifier si la clé API SendGrid est configurée
-    if (!process.env.SENDGRID_API_KEY || !verifiedSender) {
-      console.log('📧 SendGrid non configuré - sendNotificationEmail pour:', email);
-      return { success: true, message: 'SendGrid non configuré en mode développement' };
-    }
-
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     
     const msg = {
       to: email,
-      from: verifiedSender,
       subject: titre,
       html: `
         <!DOCTYPE html>
@@ -238,37 +227,15 @@ class EmailService {
       `,
     };
 
-    try {
-      await sgMail.send(msg);
-      console.log(`✅ Email de notification envoyé à ${email}`);
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'envoi de l\'email de notification:', error);
-      if (error.response) {
-        console.error(error.response.body);
-      }
-      throw new Error('Le service d\'email n\'a pas pu envoyer la notification.');
-    }
+    return this._sendMail(msg);
   }
 
   async sendCardLinkConfirmation(etudiant, idCarte) {
-    // Vérifier si les emails sont désactivés
-    if (emailsDisabled) {
-      console.log('📧 Email désactivé - sendCardLinkConfirmation pour:', etudiant.Utilisateur.email);
-      return { success: true, message: 'Email désactivé en mode développement' };
-    }
-
-    // Vérifier si la clé API SendGrid est configurée
-    if (!process.env.SENDGRID_API_KEY || !verifiedSender) {
-      console.log('📧 SendGrid non configuré - sendCardLinkConfirmation pour:', etudiant.Utilisateur.email);
-      return { success: true, message: 'SendGrid non configuré en mode développement' };
-    }
-
     const utilisateur = etudiant.Utilisateur;
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     
     const msg = {
       to: utilisateur.email,
-      from: verifiedSender,
       subject: 'Confirmation d\'association de carte - EQuizz',
       html: `
         <!DOCTYPE html>
@@ -367,39 +334,16 @@ class EmailService {
       `,
     };
 
-    try {
-      await sgMail.send(msg);
-      console.log(`✅ Email de confirmation d'association de carte envoyé à ${utilisateur.email}`);
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'envoi de l\'email de confirmation:', error);
-      if (error.response) {
-        console.error(error.response.body);
-      }
-      throw new Error('Le service d\'email n\'a pas pu envoyer la confirmation.');
-    }
+    return this._sendMail(msg);
   }
 
-  // Nouvelle fonction pour l'email de bienvenue (admin/enseignant)
   async sendWelcomeEmail(user, temporaryPassword) {
-    // Vérifier si les emails sont désactivés
-    if (emailsDisabled) {
-      console.log('📧 Email désactivé - sendWelcomeEmail pour:', user.email);
-      return { success: true, message: 'Email désactivé en mode développement' };
-    }
-
-    // Vérifier si la clé API SendGrid est configurée
-    if (!process.env.SENDGRID_API_KEY || !verifiedSender) {
-      console.log('📧 SendGrid non configuré - sendWelcomeEmail pour:', user.email);
-      return { success: true, message: 'SendGrid non configuré en mode développement' };
-    }
-
     const roleLabel = (user.role === 'SUPER-ADMIN') ? 'Administrateur' : 'Enseignant';
     const roleIcon = (user.role === 'SUPER-ADMIN') ? '👨‍💼' : '👨‍🏫';
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
 
     const msg = {
       to: user.email,
-      from: verifiedSender,
       subject: `Bienvenue sur EQuizz - Compte ${roleLabel}`,
       html: `
         <!DOCTYPE html>
@@ -483,10 +427,6 @@ class EmailService {
                                             Se connecter maintenant
                                         </a>
                                     </div>
-                                    
-                                    <p style="margin: 20px 0 0 0; color: #718096; font-size: 13px; text-align: center;">
-                                        Si vous avez des questions, n'hésitez pas à contacter l'administrateur système.
-                                    </p>
                                 </td>
                             </tr>
                             
@@ -510,40 +450,15 @@ class EmailService {
       `,
     };
 
-    try {
-      await sgMail.send(msg);
-      console.log(`✅ Email de bienvenue envoyé à ${user.email}`);
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'envoi de l\'email de bienvenue:', error);
-      if (error.response) {
-        console.error(error.response.body);
-      }
-      // Ne pas bloquer la création de l'utilisateur si l'email échoue
-      console.warn('⚠️ L\'utilisateur a été créé mais l\'email n\'a pas pu être envoyé');
-      throw new Error('Email service not configured properly');
-    }
+    return this._sendMail(msg);
   }
 
-  // Nouvelle fonction pour l'email de réinitialisation de mot de passe
   async sendPasswordResetEmail(utilisateur, token) {
-    // Vérifier si les emails sont désactivés
-    if (emailsDisabled) {
-      console.log('📧 Email désactivé - sendPasswordResetEmail pour:', utilisateur.email);
-      return { success: true, message: 'Email désactivé en mode développement' };
-    }
-
-    // Vérifier si la clé API SendGrid est configurée
-    if (!process.env.SENDGRID_API_KEY || !verifiedSender) {
-      console.log('📧 SendGrid non configuré - sendPasswordResetEmail pour:', utilisateur.email);
-      return { success: true, message: 'SendGrid non configuré en mode développement' };
-    }
-
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
     const msg = {
       to: utilisateur.email,
-      from: verifiedSender,
       subject: 'EQuizz - Réinitialisation de votre mot de passe',
       html: `
         <!DOCTYPE html>
@@ -592,39 +507,6 @@ class EmailService {
                                             Réinitialiser mon mot de passe
                                         </a>
                                     </div>
-                                    
-                                    <!-- Alerte expiration -->
-                                    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 30px 0; border-radius: 4px;">
-                                        <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
-                                            <strong>⏱️ Attention :</strong> Ce lien expire dans <strong>1 heure</strong>.
-                                        </p>
-                                    </div>
-                                    
-                                    <p style="margin: 20px 0; color: #718096; font-size: 14px; line-height: 1.6;">
-                                        Si vous n'avez pas demandé cette réinitialisation, ignorez cet email. Votre mot de passe actuel reste inchangé.
-                                    </p>
-                                    
-                                    <!-- Lien de secours -->
-                                    <div style="background: #f7fafc; padding: 20px; margin: 30px 0; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                        <p style="margin: 0 0 10px 0; color: #4a5568; font-size: 13px; font-weight: 600;">
-                                            Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :
-                                        </p>
-                                        <p style="margin: 0; color: #667eea; font-size: 12px; word-break: break-all; font-family: 'Courier New', monospace;">
-                                            ${resetUrl}
-                                        </p>
-                                    </div>
-                                </td>
-                            </tr>
-                            
-                            <!-- Footer -->
-                            <tr>
-                                <td style="background: #f7fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
-                                    <p style="margin: 0 0 10px 0; color: #718096; font-size: 12px;">
-                                        Cet email a été envoyé automatiquement, merci de ne pas y répondre.
-                                    </p>
-                                    <p style="margin: 0; color: #a0aec0; font-size: 12px;">
-                                        © 2025 EQuizz. Tous droits réservés.
-                                    </p>
                                 </td>
                             </tr>
                         </table>
@@ -636,16 +518,7 @@ class EmailService {
       `,
     };
 
-    try {
-      await sgMail.send(msg);
-      console.log(`✅ Email de réinitialisation envoyé à ${utilisateur.email}`);
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'envoi de l\'email de réinitialisation:', error);
-      if (error.response) {
-        console.error(error.response.body);
-      }
-      throw new Error('Le service d\'email n\'a pas pu envoyer le lien de réinitialisation.');
-    }
+    return this._sendMail(msg);
   }
 }
 

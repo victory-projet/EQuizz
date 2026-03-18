@@ -1,10 +1,10 @@
 // backend/src/services/jwt.service.js
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const { getSecret } = require('../utils/secrets');
 
-// Nous allons stocker la clé secrète dans notre fichier .env
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
+// Nous allons stocker la clé secrète dans notre fichier .env ou via Docker Secrets
+const JWT_SECRET = getSecret('JWT_SECRET', process.env.JWT_SECRET);
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d';
 
 class JwtService {

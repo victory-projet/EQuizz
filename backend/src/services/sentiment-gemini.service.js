@@ -2,11 +2,12 @@
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const db = require('../models');
+const { getSecret } = require('../utils/secrets');
 
 class SentimentGeminiService {
   constructor() {
     // Initialiser Gemini avec la clé API
-    const apiKey = process.env.GOOGLE_AI_API_KEY;
+    const apiKey = getSecret('GOOGLE_AI_API_KEY', process.env.GOOGLE_AI_API_KEY);
     if (!apiKey) {
       console.warn('⚠️ GOOGLE_AI_API_KEY non définie. Analyse de sentiments désactivée.');
       this.genAI = null;
@@ -37,18 +38,21 @@ Analyse le sentiment de ce commentaire d'étudiant sur un cours.
 
 Commentaire: "${text}"
 
-Réponds UNIQUEMENT au format JSON suivant (sans markdown, sans backticks):
+Réponds UNIQUEMENT au format JSON suivant:
 {
   "score": <nombre entre -1 et 1>,
   "sentiment": "<POSITIF, NEUTRE ou NEGATIF>",
-  "explanation": "<courte explication en français>"
+  "explanation": "<courte explication en français>",
+  "category": "<PEDAGOGIE, INFRASTRUCTURE, CONTENU, CLIMAT, ou AUTRE>",
+  "keywords": ["mot1", "mot2", ...],
+  "confidence": <nombre entre 0 et 1>
 }
 
 Règles:
 - score > 0.3 → POSITIF
 - score < -0.3 → NEGATIF
 - sinon → NEUTRE
-- Considère le contexte éducatif français
+- Considère le contexte éducatif
 `;
 
       const result = await this.model.generateContent(prompt);
@@ -75,7 +79,10 @@ Règles:
       return {
         score,
         sentiment,
-        explanation: analysis.explanation || 'Analyse effectuée'
+        explanation: analysis.explanation || 'Analyse effectuée',
+        category: analysis.category || 'AUTRE',
+        keywords: analysis.keywords || [],
+        confidence: parseFloat(analysis.confidence) || 1.0
       };
 
     } catch (error) {
@@ -125,7 +132,11 @@ Règles:
       // Mettre à jour
       await existingAnalysis.update({
         score: analysis.score,
-        sentiment: analysis.sentiment
+        sentiment: analysis.sentiment,
+        explication: analysis.explanation,
+        motsCles: analysis.keywords,
+        categorie: analysis.category,
+        confidence: analysis.confidence
       });
       return existingAnalysis;
     } else {
@@ -133,7 +144,11 @@ Règles:
       return db.AnalyseReponse.create({
         reponse_etudiant_id: reponseEtudiantId,
         score: analysis.score,
-        sentiment: analysis.sentiment
+        sentiment: analysis.sentiment,
+        explication: analysis.explanation,
+        motsCles: analysis.keywords,
+        categorie: analysis.category,
+        confidence: analysis.confidence
       });
     }
   }

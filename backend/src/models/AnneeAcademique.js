@@ -34,6 +34,11 @@ const AnneeAcademique = sequelize.define('AnneeAcademique', {
     allowNull: false,
   },
 
+}, {
+  tableName: 'annee_academiques',
+  freezeTableName: true,
+  underscored: true,
+  timestamps: true
 });
 
 module.exports = AnneeAcademique;

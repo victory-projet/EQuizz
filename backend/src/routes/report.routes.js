@@ -19,6 +19,12 @@ router.get('/:id', reportController.getReport);
 // GET /api/reports/:id/pdf - Exporter le rapport en PDF
 router.get('/:id/pdf', reportController.exportPDF);
 
+// GET /api/reports/stats/ue - Statistiques par UE
+router.get('/stats/ue', reportController.getUEStats);
+
+// GET /api/reports/stats/school - Statistiques par École
+router.get('/stats/school', reportController.getSchoolStats);
+
 // =========================================================
 // --- Routes pour les Exports Excel ---
 // =========================================================

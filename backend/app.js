@@ -30,18 +30,42 @@ const utilisateurRoutes = require('./src/routes/utilisateur.routes');
 const questionRoutes = require('./src/routes/question.routes');
 const importExportRoutes = require('./src/routes/import-export.routes');
 
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
 // --- Middlewares Globaux ---
+
+// Sécurité : Headers HTTP
+app.use(helmet());
+
+// Sécurisation contre le brute-force et DDoS
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limite chaque IP à 100 requêtes par fenêtre
+  message: {
+    status: 'error',
+    error: {
+      message: 'Trop de requêtes, veuillez réessayer plus tard.',
+      code: 'TOO_MANY_REQUESTS'
+    }
+  }
+});
+app.use('/api/', limiter);
+
 // Configuration CORS pour autoriser les requêtes depuis le frontend
 app.use((req, res, next) => {
+  // Signature de l'équipe
+  res.setHeader('X-Developed-By', 'EQuizz-Team-SJI-KMPEVCPBA-ISI2026');
+
   res.header('Access-Control-Allow-Origin', '*'); // Autoriser toutes les origines (à restreindre en production)
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  
+
   // Gérer les requêtes OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
-  
+
   next();
 });
 
@@ -89,7 +113,7 @@ const PORT = process.env.PORT || 3000;
 // Démarrer le serveur seulement si ce n'est pas un test
 if (process.env.NODE_ENV !== 'test') {
   console.log('🔄 Tentative de connexion à la base de données...');
-  
+
   db.sequelize.authenticate()
     .then(() => {
       console.log('✅ Connexion à la base de données établie avec succès.');
@@ -97,7 +121,7 @@ if (process.env.NODE_ENV !== 'test') {
     })
     .then(async () => {
       console.log('✅ Base de données synchronisée avec succès.');
-      
+
       // Vérifier si la base de données est vide et l'initialiser automatiquement
       const userCount = await db.Utilisateur.count();
       if (userCount === 0 && process.env.AUTO_SEED !== 'false') {
@@ -116,14 +140,14 @@ if (process.env.NODE_ENV !== 'test') {
       } else if (userCount > 0) {
         console.log(`ℹ️  Base de données déjà initialisée (${userCount} utilisateurs trouvés).`);
       }
-      
+
       // Initialiser Firebase
       console.log('🔥 Initialisation de Firebase...');
       initializeFirebase();
-      
+
       // Démarrer les tâches programmées
       schedulerService.startAllJobs();
-      
+
       app.listen(PORT, () => {
         console.log(`🚀 Serveur démarré sur le port ${PORT}`);
       });

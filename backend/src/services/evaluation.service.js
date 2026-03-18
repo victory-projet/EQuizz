@@ -9,6 +9,7 @@ const sentimentAnalysisService = require('./sentiment-analysis.service');
 const reportExportService = require('./report-export.service');
 const ExcelJS = require('exceljs');
 const AppError = require('../utils/AppError'); 
+const xss = require('xss');
 
 class EvaluationService {
   /**
@@ -20,6 +21,10 @@ class EvaluationService {
     const { classeIds, ...evaluationData } = data;
     if (!classeIds || !Array.isArray(classeIds) || classeIds.length === 0) {
       throw AppError.badRequest('Au moins une classe doit être ciblée.', 'CLASSES_REQUIRED');
+    }
+
+    if (!evaluationData.annee_academique_id) {
+      throw AppError.badRequest('L\'année académique est requise.', 'ACADEMIC_YEAR_REQUIRED');
     }
 
     const transaction = await db.sequelize.transaction();
@@ -38,16 +43,18 @@ class EvaluationService {
         ]
       });
       
-      if (!utilisateur) {
-        throw AppError.notFound('Utilisateur non trouvé.', 'USER_NOT_FOUND');
-      }
+    // Vérification : Seuls les administrateurs d'école (ADMIN) peuvent créer des évaluations
+    // Le SUPER-ADMIN a une vue globale mais ne crée pas de quizz locaux
+    if (utilisateur.Superadministrateur) {
+      throw AppError.forbidden('Les superadministrateurs ne peuvent pas créer d\'évaluations directement. Ce rôle est réservé aux administrateurs d\'école.', 'SUPERADMIN_CANNOT_CREATE');
+    }
 
-      if (!utilisateur.Superadministrateur) {
-        throw AppError.forbidden('Seuls les superadministrateurs peuvent créer des évaluations.', 'ADMIN_REQUIRED');
-      }
+    if (!utilisateur.Administrateur) {
+      throw AppError.forbidden('Seuls les administrateurs d\'école peuvent créer des évaluations.', 'ADMIN_REQUIRED');
+    }
 
-      // Ajouter l'ID du superadministrateur aux données
-      evaluationData.superadministrateur_id = adminId;
+    // Ajouter l'ID de l'administrateur aux données
+    evaluationData.administrateur_id = adminId;
 
       const evaluation = await evaluationRepository.create(evaluationData, transaction);
       await evaluation.addClasses(classeIds, { transaction });
@@ -209,7 +216,7 @@ class EvaluationService {
       }
       
       questionsToCreate.push({
-        enonce,
+        enonce: xss(enonce),
         typeQuestion,
         options,
         quizz_id: quizzId

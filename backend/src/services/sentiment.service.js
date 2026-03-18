@@ -36,7 +36,11 @@ class SentimentService {
     return {
       score: normalizedScore,
       sentiment: sentimentLabel,
-      comparative: result.comparative
+      comparative: result.comparative,
+      explanation: `Analyse locale (score: ${normalizedScore})`,
+      category: 'AUTRE',
+      keywords: result.words.filter(w => w.length > 3),
+      confidence: 0.7 // Confiance moindre pour le local
     };
   }
 
@@ -57,7 +61,11 @@ class SentimentService {
       // Mettre à jour
       await existingAnalysis.update({
         score: analysis.score,
-        sentiment: analysis.sentiment
+        sentiment: analysis.sentiment,
+        explication: analysis.explanation,
+        motsCles: analysis.keywords,
+        categorie: analysis.category,
+        confidence: analysis.confidence
       });
       return existingAnalysis;
     } else {
@@ -65,7 +73,11 @@ class SentimentService {
       return db.AnalyseReponse.create({
         reponse_etudiant_id: reponseEtudiantId,
         score: analysis.score,
-        sentiment: analysis.sentiment
+        sentiment: analysis.sentiment,
+        explication: analysis.explanation,
+        motsCles: analysis.keywords,
+        categorie: analysis.category,
+        confidence: analysis.confidence
       });
     }
   }

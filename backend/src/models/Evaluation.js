@@ -79,6 +79,15 @@ const Evaluation = sequelize.define('Evaluation', {
       model: 'cours',
       key: 'id'
     }
+  },
+
+  annee_academique_id: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: 'annee_academiques',
+      key: 'id'
+    }
   }
 
 }, {

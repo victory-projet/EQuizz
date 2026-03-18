@@ -3,6 +3,7 @@
 const db = require('../models');
 const quizzRepository = require('../repositories/quizz.repository');
 const etudiantRepository = require('../repositories/etudiant.repository');
+const xss = require('xss');
 
 class QuizzService {
   /**
@@ -129,18 +130,43 @@ class QuizzService {
         transaction
       });
 
-      // 5. Préparer toutes les réponses à insérer
+      // 5. Préparer toutes les réponses à insérer (avec sanitisation XSS)
       const reponsesToCreate = reponses.map(rep => ({
-        contenu: rep.contenu,
+        contenu: (typeof rep.contenu === 'string') ? xss(rep.contenu) : rep.contenu,
         question_id: rep.question_id,
         session_reponse_id: session.id,
       }));
 
       // 6. Insérer toutes les réponses
-      await db.ReponseEtudiant.bulkCreate(reponsesToCreate, { transaction });
+      const createdReponses = await db.ReponseEtudiant.bulkCreate(reponsesToCreate, { transaction, returning: true });
 
-      // 7. Valider la transaction
+      // 7. Lancer l'analyse de sentiment en arrière-plan pour les réponses ouvertes
+      const sentimentService = process.env.GOOGLE_AI_API_KEY
+        ? require('./sentiment-gemini.service')
+        : require('./sentiment.service');
+
+      // Identifier les questions de type REPONSE_OUVERTE
+      const openQuestions = await db.Question.findAll({
+        where: {
+          id: reponses.map(r => r.question_id),
+          typeQuestion: 'REPONSE_OUVERTE'
+        },
+        transaction
+      });
+
+      const openQuestionIds = new Set(openQuestions.map(q => q.id));
+
+      // 8. Valider la transaction avant l'analyse (pour éviter les verrous longs)
       await transaction.commit();
+
+      // Analyser de manière asynchrone (ne bloque pas la réponse HTTP)
+      createdReponses.forEach(rep => {
+        if (openQuestionIds.has(rep.question_id) && rep.contenu) {
+          sentimentService.analyzeAndSaveReponse(rep.id, rep.contenu).catch(err => {
+            console.error(`Erreur analyse sentiment réponse ${rep.id}:`, err.message);
+          });
+        }
+      });
 
       // 8. Envoyer notification de confirmation si soumission finale
       if (estFinal) {

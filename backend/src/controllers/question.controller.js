@@ -1,4 +1,5 @@
 const { Question, Quizz } = require('../models');
+const xss = require('xss');
 
 // Créer une nouvelle question
 exports.createQuestion = async (req, res) => {
@@ -39,7 +40,7 @@ exports.createQuestion = async (req, res) => {
     }
 
     const question = await Question.create({
-      enonce,
+      enonce: xss(enonce),
       typeQuestion,
       options: typeQuestion === 'CHOIX_MULTIPLE' ? options : [],
       ordre: questionOrdre,
@@ -114,7 +115,7 @@ exports.updateQuestion = async (req, res) => {
     }
 
     const updatedQuestion = await question.update({
-      enonce: enonce || question.enonce,
+      enonce: enonce ? xss(enonce) : question.enonce,
       typeQuestion: typeQuestion || question.typeQuestion,
       options: options !== undefined ? options : question.options,
       ordre: ordre !== undefined ? ordre : question.ordre
@@ -227,7 +228,7 @@ exports.importQuestions = async (req, res) => {
 
         // Créer la question
         await Question.create({
-          enonce: questionData.enonce.trim(),
+          enonce: xss(questionData.enonce.trim()),
           typeQuestion: questionData.typeQuestion,
           options: questionData.typeQuestion === 'CHOIX_MULTIPLE' ? questionData.options : [],
           ordre: currentOrdre++,

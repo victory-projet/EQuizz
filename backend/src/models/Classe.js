@@ -44,6 +44,7 @@ const Classe = sequelize.define('Classe', {
   }
 
 }, {
+  tableName: 'classes',
   freezeTableName: true,
   timestamps: true,
   underscored: true,

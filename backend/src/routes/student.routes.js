@@ -17,6 +17,9 @@ router.use(authenticate);
 // GET /api/student/me - Obtenir les informations complètes de l'étudiant connecté
 router.get('/me', studentController.getMe);
 
+// GET /api/student/history - Obtenir l'historique complet de l'étudiant (quizz passés)
+router.get('/history', studentController.getHistory);
+
 // =========================================================
 // --- Routes pour la consultation et la réponse aux Quizz ---
 // =========================================================

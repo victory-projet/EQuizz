@@ -3,6 +3,7 @@
 const admin = require('firebase-admin');
 const path = require('path');
 const fs = require('fs');
+const { getSecret } = require('../utils/secrets');
 
 let firebaseApp = null;
 
@@ -15,12 +16,21 @@ function initializeFirebase() {
   }
 
   try {
-    // Chemin vers le fichier de configuration
-    const serviceAccountPath = path.join(__dirname, '../../config/firebase-service-account.json');
+    // Chemin vers le fichier de configuration (local ou secret Docker)
+    const localServiceAccountPath = path.join(__dirname, '../../config/firebase-service-account.json');
+    const dockerSecretPath = '/run/secrets/firebase_service_account';
     
-    // Vérifier si le fichier existe et l'utiliser en priorité
-    if (fs.existsSync(serviceAccountPath)) {
-      console.log('📁 Utilisation du fichier de configuration Firebase');
+    let serviceAccountPath = null;
+    if (fs.existsSync(dockerSecretPath)) {
+      serviceAccountPath = dockerSecretPath;
+      console.log('📁 Utilisation du secret Docker pour Firebase');
+    } else if (fs.existsSync(localServiceAccountPath)) {
+      serviceAccountPath = localServiceAccountPath;
+      console.log('📁 Utilisation du fichier de configuration local Firebase');
+    }
+
+    // Si on a trouvé un fichier, l'utiliser en priorité
+    if (serviceAccountPath) {
       
       // Lire et parser le fichier JSON
       const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
@@ -40,15 +50,15 @@ function initializeFirebase() {
     
     const firebaseConfig = {
       type: process.env.FIREBASE_TYPE || 'service_account',
-      project_id: process.env.FIREBASE_PROJECT_ID,
-      private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-      private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      client_email: process.env.FIREBASE_CLIENT_EMAIL,
-      client_id: process.env.FIREBASE_CLIENT_ID,
+      project_id: getSecret('FIREBASE_PROJECT_ID', process.env.FIREBASE_PROJECT_ID),
+      private_key_id: getSecret('FIREBASE_PRIVATE_KEY_ID', process.env.FIREBASE_PRIVATE_KEY_ID),
+      private_key: getSecret('FIREBASE_PRIVATE_KEY', process.env.FIREBASE_PRIVATE_KEY)?.replace(/\\n/g, '\n'),
+      client_email: getSecret('FIREBASE_CLIENT_EMAIL', process.env.FIREBASE_CLIENT_EMAIL),
+      client_id: getSecret('FIREBASE_CLIENT_ID', process.env.FIREBASE_CLIENT_ID),
       auth_uri: process.env.FIREBASE_AUTH_URI || 'https://accounts.google.com/o/oauth2/auth',
       token_uri: process.env.FIREBASE_TOKEN_URI || 'https://oauth2.googleapis.com/token',
       auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL || 'https://www.googleapis.com/oauth2/v1/certs',
-      client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL
+      client_x509_cert_url: getSecret('FIREBASE_CLIENT_X509_CERT_URL', process.env.FIREBASE_CLIENT_X509_CERT_URL)
     };
 
     // Vérifier que les variables essentielles sont présentes
@@ -100,10 +110,12 @@ function getMessaging() {
  * Vérifie si Firebase est configuré
  */
 function isFirebaseConfigured() {
-  const serviceAccountPath = path.join(__dirname, '../../config/firebase-service-account.json');
+  const localServiceAccountPath = path.join(__dirname, '../../config/firebase-service-account.json');
+  const dockerSecretPath = '/run/secrets/firebase_service_account';
   
   return firebaseApp !== null || 
-         fs.existsSync(serviceAccountPath) || 
+         fs.existsSync(localServiceAccountPath) || 
+         fs.existsSync(dockerSecretPath) || 
          (process.env.FIREBASE_PROJECT_ID && 
           process.env.FIREBASE_PRIVATE_KEY && 
           process.env.FIREBASE_CLIENT_EMAIL);

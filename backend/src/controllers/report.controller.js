@@ -22,6 +22,15 @@ class ReportController {
     res.setHeader('Content-Disposition', `attachment; filename=rapport-evaluation-${id}.pdf`);
     res.send(pdfBuffer);
   });
+  getUEStats = asyncHandler(async (req, res) => {
+    const stats = await require('../services/stats.service').getUEStats(req.query);
+    res.status(200).json(stats);
+  });
+
+  getSchoolStats = asyncHandler(async (req, res) => {
+    const stats = await require('../services/stats.service').getSchoolStats();
+    res.status(200).json(stats);
+  });
 }
 
 module.exports = new ReportController();

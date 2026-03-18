@@ -4,9 +4,9 @@ services:
     restart: always
     environment:
       MYSQL_DATABASE: equizz_db
-      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
       MYSQL_USER: user
-      MYSQL_PASSWORD: user_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
     ports:
       - "3307:3306"
     volumes:
@@ -15,6 +15,9 @@ services:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       timeout: 20s
       retries: 10
+    secrets:
+      - db_root_password
+      - db_password
 
   backend:
     build:
@@ -28,14 +31,19 @@ services:
       - DB_PORT=3306
       - DB_NAME=equizz_db
       - DB_USER=user
-      - DB_PASSWORD=user_password
       - DB_DIALECT=mysql
-      - JWT_SECRET=development_secret_key
       - NODE_ENV=development
       - PORT=3000
     depends_on:
       db:
         condition: service_healthy
+    secrets:
+      - db_password
+      - jwt_secret
+      - google_ai_api_key
+      - firebase_service_account
+      - smtp_user
+      - smtp_pass
 
   frontend-admin:
     build:
@@ -57,6 +65,22 @@ services:
       - "19000-19002:19000-19002"
     depends_on:
       - backend
+
+secrets:
+  db_root_password:
+    file: ./secrets/db_root_password.txt
+  db_password:
+    file: ./secrets/db_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
+  google_ai_api_key:
+    file: ./secrets/google_ai_api_key.txt
+  firebase_service_account:
+    file: ./secrets/firebase_service_account.json
+  smtp_user:
+    file: ./secrets/smtp_user.txt
+  smtp_pass:
+    file: ./secrets/smtp_pass.txt
 
 volumes:
   mysql_data:

@@ -44,7 +44,8 @@
     "pdfkit": "^0.15.0",
     "sentiment": "^5.0.2",
     "sequelize": "^6.37.7",
-    "uuid": "^11.0.3"
+    "uuid": "^11.0.3",
+    "xss": "^1.0.15"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

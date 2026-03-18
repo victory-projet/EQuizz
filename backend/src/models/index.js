@@ -85,7 +85,10 @@ AnneeAcademique.hasMany(Semestre, { foreignKey: { name: 'annee_academique_id', a
 Semestre.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id' });
 
 AnneeAcademique.hasMany(Cours, { foreignKey: { name: 'annee_academique_id', allowNull: true } });
-Cours.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id' });
+Cours.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id', as: 'AnneeAcademique' });
+
+AnneeAcademique.hasMany(Evaluation, { foreignKey: { name: 'annee_academique_id', allowNull: false } });
+Evaluation.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id', as: 'AnneeAcademique' });
 
 Semestre.hasMany(Cours, { foreignKey: { name: 'semestre_id', allowNull: false } });
 Cours.belongsTo(Semestre, { foreignKey: 'semestre_id' });
@@ -97,7 +100,7 @@ Classe.hasMany(Etudiant, { foreignKey: 'classe_id' });
 Etudiant.belongsTo(Classe, { foreignKey: 'classe_id' });
 
 // Relation Plusieurs-à-Plusieurs entre Cours et Classe
-const CoursClasse = sequelize.define('CoursClasse', {}, { freezeTableName: true, paranoid: false, underscored: true }); // Table de jonction simple
+const CoursClasse = sequelize.define('CoursClasse', {}, { tableName: 'cours_classes', freezeTableName: true, paranoid: false, underscored: true }); // Table de jonction simple
 Cours.belongsToMany(Classe, { through: CoursClasse });
 Classe.belongsToMany(Cours, { through: CoursClasse });
 
@@ -147,7 +150,7 @@ Notification.belongsTo(Evaluation, { foreignKey: 'evaluation_id' });
 // Relation Plusieurs-à-Plusieurs entre Notification et Etudiant (avec statut de lecture)
 const NotificationEtudiant = sequelize.define('NotificationEtudiant', {
   estLue: { type: DataTypes.BOOLEAN, defaultValue: false }
-}, { freezeTableName: true, paranoid: false, underscored: true });
+}, { tableName: 'notification_etudiants', freezeTableName: true, paranoid: false, underscored: true });
 Etudiant.belongsToMany(Notification, { through: NotificationEtudiant });
 Notification.belongsToMany(Etudiant, { through: NotificationEtudiant });
 

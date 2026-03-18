@@ -58,7 +58,10 @@ const Question = sequelize.define('Question', {
   },
 
 }, {
-  freezeTableName: true // Empêche la pluralisation automatique
+  tableName: 'questions',
+  freezeTableName: true,
+  underscored: true,
+  timestamps: true
 });
 
 module.exports = Question;

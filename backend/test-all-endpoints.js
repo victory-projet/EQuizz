@@ -1,20 +1,51 @@
 // Test de tous les endpoints critiques
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000/api';
 
 const endpoints = [
   // Endpoints publics
   { method: 'GET', url: '/dashboard/health', auth: false },
+  { method: 'GET', url: '/academic/classes/public', auth: false },
+  { method: 'POST', url: '/auth/claim-account', auth: false },
+  { method: 'POST', url: '/auth/login', auth: false },
+  { method: 'POST', url: '/auth/forgot-password', auth: false },
   
-  // Endpoints avec auth (devraient retourner 401)
+  // Endpoints protégés par module (devraient retourner 401 ou 403)
+  // Auth & Profile
+  { method: 'GET', url: '/auth/me', auth: true },
+  { method: 'PUT', url: '/auth/profile', auth: true },
+  
+  // Académique
+  { method: 'GET', url: '/academic/ecoles', auth: true },
+  { method: 'GET', url: '/academic/annees-academiques', auth: true },
+  { method: 'GET', url: '/academic/cours', auth: true },
+  { method: 'GET', url: '/academic/classes', auth: true },
+  { method: 'GET', url: '/academic/etudiants', auth: true },
+  { method: 'GET', url: '/academic/enseignants', auth: true },
+
+  // Évaluations & Questions
+  { method: 'GET', url: '/evaluations', auth: true },
+  { method: 'POST', url: '/evaluations', auth: true },
+  { method: 'GET', url: '/questions', auth: true },
+
+  // Étudiant
+  { method: 'GET', url: '/student/evaluations/available', auth: true },
+  { method: 'GET', url: '/student/results', auth: true },
+
+  // Notifications
   { method: 'GET', url: '/notifications/summary', auth: true },
-  { method: 'PATCH', url: '/notifications/mark-all-read', auth: true },
   { method: 'GET', url: '/notifications', auth: true },
+  { method: 'GET', url: '/push-notifications/config', auth: true },
+
+  // Dashboard & Rapports
   { method: 'GET', url: '/dashboard/admin', auth: true },
   { method: 'GET', url: '/dashboard/metrics', auth: true },
-  { method: 'GET', url: '/dashboard/alerts', auth: true },
-  { method: 'GET', url: '/dashboard/activities/recent', auth: true },
+  { method: 'GET', url: '/reports/global', auth: true },
+
+  // Utilisateurs & Data
+  { method: 'GET', url: '/utilisateurs', auth: true },
+  { method: 'GET', url: '/data/export', auth: true },
 ];
 
 async function testEndpoint(endpoint) {

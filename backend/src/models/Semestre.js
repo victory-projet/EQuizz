@@ -35,7 +35,10 @@ const Semestre = sequelize.define('Semestre', {
   },
 
 }, {
-  freezeTableName: true // Empêche la pluralisation automatique
+  tableName: 'semestres',
+  freezeTableName: true,
+  underscored: true,
+  timestamps: true
 });
 
 module.exports = Semestre;

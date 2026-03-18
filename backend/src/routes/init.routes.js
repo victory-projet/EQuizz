@@ -67,7 +67,8 @@ async function seedDatabase() {
       nom: 'admin',
       prenom: 'super',
       email: 'super.admin@universitesaintjean.org',
-      motDePasseHash: 'Admin123!'
+      motDePasseHash: 'Admin123!',
+      role: 'SUPER-ADMIN'
     }, { transaction });
 
     const superadmin = await db.Superadministrateur.create({
@@ -80,7 +81,8 @@ async function seedDatabase() {
       nom: 'directeur',
       prenom: 'jean',
       email: 'jean.directeur@saintjeaningenieur.org',
-      motDePasseHash: 'Admin123!'
+      motDePasseHash: 'Admin123!',
+      role: 'ADMIN'
     }, { transaction });
 
     console.log('Création admin avec adminUser.id:', adminUser.id, 'et ecole.id:', ecole.id);
@@ -98,7 +100,8 @@ async function seedDatabase() {
       nom: 'dupont',
       prenom: 'marie',
       email: 'marie.dupont@saintjeaningenieur.org',
-      motDePasseHash: 'Prof123!'
+      motDePasseHash: 'Prof123!',
+      role: 'ENSEIGNANT'
     }, { transaction });
 
     const enseignant1 = await db.Enseignant.create({
@@ -110,7 +113,8 @@ async function seedDatabase() {
       nom: 'martin',
       prenom: 'jean',
       email: 'jean.martin@saintjeaningenieur.org',
-      motDePasseHash: 'Prof123!'
+      motDePasseHash: 'Prof123!',
+      role: 'ENSEIGNANT'
     }, { transaction });
 
     const enseignant2 = await db.Enseignant.create({
@@ -123,24 +127,21 @@ async function seedDatabase() {
       code: 'INF401',
       nom: 'Bases de Données Avancées',
       semestre_id: semestre1.id,
-      enseignant_id: enseignant1.id,
-      annee_academique_id: anneeAcademique.id
+      enseignant_id: enseignant1.id
     }, { transaction });
 
     const cours2 = await db.Cours.create({
       code: 'INF402',
       nom: 'Développement Web',
       semestre_id: semestre1.id,
-      enseignant_id: enseignant1.id,
-      annee_academique_id: anneeAcademique.id
+      enseignant_id: enseignant1.id
     }, { transaction });
 
     const cours3 = await db.Cours.create({
       code: 'MAT401',
       nom: 'Analyse Numérique',
       semestre_id: semestre1.id,
-      enseignant_id: enseignant2.id,
-      annee_academique_id: anneeAcademique.id
+      enseignant_id: enseignant2.id
     }, { transaction });
 
     // 8. Associer les cours aux classes
@@ -153,11 +154,13 @@ async function seedDatabase() {
       nom: 'sims',
       prenom: 'gills',
       email: 'gills.sims@saintjeaningenieur.org',
-      motDePasseHash: 'Etudiant123!'
+      motDePasseHash: 'Etudiant123!',
+      role: 'ETUDIANT'
     }, { transaction });
 
     await db.Etudiant.create({
       id: etudiantUser1.id,
+      matriculeUniv: 'UNIV-2024-001',
       matricule: 'ING4-2024-001',
       classe_id: classes[0].id
     }, { transaction });
@@ -171,6 +174,7 @@ async function seedDatabase() {
 
     await db.Etudiant.create({
       id: etudiantUser2.id,
+      matriculeUniv: 'UNIV-2024-002',
       matricule: 'ING4-2024-002',
       classe_id: classes[0].id
     }, { transaction });
@@ -184,6 +188,7 @@ async function seedDatabase() {
 
     await db.Etudiant.create({
       id: etudiantUser3.id,
+      matriculeUniv: 'UNIV-2024-003',
       matricule: 'ING4-2024-003',
       classe_id: classes[1].id
     }, { transaction });
@@ -197,6 +202,7 @@ async function seedDatabase() {
 
     await db.Etudiant.create({
       id: etudiantUser4.id,
+      matriculeUniv: 'UNIV-2223-235',
       matricule: '2223i235',
       classe_id: classes[0].id
     }, { transaction });
@@ -210,6 +216,7 @@ async function seedDatabase() {
 
     await db.Etudiant.create({
       id: etudiantUser5.id,
+      matriculeUniv: 'UNIV-2223-032',
       matricule: '2223i032',
       classe_id: classes[0].id
     }, { transaction });
@@ -224,7 +231,8 @@ async function seedDatabase() {
       typeEvaluation: 'MI_PARCOURS',
       statut: 'PUBLIEE',
       superadministrateur_id: superadminUser.id,
-      cours_id: cours1.id
+      cours_id: cours1.id,
+      annee_academique_id: anneeAcademique.id
     }, { transaction });
 
     // Associer l'évaluation aux classes

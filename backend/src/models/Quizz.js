@@ -20,7 +20,10 @@ const Quizz = sequelize.define('Quizz', {
     // ex: "Veuillez répondre honnêtement. Vos réponses sont anonymes."
   },
 }, {
-  freezeTableName: true // Empêche la pluralisation automatique
+  tableName: 'quizzes',
+  freezeTableName: true,
+  underscored: true,
+  timestamps: true
 });
 
 module.exports = Quizz;

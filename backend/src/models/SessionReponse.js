@@ -34,7 +34,10 @@ const SessionReponse = sequelize.define('SessionReponse', {
     allowNull: true,
   },
 }, {
-  freezeTableName: true // Empêche la pluralisation automatique
+  tableName: 'session_reponses',
+  freezeTableName: true,
+  underscored: true,
+  timestamps: true
 });
 
 module.exports = SessionReponse;

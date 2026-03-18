@@ -182,8 +182,16 @@ class ReportService {
           neutrePct: '0',
           negatifPct: '0'
         },
+        categories: {
+          PEDAGOGIE: 0,
+          INFRASTRUCTURE: 0,
+          CONTENU: 0,
+          CLIMAT: 0,
+          AUTRE: 0
+        },
         keywords: [],
-        summary: null
+        summary: null,
+        topExplanations: []
       };
     }
 
@@ -200,16 +208,35 @@ class ReportService {
     }
 
     // Compter les sentiments
-    const sentimentCounts = {
-      POSITIF: 0,
-      NEUTRE: 0,
-      NEGATIF: 0
+    const categoryCounts = {
+      PEDAGOGIE: 0,
+      INFRASTRUCTURE: 0,
+      CONTENU: 0,
+      CLIMAT: 0,
+      AUTRE: 0
     };
 
+    const explanations = [];
     const textes = [];
+
     reponses.forEach(reponse => {
       if (reponse.AnalyseReponse) {
         sentimentCounts[reponse.AnalyseReponse.sentiment]++;
+        
+        // Catégories
+        if (reponse.AnalyseReponse.categorie) {
+          const cat = reponse.AnalyseReponse.categorie.toUpperCase();
+          if (categoryCounts[cat] !== undefined) {
+            categoryCounts[cat]++;
+          } else {
+            categoryCounts.AUTRE++;
+          }
+        }
+
+        // Explications
+        if (reponse.AnalyseReponse.explication) {
+          explanations.push(reponse.AnalyseReponse.explication);
+        }
       }
       if (reponse.contenu) {
         textes.push(reponse.contenu);
@@ -240,8 +267,10 @@ class ReportService {
         neutrePct: total > 0 ? ((sentimentCounts.NEUTRE / total) * 100).toFixed(2) : '0',
         negatifPct: total > 0 ? ((sentimentCounts.NEGATIF / total) * 100).toFixed(2) : '0'
       },
+      categories: categoryCounts,
       keywords,
-      summary
+      summary,
+      topExplanations: explanations.slice(0, 5) // Les 5 premières explications pour illustration
     };
   }
 
@@ -351,6 +380,15 @@ class ReportService {
         doc.text(`Positif: ${report.sentimentAnalysis.sentiments.positif} (${report.sentimentAnalysis.sentiments.positifPct}%)`);
         doc.text(`Neutre: ${report.sentimentAnalysis.sentiments.neutre} (${report.sentimentAnalysis.sentiments.neutrePct}%)`);
         doc.text(`Négatif: ${report.sentimentAnalysis.sentiments.negatif} (${report.sentimentAnalysis.sentiments.negatifPct}%)`);
+        doc.moveDown();
+
+        doc.fontSize(14).text('Répartition par Catégorie:');
+        doc.fontSize(10);
+        Object.entries(report.sentimentAnalysis.categories).forEach(([cat, count]) => {
+          if (count > 0) {
+            doc.text(`- ${cat}: ${count}`);
+          }
+        });
         doc.moveDown();
 
         // Résumé IA (si disponible)

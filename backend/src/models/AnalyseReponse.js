@@ -24,8 +24,35 @@ const AnalyseReponse = sequelize.define('AnalyseReponse', {
     allowNull: false,
   },
 
+  explication: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'Explication du sentiment'
+  },
+
+  motsCles: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    field: 'mots_cles'
+  },
+
+  categorie: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Catégorie de la réponse (Pédagogie, Infrastructure, etc.)'
+  },
+
+  confidence: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+    defaultValue: 1.0
+  }
+
 }, {
-  freezeTableName: true // Empêche la pluralisation automatique
+  tableName: 'analyse_reponses',
+  freezeTableName: true,
+  underscored: true,
+  timestamps: true
 });
 
 module.exports = AnalyseReponse;

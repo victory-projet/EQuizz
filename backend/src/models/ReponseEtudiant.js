@@ -16,7 +16,10 @@ const ReponseEtudiant = sequelize.define('ReponseEtudiant', {
   },
 
 }, {
-  freezeTableName: true // Empêche la pluralisation automatique
+  tableName: 'reponse_etudiants',
+  freezeTableName: true,
+  underscored: true,
+  timestamps: true
 });
 
 module.exports = ReponseEtudiant;

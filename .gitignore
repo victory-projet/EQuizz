@@ -23,4 +23,12 @@ Thumbs.db
 # Fichiers d'éditeur de code
 .idea
 .vscode/
-*.swp
+secrets/
+*.json
+!**/package.json
+!**/package-lock.json
+!**/composer.json
+*.sqlite
+/backend/debug-test.js
+/backend/dump-ids.js
+/backend/verify-sentiment.js

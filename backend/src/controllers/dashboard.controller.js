@@ -17,7 +17,26 @@ class DashboardController {
     if (cours && cours !== 'all') filters.coursId = cours;
     if (enseignant && enseignant !== 'all') filters.enseignantId = enseignant;
 
-    console.log('📊 Dashboard filters received:', filters);
+    // Gestion du rôle et de l'isolation par école
+    const utilisateur = await db.Utilisateur.findByPk(req.user.id, {
+      include: [
+        { model: db.Superadministrateur, as: 'Superadministrateur' },
+        { model: db.Administrateur, as: 'Administrateur' }
+      ]
+    });
+
+    if (utilisateur.Superadministrateur) {
+      // Le Super-Admin voit tout. S'il choisit une école, on filtre.
+      if (req.query.ecole && req.query.ecole !== 'all') {
+        filters.ecoleId = req.query.ecole;
+      }
+      // Si pas d'école spécifiée, on ne met pas de filtre ecoleId -> voit tout.
+    } else if (utilisateur.Administrateur) {
+      // L'Admin standard ne voit que son école.
+      filters.ecoleId = utilisateur.Administrateur.ecole_id;
+    }
+
+    console.log('📊 Dashboard filters after role check:', filters);
 
     const dashboard = await dashboardService.getAdminDashboard(filters);
     res.status(200).json(dashboard);

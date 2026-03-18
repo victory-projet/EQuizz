@@ -120,6 +120,11 @@ class DashboardService {
       where.cours_id = filters.coursId;
     }
 
+    // Filtre par école (Multi-tenancy)
+    if (filters.ecoleId && filters.ecoleId !== 'all') {
+      where['$Classes.ecole_id$'] = filters.ecoleId;
+    }
+
     return where;
   }
 

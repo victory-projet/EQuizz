@@ -39,6 +39,13 @@ class StudentController {
       } : null
     });
   });
+
+  getHistory = asyncHandler(async (req, res) => {
+    const etudiantId = req.user.id;
+    const statsService = require('../services/stats.service');
+    const history = await statsService.getStudentHistory(etudiantId);
+    res.status(200).json(history);
+  });
 }
 
 module.exports = new StudentController();
