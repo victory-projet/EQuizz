@@ -2,14 +2,15 @@
 
 const ExcelJS = require('exceljs');
 const db = require('../models');
+const { genererMatriculeUniv } = require('../utils/matriculeGenerator');
 
 class ExcelImportService {
   /**
    * Importe des écoles depuis un fichier Excel
    */
-  async importEcoles(filePath) {
+  async importEcoles(buffer) {
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(filePath);
+    await workbook.xlsx.load(buffer);
     const worksheet = workbook.getWorksheet('Ecoles') || workbook.worksheets[0];
     
     const results = {
@@ -52,9 +53,9 @@ class ExcelImportService {
   /**
    * Importe des classes depuis un fichier Excel
    */
-  async importClasses(filePath) {
+  async importClasses(buffer) {
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(filePath);
+    await workbook.xlsx.load(buffer);
     const worksheet = workbook.getWorksheet('Classes') || workbook.worksheets[0];
     
     const results = {
@@ -112,9 +113,9 @@ class ExcelImportService {
   /**
    * Importe des étudiants depuis un fichier Excel
    */
-  async importEtudiants(filePath) {
+  async importEtudiants(buffer) {
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(filePath);
+    await workbook.xlsx.load(buffer);
     const worksheet = workbook.getWorksheet('Etudiants') || workbook.worksheets[0];
     
     const results = {
@@ -166,22 +167,21 @@ class ExcelImportService {
           }
 
           // Créer ou mettre à jour l'étudiant
-          const [etudiant, etudiantCreated] = await db.Etudiant.findOrCreate({
-            where: { matricule },
-            defaults: {
+          const existingEtudiant = await db.Etudiant.findOne({ where: { matricule }, transaction });
+
+          if (existingEtudiant) {
+            await existingEtudiant.update({ idCarte, classe_id: classeId, dateImport }, { transaction });
+            results.updated.push(matricule);
+          } else {
+            const matriculeUniv = await genererMatriculeUniv();
+            await db.Etudiant.create({
               id: utilisateur.id,
               matricule,
+              matriculeUniv,
               idCarte,
               classe_id: classeId,
               dateImport
-            },
-            transaction
-          });
-
-          if (!etudiantCreated) {
-            await etudiant.update({ idCarte, classe_id: classeId, dateImport }, { transaction });
-            results.updated.push(matricule);
-          } else {
+            }, { transaction });
             results.created.push(matricule);
           }
           
@@ -202,9 +202,9 @@ class ExcelImportService {
   /**
    * Importe des enseignants depuis un fichier Excel
    */
-  async importEnseignants(filePath) {
+  async importEnseignants(buffer) {
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(filePath);
+    await workbook.xlsx.load(buffer);
     const worksheet = workbook.getWorksheet('Enseignants') || workbook.worksheets[0];
     
     const results = {
@@ -281,9 +281,9 @@ class ExcelImportService {
   /**
    * Importe des cours depuis un fichier Excel
    */
-  async importCours(filePath) {
+  async importCours(buffer) {
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(filePath);
+    await workbook.xlsx.load(buffer);
     const worksheet = workbook.getWorksheet('Cours') || workbook.worksheets[0];
     
     const results = {

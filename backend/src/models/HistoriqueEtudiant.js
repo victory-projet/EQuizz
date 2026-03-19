@@ -13,10 +13,6 @@ const HistoriqueEtudiant = sequelize.define('HistoriqueEtudiant', {
   etudiant_id: {
     type: DataTypes.UUID,
     allowNull: false,
-    references: {
-      model: 'Etudiant',
-      key: 'id'
-    },
     comment: 'UUID permanent de l\'étudiant'
   },
 
@@ -29,20 +25,12 @@ const HistoriqueEtudiant = sequelize.define('HistoriqueEtudiant', {
   ecole_id: {
     type: DataTypes.UUID,
     allowNull: false,
-    references: {
-      model: 'Ecole',
-      key: 'id'
-    },
     comment: 'École fréquentée pendant cette période'
   },
 
   classe_id: {
     type: DataTypes.UUID,
     allowNull: false,
-    references: {
-      model: 'Classe',
-      key: 'id'
-    },
     comment: 'Classe fréquentée pendant cette période'
   },
 

@@ -9,11 +9,12 @@ router.use(authorize(['SUPER-ADMIN', 'ADMIN']));
 
 // Routes CRUD standards (accessibles par tout admin)
 router.get('/', utilisateurController.getAllUtilisateurs);
-router.get('/:id', utilisateurController.getUtilisateurById);
 router.post('/', utilisateurController.createUtilisateur);
+// Routes statiques AVANT les routes paramétrées (:id)
+router.post('/import', utilisateurController.importUtilisateurs);
+router.get('/:id', utilisateurController.getUtilisateurById);
 router.put('/:id', utilisateurController.updateUtilisateur);
 router.delete('/:id', utilisateurController.deleteUtilisateur);
 router.post('/:id/reset-password', utilisateurController.resetPassword);
-router.post('/import', utilisateurController.importUtilisateurs);
 
 module.exports = router;

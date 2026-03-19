@@ -1,3 +1,4 @@
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 const { getSecret } = require('../utils/secrets');
 
 const dbHost = process.env.DB_HOST || 'localhost';

@@ -24,13 +24,8 @@ class UtilisateurRepository {
         required: false, // On met 'false' car un admin n'a pas de profil étudiant
       }, {
         model: db.Superadministrateur,
-        as: 'Superadministrateur', // On inclut le profil Superadmin
+        as: 'Superadministrateur',
         required: false,
-        include: [{
-          model: db.Ecole,
-          attributes: ['id', 'nom'],
-          required: false
-        }]
       }, {
         model: db.Administrateur,
         as: 'Administrateur', // On inclut le profil Administrateur

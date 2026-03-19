@@ -3,6 +3,15 @@ const AppError = require('../utils/AppError');
 
 class EcoleService {
   async create(data) {
+    // Générer le domaine automatiquement si non fourni
+    if (!data.domaine && data.nom) {
+      const slug = data.nom
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // supprimer accents
+        .replace(/[^a-z0-9]+/g, '')                       // garder alphanum
+        .substring(0, 30);
+      data.domaine = `${slug}.edu`;
+    }
     return ecoleRepository.create(data);
   }
 

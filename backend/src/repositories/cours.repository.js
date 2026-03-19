@@ -15,7 +15,7 @@ class CoursRepository {
       include: [
         { model: db.Enseignant, include: [db.Utilisateur] },
         { model: db.Semestre },
-        { model: db.AnneeAcademique }
+        { model: db.AnneeAcademique, as: 'AnneeAcademique' }
       ],
       order: [['nom', 'ASC']]
     });
@@ -26,7 +26,7 @@ class CoursRepository {
       include: [
         { model: db.Enseignant, include: [db.Utilisateur] },
         { model: db.Semestre },
-        { model: db.AnneeAcademique }
+        { model: db.AnneeAcademique, as: 'AnneeAcademique' }
       ],
       order: [['nom', 'ASC']]
     });
@@ -40,7 +40,7 @@ class CoursRepository {
       include: [
         { model: db.Enseignant, include: [db.Utilisateur] },
         { model: db.Semestre },
-        { model: db.AnneeAcademique }
+        { model: db.AnneeAcademique, as: 'AnneeAcademique' }
       ]
     });
   }
@@ -50,7 +50,7 @@ class CoursRepository {
       include: [
         { model: db.Enseignant, include: [db.Utilisateur] },
         { model: db.Semestre },
-        { model: db.AnneeAcademique }
+        { model: db.AnneeAcademique, as: 'AnneeAcademique' }
       ]
     });
   }

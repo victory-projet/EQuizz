@@ -149,24 +149,44 @@ class ExportService {
    * Exporte la liste des étudiants d'une classe (ADMIN UNIQUEMENT)
    * Cette méthode est réservée à la gestion administrative
    */
-  async exportStudentsList(classeId) {
-    const classe = await db.Classe.findByPk(classeId, {
-      include: [
-        {
-          model: db.Etudiant,
-          include: [{ model: db.Utilisateur }]
-        },
-        { model: db.AnneeAcademique }
-      ]
-    });
+  async exportStudentsList(classeId = null) {
+    let rows = [];
 
-    if (!classe) {
-      throw new Error('Classe non trouvée');
+    if (classeId) {
+      // Export d'une classe spécifique
+      const classe = await db.Classe.findByPk(classeId, {
+        include: [
+          { model: db.Etudiant, include: [{ model: db.Utilisateur }] }
+        ]
+      });
+      if (!classe) throw new Error('Classe non trouvée');
+      rows = classe.Etudiants.map(e => ({
+        matricule: e.matricule,
+        nom: e.Utilisateur.nom,
+        prenom: e.Utilisateur.prenom,
+        email: e.Utilisateur.email,
+        classe: classe.nom
+      }));
+    } else {
+      // Export de tous les étudiants
+      const etudiants = await db.Etudiant.findAll({
+        include: [
+          { model: db.Utilisateur },
+          { model: db.Classe }
+        ]
+      });
+      rows = etudiants.map(e => ({
+        matricule: e.matricule,
+        nom: e.Utilisateur.nom,
+        prenom: e.Utilisateur.prenom,
+        email: e.Utilisateur.email,
+        classe: e.Classe?.nom || ''
+      }));
     }
 
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Étudiants');
-    
+
     sheet.columns = [
       { header: 'Matricule', key: 'matricule', width: 15 },
       { header: 'Nom', key: 'nom', width: 20 },
@@ -175,8 +195,6 @@ class ExportService {
       { header: 'Classe', key: 'classe', width: 15 }
     ];
 
-    // Style pour l'en-tête
-    sheet.getRow(1).font = { bold: true, size: 12 };
     sheet.getRow(1).fill = {
       type: 'pattern',
       pattern: 'solid',
@@ -184,15 +202,7 @@ class ExportService {
     };
     sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
 
-    classe.Etudiants.forEach(etudiant => {
-      sheet.addRow({
-        matricule: etudiant.matricule,
-        nom: etudiant.Utilisateur.nom,
-        prenom: etudiant.Utilisateur.prenom,
-        email: etudiant.Utilisateur.email,
-        classe: classe.nom
-      });
-    });
+    rows.forEach(r => sheet.addRow(r));
 
     return workbook;
   }
@@ -309,8 +319,7 @@ class ExportService {
     const enseignants = await db.Enseignant.findAll({
       include: [
         { 
-          model: db.Utilisateur,
-          include: [{ model: db.Ecole }]
+          model: db.Utilisateur
         }
       ],
       order: [[db.Utilisateur, 'nom', 'ASC']]

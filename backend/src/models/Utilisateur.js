@@ -32,17 +32,11 @@ const Utilisateur = sequelize.define('Utilisateur', {
     unique: true,
     validate: {
       isEmailCustom(value) {
-        // Validation format prenom.nom@... (lettres uniquement, sans chiffres, sans accents)
-        const standardFormat = /^[a-zA-Z]+\.[a-zA-Z]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (!standardFormat.test(value)) {
-          throw new Error('Le format de l\'email doit être prenom.nom@domaine.org (lettres non accentuées uniquement)');
+        // Validation basique : format email standard
+        const basicEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!basicEmail.test(value)) {
+          throw new Error('Format d\'email invalide');
         }
-
-        const domain = value.split('@')[1];
-        const isSJDomain = domain === 'universitesaintjean.org';
-
-        // Note: La validation du rôle par domaine est faite dans un hook beforeValidate 
-        // car 'this.role' n'est pas fiable ici selon les versions de Sequelize
       }
     }
   },
@@ -74,19 +68,10 @@ const Utilisateur = sequelize.define('Utilisateur', {
   // Ajout des Hooks
   hooks: {
     beforeValidate: (utilisateur) => {
-      if (utilisateur.email) {
+      if (utilisateur.email && utilisateur.role === 'SUPER-ADMIN') {
         const domain = utilisateur.email.split('@')[1];
-        const isSJDomain = domain === 'universitesaintjean.org';
-
-        // Si c'est un Super-Admin, il DOIT avoir le domaine saintjean
-        if (utilisateur.role === 'SUPER-ADMIN' && !isSJDomain) {
+        if (domain !== 'universitesaintjean.org') {
           throw new Error('Les Super-Administrateurs doivent utiliser un email @universitesaintjean.org');
-        }
-        
-        // Si ce n'est PAS un Super-Admin (donc Admin, Enseignant, Etudiant ou indéfini), il ne doit PAS avoir le domaine saintjean
-        // On permet isSJDomain UNIQUEMENT si le rôle est explicitement SUPER-ADMIN
-        if (isSJDomain && utilisateur.role !== 'SUPER-ADMIN') {
-          throw new Error('Le domaine @universitesaintjean.org est réservé aux Super-Administrateurs');
         }
       }
     },

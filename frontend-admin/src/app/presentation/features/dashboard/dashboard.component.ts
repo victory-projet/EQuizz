@@ -301,6 +301,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.dashboardService.stopAutoRefresh();
     this.destroy$.next();
     this.destroy$.complete();
   }

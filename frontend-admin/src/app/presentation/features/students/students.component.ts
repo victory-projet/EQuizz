@@ -1,4 +1,4 @@
-﻿﻿﻿﻿import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -8,8 +8,9 @@ import { User, Etudiant } from '../../../core/domain/entities/user.entity';
 import { Classe, Ecole } from '../../../core/domain/entities/academic.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { UserCacheService } from '../../../core/services/user-cache.service';
-import { ExcelUploadComponent } from '../../shared/components/excel-upload/excel-upload.component';
-import { environment } from '../../../../environments/environment';
+import { AuthService } from '../../shared/services/auth.service';
+import { ExcelUploadComponent, ExcelUploadResult } from '../../shared/components/excel-upload/excel-upload.component';
+import { ApiService } from '../../../infrastructure/http/api.service';
 
 @Component({
   selector: 'app-students',
@@ -23,28 +24,39 @@ export class StudentsComponent implements OnInit, OnDestroy {
   filteredStudents = signal<Etudiant[]>([]);
   classes = signal<Classe[]>([]);
   ecoles = signal<Ecole[]>([]);
-  
+
   isLoading = signal(false);
   showModal = signal(false);
   showDeleteModal = signal(false);
   selectedStudent = signal<Etudiant | null>(null);
-  
+
   // Cache management
   cacheEnabled = signal(true);
   lastRefresh = signal<Date | null>(null);
-  
+
   private confirmationService = inject(ConfirmationService);
   private userCacheService = inject(UserCacheService);
-  
+  private authService = inject(AuthService);
+  private apiService = inject(ApiService);
+
+  isSuperAdmin(): boolean {
+    return this.authService.currentUser()?.role === 'SUPER-ADMIN';
+  }
+
   // Destruction subject for cleanup
   private destroy$ = new Subject<void>();
-  
+
   searchQuery = signal('');
   filterEcole = signal<string>('ALL');
   filterClasse = signal<string>('ALL');
   filterStatus = signal<string>('ALL');
   showArchived = signal(false);
   showImportDialog = signal(false);
+  showActionsMenu = signal(false);
+
+  toggleActionsMenu(): void {
+    this.showActionsMenu.update(v => !v);
+  }
 
   formData = {
     nom: '',
@@ -61,31 +73,26 @@ export class StudentsComponent implements OnInit, OnDestroy {
   totalStudents = computed(() => this.students().length);
   activeStudents = computed(() => this.students().filter(s => s.estActif).length);
   inactiveStudents = computed(() => this.students().filter(s => !s.estActif).length);
-  
+
   // Computed signal pour filtrer les classes par école sélectionnée
   filteredClasses = computed(() => {
     try {
       const ecoleId = this.filterEcole();
       const allClasses = this.classes();
-      
-      // Toujours retourner un tableau, même vide
+
       if (!allClasses || !Array.isArray(allClasses)) {
         return [];
       }
-      
-      // Si "Toutes les écoles" est sélectionné, retourner toutes les classes
+
       if (!ecoleId || ecoleId === 'ALL') {
         return allClasses;
       }
-      
-      // Sinon, filtrer les classes qui appartiennent à l'école sélectionnée
+
       return allClasses.filter(c => {
-        // Vérifier si la classe a un ecoleId qui correspond
         return c && c.ecoleId && c.ecoleId.toString() === ecoleId.toString();
       });
     } catch (error) {
       console.error('Erreur dans filteredClasses:', error);
-      // En cas d'erreur, retourner toutes les classes ou un tableau vide
       const allClasses = this.classes();
       return Array.isArray(allClasses) ? allClasses : [];
     }
@@ -100,7 +107,6 @@ export class StudentsComponent implements OnInit, OnDestroy {
     this.loadStudents();
     this.loadClasses();
     this.loadEcoles();
-    this.setupCacheObservation();
   }
 
   ngOnDestroy(): void {
@@ -109,25 +115,15 @@ export class StudentsComponent implements OnInit, OnDestroy {
   }
 
   setupCacheObservation(): void {
-    // Observer les changements des étudiants en temps réel
-    this.userCacheService.observeStudents()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(students => {
-        if (students.length > 0) {
-          this.students.set(students as Etudiant[]);
-          this.applyFilters();
-          this.lastRefresh.set(new Date());
-        }
-      });
+    // Désactivé — chaque action (create/update/delete) gère son propre refresh
   }
 
   loadStudents(): void {
     this.isLoading.set(true);
-    
+
     if (this.cacheEnabled()) {
-      // Utiliser le cache service
       this.userCacheService.getStudents({
-        ttl: 10 * 60 * 1000, // 10 minutes
+        ttl: 10 * 60 * 1000,
         persistToStorage: true
       }).pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -137,11 +133,8 @@ export class StudentsComponent implements OnInit, OnDestroy {
           this.isLoading.set(false);
           this.lastRefresh.set(new Date());
         },
-        error: (error) => {
-          console.error('Erreur lors du chargement des étudiants:', error);
-          this.errorMessage.set('Erreur lors du chargement des étudiants');
+        error: () => {
           this.isLoading.set(false);
-          // Fallback vers l'API directe
           this.loadStudentsDirectly();
         }
       });
@@ -151,18 +144,15 @@ export class StudentsComponent implements OnInit, OnDestroy {
   }
 
   loadStudentsDirectly(): void {
-    // Charger TOUS les étudiants (y compris archivés)
     this.userUseCase.getAllUsers(true).subscribe({
       next: (users: User[]) => {
         const students = users.filter((u: User) => u.role === 'ETUDIANT') as Etudiant[];
-        console.log('📚 Étudiants chargés:', students);
         this.students.set(students);
         this.applyFilters();
         this.isLoading.set(false);
         this.lastRefresh.set(new Date());
       },
       error: (error: any) => {
-        console.error('Erreur lors du chargement des étudiants:', error);
         this.errorMessage.set('Erreur lors du chargement des étudiants');
         this.isLoading.set(false);
       }
@@ -170,94 +160,64 @@ export class StudentsComponent implements OnInit, OnDestroy {
   }
 
   loadClasses(): void {
-    console.log('🔄 Chargement des classes...');
     this.academicUseCase.getClasses().subscribe({
       next: (classes) => {
-        console.log('📚 Classes chargées:', classes);
-        console.log('📚 Nombre de classes:', classes.length);
-        if (classes.length > 0) {
-          console.log('📚 Exemple de classe:', classes[0]);
-          console.log('📚 ecoleId de la première classe:', classes[0].ecoleId);
-        }
-        // Filtrer les classes archivées pour les formulaires
         const classesActives = classes.filter(c => !c.estArchive);
         this.classes.set(classesActives);
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des classes:', error);
-        console.error('❌ Status:', error.status);
-        console.error('❌ Message:', error.message);
+        console.error('Erreur lors du chargement des classes:', error);
       }
     });
   }
 
   loadEcoles(): void {
-    console.log('🔄 Chargement des écoles...');
     this.academicUseCase.getEcoles().subscribe({
       next: (ecoles) => {
-        console.log('🏫 Écoles chargées:', ecoles);
-        console.log('🏫 Nombre d\'écoles:', ecoles.length);
-        if (ecoles.length > 0) {
-          console.log('🏫 Exemple d\'école:', ecoles[0]);
-        }
         this.ecoles.set(ecoles);
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des écoles:', error);
-        console.error('❌ Status:', error.status);
-        console.error('❌ Message:', error.message);
-        // Ne pas afficher d'erreur si c'est une erreur d'authentification
-        // L'intercepteur redirigera vers la page de login
         if (error.status && error.status !== 401) {
-          console.warn('⚠️ Impossible de charger les écoles. Vérifiez votre connexion.');
+          console.warn('Impossible de charger les écoles.');
         }
       }
     });
   }
 
-
   applyFilters(): void {
     try {
       let filtered = this.students();
 
-      // Filtrage par archivage (par défaut, afficher uniquement les actifs)
       if (!this.showArchived()) {
         filtered = filtered.filter(s => !s.estArchive);
       } else {
         filtered = filtered.filter(s => s.estArchive);
       }
 
-      // Filtrage par école (via la classe de l'étudiant)
       const ecoleFilter = this.filterEcole();
       if (ecoleFilter && ecoleFilter !== 'ALL') {
-        const selectedEcoleId = ecoleFilter;
-        // Récupérer les IDs des classes qui appartiennent à l'école sélectionnée
         const classesInEcole = this.classes()
-          .filter(c => c.ecoleId && c.ecoleId.toString() === selectedEcoleId.toString())
+          .filter(c => c.ecoleId && c.ecoleId.toString() === ecoleFilter.toString())
           .map(c => c.id.toString());
-        
-        // Filtrer les étudiants qui sont dans ces classes
+
         if (classesInEcole.length > 0) {
-          filtered = filtered.filter(s => 
+          filtered = filtered.filter(s =>
             s.classeId && classesInEcole.includes(s.classeId.toString())
           );
         }
       }
 
-      // Filtrage par classe
       const classeFilter = this.filterClasse();
       if (classeFilter && classeFilter !== 'ALL') {
         filtered = filtered.filter(s => s.classeId?.toString() === classeFilter);
       }
 
-      // Filtrage par statut
       const statusFilter = this.filterStatus();
       if (statusFilter && statusFilter !== 'ALL') {
         const isActive = statusFilter === 'ACTIVE';
         filtered = filtered.filter(s => s.estActif === isActive);
       }
 
-      // Filtrage par recherche textuelle
       const searchQuery = this.searchQuery();
       if (searchQuery && searchQuery.trim() !== '') {
         const query = searchQuery.toLowerCase();
@@ -271,8 +231,6 @@ export class StudentsComponent implements OnInit, OnDestroy {
 
       this.filteredStudents.set(filtered);
     } catch (error) {
-      console.error('❌ Erreur dans applyFilters:', error);
-      // En cas d'erreur, afficher tous les étudiants non archivés
       this.filteredStudents.set(this.students().filter(s => !s.estArchive));
     }
   }
@@ -284,14 +242,10 @@ export class StudentsComponent implements OnInit, OnDestroy {
   }
 
   onFilterEcole(ecoleId: string): void {
-    console.log('🔍 Filtre école changé:', ecoleId);
     this.filterEcole.set(ecoleId);
-    // Réinitialiser le filtre classe quand on change d'école
-    // pour éviter d'avoir une classe sélectionnée qui n'appartient pas à la nouvelle école
     this.filterClasse.set('ALL');
     this.applyFilters();
   }
-
 
   onToggleArchived(showArchived: boolean): void {
     this.showArchived.set(showArchived);
@@ -351,7 +305,6 @@ export class StudentsComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     this.errorMessage.set('');
-    
     if (this.selectedStudent()) {
       this.updateStudent();
     } else {
@@ -370,17 +323,15 @@ export class StudentsComponent implements OnInit, OnDestroy {
     };
 
     this.userUseCase.createUser(data).subscribe({
-      next: (newStudent) => {
+      next: () => {
         this.successMessage.set('Étudiant créé avec succès');
         this.closeModal();
-        
-        // Mettre à jour le cache
-        if (this.cacheEnabled()) {
-          this.userCacheService.updateCacheAfterOperation('create', newStudent);
-        } else {
-          this.loadStudents();
-        }
-        
+        this.userCacheService.invalidateAndRefresh().subscribe(users => {
+          const students = users.filter(u => u.role === 'ETUDIANT') as Etudiant[];
+          this.students.set(students);
+          this.applyFilters();
+          this.isLoading.set(false);
+        });
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error: any) => {
@@ -402,17 +353,15 @@ export class StudentsComponent implements OnInit, OnDestroy {
     };
 
     this.userUseCase.updateUser(student.id.toString(), data).subscribe({
-      next: (updatedStudent) => {
+      next: () => {
         this.successMessage.set('Étudiant mis à jour avec succès');
         this.closeModal();
-        
-        // Mettre à jour le cache
-        if (this.cacheEnabled()) {
-          this.userCacheService.updateCacheAfterOperation('update', updatedStudent);
-        } else {
-          this.loadStudents();
-        }
-        
+        this.userCacheService.invalidateAndRefresh().subscribe(users => {
+          const students = users.filter(u => u.role === 'ETUDIANT') as Etudiant[];
+          this.students.set(students);
+          this.applyFilters();
+          this.isLoading.set(false);
+        });
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error: any) => {
@@ -430,7 +379,12 @@ export class StudentsComponent implements OnInit, OnDestroy {
     this.userUseCase.deleteUser(student.id.toString()).subscribe({
       next: () => {
         this.successMessage.set('Étudiant supprimé avec succès');
-        this.loadStudents();
+        this.userCacheService.invalidateAndRefresh().subscribe(users => {
+          const students = users.filter(u => u.role === 'ETUDIANT') as Etudiant[];
+          this.students.set(students);
+          this.applyFilters();
+          this.isLoading.set(false);
+        });
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error: any) => {
@@ -444,14 +398,14 @@ export class StudentsComponent implements OnInit, OnDestroy {
     const newStatus = !student.estActif;
     const action = student.estActif ? 'désactiver' : 'activer';
     const confirmed = await this.confirmationService.confirm({
-      title: `Confirmer ${action === 'désactiver' ? 'la désactivation' : 'l\'activation'}`,
+      title: `Confirmer ${action === 'désactiver' ? 'la désactivation' : "l'activation"}`,
       message: `Êtes-vous sûr de vouloir ${action} l'étudiant "${student.prenom} ${student.nom}" ?`,
       confirmText: action === 'désactiver' ? 'Désactiver' : 'Activer',
       cancelText: 'Annuler',
       type: action === 'désactiver' ? 'warning' : 'success',
       icon: action === 'désactiver' ? 'person_off' : 'person'
     });
-    
+
     if (!confirmed) return;
 
     this.userUseCase.updateUser(student.id.toString(), { estActif: newStatus }).subscribe({
@@ -472,11 +426,6 @@ export class StudentsComponent implements OnInit, OnDestroy {
     return classe ? classe.nom : 'Non assignée';
   }
 
-  // === MÉTHODES DE GESTION DU CACHE ===
-
-  /**
-   * Active ou désactive le cache
-   */
   toggleCache(): void {
     this.cacheEnabled.set(!this.cacheEnabled());
     if (this.cacheEnabled()) {
@@ -487,9 +436,6 @@ export class StudentsComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Actualise manuellement les données
-   */
   refreshData(): void {
     if (this.cacheEnabled()) {
       this.userCacheService.refreshByRole('ETUDIANT');
@@ -498,9 +444,6 @@ export class StudentsComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Vide le cache des étudiants
-   */
   clearCache(): void {
     this.userCacheService.refreshByRole('ETUDIANT');
     this.lastRefresh.set(null);
@@ -508,30 +451,19 @@ export class StudentsComponent implements OnInit, OnDestroy {
     setTimeout(() => this.successMessage.set(''), 3000);
   }
 
-  /**
-   * Vérifie si les données sont récentes
-   */
   isDataFresh(): boolean {
     const lastRefresh = this.lastRefresh();
     if (!lastRefresh) return false;
-    
-    const now = new Date();
-    const diffMinutes = (now.getTime() - lastRefresh.getTime()) / (1000 * 60);
-    return diffMinutes < 5; // Considéré comme frais si moins de 5 minutes
+    const diffMinutes = (new Date().getTime() - lastRefresh.getTime()) / (1000 * 60);
+    return diffMinutes < 5;
   }
 
-  /**
-   * Obtient le statut du cache pour l'affichage
-   */
   getCacheStatus(): string {
     if (!this.cacheEnabled()) return 'Désactivé';
     if (this.isDataFresh()) return 'Actuel';
     return 'Expiré';
   }
 
-  /**
-   * Obtient la classe CSS pour le statut du cache
-   */
   getCacheStatusClass(): string {
     if (!this.cacheEnabled()) return 'cache-disabled';
     if (this.isDataFresh()) return 'cache-fresh';
@@ -548,25 +480,66 @@ export class StudentsComponent implements OnInit, OnDestroy {
     this.showImportDialog.set(false);
   }
 
-  onImportComplete(result: any): void {
-    this.successMessage.set(`Import réussi: ${result.created || 0} créés, ${result.updated || 0} mis à jour`);
-    this.closeImportDialog();
-    this.refreshData();
-    setTimeout(() => this.successMessage.set(''), 5000);
-  }
+  async onExcelFileUploaded(result: ExcelUploadResult): Promise<void> {
+    this.isLoading.set(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', result.file);
 
-  onImportError(error: any): void {
-    this.errorMessage.set(error.message || 'Erreur lors de l\'import');
-    setTimeout(() => this.errorMessage.set(''), 5000);
+      const response = await new Promise<any>((resolve, reject) => {
+        this.apiService.upload<any>('/data/import/etudiants', formData).subscribe({
+          next: (res) => resolve(res),
+          error: (err) => reject(err)
+        });
+      });
+
+      this.successMessage.set(
+        `Import réussi: ${response.data?.created?.length || 0} créés, ${response.data?.updated?.length || 0} mis à jour`
+      );
+      this.closeImportDialog();
+      this.refreshData();
+      setTimeout(() => this.successMessage.set(''), 5000);
+    } catch (error: any) {
+      this.errorMessage.set(error.error?.message || "Erreur lors de l'import");
+      setTimeout(() => this.errorMessage.set(''), 5000);
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 
   exportStudents(): void {
-    const url = `${environment.apiUrl}/data/export/etudiants`;
-    window.open(url, '_blank');
+    const params: any = {};
+    if (this.filterClasse() !== 'ALL') {
+      params['classeId'] = this.filterClasse();
+    }
+
+    const queryString = new URLSearchParams(params).toString();
+    const endpoint = `/data/export/etudiants${queryString ? '?' + queryString : ''}`;
+
+    this.apiService.get<Blob>(endpoint, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `etudiants_${Date.now()}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.errorMessage.set("Erreur lors de l'export")
+    });
   }
 
   downloadTemplate(): void {
-    const url = `${environment.apiUrl}/data/templates/etudiants`;
-    window.open(url, '_blank');
+    this.apiService.get<Blob>('/data/templates/etudiants', { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `template_etudiants.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.errorMessage.set('Erreur lors du téléchargement du template')
+    });
   }
 }

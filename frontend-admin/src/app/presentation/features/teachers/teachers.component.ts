@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { UserUseCase } from '../../../core/usecases/user.usecase';
 import { Enseignant } from '../../../core/domain/entities/user.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
-import { ExcelUploadComponent } from '../../shared/components/excel-upload/excel-upload.component';
-import { environment } from '../../../../environments/environment';
+import { ExcelUploadComponent, ExcelUploadResult } from '../../shared/components/excel-upload/excel-upload.component';
+import { ApiService } from '../../../infrastructure/http/api.service';
 
 @Component({
   selector: 'app-teachers',
@@ -24,11 +24,17 @@ export class TeachersComponent implements OnInit {
   selectedTeacher = signal<Enseignant | null>(null);
   
   private confirmationService = inject(ConfirmationService);
+  private apiService = inject(ApiService);
   
   searchQuery = signal('');
   filterStatus = signal<string>('ALL');
   showArchived = signal(false);
   showImportDialog = signal(false);
+  showActionsMenu = signal(false);
+
+  toggleActionsMenu(): void {
+    this.showActionsMenu.update(v => !v);
+  }
 
   formData = {
     nom: '',
@@ -254,25 +260,58 @@ export class TeachersComponent implements OnInit {
     this.showImportDialog.set(false);
   }
 
-  onImportComplete(result: any): void {
-    this.successMessage.set(`Import réussi: ${result.created || 0} créés, ${result.updated || 0} mis à jour`);
-    this.closeImportDialog();
-    this.loadTeachers();
-    setTimeout(() => this.successMessage.set(''), 5000);
-  }
+  async onExcelFileUploaded(result: ExcelUploadResult): Promise<void> {
+    this.isLoading.set(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', result.file);
 
-  onImportError(error: any): void {
-    this.errorMessage.set(error.message || 'Erreur lors de l\'import');
-    setTimeout(() => this.errorMessage.set(''), 5000);
+      const response = await new Promise<any>((resolve, reject) => {
+        this.apiService.upload<any>('/data/import/enseignants', formData).subscribe({
+          next: (res) => resolve(res),
+          error: (err) => reject(err)
+        });
+      });
+
+      this.successMessage.set(
+        `Import réussi: ${response.data?.created?.length || 0} créés, ${response.data?.updated?.length || 0} mis à jour`
+      );
+      this.closeImportDialog();
+      this.loadTeachers();
+      setTimeout(() => this.successMessage.set(''), 5000);
+    } catch (error: any) {
+      this.errorMessage.set(error.error?.message || "Erreur lors de l'import");
+      setTimeout(() => this.errorMessage.set(''), 5000);
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 
   exportTeachers(): void {
-    const url = `${environment.apiUrl}/data/export/enseignants`;
-    window.open(url, '_blank');
+    this.apiService.get<Blob>('/data/export/enseignants', { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `enseignants_${Date.now()}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.errorMessage.set("Erreur lors de l'export")
+    });
   }
 
   downloadTemplate(): void {
-    const url = `${environment.apiUrl}/data/templates/enseignants`;
-    window.open(url, '_blank');
+    this.apiService.get<Blob>('/data/templates/enseignants', { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `template_enseignants.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.errorMessage.set('Erreur lors du téléchargement du template')
+    });
   }
 }

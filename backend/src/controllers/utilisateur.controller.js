@@ -17,7 +17,7 @@ exports.getAllUtilisateurs = async (req, res) => {
         { model: Enseignant, as: 'Enseignant' },
         { model: Etudiant, as: 'Etudiant' }
       ],
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
 
     // Ajouter le rôle à chaque utilisateur

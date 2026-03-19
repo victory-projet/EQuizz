@@ -4,8 +4,6 @@ const importService = require('../services/excel-import.service');
 const exportService = require('../services/export.service');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
-const path = require('path');
-const fs = require('fs').promises;
 
 class ImportController {
   /**
@@ -42,10 +40,7 @@ class ImportController {
       throw new AppError('Aucun fichier fourni', 400);
     }
 
-    const results = await importService.importEcoles(req.file.path);
-    
-    // Nettoyer le fichier temporaire
-    await fs.unlink(req.file.path);
+    const results = await importService.importEcoles(req.file.buffer);
 
     res.status(200).json({
       success: true,
@@ -62,9 +57,7 @@ class ImportController {
       throw new AppError('Aucun fichier fourni', 400);
     }
 
-    const results = await importService.importClasses(req.file.path);
-    
-    await fs.unlink(req.file.path);
+    const results = await importService.importClasses(req.file.buffer);
 
     res.status(200).json({
       success: true,
@@ -81,9 +74,7 @@ class ImportController {
       throw new AppError('Aucun fichier fourni', 400);
     }
 
-    const results = await importService.importEtudiants(req.file.path);
-    
-    await fs.unlink(req.file.path);
+    const results = await importService.importEtudiants(req.file.buffer);
 
     res.status(200).json({
       success: true,
@@ -100,9 +91,7 @@ class ImportController {
       throw new AppError('Aucun fichier fourni', 400);
     }
 
-    const results = await importService.importEnseignants(req.file.path);
-    
-    await fs.unlink(req.file.path);
+    const results = await importService.importEnseignants(req.file.buffer);
 
     res.status(200).json({
       success: true,
@@ -119,9 +108,7 @@ class ImportController {
       throw new AppError('Aucun fichier fourni', 400);
     }
 
-    const results = await importService.importCours(req.file.path);
-    
-    await fs.unlink(req.file.path);
+    const results = await importService.importCours(req.file.buffer);
 
     res.status(200).json({
       success: true,
@@ -173,12 +160,8 @@ class ImportController {
    */
   exportEtudiants = asyncHandler(async (req, res) => {
     const { classeId } = req.query;
-    
-    if (!classeId) {
-      throw new AppError('ID de classe requis', 400);
-    }
 
-    const workbook = await exportService.exportStudentsList(classeId);
+    const workbook = await exportService.exportStudentsList(classeId || null);
     
     res.setHeader(
       'Content-Type',

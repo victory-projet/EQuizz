@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { tap, map, shareReplay } from 'rxjs/operators';
 import { CacheService, CacheConfig } from './cache.service';
 import { User } from '../domain/entities/user.entity';
 import { UserUseCase } from '../usecases/user.usecase';
@@ -179,11 +179,29 @@ export class UserCacheService {
   }
 
   /**
+   * Invalide le cache et force un rechargement depuis l'API.
+   * Retourne un Observable qui émet la liste fraîche des utilisateurs.
+   */
+  invalidateAndRefresh(): Observable<User[]> {
+    this.invalidateAllUsers();
+    return this.cacheService.fetchAndCache(
+      this.CACHE_KEYS.ALL_USERS,
+      () => this.userUseCase.getAllUsers(true),
+      this.defaultUserConfig
+    ).pipe(
+      tap(users => {
+        this.usersSubject.next(users);
+        this.updateRoleBasedCache(users);
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
    * Actualise les données des utilisateurs
    */
   refreshAllUsers(): void {
-    this.invalidateAllUsers();
-    this.getAllUsers().subscribe();
+    this.invalidateAndRefresh().subscribe();
   }
 
   /**

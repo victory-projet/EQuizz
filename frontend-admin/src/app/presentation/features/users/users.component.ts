@@ -292,17 +292,15 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     this.isLoading.set(true);
     this.userUseCase.createUser(data).subscribe({
-      next: (newUser) => {
+      next: () => {
         this.successMessage.set('Administrateur créé avec succès');
         this.closeModal();
-        
-        // Mettre à jour le cache
-        if (this.cacheEnabled()) {
-          this.userCacheService.updateCacheAfterOperation('create', newUser);
-        } else {
-          this.loadUsers();
-        }
-        
+        this.userCacheService.invalidateAndRefresh().subscribe(users => {
+          const admins = users.filter(u => u.role === 'SUPER-ADMIN' && u.estActif);
+          this.users.set(admins);
+          this.applyFilters();
+          this.isLoading.set(false);
+        });
         setTimeout(() => this.successMessage.set(''), 5000);
       },
       error: (error) => {
@@ -329,17 +327,15 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     this.isLoading.set(true);
     this.userUseCase.updateUser(user.id.toString(), data).subscribe({
-      next: (updatedUser) => {
+      next: () => {
         this.successMessage.set('Utilisateur mis à jour avec succès');
         this.closeModal();
-        
-        // Mettre à jour le cache
-        if (this.cacheEnabled()) {
-          this.userCacheService.updateCacheAfterOperation('update', updatedUser);
-        } else {
-          this.loadUsers();
-        }
-        
+        this.userCacheService.invalidateAndRefresh().subscribe(users => {
+          const admins = users.filter(u => u.role === 'SUPER-ADMIN' && u.estActif);
+          this.users.set(admins);
+          this.applyFilters();
+          this.isLoading.set(false);
+        });
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
@@ -357,14 +353,12 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.userUseCase.deleteUser(user.id.toString()).subscribe({
       next: () => {
         this.successMessage.set('Utilisateur supprimé avec succès');
-        
-        // Mettre à jour le cache
-        if (this.cacheEnabled()) {
-          this.userCacheService.updateCacheAfterOperation('delete', user);
-        } else {
-          this.loadUsers();
-        }
-        
+        this.userCacheService.invalidateAndRefresh().subscribe(users => {
+          const admins = users.filter(u => u.role === 'SUPER-ADMIN' && u.estActif);
+          this.users.set(admins);
+          this.applyFilters();
+          this.isLoading.set(false);
+        });
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
@@ -392,16 +386,13 @@ export class UsersComponent implements OnInit, OnDestroy {
     };
 
     this.userUseCase.updateUser(user.id.toString(), data).subscribe({
-      next: (updatedUser) => {
+      next: () => {
         this.successMessage.set(`Utilisateur ${data.estActif ? 'activé' : 'désactivé'} avec succès`);
-        
-        // Mettre à jour le cache
-        if (this.cacheEnabled()) {
-          this.userCacheService.updateCacheAfterOperation('update', updatedUser);
-        } else {
-          this.loadUsers();
-        }
-        
+        this.userCacheService.invalidateAndRefresh().subscribe(users => {
+          const admins = users.filter(u => u.role === 'SUPER-ADMIN' && u.estActif);
+          this.users.set(admins);
+          this.applyFilters();
+        });
         setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
@@ -630,8 +621,8 @@ export class UsersComponent implements OnInit, OnDestroy {
       if (!sheet.hasData) return;
       
       const headers = sheet.headers;
-      const nomIndex = headers.findIndex(h => h.toLowerCase().includes('nom'));
-      const prenomIndex = headers.findIndex(h => h.toLowerCase().includes('prenom'));
+      const nomIndex = headers.findIndex(h => h.toLowerCase() === 'nom' || h.toLowerCase() === 'last name' || h.toLowerCase() === 'lastname');
+      const prenomIndex = headers.findIndex(h => h.toLowerCase().includes('prenom') || h.toLowerCase() === 'first name' || h.toLowerCase() === 'firstname');
       const emailIndex = headers.findIndex(h => h.toLowerCase().includes('email'));
       const typeIndex = headers.findIndex(h => h.toLowerCase().includes('type'));
       

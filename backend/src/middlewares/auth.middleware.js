@@ -55,6 +55,7 @@ const authenticate = async (req, res, next) => {
     if (error.name === 'JsonWebTokenError') {
       return next(AppError.unauthorized('Token invalide.', 'TOKEN_INVALID'));
     }
+    console.error('AUTH_ERROR details:', error.message, error.name);
     return next(AppError.unauthorized('Erreur d\'authentification.', 'AUTH_ERROR'));
   }
 };

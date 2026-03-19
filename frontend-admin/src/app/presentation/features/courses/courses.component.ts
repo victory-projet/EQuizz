@@ -31,6 +31,7 @@ export class CoursesComponent implements OnInit {
   filterSemestre = signal<string>('ALL');
   showArchived = signal(false);
   showImportDialog = signal(false);
+  showActionsMenu = signal(false);
 
   formData = {
     code: '',
@@ -297,6 +298,10 @@ export class CoursesComponent implements OnInit {
   }
 
   // === MÉTHODES D'IMPORT/EXPORT ===
+
+  toggleActionsMenu(): void {
+    this.showActionsMenu.set(!this.showActionsMenu());
+  }
 
   openImportDialog(): void {
     this.showImportDialog.set(true);

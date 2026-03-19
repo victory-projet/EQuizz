@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, timer, combineLatest } from 'rxjs';
-import { tap, catchError, switchMap, map } from 'rxjs/operators';
+import { Observable, BehaviorSubject, Subject, timer, combineLatest } from 'rxjs';
+import { tap, catchError, switchMap, map, takeUntil } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AdminDashboard, DashboardStats } from '../domain/entities/dashboard.entity';
 import { NotificationService } from './notification.service';
@@ -103,6 +103,9 @@ export class DashboardService {
   private readonly API_BASE = `${environment.apiUrl}/dashboard`;
   private readonly REFRESH_INTERVAL = 30000; // 30 secondes
   private readonly METRICS_INTERVAL = 60000; // 1 minute
+
+  // Subject pour stopper les timers
+  private stopRefresh$ = new Subject<void>();
 
   constructor() {
     // Ne pas démarrer l'auto-refresh automatiquement
@@ -335,23 +338,31 @@ export class DashboardService {
 
     // Actualisation des données principales
     timer(0, this.REFRESH_INTERVAL).pipe(
+      takeUntil(this.stopRefresh$),
       switchMap(() => this.getDashboardData())
     ).subscribe();
 
     // Actualisation des alertes
     timer(0, this.REFRESH_INTERVAL).pipe(
+      takeUntil(this.stopRefresh$),
       switchMap(() => this.getAlerts())
     ).subscribe();
 
     // Actualisation des activités récentes
     timer(0, this.REFRESH_INTERVAL).pipe(
+      takeUntil(this.stopRefresh$),
       switchMap(() => this.getRecentActivities())
     ).subscribe();
 
     // Actualisation des métriques (moins fréquent)
     timer(0, this.METRICS_INTERVAL).pipe(
+      takeUntil(this.stopRefresh$),
       switchMap(() => this.getMetrics())
     ).subscribe();
+  }
+
+  stopAutoRefresh(): void {
+    this.stopRefresh$.next();
   }
 
   private checkSystemHealth(metrics: DashboardMetrics): void {

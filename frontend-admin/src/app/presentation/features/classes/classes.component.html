@@ -14,12 +14,13 @@
       <p>Gérez les classes et leurs étudiants</p>
     </div>
     <div class="header-actions">
-      <div class="dropdown">
-        <button class="btn btn-secondary dropdown-toggle">
+      <div class="dropdown" [class.open]="showActionsMenu()">
+        <button class="btn btn-secondary dropdown-toggle" (click)="toggleActionsMenu()">
           <span class="material-icons">more_vert</span>
           Actions
+          <span class="material-icons arrow">expand_more</span>
         </button>
-        <div class="dropdown-menu">
+        <div class="dropdown-menu" (click)="showActionsMenu.set(false)">
           <button class="dropdown-item" (click)="openImportDialog()">
             <span class="material-icons">upload_file</span>
             Importer depuis Excel
@@ -34,7 +35,7 @@
           </button>
         </div>
       </div>
-      <button class="btn-primary" (click)="openCreateModal()">
+      <button class="btn btn-primary" (click)="openCreateModal()">
         <span class="material-icons">add</span>
         Nouvelle Classe
       </button>

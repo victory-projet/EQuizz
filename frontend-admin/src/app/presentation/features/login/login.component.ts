@@ -41,12 +41,6 @@ export class LoginComponent implements OnInit {
       this.credentials.email = rememberedEmail;
       this.rememberMe.set(true);
     }
-
-    // Check if it's first time (show onboarding)
-    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
-    if (!hasSeenOnboarding) {
-      this.router.navigate(['/onboarding']);
-    }
   }
 
   togglePassword(): void {

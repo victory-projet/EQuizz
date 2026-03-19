@@ -31,6 +31,11 @@ export class ClassesComponent implements OnInit {
   filterAnnee = signal<string>('ALL');
   showArchived = signal(false);
   showImportDialog = signal(false);
+  showActionsMenu = signal(false);
+
+  toggleActionsMenu(): void {
+    this.showActionsMenu.update(v => !v);
+  }
 
   formData = {
     nom: '',

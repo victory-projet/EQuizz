@@ -101,6 +101,19 @@ export class CacheService {
   }
 
   /**
+   * Force un appel API (ignore le cache) et stocke le résultat
+   */
+  fetchAndCache<T>(
+    key: string,
+    fetchFn: () => Observable<T>,
+    config?: CacheConfig
+  ): Observable<T> {
+    return fetchFn().pipe(
+      tap(data => this.set(key, data, config))
+    );
+  }
+
+  /**
    * Observe les changements d'une clé de cache
    */
   observe<T>(key: string): Observable<T | null> {

@@ -12,7 +12,7 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: 'Etudiant',
+          model: 'Etudiants',
           key: 'id'
         },
         onUpdate: 'CASCADE',
@@ -28,7 +28,7 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: 'Ecole',
+          model: 'ecoles',
           key: 'id'
         },
         onUpdate: 'CASCADE',
@@ -39,7 +39,7 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: 'Classe',
+          model: 'classes',
           key: 'id'
         },
         onUpdate: 'CASCADE',
@@ -75,17 +75,14 @@ module.exports = {
       }
     });
 
-    // Ajouter des index pour améliorer les performances (seulement si pas SQLite)
     const dialect = queryInterface.sequelize.getDialect();
     if (dialect !== 'sqlite') {
       await queryInterface.addIndex('HistoriqueEtudiant', ['etudiant_id'], {
         name: 'idx_historique_etudiant_id'
       });
-
       await queryInterface.addIndex('HistoriqueEtudiant', ['matricule'], {
         name: 'idx_historique_matricule'
       });
-
       await queryInterface.addIndex('HistoriqueEtudiant', ['estPeriodeActuelle'], {
         name: 'idx_historique_periode_actuelle'
       });

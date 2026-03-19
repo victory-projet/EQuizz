@@ -12,12 +12,13 @@
       <p>Gérez les étudiants et leurs classes</p>
     </div>
     <div class="header-actions">
-      <div class="dropdown">
-        <button class="btn btn-secondary dropdown-toggle">
+      <div class="dropdown" [class.open]="showActionsMenu()">
+        <button class="btn btn-secondary dropdown-toggle" (click)="toggleActionsMenu()">
           <span class="material-icons">more_vert</span>
           Actions
+          <span class="material-icons arrow">expand_more</span>
         </button>
-        <div class="dropdown-menu">
+        <div class="dropdown-menu" (click)="showActionsMenu.set(false)">
           <button class="dropdown-item" (click)="openImportDialog()">
             <span class="material-icons">upload_file</span>
             Importer depuis Excel
@@ -32,7 +33,7 @@
           </button>
         </div>
       </div>
-      <button class="btn-primary" (click)="openCreateModal()">
+      <button class="btn btn-primary" (click)="openCreateModal()">
         <span class="material-icons">add</span>
         Nouvel Étudiant
       </button>
@@ -103,7 +104,7 @@
       </button>
     </div>
 
-    <div class="filter-select">
+    <div class="filter-select" *ngIf="isSuperAdmin()">
       <select (change)="onFilterEcole($any($event.target).value)" [value]="filterEcole()">
         <option value="ALL">Toutes les écoles</option>
         @for (ecole of ecoles(); track ecole.id) {
@@ -316,10 +317,9 @@
       <div class="modal-body">
         <app-excel-upload
           title="Importer des étudiants"
-          entityType="etudiants"
           description="Sélectionnez un fichier Excel contenant les données des étudiants"
-          (uploadComplete)="onImportComplete($event)"
-          (uploadError)="onImportError($event)">
+          (fileUploaded)="onExcelFileUploaded($event)"
+          (uploadCancelled)="closeImportDialog()">
         </app-excel-upload>
       </div>
     </div>
