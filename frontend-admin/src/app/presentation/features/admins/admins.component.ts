@@ -74,20 +74,12 @@ export class AdminsComponent implements OnInit, OnDestroy {
     
     this.userUseCase.getAllUsers(false).subscribe({
       next: (users) => {
-        console.log('📊 Tous les utilisateurs reçus:', users);
-        // Filtrer pour ne garder que les administrateurs actifs
         const admins = users.filter(u => u.role === 'ADMIN' && u.estActif);
-        console.log('👥 Administrateurs filtrés:', admins);
-        console.log('🏫 Détails du premier admin:', admins.length > 0 ? admins[0] : 'Aucun');
         this.admins.set(admins);
         this.applyFilters();
         this.isLoading.set(false);
       },
-      error: (error) => {
-        console.error('Erreur lors du chargement des administrateurs:', error);
-        this.errorMessage.set('Erreur lors du chargement des administrateurs');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -248,7 +240,6 @@ export class AdminsComponent implements OnInit, OnDestroy {
   }
 
   createAdmin(): void {
-    // Validation
     if (!this.formData.motDePasse) {
       this.errorMessage.set('Le mot de passe est requis');
       return;
@@ -270,16 +261,13 @@ export class AdminsComponent implements OnInit, OnDestroy {
 
     this.isLoading.set(true);
     this.userUseCase.createUser(data).subscribe({
-      next: (newAdmin) => {
+      next: () => {
         this.successMessage.set('Administrateur créé avec succès');
         this.closeModal();
         this.loadAdmins();
         setTimeout(() => this.successMessage.set(''), 5000);
       },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la création');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -300,16 +288,13 @@ export class AdminsComponent implements OnInit, OnDestroy {
 
     this.isLoading.set(true);
     this.userUseCase.updateUser(admin.id.toString(), data).subscribe({
-      next: (updatedAdmin) => {
+      next: () => {
         this.successMessage.set('Administrateur mis à jour avec succès');
         this.closeModal();
         this.loadAdmins();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la mise à jour');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -324,10 +309,7 @@ export class AdminsComponent implements OnInit, OnDestroy {
         this.loadAdmins();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -349,14 +331,12 @@ export class AdminsComponent implements OnInit, OnDestroy {
     };
 
     this.userUseCase.updateUser(admin.id.toString(), data).subscribe({
-      next: (updatedAdmin) => {
+      next: () => {
         this.successMessage.set(`Administrateur ${data.estActif ? 'activé' : 'désactivé'} avec succès`);
         this.loadAdmins();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la modification du statut');
-      }
+      error: () => {}
     });
   }
 
@@ -389,10 +369,7 @@ export class AdminsComponent implements OnInit, OnDestroy {
         this.closeModal();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la réinitialisation');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 

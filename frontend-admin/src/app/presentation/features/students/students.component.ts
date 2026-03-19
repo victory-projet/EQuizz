@@ -152,8 +152,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
         this.isLoading.set(false);
         this.lastRefresh.set(new Date());
       },
-      error: (error: any) => {
-        this.errorMessage.set('Erreur lors du chargement des étudiants');
+      error: () => {
         this.isLoading.set(false);
       }
     });
@@ -334,10 +333,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
         });
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la création');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -364,10 +360,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
         });
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la mise à jour');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -387,10 +380,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
         });
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -414,9 +404,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
         this.loadStudents();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors du changement de statut');
-      }
+      error: () => {}
     });
   }
 

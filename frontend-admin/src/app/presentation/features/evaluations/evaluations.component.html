@@ -5,7 +5,7 @@
       <h1 class="page-title">Gestion des Quiz</h1>
       <p class="page-subtitle">Vue d'ensemble de tous vos questionnaires d'évaluation</p>
     </div>
-    <button class="btn-primary" (click)="createEvaluation()">
+    <button class="btn-primary" (click)="createEvaluation()" *ngIf="!isSuperAdmin()">
       <span class="material-icons">add</span> Créer un Quiz
     </button>
   </div>
@@ -391,10 +391,10 @@
               </span>
             }
             <div class="card-actions">
-              <button class="btn-icon" [title]="'Actions pour ' + evaluation.titre" (click)="toggleCardMenu(evaluation.id)">
+              <button class="btn-icon" [title]="'Actions pour ' + evaluation.titre" (click)="toggleCardMenu(evaluation.id)" *ngIf="!isSuperAdmin()">
                 <span class="material-icons">more_vert</span>
               </button>
-              @if (showCardMenu() === evaluation.id) {
+              @if (!isSuperAdmin() && showCardMenu() === evaluation.id) {
                 <div class="card-menu modern-menu">
                   @if (evaluation.statut === 'BROUILLON') {
                     <button class="menu-item edit-item" (click)="editEvaluation(evaluation); hideCardMenu()" title="Modifier cette évaluation">
@@ -493,23 +493,25 @@
 
           <div class="card-footer modern-footer">
             @if (evaluation.statut === 'BROUILLON') {
-              <div class="footer-actions">
-                <button class="btn-action btn-edit" (click)="editEvaluation(evaluation); $event.stopPropagation()" title="Modifier cette évaluation">
-                  <span class="material-icons">edit</span>
-                  <span class="btn-text">Modifier</span>
-                </button>
-                @if (getQuestionCount(evaluation) > 0) {
-                  <button class="btn-action btn-publish" (click)="publishEvaluation(evaluation); $event.stopPropagation()" title="Publier cette évaluation">
-                    <span class="material-icons">send</span>
-                    <span class="btn-text">Publier</span>
+              @if (!isSuperAdmin()) {
+                <div class="footer-actions">
+                  <button class="btn-action btn-edit" (click)="editEvaluation(evaluation); $event.stopPropagation()" title="Modifier cette évaluation">
+                    <span class="material-icons">edit</span>
+                    <span class="btn-text">Modifier</span>
                   </button>
-                } @else {
-                  <button class="btn-action btn-publish disabled" disabled title="Ajoutez des questions avant de publier">
-                    <span class="material-icons">send</span>
-                    <span class="btn-text">Publier</span>
-                  </button>
-                }
-              </div>
+                  @if (getQuestionCount(evaluation) > 0) {
+                    <button class="btn-action btn-publish" (click)="publishEvaluation(evaluation); $event.stopPropagation()" title="Publier cette évaluation">
+                      <span class="material-icons">send</span>
+                      <span class="btn-text">Publier</span>
+                    </button>
+                  } @else {
+                    <button class="btn-action btn-publish disabled" disabled title="Ajoutez des questions avant de publier">
+                      <span class="material-icons">send</span>
+                      <span class="btn-text">Publier</span>
+                    </button>
+                  }
+                </div>
+              }
               <div class="footer-status">
                 <div class="status-indicator draft-status">
                   <span class="material-icons">edit_note</span>
@@ -521,9 +523,11 @@
               <button class="btn-outline" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
                 <span class="material-icons">visibility</span> Voir
               </button>
-              <button class="btn-primary" (click)="closeEvaluation(evaluation); $event.stopPropagation()">
-                <span class="material-icons">lock</span> Fermer
-              </button>
+              @if (!isSuperAdmin()) {
+                <button class="btn-primary" (click)="closeEvaluation(evaluation); $event.stopPropagation()">
+                  <span class="material-icons">lock</span> Fermer
+                </button>
+              }
             }
             @if (evaluation.statut === 'CLOTUREE') {
               <button class="btn-outline" (click)="viewEvaluation(evaluation.id); $event.stopPropagation()">
@@ -543,7 +547,7 @@
         <span class="material-icons empty-icon">assignment</span>
         <h3>Aucune évaluation trouvée</h3>
         <p>Commencez par créer votre première évaluation</p>
-        <button class="btn-primary" (click)="createEvaluation()">
+        <button class="btn-primary" (click)="createEvaluation()" *ngIf="!isSuperAdmin()">
           <span class="material-icons">add</span> Créer un Quiz
         </button>
       </div>

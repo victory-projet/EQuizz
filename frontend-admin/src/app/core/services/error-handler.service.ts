@@ -113,7 +113,11 @@ export class ErrorHandlerService {
     // Utiliser le message d'erreur du serveur si disponible
     if (error.error?.message) {
       message = error.error.message;
-    } else if (error.message && error.message !== 'Http failure response') {
+    } else if (error.error?.error) {
+      message = error.error.error;
+    } else if (typeof error.error === 'string' && error.error.length < 200) {
+      message = error.error;
+    } else if (error.message && !error.message.startsWith('Http failure')) {
       message = error.message;
     }
     

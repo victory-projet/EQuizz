@@ -1,8 +1,8 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { ErrorHandlerService, AppError } from '../../../../core/services/error-handler.service';
-import { Subject, takeUntil, timer } from 'rxjs';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-error-toast',
@@ -34,8 +34,8 @@ import { Subject, takeUntil, timer } from 'rxjs';
             
             <div class="error-message">
               <div class="error-title">{{ error.message }}</div>
-              @if (error.details && showDetails()) {
-                <div class="error-details">{{ error.details }}</div>
+              @if (error.status) {
+                <div class="error-details">Code {{ error.status }}{{ error.url ? ' · ' + getShortUrl(error.url) : '' }}</div>
               }
             </div>
             
@@ -253,58 +253,51 @@ import { Subject, takeUntil, timer } from 'rxjs';
     }
   `]
 })
-export class ErrorToastComponent implements OnInit, OnDestroy {
+export class ErrorToastComponent implements OnDestroy {
   private errorHandler = inject(ErrorHandlerService);
   private destroy$ = new Subject<void>();
-  
+  private autoDismissTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
   visibleErrors = signal<AppError[]>([]);
   showDetails = signal(false);
-  
-  // Configuration
+
   private readonly MAX_VISIBLE_ERRORS = 3;
-  private readonly AUTO_DISMISS_TIMES = {
+  private readonly AUTO_DISMISS_TIMES: Record<AppError['type'], number> = {
     network: 5000,
-    auth: 0, // Pas d'auto-dismiss pour les erreurs d'auth
+    auth: 0,
     validation: 4000,
     server: 6000,
     unknown: 5000
   };
-  
-  ngOnInit(): void {
-    // Écouter les changements d'erreurs
-    // Note: Les signaux Angular n'ont pas de méthode pipe, on utilise effect() à la place
-    this.setupErrorSubscription();
-  }
-  
-  private setupErrorSubscription(): void {
-    // Utiliser un interval pour vérifier les changements d'erreurs
-    timer(0, 1000).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(() => {
+
+  constructor() {
+    // Réagit immédiatement à chaque changement du signal errors
+    effect(() => {
       const errors = this.errorHandler.errors();
-      
-      // Afficher seulement les N dernières erreurs
-      const visibleErrors = errors.slice(0, this.MAX_VISIBLE_ERRORS);
-      const currentVisible = this.visibleErrors();
-      
-      // Mettre à jour seulement si les erreurs ont changé
-      if (JSON.stringify(visibleErrors) !== JSON.stringify(currentVisible)) {
-        this.visibleErrors.set(visibleErrors);
-        
-        // Programmer l'auto-dismiss pour les nouvelles erreurs
-        visibleErrors.forEach((error: AppError) => {
-          const dismissTime = this.getAutoDismissTime(error);
+      const next = errors.slice(0, this.MAX_VISIBLE_ERRORS);
+      const current = this.visibleErrors();
+
+      // Nouvelles erreurs à afficher
+      const currentIds = new Set(current.map(e => e.id));
+      next.forEach(error => {
+        if (!currentIds.has(error.id)) {
+          const dismissTime = this.AUTO_DISMISS_TIMES[error.type];
           if (dismissTime > 0) {
-            timer(dismissTime).subscribe(() => {
+            const timer = setTimeout(() => {
               this.dismissError(error.id);
-            });
+              this.autoDismissTimers.delete(error.id);
+            }, dismissTime);
+            this.autoDismissTimers.set(error.id, timer);
           }
-        });
-      }
+        }
+      });
+
+      this.visibleErrors.set(next);
     });
   }
-  
+
   ngOnDestroy(): void {
+    this.autoDismissTimers.forEach(t => clearTimeout(t));
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -335,6 +328,17 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
   }
   
   /**
+   * Raccourcit l'URL pour l'affichage
+   */
+  getShortUrl(url: string): string {
+    try {
+      return new URL(url).pathname;
+    } catch {
+      return url;
+    }
+  }
+
+  /**
    * Obtient la classe CSS pour le type d'erreur
    */
   getErrorClass(error: AppError): string {
@@ -360,12 +364,5 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
    */
   getAutoDismissTime(error: AppError): number {
     return this.AUTO_DISMISS_TIMES[error.type] || 0;
-  }
-  
-  /**
-   * Bascule l'affichage des détails
-   */
-  toggleDetails(): void {
-    this.showDetails.set(!this.showDetails());
   }
 }

@@ -52,11 +52,7 @@ export class SchoolsComponent implements OnInit {
         this.updateStats();
         this.loading.set(false);
       },
-      error: (err) => {
-        console.error('Error loading schools:', err);
-        this.error.set('Erreur lors du chargement des écoles');
-        this.loading.set(false);
-      }
+      error: () => { this.loading.set(false); }
     });
   }
 
@@ -127,11 +123,7 @@ export class SchoolsComponent implements OnInit {
         this.loadSchools();
         this.closeModals();
       },
-      error: (err) => {
-        console.error('Error saving school:', err);
-        this.error.set('Erreur lors de l\'enregistrement de l\'école');
-        this.loading.set(false);
-      }
+      error: () => { this.loading.set(false); }
     });
   }
 
@@ -146,11 +138,7 @@ export class SchoolsComponent implements OnInit {
         this.loadSchools();
         this.closeModals();
       },
-      error: (err) => {
-        console.error('Error deleting school:', err);
-        this.error.set('Erreur lors de la suppression de l\'école');
-        this.loading.set(false);
-      }
+      error: () => { this.loading.set(false); }
     });
   }
 
@@ -165,11 +153,7 @@ export class SchoolsComponent implements OnInit {
         this.loadSchools();
         this.closeModals();
       },
-      error: (err) => {
-        console.error('Error toggling school status:', err);
-        this.error.set('Erreur lors du changement de statut de l\'école');
-        this.loading.set(false);
-      }
+      error: () => { this.loading.set(false); }
     });
   }
 }

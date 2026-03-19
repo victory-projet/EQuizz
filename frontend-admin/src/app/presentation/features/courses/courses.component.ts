@@ -73,28 +73,13 @@ export class CoursesComponent implements OnInit {
 
   loadCours(): void {
     this.isLoading.set(true);
-    // Toujours charger tous les cours (actifs + archivés) pour pouvoir les filtrer côté client
     this.academicUseCase.getCours(true).subscribe({
       next: (cours) => {
-        console.log('📚 Cours chargés:', cours);
-        cours.forEach(c => {
-          console.log(`Cours ${c.nom}:`, {
-            id: c.id,
-            code: c.code,
-            enseignantId: c.enseignantId,
-            enseignant: c.enseignant,
-            objetComplet: c
-          });
-        });
         this.cours.set(cours);
         this.applyFilters();
         this.isLoading.set(false);
       },
-      error: (error) => {
-        console.error('Erreur lors du chargement des cours:', error);
-        this.errorMessage.set('Erreur lors du chargement des cours');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -230,10 +215,7 @@ export class CoursesComponent implements OnInit {
         this.loadCours();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la création');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -255,10 +237,7 @@ export class CoursesComponent implements OnInit {
         this.loadCours();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la mise à jour');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -274,26 +253,19 @@ export class CoursesComponent implements OnInit {
         this.loadCours();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
   toggleArchiveStatus(cours: Cours): void {
     const newArchiveStatus = !cours.estArchive;
-    this.academicUseCase.updateCours(cours.id, {
-      estArchive: newArchiveStatus
-    }).subscribe({
+    this.academicUseCase.updateCours(cours.id, { estArchive: newArchiveStatus }).subscribe({
       next: () => {
         this.successMessage.set(`Cours ${newArchiveStatus ? 'archivé' : 'désarchivé'} avec succès`);
         this.loadCours();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la modification');
-      }
+      error: () => {}
     });
   }
 

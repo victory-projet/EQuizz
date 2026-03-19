@@ -2,6 +2,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './presentation/shared/guards/auth.guard';
 import { adminGuard } from './presentation/shared/guards/admin.guard';
+import { readonlyGuard } from './presentation/shared/guards/readonly.guard';
 
 export const routes: Routes = [
   {
@@ -63,6 +64,7 @@ export const routes: Routes = [
       },
       {
         path: 'evaluations/create',
+        canActivate: [readonlyGuard],
         loadComponent: () => import('./presentation/features/evaluation-create/evaluation-create.component').then(m => m.EvaluationCreateComponent)
       },
       {

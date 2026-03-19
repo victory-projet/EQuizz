@@ -8,6 +8,7 @@ import { Evaluation } from '../../../core/domain/entities/evaluation.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { GlobalSearchService } from '../../shared/services/global-search.service';
 import { ArchiveToggleComponent } from '../../shared/components/archive-toggle/archive-toggle.component';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
   selector: 'app-evaluations',
@@ -47,6 +48,11 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
   showCardMenu = signal<number | string | null>(null);
 
   private confirmationService = inject(ConfirmationService);
+  private authService = inject(AuthService);
+
+  isSuperAdmin(): boolean {
+    return this.authService.currentUser()?.role === 'SUPER-ADMIN';
+  }
 
   constructor(
     private evaluationUseCase: EvaluationUseCase,
@@ -357,6 +363,7 @@ export class EvaluationsComponent implements OnInit, OnDestroy {
   }
 
   createEvaluation(): void {
+    if (this.isSuperAdmin()) return;
     this.router.navigate(['/evaluations/create']);
   }
 

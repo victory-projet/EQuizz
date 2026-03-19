@@ -60,18 +60,13 @@ export class ClassesComponent implements OnInit {
 
   loadClasses(): void {
     this.isLoading.set(true);
-    // Charger TOUTES les classes (y compris archivées)
     this.academicUseCase.getClasses(true).subscribe({
       next: (classes) => {
         this.classes.set(classes);
         this.applyFilters();
         this.isLoading.set(false);
       },
-      error: (error) => {
-        console.error('Erreur lors du chargement des classes:', error);
-        this.errorMessage.set('Erreur lors du chargement des classes');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -120,17 +115,13 @@ export class ClassesComponent implements OnInit {
 
   toggleArchiveStatus(classe: Classe): void {
     const newArchiveStatus = !classe.estArchive;
-    this.academicUseCase.updateClasse(classe.id, {
-      estArchive: newArchiveStatus
-    }).subscribe({
+    this.academicUseCase.updateClasse(classe.id, { estArchive: newArchiveStatus }).subscribe({
       next: () => {
         this.successMessage.set(`Classe ${newArchiveStatus ? 'archivée' : 'désarchivée'} avec succès`);
         this.loadClasses();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la modification');
-      }
+      error: () => {}
     });
   }
 
@@ -205,10 +196,7 @@ export class ClassesComponent implements OnInit {
         this.loadClasses();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la création');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -230,10 +218,7 @@ export class ClassesComponent implements OnInit {
         this.loadClasses();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la mise à jour');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -249,10 +234,7 @@ export class ClassesComponent implements OnInit {
         this.loadClasses();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 

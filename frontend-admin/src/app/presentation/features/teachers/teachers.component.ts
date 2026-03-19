@@ -59,20 +59,14 @@ export class TeachersComponent implements OnInit {
 
   loadTeachers(): void {
     this.isLoading.set(true);
-    // Charger TOUS les enseignants (y compris archivés)
     this.userUseCase.getAllUsers(true).subscribe({
       next: (users: any[]) => {
         const teachers = users.filter((u: any) => u.role === 'ENSEIGNANT') as Enseignant[];
-        console.log('👨‍🏫 Enseignants chargés:', teachers);
         this.teachers.set(teachers);
         this.applyFilters();
         this.isLoading.set(false);
       },
-      error: (error: any) => {
-        console.error('Erreur lors du chargement des enseignants:', error);
-        this.errorMessage.set('Erreur lors du chargement des enseignants');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -184,10 +178,7 @@ export class TeachersComponent implements OnInit {
         this.loadTeachers();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la création');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -210,10 +201,7 @@ export class TeachersComponent implements OnInit {
         this.loadTeachers();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la mise à jour');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -229,10 +217,7 @@ export class TeachersComponent implements OnInit {
         this.loadTeachers();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors de la suppression');
-        this.isLoading.set(false);
-      }
+      error: () => { this.isLoading.set(false); }
     });
   }
 
@@ -244,9 +229,7 @@ export class TeachersComponent implements OnInit {
         this.loadTeachers();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: (error: any) => {
-        this.errorMessage.set(error.error?.message || 'Erreur lors du changement de statut');
-      }
+      error: () => {}
     });
   }
 
