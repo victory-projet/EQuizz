@@ -3,23 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { STORAGE_KEYS } from './constants';
 import { API_CONFIG } from './config';
 
-/**
- * Instance axios centralisée pour toutes les requêtes API
- * Configure automatiquement l'URL de base et les headers d'authentification
- */
-
-const API_URL = API_CONFIG.BASE_URL;
-
-console.log('🌐 API URL configurée:', API_URL);
-
-// Variable pour éviter les appels multiples de refresh
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value?: any) => void;
-  reject: (error?: any) => void;
-}> = [];
-
-const processQueue = (error: any, token: string | null = null) => {
+/**n
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) {
       reject(error);

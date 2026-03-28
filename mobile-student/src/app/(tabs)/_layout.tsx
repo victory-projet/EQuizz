@@ -60,6 +60,16 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen
+          name="historique"
+          options={{
+            title: 'Historique',
+            tabBarIcon: ({ color, size }) => (
+              <MaterialIcons name="history" size={size} color={color} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
           name="profil"
           options={{
             title: 'Profil',

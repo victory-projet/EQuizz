@@ -36,6 +36,7 @@ export default {
       favicon: "./assets/images/favicon.png"
     },
     plugins: [
+      "expo-font", 
       "expo-router",
       [
         "expo-splash-screen",
@@ -61,10 +62,9 @@ export default {
     },
     extra: {
       router: {},
-      eas: {
-        projectId: "acf6212f-dac0-4e9b-95a1-58cb8b98caaa"
+      "eas": {
+        "projectId": "eaee8b0d-72e4-45dd-8a31-cea6921bbbea"
       }
-    },
-    owner: "sims25"
+    }
   }
 };
