@@ -1,6 +1,7 @@
 import { QuizzRepository } from '../../domain/repositories/QuizzRepository';
 import { Evaluation } from '../../domain/entities/Evaluation';
 import { Quizz, QuizzSubmission } from '../../domain/entities/Quizz';
+import { QuizzHistory } from '../../domain/entities/QuizzHistory';
 import { QuizzDataSource } from '../datasources/QuizzDataSource';
 
 /**
@@ -20,5 +21,9 @@ export class QuizzRepositoryImpl implements QuizzRepository {
 
   async submitAnswers(quizzId: string, submission: QuizzSubmission): Promise<void> {
     return this.quizzDataSource.submitAnswers(quizzId, submission);
+  }
+
+  async getQuizzHistory(): Promise<QuizzHistory[]> {
+    return this.quizzDataSource.getQuizzHistory();
   }
 }

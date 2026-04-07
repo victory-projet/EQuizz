@@ -63,7 +63,7 @@ export default function OfflineDemoMenu() {
           <Text style={styles.featuresTitle}>✨ Fonctionnalités implémentées :</Text>
           <View style={styles.featuresList}>
             <Text style={styles.featureItem}>✅ Stockage local persistant (SQLite)</Text>
-            <Text style={styles.featureItem}>✅ Queue d'opérations avec retry automatique</Text>
+            <Text style={styles.featureItem}>✅ Queue d&apos;opérations avec retry automatique</Text>
             <Text style={styles.featureItem}>✅ Synchronisation bidirectionnelle</Text>
             <Text style={styles.featureItem}>✅ Résolution automatique des conflits</Text>
             <Text style={styles.featureItem}>✅ Détection intelligente du réseau</Text>

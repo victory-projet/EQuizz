@@ -215,9 +215,9 @@ const NotificationSettingsScreen: React.FC = () => {
 
               <View style={styles.preferenceItem}>
                 <View style={styles.preferenceText}>
-                  <Text style={styles.preferenceTitle}>Rappels d'évaluation</Text>
+                  <Text style={styles.preferenceTitle}>Rappels d&apos;évaluation</Text>
                   <Text style={styles.preferenceSubtitle}>
-                    Rappels avant la fermeture d'une évaluation
+                    Rappels avant la fermeture d&apos;une évaluation
                   </Text>
                 </View>
                 <Switch
@@ -262,7 +262,7 @@ const NotificationSettingsScreen: React.FC = () => {
                 <View style={styles.preferenceText}>
                   <Text style={styles.preferenceTitle}>Confirmations de soumission</Text>
                   <Text style={styles.preferenceSubtitle}>
-                    Confirmation après soumission d'un quiz
+                    Confirmation après soumission d&apos;un quiz
                   </Text>
                 </View>
                 <Switch

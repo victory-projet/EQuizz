@@ -24,6 +24,7 @@ import { QuestionDataSourceImpl } from '../../data/datasources/QuestionDataSourc
 import { ClasseDataSourceImpl } from '../../data/datasources/ClasseDataSource';
 import { ClasseRepositoryImpl } from '../../data/repositories/Classe.repository.impl';
 import { GetClassesUseCase } from '../../domain/usecases/GetClasses.usecase';
+import { GetQuizzHistoryUseCase } from '../../domain/usecases/GetQuizzHistoryUseCase';
 
 /**
  * Conteneur d'injection de dépendances
@@ -214,6 +215,11 @@ class DIContainer {
     // Getters for classe use cases
     getGetClassesUseCase(): GetClassesUseCase {
         return new GetClassesUseCase(this.classeRepository);
+    }
+
+    // Getter for quizz history use case
+    get getQuizzHistoryUseCase(): GetQuizzHistoryUseCase {
+        return new GetQuizzHistoryUseCase(this.quizzRepository);
     }
 }
 

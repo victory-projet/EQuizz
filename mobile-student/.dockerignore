@@ -1,8 +1,0 @@
-node_modules
-.expo
-.git
-.gitignore
-README.md
-Dockerfile
-.dockerignore
-web-build

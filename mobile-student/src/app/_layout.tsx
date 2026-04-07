@@ -53,9 +53,9 @@ function AppInitializer({ children }: AppInitializerProps) {
   if (error) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorTitle}>Erreur d'initialisation</Text>
+        <Text style={styles.errorTitle}>Erreur d&apos;initialisation</Text>
         <Text style={styles.errorMessage}>{error}</Text>
-        <Text style={styles.errorHint}>Veuillez redémarrer l'application</Text>
+        <Text style={styles.errorHint}>Veuillez redémarrer l&apos;application</Text>
       </View>
     );
   }

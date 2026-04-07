@@ -2,11 +2,9 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import * as SecureStore from 'expo-secure-store';
 import { Utilisateur } from '../../domain/entities/Utilisateur';
 import DIContainer from '../../core/di/container';
-import { STORAGE_KEYS } from '../../core/constants';
-import { SyncEngine } from '../../data/services/SyncEngine';
-import { SyncService } from '../../data/services/SyncService';
 
 const container = DIContainer.getInstance();
+import { STORAGE_KEYS } from '../../core/constants';
 
 interface AuthContextType {
   utilisateur: Utilisateur | null;
@@ -24,17 +22,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const startSyncEngines = async () => {
-    try {
-      await SyncEngine.getInstance().start();
-      await SyncService.getInstance().startAutoSync();
-      console.log('🔄 Moteurs de synchronisation démarrés');
-    } catch (error) {
-      console.warn('⚠️ Erreur démarrage sync engines:', error);
-      // Ne pas bloquer l'auth si sync échoue
-    }
-  };
-
   // Vérifier si l'utilisateur est déjà connecté au démarrage
   useEffect(() => {
     checkAuthStatus();
@@ -48,8 +35,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUtilisateur(JSON.parse(storedUser));
-        // Démarrer la sync si déjà authentifié au démarrage
-        startSyncEngines();
       }
     } catch (error) {
       console.error('Erreur lors de la vérification du statut d\'authentification:', error);
@@ -70,11 +55,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Mettre à jour le token et l'utilisateur immédiatement
     setToken(result.token);
     setUtilisateur(result.utilisateur);
-
+    
     console.log('🔄 Auth state updated, isAuthenticated should be true now');
-
-    startSyncEngines();
-
+    
     // Initialiser les notifications push en arrière-plan
     setTimeout(async () => {
       try {
@@ -104,12 +87,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
-    try {
-      SyncEngine.getInstance().stop();
-      SyncService.getInstance().stopAutoSync();
-    } catch (error) {
-      console.warn('⚠️ Erreur arrêt sync engines:', error);
-    }
     await container.authRepository.logout();
     setToken(null);
     setUtilisateur(null);

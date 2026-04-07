@@ -5,7 +5,6 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
-import messaging from '@react-native-firebase/messaging';
 import { apiClient } from '../api';
 import { STORAGE_KEYS } from '../constants';
 
@@ -44,7 +43,7 @@ export interface DeviceToken {
 }
 
 class PushNotificationService {
-  private fcmToken: string | null = null;
+  private expoPushToken: string | null = null;
   private notificationListener: any = null;
   private responseListener: any = null;
 
@@ -53,7 +52,7 @@ class PushNotificationService {
    */
   async initialize(): Promise<boolean> {
     try {
-      console.log('🔔 Initialisation des notifications push...');
+      console.log('🔔 Initialisation des notifications push (Expo)...');
 
       // Vérifier si c'est un appareil physique
       if (!Device.isDevice) {
@@ -68,21 +67,20 @@ class PushNotificationService {
         return false;
       }
 
-      // Obtenir le token FCM
-      const token = await this.getFCMToken();
+      // Obtenir le token Expo Push
+      const token = await this.getExpoPushToken();
       if (!token) {
-        console.error('❌ Impossible d\'obtenir le token FCM');
+        console.error('❌ Impossible d\'obtenir le token Expo Push');
         return false;
       }
 
-      this.fcmToken = token;
+      this.expoPushToken = token;
 
       // Enregistrer le token sur le serveur
       await this.registerTokenOnServer(token);
 
       // Configurer les listeners
       this.setupNotificationListeners();
-      this.setupFirebaseListeners();
 
       console.log('✅ Notifications push initialisées avec succès');
       return true;
@@ -98,23 +96,7 @@ class PushNotificationService {
    */
   private async requestPermissions(): Promise<boolean> {
     try {
-      // Essayer d'abord Firebase si disponible
-      try {
-        if (messaging) {
-          const authStatus = await messaging().requestPermission();
-          const enabled =
-            authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-            authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-          if (!enabled) {
-            console.warn('Permission Firebase refusée');
-          }
-        }
-      } catch (firebaseError) {
-        console.warn('Firebase non disponible, utilisation d\'Expo uniquement');
-      }
-
-      // Demander aussi les permissions Expo pour les notifications locales
+      // Demander les permissions Expo
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
 
@@ -147,79 +129,17 @@ class PushNotificationService {
   }
 
   /**
-   * Obtient le token FCM
+   * Obtient le token Expo Push
    */
-  private async getFCMToken(): Promise<string | null> {
+  private async getExpoPushToken(): Promise<string | null> {
     try {
-      // Vérifier si Firebase est disponible
-      if (!messaging) {
-        console.warn('⚠️ Firebase messaging non disponible');
-        return null;
-      }
-
-      // Obtenir le token FCM
-      const token = await messaging().getToken();
-      console.log('🔑 Token FCM obtenu:', token.substring(0, 20) + '...');
-      return token;
+      console.log('🔄 Récupération du token Expo Push...');
+      const tokenData = await Notifications.getExpoPushTokenAsync();
+      console.log('🔑 Token Expo obtenu:', tokenData.data.substring(0, 20) + '...');
+      return tokenData.data;
     } catch (error) {
-      console.error('Erreur lors de l\'obtention du token FCM:', error);
-      
-      // Si Firebase n'est pas configuré, essayer avec Expo
-      try {
-        console.log('🔄 Tentative avec Expo Push Token...');
-        const tokenData = await Notifications.getExpoPushTokenAsync();
-        console.log('🔑 Token Expo obtenu:', tokenData.data.substring(0, 20) + '...');
-        return tokenData.data;
-      } catch (expoError) {
-        console.error('Erreur lors de l\'obtention du token Expo:', expoError);
-        return null;
-      }
-    }
-  }
-
-  /**
-   * Configure les listeners Firebase
-   */
-  private setupFirebaseListeners(): void {
-    try {
-      // Vérifier si Firebase est disponible
-      if (!messaging) {
-        console.warn('⚠️ Firebase messaging non disponible, listeners non configurés');
-        return;
-      }
-
-      // Listener pour les messages en arrière-plan
-      messaging().setBackgroundMessageHandler(async remoteMessage => {
-        console.log('📱 Message reçu en arrière-plan:', remoteMessage);
-      });
-
-      // Listener pour les messages au premier plan
-      messaging().onMessage(async remoteMessage => {
-        console.log('📱 Message reçu au premier plan:', remoteMessage);
-        
-        // Afficher une notification locale même quand l'app est au premier plan
-        if (remoteMessage.notification) {
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: remoteMessage.notification.title || 'EQuizz',
-              body: remoteMessage.notification.body || '',
-              data: remoteMessage.data || {},
-            },
-            trigger: null,
-          });
-        }
-      });
-
-      // Listener pour les tokens rafraîchis
-      messaging().onTokenRefresh(token => {
-        console.log('🔄 Token FCM rafraîchi:', token.substring(0, 20) + '...');
-        this.fcmToken = token;
-        this.registerTokenOnServer(token).catch(error => {
-          console.error('Erreur lors de l\'enregistrement du token rafraîchi:', error);
-        });
-      });
-    } catch (error) {
-      console.error('Erreur lors de la configuration des listeners Firebase:', error);
+      console.error('Erreur lors de l\'obtention du token Expo:', error);
+      return null;
     }
   }
 
@@ -242,7 +162,7 @@ class PushNotificationService {
         platform,
         deviceId,
         appVersion,
-        tokenType: 'fcm',
+        tokenType: 'expo', // Changé de 'fcm' à 'expo'
       });
 
       // Sauvegarder le token localement
@@ -254,10 +174,11 @@ class PushNotificationService {
         timestamp: new Date().toISOString(),
         token: token.substring(0, 20) + '...',
         platform,
-        deviceId
+        deviceId,
+        tokenType: 'expo'
       }));
 
-      console.log('✅ Token FCM enregistré sur le serveur');
+      console.log('✅ Token Expo enregistré sur le serveur');
     } catch (error) {
       console.error('❌ Erreur lors de l\'enregistrement du token:', error);
       
@@ -279,13 +200,13 @@ class PushNotificationService {
   private setupNotificationListeners(): void {
     // Listener pour les notifications reçues quand l'app est au premier plan
     this.notificationListener = Notifications.addNotificationReceivedListener(notification => {
-      console.log('� N otification reçue:', notification);
+      console.log('📬 Notification reçue:', notification);
       this.handleNotificationReceived(notification);
     });
 
     // Listener pour les interactions avec les notifications
     this.responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('� Notificatuion cliquée:', response);
+      console.log('👆 Notification cliquée:', response);
       this.handleNotificationResponse(response);
     });
   }
@@ -295,9 +216,6 @@ class PushNotificationService {
    */
   private handleNotificationReceived(notification: Notifications.Notification): void {
     const { title, body, data } = notification.request.content;
-    
-    // Vous pouvez ajouter ici une logique personnalisée
-    // Par exemple, mettre à jour un badge, jouer un son spécifique, etc.
     
     console.log(`📬 Notification: ${title} - ${body}`);
     
@@ -324,25 +242,21 @@ class PushNotificationService {
   private handleNotificationAction(action: string, data: any): void {
     switch (action) {
       case 'open_evaluation':
-        // Naviguer vers l'évaluation
         console.log(`🎯 Ouvrir évaluation: ${data.evaluationId}`);
         // TODO: Implémenter la navigation
         break;
         
       case 'view_results':
-        // Naviguer vers les résultats
         console.log(`📊 Voir résultats: ${data.evaluationId}`);
         // TODO: Implémenter la navigation
         break;
         
       case 'view_submission':
-        // Naviguer vers la soumission
         console.log(`📝 Voir soumission: ${data.evaluationId}`);
         // TODO: Implémenter la navigation
         break;
         
       case 'security_notification':
-        // Naviguer vers les paramètres de sécurité
         console.log(`🔒 Notification de sécurité: ${data.securityAction}`);
         // TODO: Implémenter la navigation
         break;
@@ -375,7 +289,7 @@ class PushNotificationService {
         this.responseListener = null;
       }
 
-      this.fcmToken = null;
+      this.expoPushToken = null;
       console.log('✅ Notifications désactivées');
     } catch (error) {
       console.error('❌ Erreur lors de la désactivation:', error);
@@ -442,7 +356,7 @@ class PushNotificationService {
    * Obtient le token actuel
    */
   getCurrentToken(): string | null {
-    return this.fcmToken;
+    return this.expoPushToken;
   }
 
   /**
@@ -450,18 +364,6 @@ class PushNotificationService {
    */
   async areNotificationsEnabled(): Promise<boolean> {
     try {
-      // Essayer Firebase d'abord
-      try {
-        if (messaging) {
-          const authStatus = await messaging().hasPermission();
-          return authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-                 authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-        }
-      } catch (firebaseError) {
-        // Fallback vers Expo
-      }
-
-      // Fallback vers Expo
       const { status } = await Notifications.getPermissionsAsync();
       return status === 'granted';
     } catch (error) {

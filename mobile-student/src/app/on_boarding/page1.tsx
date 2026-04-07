@@ -39,7 +39,7 @@ export default function Page1() {
                     <Text style={styles.title}>Bienvenue sur Notre Application</Text>
 
                     <Text style={styles.subtitle}>
-                        Participez à l'amélioration continue de la qualité de l'enseignement dans votre établissement.
+                        Participez à l&apos;amélioration continue de la qualité de l&apos;enseignement dans votre établissement.
                     </Text>
                 </View>
 

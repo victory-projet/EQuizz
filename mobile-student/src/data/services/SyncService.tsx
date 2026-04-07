@@ -267,51 +267,39 @@ export class SyncService {
     try {
       console.log('📥 Téléchargement des données...');
 
-      // Récupérer le timestamp de la dernière synchronisation
-      const lastSyncTimestamp = await SecureStore.getItemAsync(STORAGE_KEYS.LAST_SYNC);
-
-      // Construire l'URL avec le paramètre since si disponible
-      const url = lastSyncTimestamp
-        ? `/student/sync/download?since=${lastSyncTimestamp}`
-        : '/student/sync/download';
-
-      const response = await apiClient.get(url);
-      const payload = response.data;
-
-      // Sauvegarder les évaluations si présentes
-      if (payload?.evaluations) {
-        await this.quizzRepo.saveEvaluations(payload.evaluations);
-        console.log(`📚 ${payload.evaluations.length} évaluations téléchargées`);
+      // Récupérer l'utilisateur connecté
+      const userDataStr = await SecureStore.getItemAsync(STORAGE_KEYS.USER_DATA);
+      if (!userDataStr) {
+        throw new Error('Aucun utilisateur connecté');
       }
 
-      // Sauvegarder les quizz si présents
-      if (payload?.quizzes) {
-        for (const quizz of payload.quizzes) {
-          await this.quizzRepo.saveQuizDetails(quizz);
+      const userData = JSON.parse(userDataStr);
 
-          if (quizz.Questions) {
-            const mappedQuestions = quizz.Questions.map((q: any) => ({
-              id: q.id,
-              question: q.enonce,
-              type: q.typeQuestion,
-              options: q.options,
-            }));
-            await this.quizzRepo.saveQuestions(mappedQuestions);
+      // 1. Télécharger les évaluations
+      const evaluationsResponse = await apiClient.get('/evaluations');
+      if (evaluationsResponse.data?.evaluations) {
+        await this.quizzRepo.saveEvaluations(evaluationsResponse.data.evaluations);
+        console.log(`📚 ${evaluationsResponse.data.evaluations.length} évaluations téléchargées`);
+      }
+
+      // 2. Télécharger les détails des quizz actifs
+      const activeEvaluations = evaluationsResponse.data?.evaluations?.filter(
+        (evaluation: any) => evaluation.status === 'active'
+      ) || [];
+
+      for (const evaluation of activeEvaluations) {
+        try {
+          const quizzResponse = await apiClient.get(`/evaluations/${evaluation.id}/quizz`);
+          if (quizzResponse.data?.quizz) {
+            await this.quizzRepo.saveQuizDetails(quizzResponse.data.quizz);
+            
+            if (quizzResponse.data.quizz.questions) {
+              await this.quizzRepo.saveQuestions(quizzResponse.data.quizz.questions);
+            }
           }
+        } catch (error) {
+          console.warn(`⚠️ Impossible de télécharger le quizz ${evaluation.id}:`, error);
         }
-        console.log(`📝 ${payload.quizzes.length} quizz téléchargé(s)`);
-      }
-
-      // Sauvegarder l'utilisateur si présent
-      if (payload?.user) {
-        await this.userRepo.saveUser(payload.user);
-        console.log('👤 Données utilisateur mises à jour');
-      }
-
-      // Mettre à jour le timestamp de dernière sync
-      if (payload?.serverTime) {
-        await SecureStore.setItemAsync(STORAGE_KEYS.LAST_SYNC, payload.serverTime.toString());
-        console.log(`⏱️ Timestamp de sync mis à jour: ${payload.serverTime}`);
       }
 
       return { success: true, message: 'Données téléchargées avec succès' };
@@ -330,7 +318,7 @@ export class SyncService {
 
     try {
       const pendingSubmissions = await this.quizzRepo.getPendingSubmissions();
-
+      
       if (pendingSubmissions.length === 0) {
         console.log('📤 Aucune soumission en attente');
         return { success: 0, failed: 0 };
@@ -338,38 +326,58 @@ export class SyncService {
 
       console.log(`📤 Synchronisation de ${pendingSubmissions.length} soumission(s)...`);
 
-      // Construire le tableau d'opérations batch
-      const operations = pendingSubmissions.map((submission: any) => ({
-        operationId: `submission_${submission.quizz_id}_${submission.id}`,
-        type: 'submission',
-        payload: {
-          quizzId: submission.quizz_id,
-          reponses: submission.responses,
-          estFinal: true,
-        },
-      }));
+      for (const submission of pendingSubmissions) {
+        try {
+          // Tenter d'envoyer la soumission
+          const response = await apiClient.post(
+            `/evaluations/quizz/${submission.quizz_id}/submit`,
+            { reponses: submission.responses }
+          );
 
-      // Appel batch upload
-      const response = await apiClient.post('/student/sync/upload', { operations });
-      const results: Array<{ operationId: string; status: string; data?: any; error?: string }> =
-        response.data?.results || [];
+          if (response.data) {
+            // Marquer comme synchronisé
+            await this.quizzRepo.markSubmissionAsSynced(submission.id);
+            
+            // Supprimer les réponses brouillons
+            await this.quizzRepo.deleteAnswers(submission.quizz_id, submission.user_id);
+            
+            success++;
+            console.log(`✅ Soumission ${submission.id} synchronisée`);
+          }
+        } catch (error: any) {
+          // Si erreur 401, tenter de rafraîchir le token
+          if (error.response?.status === 401) {
+            console.log('🔄 Token expiré, tentative de refresh...');
+            const newToken = await this.refreshTokenOffline();
+            
+            if (newToken) {
+              // Réessayer avec le nouveau token
+              try {
+                const retryResponse = await apiClient.post(
+                  `/evaluations/quizz/${submission.quizz_id}/submit`,
+                  { reponses: submission.responses }
+                );
+                
+                if (retryResponse.data) {
+                  await this.quizzRepo.markSubmissionAsSynced(submission.id);
+                  await this.quizzRepo.deleteAnswers(submission.quizz_id, submission.user_id);
+                  success++;
+                  console.log(`✅ Soumission ${submission.id} synchronisée après refresh`);
+                  continue;
+                }
+              } catch (retryError) {
+                console.error(`❌ Échec retry soumission ${submission.id}:`, retryError);
+              }
+            }
+          }
 
-      for (let i = 0; i < results.length; i++) {
-        const result = results[i];
-        const submission = pendingSubmissions[i];
-
-        if (result.status === 'success') {
-          await this.quizzRepo.markSubmissionAsSynced(submission.id);
-          await this.quizzRepo.deleteAnswers(submission.quizz_id, submission.user_id);
-          success++;
-          console.log(`✅ Soumission ${submission.id} synchronisée`);
-        } else {
+          // Gérer l'échec
+          failed++;
           await this.quizzRepo.incrementSubmissionRetries(
             submission.id,
-            result.error || 'Erreur inconnue'
+            error.message || 'Erreur inconnue'
           );
-          failed++;
-          console.error(`❌ Échec soumission ${submission.id}:`, result.error);
+          console.error(`❌ Échec soumission ${submission.id}:`, error.message);
         }
       }
 
@@ -385,7 +393,7 @@ export class SyncService {
    */
   private async syncUserProfile(): Promise<void> {
     try {
-      const userResponse = await apiClient.get('/student/me');
+      const userResponse = await apiClient.get('/auth/me');
       if (userResponse.data) {
         await this.userRepo.saveUser(userResponse.data);
         console.log('👤 Profil utilisateur synchronisé');

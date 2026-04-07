@@ -1,5 +1,6 @@
 import { Evaluation } from '../entities/Evaluation';
 import { Quizz, QuizzSubmission } from '../entities/Quizz';
+import { QuizzHistory } from '../entities/QuizzHistory';
 
 /**
  * Interface du repository pour les quizz
@@ -20,4 +21,10 @@ export interface QuizzRepository {
    * Soumet les réponses d'un quizz
    */
   submitAnswers(quizzId: string, submission: QuizzSubmission): Promise<void>;
+
+  /**
+   * Récupère l'historique complet de tous les quizz terminés par l'étudiant
+   * Inclut les quizz de tous les établissements fréquentés
+   */
+  getQuizzHistory(): Promise<QuizzHistory[]>;
 }
