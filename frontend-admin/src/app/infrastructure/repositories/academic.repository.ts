@@ -150,8 +150,8 @@ export class AcademicRepository implements AcademicRepositoryInterface {
     return this.api.delete<void>(`/academic/classes/${id}`);
   }
 
-  addCoursToClasse(classeId: string | number, coursId: string | number): Observable<void> {
-    return this.api.post<void>(`/academic/classes/${classeId}/cours/${coursId}`, {});
+  addCoursToClasse(classeId: string | number, coursId: string | number, anneeAcademiqueId?: string | number): Observable<void> {
+    return this.api.post<void>(`/academic/classes/${classeId}/cours/${coursId}`, { anneeAcademiqueId: anneeAcademiqueId || null });
   }
 
   removeCoursFromClasse(classeId: string | number, coursId: string | number): Observable<void> {

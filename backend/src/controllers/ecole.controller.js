@@ -10,6 +10,16 @@ class EcoleController {
   });
 
   findAll = asyncHandler(async (req, res) => {
+    // Un admin normal ne voit que son école
+    if (req.user?.role === 'admin') {
+      const ecoleId = req.user?.Administrateur?.ecole_id
+        || req.user?.Administrateur?.dataValues?.ecole_id
+        || req.user?.Administrateur?.Ecole?.id;
+      if (ecoleId) {
+        const ecole = await ecoleService.findOne(ecoleId);
+        return res.status(200).json({ count: 1, rows: [ecole] });
+      }
+    }
     const result = await ecoleService.findAll(req.query);
     res.status(200).json(result);
   });

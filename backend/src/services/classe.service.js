@@ -3,47 +3,55 @@
 const classeRepository = require('../repositories/classe.repository');
 const ecoleRepository = require('../repositories/ecole.repository');
 const coursRepository = require('../repositories/cours.repository');
+const db = require('../models');
+const AppError = require('../utils/AppError');
 
 class ClasseService {
   async create(data) {
     let ecoleId = data.ecole_id;
     
-    // Si ecole_id n'est pas fourni, récupérer l'école depuis une classe existante ou la première école
     if (!ecoleId) {
-      // Essayer de récupérer l'école depuis une classe existante
-      const existingClasse = await classeRepository.findAll();
-      if (existingClasse && existingClasse.length > 0 && existingClasse[0].ecole_id) {
-        ecoleId = existingClasse[0].ecole_id;
-      } else {
-        // Sinon, récupérer la première école disponible
-        const ecoles = await ecoleRepository.findAll();
-        if (ecoles && ecoles.length > 0) {
-          ecoleId = ecoles[0].id;
-        }
+      // Fallback : première école disponible (findAll retourne {count, rows})
+      const result = await ecoleRepository.findAll();
+      const ecoles = result.rows || result;
+      if (ecoles && ecoles.length > 0) {
+        ecoleId = ecoles[0].id;
       }
     }
     
     if (!ecoleId) {
       throw new Error('École non trouvée. Impossible de créer la classe.');
     }
-    
-    const ecole = await ecoleRepository.findById(ecoleId);
-    if (!ecole) {
-      throw new Error('École non trouvée. Impossible de créer la classe.');
+
+    // Vérifier si une classe avec ce nom existe déjà dans la même école
+    const existing = await db.Classe.scope('all').findOne({ where: { nom: data.nom, ecole_id: ecoleId } });
+    if (existing) {
+      throw AppError.conflict(`Une classe avec le nom "${data.nom}" existe déjà dans cette école.`, 'DUPLICATE_ERROR');
     }
     
-    // Ajouter l'ecole_id aux données
-    const dataWithEcole = { ...data, ecole_id: ecoleId };
-    return classeRepository.create(dataWithEcole);
+    return classeRepository.create({ ...data, ecole_id: ecoleId });
   }
 
-  async findAll(includeArchived = false) {
-    if (includeArchived) {
-      // Utiliser le scope 'all' pour inclure les archivés
-      return classeRepository.findAllWithScope('all');
+  async findAll(includeArchived = false, ecoleId = null) {
+    const scope = includeArchived ? 'all' : 'defaultScope';
+    const options = {
+      include: [
+        { model: db.Ecole },
+        { model: db.AnneeAcademique },
+        { model: db.Cours },
+        { model: db.Etudiant }
+      ],
+      order: [['nom', 'ASC']]
+    };
+
+    if (ecoleId) {
+      options.where = { ecole_id: ecoleId };
     }
-    // Par défaut, utiliser le scope par défaut (sans archivés)
-    return classeRepository.findAll();
+
+    if (includeArchived) {
+      return classeRepository.findAllWithScope('all', options);
+    }
+    return classeRepository.findAll(options);
   }
 
   async findOne(id) {
@@ -94,7 +102,7 @@ class ClasseService {
 
   // --- Logique pour la relation Plusieurs-à-Plusieurs ---
 
-  async addCoursToClasse(classeId, coursId) {
+  async addCoursToClasse(classeId, coursId, anneeAcademiqueId = null) {
     const classe = await classeRepository.findById(classeId);
     if (!classe) {
       throw new Error('Classe non trouvée.');
@@ -103,8 +111,8 @@ class ClasseService {
     if (!cours) {
       throw new Error('Cours non trouvé.');
     }
-    // La méthode addCours est automatiquement ajoutée par Sequelize
-    await classe.addCours(cours);
+    // Passer anneeAcademiqueId comme attribut de la table de jonction
+    await classe.addCours(cours, { through: { anneeAcademiqueId: anneeAcademiqueId || null } });
     return { message: 'Cours ajouté à la classe avec succès.' };
   }
 

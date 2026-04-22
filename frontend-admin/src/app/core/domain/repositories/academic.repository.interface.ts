@@ -37,7 +37,7 @@ export abstract class AcademicRepositoryInterface {
   abstract getClasse(id: string | number): Observable<Classe>;
   abstract updateClasse(id: string | number, classe: Partial<Classe>): Observable<Classe>;
   abstract deleteClasse(id: string | number): Observable<void>;
-  abstract addCoursToClasse(classeId: string | number, coursId: string | number): Observable<void>;
+  abstract addCoursToClasse(classeId: string | number, coursId: string | number, anneeAcademiqueId?: string | number): Observable<void>;
   abstract removeCoursFromClasse(classeId: string | number, coursId: string | number): Observable<void>;
   abstract addEtudiantToClasse(classeId: string | number, etudiantId: string | number): Observable<void>;
   abstract removeEtudiantFromClasse(classeId: string | number, etudiantId: string | number): Observable<void>;

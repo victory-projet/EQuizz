@@ -24,7 +24,12 @@ class EvaluationService {
     }
 
     if (!evaluationData.annee_academique_id) {
-      throw AppError.badRequest('L\'année académique est requise.', 'ACADEMIC_YEAR_REQUIRED');
+      // Auto-resolve the current academic year if not provided
+      const anneeActive = await db.AnneeAcademique.findOne({ where: { estCourante: true } });
+      if (!anneeActive) {
+        throw AppError.badRequest('Aucune année académique courante trouvée. Veuillez en définir une.', 'ACADEMIC_YEAR_REQUIRED');
+      }
+      evaluationData.annee_academique_id = anneeActive.id;
     }
 
     const transaction = await db.sequelize.transaction();
@@ -73,8 +78,8 @@ class EvaluationService {
     }
   }
 
-  async findAll() {
-    return evaluationRepository.findAll();
+  async findAll(ecoleId = null) {
+    return evaluationRepository.findAll(ecoleId);
   }
 
   async findOne(id) {

@@ -7,22 +7,29 @@ class EvaluationRepository {
     return db.Evaluation.create(data, { transaction });
   }
 
-  async findAll() {
+  async findAll(ecoleId = null) {
+    const classeInclude = { 
+      model: db.Classe,
+      required: false
+    };
+
+    if (ecoleId) {
+      classeInclude.where = { ecole_id: ecoleId };
+      classeInclude.required = true;
+    }
+
     return db.Evaluation.findAll({
       include: [
         { 
           model: db.Cours,
-          required: false // Allow evaluations without courses for debugging
+          required: false
         },
         { 
           model: db.Quizz, 
           include: [db.Question],
           required: false
         },
-        { 
-          model: db.Classe,
-          required: false
-        }
+        classeInclude
       ],
       order: [['dateDebut', 'DESC']]
     });

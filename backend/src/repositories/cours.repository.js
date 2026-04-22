@@ -63,6 +63,19 @@ class CoursRepository {
     return null;
   }
 
+  async findAllByEcole(ecoleId, includeArchived = false) {
+    const scope = includeArchived ? 'all' : 'defaultScope';
+    return db.Cours.scope(scope).findAll({
+      where: { ecole_id: ecoleId },
+      include: [
+        { model: db.Enseignant, include: [db.Utilisateur] },
+        { model: db.Semestre },
+        { model: db.AnneeAcademique, as: 'AnneeAcademique' }
+      ],
+      order: [['nom', 'ASC']]
+    });
+  }
+
   async delete(id) {
     return db.Cours.destroy({
       where: { id: id }

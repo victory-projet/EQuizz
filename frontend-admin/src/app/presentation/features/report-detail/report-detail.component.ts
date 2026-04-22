@@ -35,6 +35,42 @@ interface ReportData {
   questions: any[];
 }
 
+interface QuestionStat {
+  id: string;
+  enonce: string;
+  typeQuestion: string;
+  ordre: number;
+  options: string[];
+  totalReponses: number;
+  distribution: Record<string, number>;
+  distributionPct: Record<string, number>;
+  parClasse: Array<{
+    classeId: string;
+    classeNom: string;
+    ecoleId: string;
+    ecoleNom: string;
+    totalReponses: number;
+    distribution: Record<string, number>;
+    distributionPct: Record<string, number>;
+  }>;
+  parEcole: Array<{
+    ecoleId: string;
+    ecoleNom: string;
+    totalReponses: number;
+    distribution: Record<string, number>;
+    distributionPct: Record<string, number>;
+  }>;
+}
+
+interface QuestionStatsData {
+  evaluationId: string;
+  titre: string;
+  statut: string;
+  cours: string;
+  classes: Array<{ id: string; nom: string; ecole: string }>;
+  questions: QuestionStat[];
+}
+
 @Component({
   selector: 'app-report-detail',
   standalone: true,
@@ -44,9 +80,13 @@ interface ReportData {
 })
 export class ReportDetailComponent implements OnInit {
   report = signal<ReportData | null>(null);
+  questionStats = signal<QuestionStatsData | null>(null);
   isLoading = signal(false);
+  isLoadingStats = signal(false);
   errorMessage = signal('');
-  activeTab = signal<'overview' | 'sentiment' | 'performance'>('overview');
+  activeTab = signal<'overview' | 'sentiment' | 'performance' | 'questions'>('overview');
+  selectedView = signal<'global' | 'parClasse' | 'parEcole'>('global');
+  evaluationId = signal<string>('');
 
   constructor(
     private route: ActivatedRoute,
@@ -57,6 +97,7 @@ export class ReportDetailComponent implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
+      this.evaluationId.set(id);
       this.loadReport(id);
     }
   }
@@ -69,9 +110,12 @@ export class ReportDetailComponent implements OnInit {
     
     this.http.get<ReportData>(apiUrl).subscribe({
       next: (data) => {
-        console.log('📊 Report loaded:', data);
         this.report.set(data);
         this.isLoading.set(false);
+        // Charger les stats questions si l'évaluation est clôturée
+        if (data.evaluation.statut === 'CLOTUREE') {
+          this.loadQuestionStats(id);
+        }
       },
       error: (error) => {
         console.error('❌ Error loading report:', error);
@@ -81,8 +125,35 @@ export class ReportDetailComponent implements OnInit {
     });
   }
 
-  setActiveTab(tab: 'overview' | 'sentiment' | 'performance'): void {
+  loadQuestionStats(id: string): void {
+    this.isLoadingStats.set(true);
+    this.http.get<QuestionStatsData>(`${environment.apiUrl}/reports/${id}/question-stats`).subscribe({
+      next: (data) => {
+        this.questionStats.set(data);
+        this.isLoadingStats.set(false);
+      },
+      error: (err) => {
+        console.error('❌ Error loading question stats:', err);
+        this.isLoadingStats.set(false);
+      }
+    });
+  }
+
+  setActiveTab(tab: 'overview' | 'sentiment' | 'performance' | 'questions'): void {
     this.activeTab.set(tab);
+  }
+
+  setSelectedView(view: 'global' | 'parClasse' | 'parEcole'): void {
+    this.selectedView.set(view);
+  }
+
+  getOptionColor(index: number): string {
+    const colors = ['#667eea', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#84cc16'];
+    return colors[index % colors.length];
+  }
+
+  getMaxCount(distribution: Record<string, number>): number {
+    return Math.max(...Object.values(distribution), 1);
   }
 
   exportPDF(): void {

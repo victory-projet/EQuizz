@@ -7,7 +7,11 @@ const AppError = require('../utils/AppError');
 
 class EtudiantController {
   findAll = asyncHandler(async (req, res) => {
-    const etudiants = await etudiantService.findAll();
+    // Filtrer par école si l'utilisateur est un admin (pas super-admin)
+    const ecoleId = req.user.role === 'admin'
+      ? (req.user.Administrateur?.ecole_id || req.user.Administrateur?.dataValues?.ecole_id)
+      : null;
+    const etudiants = await etudiantService.findAll(ecoleId);
     res.status(200).json(etudiants);
   });
 

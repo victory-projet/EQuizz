@@ -74,6 +74,32 @@
   }
 }
 
+.school-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--sidebar-border);
+
+  .material-icons {
+    font-size: 16px;
+    color: var(--sidebar-text-muted, rgba(255,255,255,0.6));
+    flex-shrink: 0;
+  }
+
+  .school-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sidebar-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
 .sidebar-nav {
   flex: 1;
   padding: 20px 0;

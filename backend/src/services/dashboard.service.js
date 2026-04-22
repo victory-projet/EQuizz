@@ -25,9 +25,9 @@ class DashboardService {
       this.countEtudiants(filters),
       db.Enseignant.count(),
       db.Cours.count(),
-      db.Evaluation.count({ where: whereClause }),
-      db.Evaluation.count({ where: { ...whereClause, statut: 'PUBLIEE' } }),
-      db.Evaluation.count({ where: { ...whereClause, statut: 'CLOTUREE' } }),
+      db.Evaluation.count({ where: whereClause, include: this.buildEcoleInclude(filters) }),
+      db.Evaluation.count({ where: { ...whereClause, statut: 'PUBLIEE' }, include: this.buildEcoleInclude(filters) }),
+      db.Evaluation.count({ where: { ...whereClause, statut: 'CLOTUREE' }, include: this.buildEcoleInclude(filters) }),
       this.calculateAverageParticipation(filters)
     ]);
 
@@ -38,7 +38,11 @@ class DashboardService {
       order: [['createdAt', 'DESC']],
       include: [
         { model: db.Cours, required: false },
-        { model: db.Classe, required: false }
+        {
+          model: db.Classe,
+          required: filters.ecoleId && filters.ecoleId !== 'all',
+          where: filters.ecoleId && filters.ecoleId !== 'all' ? { ecole_id: filters.ecoleId } : undefined,
+        }
       ]
     });
 
@@ -120,12 +124,20 @@ class DashboardService {
       where.cours_id = filters.coursId;
     }
 
-    // Filtre par école (Multi-tenancy)
-    if (filters.ecoleId && filters.ecoleId !== 'all') {
-      where['$Classes.ecole_id$'] = filters.ecoleId;
-    }
-
     return where;
+  }
+
+  // Retourne les options include nécessaires pour filtrer par école
+  buildEcoleInclude(filters) {
+    if (!filters.ecoleId || filters.ecoleId === 'all') return [];
+    return [{
+      model: db.Classe,
+      as: 'Classes',
+      required: true,
+      where: { ecole_id: filters.ecoleId },
+      attributes: [],
+      through: { attributes: [] }
+    }];
   }
 
   /**
@@ -134,6 +146,17 @@ class DashboardService {
   async countEtudiants(filters) {
     if (filters.classeId && filters.classeId !== 'all') {
       return db.Etudiant.count({ where: { classe_id: filters.classeId } });
+    }
+    if (filters.ecoleId && filters.ecoleId !== 'all') {
+      return db.Etudiant.count({
+        include: [{
+          model: db.Classe,
+          as: 'Classe',
+          required: true,
+          where: { ecole_id: filters.ecoleId },
+          attributes: []
+        }]
+      });
     }
     return db.Etudiant.count();
   }
@@ -154,6 +177,8 @@ class DashboardService {
         },
         {
           model: db.Classe,
+          required: filters.ecoleId && filters.ecoleId !== 'all',
+          where: filters.ecoleId && filters.ecoleId !== 'all' ? { ecole_id: filters.ecoleId } : undefined,
           include: [{ model: db.Etudiant }]
         }
       ]
@@ -289,6 +314,8 @@ class DashboardService {
         },
         {
           model: db.Classe,
+          required: filters.ecoleId && filters.ecoleId !== 'all',
+          where: filters.ecoleId && filters.ecoleId !== 'all' ? { ecole_id: filters.ecoleId } : undefined,
           include: [{ model: db.Etudiant }]
         }
       ]

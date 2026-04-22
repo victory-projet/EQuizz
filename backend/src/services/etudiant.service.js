@@ -5,17 +5,25 @@ const AppError = require('../utils/AppError');
 const { genererMatriculeUniv } = require('../utils/matriculeGenerator');
 
 class EtudiantService {
-  async findAll() {
+  async findAll(ecoleId = null) {
+    const classeInclude = {
+      model: db.Classe,
+      attributes: ['nom', 'niveau']
+    };
+
+    // Si ecoleId fourni, filtrer les étudiants dont la classe appartient à cette école
+    if (ecoleId) {
+      classeInclude.where = { ecole_id: ecoleId };
+      classeInclude.required = true;
+    }
+
     return db.Etudiant.findAll({
       include: [
         {
           model: db.Utilisateur,
           attributes: ['nom', 'prenom', 'email', 'estActif']
         },
-        {
-          model: db.Classe,
-          attributes: ['nom', 'niveau']
-        }
+        classeInclude
       ],
       order: [['createdAt', 'DESC']]
     });

@@ -265,6 +265,14 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     return this.authService.currentUser()?.role === 'SUPER-ADMIN';
   }
 
+  isAdmin(): boolean {
+    return this.authService.currentUser()?.role === 'ADMIN';
+  }
+
+  getEcoleName(): string {
+    return this.authService.currentUser()?.ecole?.nom || '';
+  }
+
   getUserRoleLabel(): string {
     const role = this.authService.currentUser()?.role;
     switch (role) {

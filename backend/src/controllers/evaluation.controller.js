@@ -13,7 +13,9 @@ class EvaluationController {
   });
 
   findAll = asyncHandler(async (req, res) => {
-    const evaluations = await evaluationService.findAll();
+    // Filtrer par école si l'utilisateur est un admin (pas super-admin)
+    const ecoleId = req.user.role === 'admin' ? req.user.Administrateur?.ecole_id : null;
+    const evaluations = await evaluationService.findAll(ecoleId);
     res.status(200).json(evaluations);
   });
 

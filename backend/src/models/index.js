@@ -90,19 +90,26 @@ Cours.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id', as: 'Annee
 AnneeAcademique.hasMany(Evaluation, { foreignKey: { name: 'annee_academique_id', allowNull: false } });
 Evaluation.belongsTo(AnneeAcademique, { foreignKey: 'annee_academique_id', as: 'AnneeAcademique' });
 
-Semestre.hasMany(Cours, { foreignKey: { name: 'semestre_id', allowNull: false } });
+Semestre.hasMany(Cours, { foreignKey: { name: 'semestre_id', allowNull: true } });
 Cours.belongsTo(Semestre, { foreignKey: 'semestre_id' });
 
-Enseignant.hasMany(Cours, { foreignKey: { name: 'enseignant_id', allowNull: false } });
+Enseignant.hasMany(Cours, { foreignKey: { name: 'enseignant_id', allowNull: true } });
 Cours.belongsTo(Enseignant, { foreignKey: 'enseignant_id' });
 
 Classe.hasMany(Etudiant, { foreignKey: 'classe_id' });
 Etudiant.belongsTo(Classe, { foreignKey: 'classe_id' });
 
 // Relation Plusieurs-à-Plusieurs entre Cours et Classe
-const CoursClasse = sequelize.define('CoursClasse', {}, { tableName: 'cours_classes', freezeTableName: true, paranoid: false, underscored: true }); // Table de jonction simple
-Cours.belongsToMany(Classe, { through: CoursClasse });
-Classe.belongsToMany(Cours, { through: CoursClasse });
+const CoursClasse = sequelize.define('CoursClasse', {
+  anneeAcademiqueId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    field: 'annee_academique_id'
+  }
+}, { tableName: 'cours_classes', freezeTableName: true, paranoid: false, underscored: true });
+Cours.belongsToMany(Classe, { through: CoursClasse, foreignKey: 'cour_id', otherKey: 'classe_id' });
+Classe.belongsToMany(Cours, { through: CoursClasse, foreignKey: 'classe_id', otherKey: 'cour_id' });
+db.CoursClasse = CoursClasse;
 
 
 // --- 3. Processus d'Évaluation (Composition) ---
@@ -157,8 +164,8 @@ Notification.belongsToMany(Etudiant, { through: NotificationEtudiant });
 //  Nouvelle Relation Plusieurs-à-Plusieurs entre Evaluation et Classe 
 
 const EvaluationClasse = sequelize.define('EvaluationClasse', {}, { freezeTableName: true, paranoid: false, underscored: true });
-Evaluation.belongsToMany(Classe, { through: EvaluationClasse });
-Classe.belongsToMany(Evaluation, { through: EvaluationClasse });
+Evaluation.belongsToMany(Classe, { through: EvaluationClasse, foreignKey: 'evaluation_id', otherKey: 'classe_id' });
+Classe.belongsToMany(Evaluation, { through: EvaluationClasse, foreignKey: 'classe_id', otherKey: 'evaluation_id' });
 
 // --- 6. Password Reset Tokens ---
 // Désactivé temporairement - problème de compatibilité de clé étrangère
@@ -183,7 +190,6 @@ Classe.hasMany(HistoriqueEtudiant, { foreignKey: { name: 'classe_id', allowNull:
 HistoriqueEtudiant.belongsTo(Classe, { foreignKey: 'classe_id' });
 
 // --- 8. Relation Admin à École (pour Admin scolaires) ---
-Ecole.hasMany(Administrateur, { foreignKey: { name: 'ecole_id', allowNull: true } });
-Administrateur.belongsTo(Ecole, { foreignKey: 'ecole_id' });
+// Note: déjà défini plus haut, pas de doublon
 
 module.exports = db;

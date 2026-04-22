@@ -5,13 +5,28 @@ const asyncHandler = require('../utils/asyncHandler');
 
 class CoursController {
   create = asyncHandler(async (req, res) => {
-    const cours = await coursService.create(req.body);
+    const data = { ...req.body };
+    // Pour un admin d'école, récupérer ecole_id depuis son profil
+    if (req.user?.role === 'admin') {
+      const ecoleId = req.user?.Administrateur?.ecole_id
+        || req.user?.Administrateur?.dataValues?.ecole_id
+        || req.user?.Administrateur?.Ecole?.id;
+      if (ecoleId) data.ecole_id = ecoleId;
+    }
+    // Pour le super-admin, ecole_id peut être fourni dans le body
+    if (!data.ecole_id && data.ecoleId) {
+      data.ecole_id = data.ecoleId;
+    }
+    const cours = await coursService.create(data);
     res.status(201).json(cours);
   });
 
   findAll = asyncHandler(async (req, res) => {
     const includeArchived = req.query.includeArchived === 'true';
-    const coursList = await coursService.findAll(includeArchived);
+    const ecoleId = req.user?.role === 'admin'
+      ? (req.user?.Administrateur?.ecole_id || req.user?.Administrateur?.dataValues?.ecole_id || req.user?.Administrateur?.Ecole?.id)
+      : null;
+    const coursList = await coursService.findAll(includeArchived, ecoleId);
     res.status(200).json(coursList);
   });
 

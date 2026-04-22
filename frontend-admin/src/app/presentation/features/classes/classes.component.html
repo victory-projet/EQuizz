@@ -170,6 +170,14 @@
             </button>
 
             <button 
+              class="action-btn btn-link" 
+              (click)="openAssocierCoursModal(classe)"
+              title="Associer un cours">
+              <span class="material-icons">link</span>
+              Cours
+            </button>
+
+            <button 
               class="action-btn btn-archive" 
               (click)="toggleArchiveStatus(classe)"
               [title]="classe.estArchive ? 'Désarchiver' : 'Archiver'">
@@ -239,6 +247,18 @@
               >
             </div>
 
+            @if (isSuperAdmin() && !selectedClasse()) {
+              <div class="form-group">
+                <label>École *</label>
+                <select [(ngModel)]="formData.ecoleId" name="ecoleId" required>
+                  <option value="">Sélectionner une école</option>
+                  @for (school of schools(); track school.id) {
+                    <option [value]="school.id">{{ school.nom }}</option>
+                  }
+                </select>
+              </div>
+            }
+
             <div class="form-group">
               <label>Année Académique</label>
               <select 
@@ -293,6 +313,61 @@
     </div>
   }
 </div>
+
+<!-- Modal Associer Cours -->
+@if (showAssocierCoursModal()) {
+  <div class="modal-overlay" (click)="closeAssocierCoursModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Associer un cours à {{ selectedClasseForAssoc()?.nom }}</h3>
+        <button class="close-btn" (click)="closeAssocierCoursModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        @if (errorMessage()) {
+          <div class="alert alert-error">{{ errorMessage() }}</div>
+        }
+
+        <div class="form-group">
+          <label>Cours *</label>
+          <select [(ngModel)]="assocFormData.coursId" name="coursId" required>
+            <option value="">Sélectionner un cours</option>
+            @for (cours of getCoursNonAssocies(selectedClasseForAssoc()!); track cours.id) {
+              <option [value]="cours.id">{{ cours.code }} - {{ cours.nom }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Année Académique</label>
+          <select [(ngModel)]="assocFormData.anneeAcademiqueId" name="anneeAcademiqueId">
+            <option value="">Aucune</option>
+            @for (annee of anneesAcademiques(); track annee.id) {
+              <option [value]="annee.id">
+                {{ annee.libelle }}{{ annee.estCourante ? ' (courante)' : '' }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeAssocierCoursModal()">
+          Annuler
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-primary" 
+          (click)="submitAssocierCours()"
+          [disabled]="!assocFormData.coursId">
+          Associer
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- Import Excel Modal -->
 @if (showImportDialog()) {

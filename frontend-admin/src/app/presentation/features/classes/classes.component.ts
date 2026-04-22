@@ -2,10 +2,12 @@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
-import { Classe, AnneeAcademique } from '../../../core/domain/entities/academic.entity';
+import { Classe, AnneeAcademique, Cours } from '../../../core/domain/entities/academic.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { ArchiveToggleComponent } from '../../shared/components/archive-toggle/archive-toggle.component';
 import { ExcelUploadComponent } from '../../shared/components/excel-upload/excel-upload.component';
+import { AuthService } from '../../shared/services/auth.service';
+import { SchoolService, School } from '../../../core/services/school.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -26,12 +28,24 @@ export class ClassesComponent implements OnInit {
   selectedClasse = signal<Classe | null>(null);
   
   private confirmationService = inject(ConfirmationService);
+  private authService = inject(AuthService);
+  private schoolService = inject(SchoolService);
+  
+  isSuperAdmin = computed(() => this.authService.currentUser()?.role === 'SUPER-ADMIN');
+  schools = signal<School[]>([]);
   
   searchQuery = signal('');
   filterAnnee = signal<string>('ALL');
   showArchived = signal(false);
   showImportDialog = signal(false);
   showActionsMenu = signal(false);
+  showAssocierCoursModal = signal(false);
+  allCours = signal<Cours[]>([]);
+  selectedClasseForAssoc = signal<Classe | null>(null);
+  assocFormData = {
+    coursId: '',
+    anneeAcademiqueId: ''
+  };
 
   toggleActionsMenu(): void {
     this.showActionsMenu.update(v => !v);
@@ -40,7 +54,8 @@ export class ClassesComponent implements OnInit {
   formData = {
     nom: '',
     niveau: '',
-    anneeAcademiqueId: ''
+    anneeAcademiqueId: '',
+    ecoleId: ''
   };
 
   errorMessage = signal('');
@@ -56,6 +71,17 @@ export class ClassesComponent implements OnInit {
   ngOnInit(): void {
     this.loadClasses();
     this.loadAnneesAcademiques();
+    this.loadCours();
+    if (this.isSuperAdmin()) {
+      this.loadSchools();
+    }
+  }
+
+  loadSchools(): void {
+    this.schoolService.getAllSchools().subscribe({
+      next: (schools) => this.schools.set(schools),
+      error: (err) => console.error('Erreur chargement écoles:', err)
+    });
   }
 
   loadClasses(): void {
@@ -66,7 +92,11 @@ export class ClassesComponent implements OnInit {
         this.applyFilters();
         this.isLoading.set(false);
       },
-      error: () => { this.isLoading.set(false); }
+      error: (err) => {
+        console.error('Erreur chargement classes:', err);
+        this.errorMessage.set(err?.error?.message || 'Erreur lors du chargement des classes');
+        this.isLoading.set(false);
+      }
     });
   }
 
@@ -78,6 +108,13 @@ export class ClassesComponent implements OnInit {
       error: (error) => {
         console.error('Erreur lors du chargement des années académiques:', error);
       }
+    });
+  }
+
+  loadCours(): void {
+    this.academicUseCase.getCours(false).subscribe({
+      next: (cours) => this.allCours.set(cours),
+      error: (error) => console.error('Erreur lors du chargement des cours:', error)
     });
   }
 
@@ -147,7 +184,8 @@ export class ClassesComponent implements OnInit {
     this.formData = {
       nom: classe.nom,
       niveau: classe.niveau || '',
-      anneeAcademiqueId: classe.anneeAcademiqueId?.toString() || ''
+      anneeAcademiqueId: classe.anneeAcademiqueId?.toString() || '',
+      ecoleId: (classe as any).ecoleId || ''
     };
     this.showModal.set(true);
   }
@@ -167,7 +205,8 @@ export class ClassesComponent implements OnInit {
     this.formData = {
       nom: '',
       niveau: '',
-      anneeAcademiqueId: ''
+      anneeAcademiqueId: '',
+      ecoleId: ''
     };
   }
 
@@ -183,11 +222,15 @@ export class ClassesComponent implements OnInit {
 
   createClasse(): void {
     this.isLoading.set(true);
-    const data = {
+    const data: any = {
       nom: this.formData.nom,
       niveau: this.formData.niveau,
       anneeAcademiqueId: this.formData.anneeAcademiqueId || undefined
     };
+    // Pour le super-admin, inclure l'école sélectionnée
+    if (this.isSuperAdmin() && this.formData.ecoleId) {
+      data.ecoleId = this.formData.ecoleId;
+    }
 
     this.academicUseCase.createClasse(data).subscribe({
       next: () => {
@@ -196,7 +239,11 @@ export class ClassesComponent implements OnInit {
         this.loadClasses();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: () => { this.isLoading.set(false); }
+      error: (err: any) => {
+        this.isLoading.set(false);
+        const msg = err?.error?.error?.message;
+        this.errorMessage.set(msg || 'Erreur lors de la création de la classe');
+      }
     });
   }
 
@@ -236,6 +283,49 @@ export class ClassesComponent implements OnInit {
       },
       error: () => { this.isLoading.set(false); }
     });
+  }
+
+  openAssocierCoursModal(classe: Classe): void {
+    this.selectedClasseForAssoc.set(classe);
+    this.assocFormData = { coursId: '', anneeAcademiqueId: '' };
+    // Pré-sélectionner l'année courante si disponible
+    const courante = this.anneesAcademiques().find(a => a.estCourante);
+    if (courante) {
+      this.assocFormData.anneeAcademiqueId = courante.id.toString();
+    }
+    this.showAssocierCoursModal.set(true);
+  }
+
+  closeAssocierCoursModal(): void {
+    this.showAssocierCoursModal.set(false);
+    this.selectedClasseForAssoc.set(null);
+  }
+
+  submitAssocierCours(): void {
+    const classe = this.selectedClasseForAssoc();
+    if (!classe || !this.assocFormData.coursId) return;
+
+    this.academicUseCase.addCoursToClasse(
+      classe.id,
+      this.assocFormData.coursId,
+      this.assocFormData.anneeAcademiqueId || undefined
+    ).subscribe({
+      next: () => {
+        this.successMessage.set('Cours associé à la classe avec succès');
+        this.closeAssocierCoursModal();
+        this.loadClasses();
+        setTimeout(() => this.successMessage.set(''), 3000);
+      },
+      error: (err) => {
+        this.errorMessage.set(err?.error?.message || 'Erreur lors de l\'association');
+        setTimeout(() => this.errorMessage.set(''), 4000);
+      }
+    });
+  }
+
+  getCoursNonAssocies(classe: Classe): Cours[] {
+    const associesIds = (classe.cours || []).map(c => c.id.toString());
+    return this.allCours().filter(c => !associesIds.includes(c.id.toString()));
   }
 
   getAnneeLibelle(anneeId?: number | string): string {

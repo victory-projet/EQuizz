@@ -6,6 +6,8 @@ import { Enseignant } from '../../../core/domain/entities/user.entity';
 import { ConfirmationService } from '../../shared/services/confirmation.service';
 import { ExcelUploadComponent, ExcelUploadResult } from '../../shared/components/excel-upload/excel-upload.component';
 import { ApiService } from '../../../infrastructure/http/api.service';
+import { AuthService } from '../../shared/services/auth.service';
+import { SchoolService, School } from '../../../core/services/school.service';
 
 @Component({
   selector: 'app-teachers',
@@ -24,10 +26,16 @@ export class TeachersComponent implements OnInit {
   selectedTeacher = signal<Enseignant | null>(null);
   
   private confirmationService = inject(ConfirmationService);
+  private authService = inject(AuthService);
+  private schoolService = inject(SchoolService);
   private apiService = inject(ApiService);
-  
+
+  isSuperAdmin = computed(() => this.authService.currentUser()?.role === 'SUPER-ADMIN');
+  schools = signal<School[]>([]);
+
   searchQuery = signal('');
   filterStatus = signal<string>('ALL');
+  filterEcole = signal<string>('ALL');
   showArchived = signal(false);
   showImportDialog = signal(false);
   showActionsMenu = signal(false);
@@ -55,6 +63,16 @@ export class TeachersComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadTeachers();
+    if (this.isSuperAdmin()) {
+      this.loadSchools();
+    }
+  }
+
+  loadSchools(): void {
+    this.schoolService.getAllSchools().subscribe({
+      next: (schools) => this.schools.set(schools),
+      error: () => {}
+    });
   }
 
   loadTeachers(): void {
@@ -85,6 +103,11 @@ export class TeachersComponent implements OnInit {
       filtered = filtered.filter(t => t.estActif === isActive);
     }
 
+    const ecoleFilter = this.filterEcole();
+    if (ecoleFilter && ecoleFilter !== 'ALL') {
+      filtered = filtered.filter(t => (t as any).ecoleId?.toString() === ecoleFilter);
+    }
+
     if (this.searchQuery()) {
       const query = this.searchQuery().toLowerCase();
       filtered = filtered.filter(t =>
@@ -96,6 +119,11 @@ export class TeachersComponent implements OnInit {
     }
 
     this.filteredTeachers.set(filtered);
+  }
+
+  onFilterEcole(ecoleId: string): void {
+    this.filterEcole.set(ecoleId);
+    this.applyFilters();
   }
 
   onSearch(event: Event): void {

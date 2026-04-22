@@ -346,7 +346,8 @@ export class AssociationsComponent implements OnInit {
           return new Promise<void>((resolve, reject) => {
             this.academicUseCase.addCoursToClasse(
               classeId,
-              this.formData.coursId
+              this.formData.coursId,
+              this.formData.anneeAcademiqueId || undefined
             ).subscribe({
               next: () => resolve(),
               error: reject

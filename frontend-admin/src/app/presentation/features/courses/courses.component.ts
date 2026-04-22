@@ -1,10 +1,12 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AcademicUseCase } from '../../../core/usecases/academic.usecase';
-import { Cours, AnneeAcademique, Semestre } from '../../../core/domain/entities/academic.entity';
+import { Cours } from '../../../core/domain/entities/academic.entity';
 import { ArchiveToggleComponent } from '../../shared/components/archive-toggle/archive-toggle.component';
 import { ExcelUploadComponent } from '../../shared/components/excel-upload/excel-upload.component';
+import { AuthService } from '../../shared/services/auth.service';
+import { SchoolService, School } from '../../../core/services/school.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -17,9 +19,6 @@ import { environment } from '../../../../environments/environment';
 export class CoursesComponent implements OnInit {
   cours = signal<Cours[]>([]);
   filteredCours = signal<Cours[]>([]);
-  anneesAcademiques = signal<AnneeAcademique[]>([]);
-  semestres = signal<Semestre[]>([]);
-  enseignants = signal<any[]>([]);
   
   isLoading = signal(false);
   showModal = signal(false);
@@ -27,18 +26,22 @@ export class CoursesComponent implements OnInit {
   selectedCours = signal<Cours | null>(null);
   
   searchQuery = signal('');
-  filterStatus = signal<'ALL' | 'ACTIVE' | 'ARCHIVED'>('ACTIVE'); // Par défaut, afficher uniquement les actifs
-  filterSemestre = signal<string>('ALL');
+  filterStatus = signal<'ALL' | 'ACTIVE' | 'ARCHIVED'>('ACTIVE');
   showArchived = signal(false);
   showImportDialog = signal(false);
   showActionsMenu = signal(false);
+
+  private authService = inject(AuthService);
+  private schoolService = inject(SchoolService);
+
+  isSuperAdmin = computed(() => this.authService.currentUser()?.role === 'SUPER-ADMIN');
+  schools = signal<School[]>([]);
 
   formData = {
     code: '',
     nom: '',
     description: '',
-    semestre_id: '',
-    enseignant_id: ''
+    ecoleId: ''
   };
 
   errorMessage = signal('');
@@ -53,22 +56,16 @@ export class CoursesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCours();
-    this.loadAnneesAcademiques();
-    this.loadEnseignants();
-  }
-
-  loadEnseignants(): void {
-    // TODO: Implémenter quand le use case enseignants sera disponible
-    // Pour l'instant, on laisse vide
-    this.enseignants.set([]);
-  }
-
-  onAnneeChange(anneeId: string): void {
-    if (anneeId) {
-      this.loadSemestres(Number(anneeId));
-    } else {
-      this.semestres.set([]);
+    if (this.isSuperAdmin()) {
+      this.loadSchools();
     }
+  }
+
+  loadSchools(): void {
+    this.schoolService.getAllSchools().subscribe({
+      next: (schools) => this.schools.set(schools),
+      error: (err) => console.error('Erreur chargement écoles:', err)
+    });
   }
 
   loadCours(): void {
@@ -80,28 +77,6 @@ export class CoursesComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: () => { this.isLoading.set(false); }
-    });
-  }
-
-  loadAnneesAcademiques(): void {
-    this.academicUseCase.getAnneesAcademiques().subscribe({
-      next: (annees) => {
-        this.anneesAcademiques.set(annees);
-      },
-      error: (error) => {
-        console.error('Erreur lors du chargement des années académiques:', error);
-      }
-    });
-  }
-
-  loadSemestres(anneeId: number): void {
-    this.academicUseCase.getSemestresByAnnee(anneeId).subscribe({
-      next: (semestres) => {
-        this.semestres.set(semestres);
-      },
-      error: (error) => {
-        console.error('Erreur lors du chargement des semestres:', error);
-      }
     });
   }
 
@@ -155,8 +130,7 @@ export class CoursesComponent implements OnInit {
       code: cours.code,
       nom: cours.nom,
       description: cours.description || '',
-      semestre_id: '',
-      enseignant_id: ''
+      ecoleId: (cours as any).ecoleId || ''
     };
     this.showModal.set(true);
   }
@@ -177,8 +151,7 @@ export class CoursesComponent implements OnInit {
       code: '',
       nom: '',
       description: '',
-      semestre_id: '',
-      enseignant_id: ''
+      ecoleId: ''
     };
   }
 
@@ -193,20 +166,17 @@ export class CoursesComponent implements OnInit {
   }
 
   createCours(): void {
-    if (!this.formData.semestre_id || !this.formData.enseignant_id) {
-      this.errorMessage.set('Le semestre et l\'enseignant sont requis');
-      return;
-    }
-
     this.isLoading.set(true);
-    const data = {
+    const data: any = {
       code: this.formData.code,
       nom: this.formData.nom,
       description: this.formData.description,
-      semestre_id: this.formData.semestre_id,
-      enseignant_id: this.formData.enseignant_id,
       estArchive: false
     };
+    // Pour le super-admin, inclure l'école sélectionnée
+    if (this.isSuperAdmin() && this.formData.ecoleId) {
+      data.ecoleId = this.formData.ecoleId;
+    }
 
     this.academicUseCase.createCours(data).subscribe({
       next: () => {
@@ -215,7 +185,11 @@ export class CoursesComponent implements OnInit {
         this.loadCours();
         setTimeout(() => this.successMessage.set(''), 3000);
       },
-      error: () => { this.isLoading.set(false); }
+      error: (err: any) => {
+        this.isLoading.set(false);
+        const msg = err?.error?.error?.message;
+        this.errorMessage.set(msg || 'Erreur lors de la création du cours');
+      }
     });
   }
 

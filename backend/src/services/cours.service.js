@@ -10,25 +10,31 @@ class CoursService {
    * @param {object} data - Doit contenir semestre_id et enseignant_id.
    */
   async create(data) {
-    const semestre = await semestreRepository.findById(data.semestre_id);
-    if (!semestre) {
-      throw new Error('Semestre non trouvé. Impossible de créer le cours.');
+    // semestre_id et enseignant_id sont optionnels
+    if (data.semestre_id) {
+      const semestre = await semestreRepository.findById(data.semestre_id);
+      if (!semestre) {
+        throw new Error('Semestre non trouvé. Impossible de créer le cours.');
+      }
     }
 
-    const enseignant = await enseignantRepository.findById(data.enseignant_id);
-    if (!enseignant) {
-      throw new Error('Enseignant non trouvé. Impossible de créer le cours.');
+    if (data.enseignant_id) {
+      const enseignant = await enseignantRepository.findById(data.enseignant_id);
+      if (!enseignant) {
+        throw new Error('Enseignant non trouvé. Impossible de créer le cours.');
+      }
     }
     
     return coursRepository.create(data);
   }
 
-  async findAll(includeArchived = false) {
+  async findAll(includeArchived = false, ecoleId = null) {
+    if (ecoleId) {
+      return coursRepository.findAllByEcole(ecoleId, includeArchived);
+    }
     if (includeArchived) {
-      // Utiliser le scope 'all' pour inclure les archivés
       return coursRepository.findAllWithScope('all');
     }
-    // Par défaut, utiliser le scope par défaut (sans archivés)
     return coursRepository.findAll();
   }
 

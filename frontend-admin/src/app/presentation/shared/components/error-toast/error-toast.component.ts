@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { ErrorHandlerService, AppError } from '../../../../core/services/error-handler.service';
@@ -271,29 +271,35 @@ export class ErrorToastComponent implements OnDestroy {
   };
 
   constructor() {
-    // Réagit immédiatement à chaque changement du signal errors
-    effect(() => {
-      const errors = this.errorHandler.errors();
-      const next = errors.slice(0, this.MAX_VISIBLE_ERRORS);
-      const current = this.visibleErrors();
+    // Surveiller les erreurs sans effect pour éviter les boucles réactives
+    // La mise à jour se fait via ngDoCheck ou directement depuis ErrorHandlerService
+  }
 
-      // Nouvelles erreurs à afficher
-      const currentIds = new Set(current.map(e => e.id));
-      next.forEach(error => {
-        if (!currentIds.has(error.id)) {
-          const dismissTime = this.AUTO_DISMISS_TIMES[error.type];
-          if (dismissTime > 0) {
-            const timer = setTimeout(() => {
-              this.dismissError(error.id);
-              this.autoDismissTimers.delete(error.id);
-            }, dismissTime);
-            this.autoDismissTimers.set(error.id, timer);
-          }
+  ngOnInit(): void {
+    // Synchroniser les erreurs visibles depuis le service
+    this.syncErrors();
+  }
+
+  private syncErrors(): void {
+    const errors = this.errorHandler.errors();
+    const next = errors.slice(0, this.MAX_VISIBLE_ERRORS);
+    const current = this.visibleErrors();
+    const currentIds = new Set(current.map((e: AppError) => e.id));
+
+    next.forEach((error: AppError) => {
+      if (!currentIds.has(error.id)) {
+        const dismissTime = this.AUTO_DISMISS_TIMES[error.type];
+        if (dismissTime > 0) {
+          const timer = setTimeout(() => {
+            this.dismissError(error.id);
+            this.autoDismissTimers.delete(error.id);
+          }, dismissTime);
+          this.autoDismissTimers.set(error.id, timer);
         }
-      });
-
-      this.visibleErrors.set(next);
+      }
     });
+
+    this.visibleErrors.set(next);
   }
 
   ngOnDestroy(): void {

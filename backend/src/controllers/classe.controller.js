@@ -5,13 +5,29 @@ const asyncHandler = require('../utils/asyncHandler');
 
 class ClasseController {
   create = asyncHandler(async (req, res) => {
-    const classe = await classeService.create(req.body);
+    const data = { ...req.body };
+    // Pour un admin d'école, récupérer ecole_id depuis son profil (Sequelize retourne camelCase)
+    if (req.user?.role === 'admin') {
+      const ecoleId = req.user?.Administrateur?.ecole_id 
+        || req.user?.Administrateur?.dataValues?.ecole_id
+        || req.user?.Administrateur?.Ecole?.id;
+      if (ecoleId) data.ecole_id = ecoleId;
+    }
+    // Pour le super-admin, ecole_id doit être fourni dans le body (data.ecoleId ou data.ecole_id)
+    if (!data.ecole_id && data.ecoleId) {
+      data.ecole_id = data.ecoleId;
+    }
+    const classe = await classeService.create(data);
     res.status(201).json(classe);
   });
 
   findAll = asyncHandler(async (req, res) => {
     const includeArchived = req.query.includeArchived === 'true';
-    const classes = await classeService.findAll(includeArchived);
+    // Super-admin voit tout, admin voit seulement son école
+    const ecoleId = (req.user?.role === 'admin')
+      ? (req.user?.Administrateur?.ecole_id || req.user?.Administrateur?.dataValues?.ecole_id || req.user?.Administrateur?.Ecole?.id)
+      : null;
+    const classes = await classeService.findAll(includeArchived, ecoleId);
     res.status(200).json(classes);
   });
 
@@ -32,7 +48,8 @@ class ClasseController {
 
   addCoursToClasse = asyncHandler(async (req, res) => {
     const { classeId, coursId } = req.params;
-    const result = await classeService.addCoursToClasse(classeId, coursId);
+    const { anneeAcademiqueId } = req.body;
+    const result = await classeService.addCoursToClasse(classeId, coursId, anneeAcademiqueId);
     res.status(200).json(result);
   });
 

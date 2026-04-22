@@ -25,6 +25,12 @@
       </button>
     </div>
 
+    <!-- Badge école pour les admins -->
+    <div class="school-badge" *ngIf="isAdmin() && !isSidebarCollapsed()">
+      <span class="material-icons">apartment</span>
+      <span class="school-name">{{ getEcoleName() }}</span>
+    </div>
+
     <nav class="sidebar-nav">
       <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
         <span class="material-icons">home</span>

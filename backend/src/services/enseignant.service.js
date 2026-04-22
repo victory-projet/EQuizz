@@ -4,16 +4,18 @@ const db = require('../models');
 const AppError = require('../utils/AppError');
 
 class EnseignantService {
-  async findAll() {
-    return db.Enseignant.findAll({
-      include: [
-        {
-          model: db.Utilisateur,
-          attributes: ['nom', 'prenom', 'email', 'estActif']
-        }
-      ],
-      order: [[db.Utilisateur, 'nom', 'ASC']]
-    });
+  async findAll(ecoleId = null) {
+    const options = {
+      include: [{ model: db.Utilisateur, attributes: ['nom', 'prenom', 'email', 'estActif'] }],
+      order: [[db.Utilisateur, 'nom', 'ASC']],
+      distinct: true
+    };
+
+    if (ecoleId) {
+      options.where = { ecole_id: ecoleId };
+    }
+
+    return db.Enseignant.findAll(options);
   }
 
   async findOne(id) {
@@ -38,34 +40,28 @@ class EnseignantService {
   }
 
   async create(data) {
-    const { nom, prenom, email, specialite, motDePasse } = data;
+    const { nom, prenom, email, specialite, motDePasse, ecole_id } = data;
 
-    // Vérifier si l'email existe déjà
     const existingUser = await db.Utilisateur.findOne({ where: { email } });
     if (existingUser) {
       throw AppError.conflict('Cet email est déjà utilisé', 'EMAIL_EXISTS');
     }
 
     const transaction = await db.sequelize.transaction();
-
     try {
-      // Créer l'utilisateur
       const utilisateur = await db.Utilisateur.create({
-        nom,
-        prenom,
-        email,
-        motDePasseHash: motDePasse || 'Prof123!', // Mot de passe par défaut
+        nom, prenom, email,
+        motDePasseHash: motDePasse || 'Prof123!',
         estActif: true
       }, { transaction });
 
-      // Créer l'enseignant
       const enseignant = await db.Enseignant.create({
         id: utilisateur.id,
-        specialite: specialite || 'Non spécifié'
+        specialite: specialite || 'Non spécifié',
+        ecole_id: ecole_id || null
       }, { transaction });
 
       await transaction.commit();
-
       return this.findOne(enseignant.id);
     } catch (error) {
       await transaction.rollback();

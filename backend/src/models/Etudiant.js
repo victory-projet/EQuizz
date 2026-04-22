@@ -32,6 +32,11 @@ const Etudiant = sequelize.define('Etudiant', {
     comment: 'Date du dernier import Excel'
   }
 
+}, {
+  tableName: 'etudiant',
+  freezeTableName: true,
+  timestamps: true,
+  underscored: true
 });
 
 module.exports = Etudiant;

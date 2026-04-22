@@ -54,7 +54,7 @@ app.use(helmet({
 
 // Signature de l'équipe
 app.use((req, res, next) => {
-  res.setHeader('X-Developed-By', 'EQuizz-Team-SJI-KMPEVCPBA-ISI2026');
+  res.setHeader('X-Developed-By', 'EQuizz-Team-SJI-KMSEMCBKB-ISI2026');
   next();
 });
 

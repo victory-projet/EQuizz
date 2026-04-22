@@ -28,7 +28,7 @@ class AuthController {
     } else if (utilisateur.Administrateur) {
       role = 'ADMIN';
       additionalInfo = {
-        ecoleId: utilisateur.Administrateur.ecoleId,
+        ecoleId: utilisateur.Administrateur.ecole_id,
         ecole: utilisateur.Administrateur.Ecole ? {
           id: utilisateur.Administrateur.Ecole.id,
           nom: utilisateur.Administrateur.Ecole.nom
@@ -89,7 +89,7 @@ class AuthController {
     } else if (utilisateur.Administrateur) {
       role = 'ADMIN';
       additionalInfo = {
-        ecoleId: utilisateur.Administrateur.ecoleId,
+        ecoleId: utilisateur.Administrateur.ecole_id,
         ecole: utilisateur.Administrateur.Ecole ? {
           id: utilisateur.Administrateur.Ecole.id,
           nom: utilisateur.Administrateur.Ecole.nom

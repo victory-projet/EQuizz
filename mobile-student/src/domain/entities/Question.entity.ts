@@ -1,7 +1,9 @@
 export enum QuestionType {
     MULTIPLE_CHOICE = 'MULTIPLE_CHOICE',
     SINGLE_CHOICE = 'SINGLE_CHOICE',
-    TEXT = 'TEXT'
+    TEXT = 'TEXT',
+    CHOIX_MULTIPLE = 'CHOIX_MULTIPLE',
+    REPONSE_OUVERTE = 'REPONSE_OUVERTE',
 }
 
 export interface QuestionOption {

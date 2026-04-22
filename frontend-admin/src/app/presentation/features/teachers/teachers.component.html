@@ -83,6 +83,15 @@
       >
     </div>
 
+    @if (isSuperAdmin() && schools().length > 0) {
+      <select class="filter-select" (change)="onFilterEcole($any($event.target).value)" [value]="filterEcole()">
+        <option value="ALL">Toutes les écoles</option>
+        @for (school of schools(); track school.id) {
+          <option [value]="school.id">{{ school.nom }}</option>
+        }
+      </select>
+    }
+
     <div class="filter-buttons">
       <button 
         class="filter-btn" 
@@ -168,8 +177,8 @@
         <div class="empty-state">
           <span class="material-icons">person</span>
           <p>Aucun enseignant trouvé</p>
-          @if (searchQuery() || filterStatus() !== 'ALL') {
-            <button class="btn btn-secondary" (click)="searchQuery.set(''); filterStatus.set('ALL'); applyFilters()">
+          @if (searchQuery() || filterStatus() !== 'ALL' || filterEcole() !== 'ALL') {
+            <button class="btn btn-secondary" (click)="searchQuery.set(''); filterStatus.set('ALL'); filterEcole.set('ALL'); applyFilters()">
               Réinitialiser les filtres
             </button>
           } @else {

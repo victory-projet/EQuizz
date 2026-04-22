@@ -1,14 +1,31 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { Question, QuestionType } from '../../domain/entities/Question.entity';
 
 interface QuestionCardProps {
     question: Question;
     selectedOptions: string[];
     onOptionSelect: (optionId: string) => void;
+    textAnswer?: string;
+    onTextChange?: (text: string) => void;
 }
 
-export default function QuestionCard({ question, selectedOptions, onOptionSelect }: QuestionCardProps) {
+const isOpenEnded = (type: QuestionType) =>
+    type === QuestionType.TEXT ||
+    type === QuestionType.REPONSE_OUVERTE;
+
+const isMultipleChoice = (type: QuestionType) =>
+    type === QuestionType.MULTIPLE_CHOICE ||
+    type === QuestionType.SINGLE_CHOICE ||
+    type === QuestionType.CHOIX_MULTIPLE;
+
+export default function QuestionCard({
+    question,
+    selectedOptions,
+    onOptionSelect,
+    textAnswer = '',
+    onTextChange,
+}: QuestionCardProps) {
     const isSelected = (optionId: string) => selectedOptions.includes(optionId);
 
     return (
@@ -17,41 +34,60 @@ export default function QuestionCard({ question, selectedOptions, onOptionSelect
                 <Text style={styles.questionNumber}>
                     Question {question.questionNumber} sur {question.totalQuestions}
                 </Text>
-                {question.type === QuestionType.MULTIPLE_CHOICE && (
-                    <View style={styles.badge}>
-                        <Text style={styles.badgeText}>Choix multiple</Text>
-                    </View>
-                )}
+                <View style={[
+                    styles.badge,
+                    isOpenEnded(question.type) && styles.badgeOpen
+                ]}>
+                    <Text style={styles.badgeText}>
+                        {isOpenEnded(question.type) ? 'Réponse ouverte' : 'Choix multiple'}
+                    </Text>
+                </View>
             </View>
 
             <Text style={styles.questionText}>{question.text}</Text>
 
-            <View style={styles.optionsContainer}>
-                {question.options?.map((option) => (
-                    <TouchableOpacity
-                        key={option.id}
-                        style={[
-                            styles.optionButton,
-                            isSelected(option.id) && styles.optionButtonSelected
-                        ]}
-                        onPress={() => onOptionSelect(option.id)}
-                        activeOpacity={0.7}
-                    >
-                        <View style={[
-                            styles.radio,
-                            isSelected(option.id) && styles.radioSelected
-                        ]}>
-                            {isSelected(option.id) && <View style={styles.radioInner} />}
-                        </View>
-                        <Text style={[
-                            styles.optionText,
-                            isSelected(option.id) && styles.optionTextSelected
-                        ]}>
-                            {option.text}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
+            {isMultipleChoice(question.type) && question.options ? (
+                <View style={styles.optionsContainer}>
+                    {question.options.map((option) => (
+                        <TouchableOpacity
+                            key={option.id}
+                            style={[
+                                styles.optionButton,
+                                isSelected(option.id) && styles.optionButtonSelected
+                            ]}
+                            onPress={() => onOptionSelect(option.id)}
+                            activeOpacity={0.7}
+                        >
+                            <View style={[
+                                styles.radio,
+                                isSelected(option.id) && styles.radioSelected
+                            ]}>
+                                {isSelected(option.id) && <View style={styles.radioInner} />}
+                            </View>
+                            <Text style={[
+                                styles.optionText,
+                                isSelected(option.id) && styles.optionTextSelected
+                            ]}>
+                                {option.text}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            ) : (
+                <View style={styles.textInputContainer}>
+                    <Text style={styles.textInputLabel}>Votre réponse :</Text>
+                    <TextInput
+                        style={styles.textInput}
+                        placeholder="Entrez votre réponse ici..."
+                        placeholderTextColor="#9CA3AF"
+                        value={textAnswer}
+                        onChangeText={onTextChange}
+                        multiline
+                        numberOfLines={6}
+                        textAlignVertical="top"
+                    />
+                </View>
+            )}
         </View>
     );
 }
@@ -87,6 +123,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 5,
         borderRadius: 12,
+    },
+    badgeOpen: {
+        backgroundColor: '#F59E0B',
     },
     badgeText: {
         fontSize: 10,
@@ -149,5 +188,24 @@ const styles = StyleSheet.create({
     optionTextSelected: {
         color: '#1F2937',
         fontWeight: '600',
+    },
+    textInputContainer: {
+        marginTop: 8,
+    },
+    textInputLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#374151',
+        marginBottom: 8,
+    },
+    textInput: {
+        backgroundColor: '#F9FAFB',
+        borderRadius: 8,
+        borderWidth: 2,
+        borderColor: '#E5E7EB',
+        padding: 16,
+        minHeight: 120,
+        fontSize: 15,
+        color: '#1F2937',
     },
 });

@@ -14,10 +14,9 @@ const Administrateur = sequelize.define('Administrateur', {
     comment: 'Clé primaire et étrangère vers Utilisateur'
   },
   
-  ecoleId: {
+  ecole_id: {
     type: DataTypes.UUID,
     allowNull: false,
-    field: 'ecole_id',
     references: {
       model: 'ecoles',
       key: 'id'
@@ -47,7 +46,6 @@ const Administrateur = sequelize.define('Administrateur', {
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
-  underscored: true,
   paranoid: false,
   comment: 'Table des administrateurs d\'école'
 });

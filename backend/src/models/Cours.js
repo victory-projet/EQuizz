@@ -21,6 +21,15 @@ const Cours = sequelize.define('Cours', {
     // ex: "Bases de Données"
   },
 
+  ecole_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: { model: 'ecoles', key: 'id' },
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+    comment: 'École à laquelle le cours appartient'
+  },
+
   estArchive: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,

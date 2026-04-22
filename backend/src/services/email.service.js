@@ -9,14 +9,26 @@ const emailsDisabled = process.env.DISABLE_EMAIL_NOTIFICATIONS === 'true';
 class EmailService {
   constructor() {
     if (!emailsDisabled) {
-      this.transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: getSecret('SMTP_USER', process.env.SMTP_USER),
-          pass: getSecret('SMTP_PASS', process.env.SMTP_PASS)
-        }
-      });
-      console.log('📧 Service email (Gmail) initialisé');
+      if (process.env.SENDGRID_API_KEY) {
+        this.transporter = nodemailer.createTransport({
+          host: 'smtp.sendgrid.net',
+          port: 587,
+          auth: {
+            user: 'apikey',
+            pass: process.env.SENDGRID_API_KEY
+          }
+        });
+        console.log('📧 Service email (SendGrid) initialisé');
+      } else {
+        this.transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: getSecret('SMTP_USER', process.env.SMTP_USER),
+            pass: getSecret('SMTP_PASS', process.env.SMTP_PASS)
+          }
+        });
+        console.log('📧 Service email (Gmail) initialisé');
+      }
     }
   }
 
@@ -27,8 +39,9 @@ class EmailService {
     }
 
     try {
+      const defaultFrom = process.env.SENDGRID_VERIFIED_SENDER || getSecret('SMTP_USER', process.env.SMTP_USER);
       const info = await this.transporter.sendMail({
-        from: msg.from || getSecret('SMTP_USER', process.env.SMTP_USER),
+        from: msg.from || `"EQuizz Platform" <${defaultFrom}>`,
         to: msg.to,
         subject: msg.subject,
         html: msg.html
@@ -45,9 +58,10 @@ class EmailService {
     const utilisateur = etudiant.Utilisateur;
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     
+    const defaultFrom = process.env.SENDGRID_VERIFIED_SENDER || getSecret('SMTP_USER', process.env.SMTP_USER);
     const msg = {
       to: utilisateur.email,
-      from: `"EQuizz Platform" <${getSecret('SMTP_USER', process.env.SMTP_USER)}>`,
+      from: `"EQuizz Platform" <${defaultFrom}>`,
       subject: 'Bienvenue sur EQuizz - Vos identifiants de connexion',
       html: `
         <!DOCTYPE html>

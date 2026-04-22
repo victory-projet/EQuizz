@@ -333,6 +333,24 @@
         }
       }
 
+      &.btn-link {
+        background: #ede9fe;
+        color: #7c3aed;
+
+        &:hover {
+          background: #ddd6fe;
+        }
+      }
+
+      &.btn-archive {
+        background: #f3f4f6;
+        color: #6b7280;
+
+        &:hover {
+          background: #e5e7eb;
+        }
+      }
+
       &.btn-delete {
         background: #fee2e2;
         color: #dc2626;

@@ -7,19 +7,20 @@ class ClasseRepository {
     return db.Classe.create(data);
   }
 
-  async findAll() {
+  async findAll(extraOptions = {}) {
     return db.Classe.findAll({
       include: [
-        { model: db.Ecole }, // Inclure l'école à laquelle la classe appartient
-        { model: db.AnneeAcademique }, // Inclure l'année académique
-        { model: db.Cours },  // Inclure les cours associés à cette classe
-        { model: db.Etudiant } // Inclure les étudiants de la classe
+        { model: db.Ecole },
+        { model: db.AnneeAcademique },
+        { model: db.Cours },
+        { model: db.Etudiant }
       ],
-      order: [['nom', 'ASC']]
+      order: [['nom', 'ASC']],
+      ...extraOptions
     });
   }
 
-  async findAllWithScope(scope = 'defaultScope') {
+  async findAllWithScope(scope = 'defaultScope', extraOptions = {}) {
     return db.Classe.scope(scope).findAll({
       include: [
         { model: db.Ecole },
@@ -27,7 +28,8 @@ class ClasseRepository {
         { model: db.Cours },
         { model: db.Etudiant }
       ],
-      order: [['nom', 'ASC']]
+      order: [['nom', 'ASC']],
+      ...extraOptions
     });
   }
 

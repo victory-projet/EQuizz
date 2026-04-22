@@ -243,47 +243,22 @@
               ></textarea>
             </div>
 
+            @if (isSuperAdmin() && !selectedCours()) {
+              <div class="form-group">
+                <label>École</label>
+                <select [(ngModel)]="formData.ecoleId" name="ecoleId">
+                  <option value="">— Sélectionner une école —</option>
+                  @for (school of schools(); track school.id) {
+                    <option [value]="school.id">{{ school.nom }}</option>
+                  }
+                </select>
+              </div>
+            }
+
             @if (!selectedCours()) {
-              <div class="form-group">
-                <label>Année Académique *</label>
-                <select 
-                  #anneeSelect
-                  (change)="onAnneeChange(anneeSelect.value)"
-                  required>
-                  <option value="">Sélectionner une année</option>
-                  @for (annee of anneesAcademiques(); track annee.id) {
-                    <option [value]="annee.id">{{ annee.libelle }}</option>
-                  }
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Semestre *</label>
-                <select 
-                  [(ngModel)]="formData.semestre_id" 
-                  name="semestre_id"
-                  required>
-                  <option value="">Sélectionner un semestre</option>
-                  @for (semestre of semestres(); track semestre.id) {
-                    <option [value]="semestre.id">{{ semestre.libelle }}</option>
-                  }
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Enseignant *</label>
-                <select 
-                  [(ngModel)]="formData.enseignant_id" 
-                  name="enseignant_id"
-                  required>
-                  <option value="">Sélectionner un enseignant</option>
-                  @for (enseignant of enseignants(); track enseignant.id) {
-                    <option [value]="enseignant.id">{{ enseignant.nom }}</option>
-                  }
-                </select>
-                @if (enseignants().length === 0) {
-                  <small class="warning-text">Aucun enseignant disponible. Créez d'abord des enseignants.</small>
-                }
+              <div class="info-note">
+                <span class="material-icons">info</span>
+                <span>L'année académique, le semestre et l'enseignant seront assignés via le module <strong>Associations</strong>.</span>
               </div>
             }
           </div>

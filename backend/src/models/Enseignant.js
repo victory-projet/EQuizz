@@ -12,6 +12,15 @@ const Enseignant = sequelize.define('Enseignant', {
     allowNull: true,
   },
 
+  ecole_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: { model: 'ecoles', key: 'id' },
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+    comment: 'École à laquelle l\'enseignant est rattaché'
+  },
+
   dateImport: {
     type: DataTypes.DATE,
     allowNull: true,
@@ -19,6 +28,11 @@ const Enseignant = sequelize.define('Enseignant', {
     comment: 'Date du dernier import Excel'
   }
 
+}, {
+  tableName: 'enseignant',
+  freezeTableName: true,
+  timestamps: true,
+  underscored: true
 });
 
 module.exports = Enseignant;

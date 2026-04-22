@@ -31,6 +31,12 @@ class ReportController {
     const stats = await require('../services/stats.service').getSchoolStats();
     res.status(200).json(stats);
   });
+
+  getQuestionStats = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const stats = await reportService.getQuestionStats(id);
+    res.status(200).json(stats);
+  });
 }
 
 module.exports = new ReportController();

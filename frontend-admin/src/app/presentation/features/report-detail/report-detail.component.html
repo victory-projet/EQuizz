@@ -63,6 +63,15 @@
         <span class="material-icons">emoji_events</span>
         Performances
       </button>
+      @if (report()!.evaluation.statut === 'CLOTUREE') {
+        <button
+          class="tab-btn"
+          [class.active]="activeTab() === 'questions'"
+          (click)="setActiveTab('questions')">
+          <span class="material-icons">poll</span>
+          Statistiques Questions
+        </button>
+      }
     </div>
 
     <!-- Overview Tab -->
@@ -262,6 +271,133 @@
             </div>
           </div>
         </div>
+      </div>
+    }
+    <!-- Questions Stats Tab -->
+    @if (activeTab() === 'questions') {
+      <div class="tab-content">
+        @if (isLoadingStats()) {
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Chargement des statistiques...</p>
+          </div>
+        } @else if (!questionStats()) {
+          <div class="empty-state">
+            <span class="material-icons">poll</span>
+            <h3>Statistiques non disponibles</h3>
+            <p>Les statistiques sont uniquement disponibles pour les quizz clôturés.</p>
+          </div>
+        } @else {
+          <!-- View selector -->
+          <div class="view-selector">
+            <button class="view-btn" [class.active]="selectedView() === 'global'" (click)="setSelectedView('global')">
+              <span class="material-icons">public</span> Global
+            </button>
+            <button class="view-btn" [class.active]="selectedView() === 'parEcole'" (click)="setSelectedView('parEcole')">
+              <span class="material-icons">account_balance</span> Par École
+            </button>
+            <button class="view-btn" [class.active]="selectedView() === 'parClasse'" (click)="setSelectedView('parClasse')">
+              <span class="material-icons">groups</span> Par Classe
+            </button>
+          </div>
+
+          @for (question of questionStats()!.questions; track question.id) {
+            @if (question.typeQuestion === 'CHOIX_MULTIPLE') {
+              <div class="section-card question-stat-card">
+                <div class="question-header">
+                  <span class="question-number">Q{{ question.ordre || $index + 1 }}</span>
+                  <h4 class="question-enonce">{{ question.enonce }}</h4>
+                  <span class="total-badge">{{ question.totalReponses }} réponse(s)</span>
+                </div>
+
+                <!-- Vue globale -->
+                @if (selectedView() === 'global') {
+                  <div class="options-list">
+                    @for (option of question.options; track option; let i = $index) {
+                      <div class="option-row">
+                        <span class="option-label">{{ option }}</span>
+                        <div class="option-bar-wrap">
+                          <div class="option-bar"
+                               [style.width.%]="question.distributionPct[option]"
+                               [style.background]="getOptionColor(i)">
+                          </div>
+                        </div>
+                        <span class="option-count">
+                          {{ question.distribution[option] }} ({{ question.distributionPct[option] }}%)
+                        </span>
+                      </div>
+                    }
+                  </div>
+                }
+
+                <!-- Vue par école -->
+                @if (selectedView() === 'parEcole') {
+                  @if (question.parEcole.length === 0) {
+                    <p class="no-data">Aucune donnée par école.</p>
+                  }
+                  @for (ecole of question.parEcole; track ecole.ecoleId) {
+                    <div class="group-block">
+                      <div class="group-title">
+                        <span class="material-icons">account_balance</span>
+                        {{ ecole.ecoleNom }}
+                        <span class="group-count">{{ ecole.totalReponses }} réponse(s)</span>
+                      </div>
+                      <div class="options-list">
+                        @for (option of question.options; track option; let i = $index) {
+                          <div class="option-row">
+                            <span class="option-label">{{ option }}</span>
+                            <div class="option-bar-wrap">
+                              <div class="option-bar"
+                                   [style.width.%]="ecole.distributionPct[option]"
+                                   [style.background]="getOptionColor(i)">
+                              </div>
+                            </div>
+                            <span class="option-count">
+                              {{ ecole.distribution[option] }} ({{ ecole.distributionPct[option] }}%)
+                            </span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                }
+
+                <!-- Vue par classe -->
+                @if (selectedView() === 'parClasse') {
+                  @if (question.parClasse.length === 0) {
+                    <p class="no-data">Aucune donnée par classe.</p>
+                  }
+                  @for (classe of question.parClasse; track classe.classeId) {
+                    <div class="group-block">
+                      <div class="group-title">
+                        <span class="material-icons">groups</span>
+                        {{ classe.classeNom }}
+                        <span class="group-ecole">— {{ classe.ecoleNom }}</span>
+                        <span class="group-count">{{ classe.totalReponses }} réponse(s)</span>
+                      </div>
+                      <div class="options-list">
+                        @for (option of question.options; track option; let i = $index) {
+                          <div class="option-row">
+                            <span class="option-label">{{ option }}</span>
+                            <div class="option-bar-wrap">
+                              <div class="option-bar"
+                                   [style.width.%]="classe.distributionPct[option]"
+                                   [style.background]="getOptionColor(i)">
+                              </div>
+                            </div>
+                            <span class="option-count">
+                              {{ classe.distribution[option] }} ({{ classe.distributionPct[option] }}%)
+                            </span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          }
+        }
       </div>
     }
   }

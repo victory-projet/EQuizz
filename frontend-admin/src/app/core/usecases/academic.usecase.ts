@@ -115,8 +115,8 @@ export class AcademicUseCase {
     return this.academicRepository.deleteClasse(id);
   }
 
-  addCoursToClasse(classeId: string | number, coursId: string | number): Observable<void> {
-    return this.academicRepository.addCoursToClasse(classeId, coursId);
+  addCoursToClasse(classeId: string | number, coursId: string | number, anneeAcademiqueId?: string | number): Observable<void> {
+    return this.academicRepository.addCoursToClasse(classeId, coursId, anneeAcademiqueId);
   }
 
   removeCoursFromClasse(classeId: string | number, coursId: string | number): Observable<void> {

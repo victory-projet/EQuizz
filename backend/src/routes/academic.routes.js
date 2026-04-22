@@ -22,11 +22,11 @@ router.use(authenticate, isAdmin);
 // POST /api/academic/ecoles - Créer une nouvelle école (SUPER-ADMIN uniquement)
 router.post('/ecoles', isSuperAdmin, ecoleValidationRules(), validate, ecoleController.create);
 
-// GET /api/academic/ecoles - Obtenir la liste de toutes les écoles (SUPER-ADMIN uniquement)
-router.get('/ecoles', isSuperAdmin, ecoleController.findAll);
+// GET /api/academic/ecoles - Obtenir la liste de toutes les écoles (admin + super-admin)
+router.get('/ecoles', ecoleController.findAll);
 
-// GET /api/academic/ecoles/:id - Obtenir une école par son ID (SUPER-ADMIN uniquement)
-router.get('/ecoles/:id', isSuperAdmin, ecoleController.findOne);
+// GET /api/academic/ecoles/:id - Obtenir une école par son ID (admin + super-admin)
+router.get('/ecoles/:id', ecoleController.findOne);
 
 // PUT /api/academic/ecoles/:id - Mettre à jour une école par son ID (SUPER-ADMIN uniquement)
 router.put('/ecoles/:id', isSuperAdmin, ecoleValidationRules(), validate, ecoleController.update);

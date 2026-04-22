@@ -30,17 +30,19 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     );
   }
   
-  // Si pas de token valide, vérifier si on est sur une route protégée
-  const isProtectedRoute = !req.url.includes('/login') && 
-                          !req.url.includes('/onboarding') && 
-                          !req.url.includes('/public') &&
-                          !req.url.includes('/auth/');
+  // Si pas de token valide, laisser passer les requêtes non-API
+  const isApiRequest = req.url.includes('/api/');
   
-  if (isProtectedRoute) {
-    console.warn('🔒 Tentative d\'accès à une route protégée sans token:', req.url);
-    // Ne pas rediriger automatiquement ici pour éviter les boucles
-    // Laisser le composant gérer la redirection
-    return throwError(() => new Error('No authentication token'));
+  if (isApiRequest) {
+    const isPublicRoute = req.url.includes('/login') || 
+                          req.url.includes('/onboarding') || 
+                          req.url.includes('/public') ||
+                          req.url.includes('/auth/');
+    
+    if (!isPublicRoute) {
+      console.warn('🔒 Tentative d\'accès à une route protégée sans token:', req.url);
+      return throwError(() => new Error('No authentication token'));
+    }
   }
   
   return next(req);

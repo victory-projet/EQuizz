@@ -208,6 +208,12 @@ class ReportService {
     }
 
     // Compter les sentiments
+    const sentimentCounts = {
+      POSITIF: 0,
+      NEUTRE: 0,
+      NEGATIF: 0
+    };
+
     const categoryCounts = {
       PEDAGOGIE: 0,
       INFRASTRUCTURE: 0,
@@ -341,6 +347,165 @@ class ReportService {
     }
 
     return questions;
+  }
+
+  /**
+   * Statistiques des questions pour un quizz clôturé
+   * Retourne la distribution des réponses par question, école et classe
+   */
+  async getQuestionStats(evaluationId) {
+    const evaluation = await db.Evaluation.findOne({
+      where: { id: evaluationId, statut: 'CLOTUREE' },
+      include: [
+        { model: db.Cours, required: false },
+        {
+          model: db.Classe,
+          include: [
+            { model: db.Ecole },
+            { model: db.Etudiant }
+          ]
+        },
+        {
+          model: db.Quizz,
+          include: [
+            {
+              model: db.Question,
+              include: [
+                {
+                  model: db.ReponseEtudiant,
+                  include: [
+                    {
+                      model: db.SessionReponse,
+                      include: [
+                        {
+                          model: db.Etudiant,
+                          include: [{ model: db.Classe, include: [{ model: db.Ecole }] }]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!evaluation) {
+      throw new Error('Évaluation non trouvée ou non clôturée');
+    }
+
+    const questions = evaluation.Quizz?.Questions || [];
+
+    // Construire les stats globales + par classe + par école
+    const questionStats = questions.map(question => {
+      const reponses = question.ReponseEtudiants || [];
+      const options = Array.isArray(question.options) ? question.options : [];
+
+      // Distribution globale
+      const globalDist = {};
+      options.forEach(opt => { globalDist[opt] = 0; });
+      reponses.forEach(rep => {
+        if (rep.contenu && globalDist[rep.contenu] !== undefined) {
+          globalDist[rep.contenu]++;
+        }
+      });
+
+      // Distribution par classe
+      const parClasse = {};
+      reponses.forEach(rep => {
+        const classe = rep.SessionReponse?.Etudiant?.Classe;
+        const ecole = classe?.Ecole;
+        if (!classe) return;
+
+        const classeKey = classe.id;
+        if (!parClasse[classeKey]) {
+          parClasse[classeKey] = {
+            classeId: classe.id,
+            classeNom: classe.nom,
+            ecoleId: ecole?.id || null,
+            ecoleNom: ecole?.nom || 'N/A',
+            totalReponses: 0,
+            distribution: {},
+            distributionPct: {}
+          };
+          options.forEach(opt => { parClasse[classeKey].distribution[opt] = 0; });
+        }
+
+        parClasse[classeKey].totalReponses++;
+        if (rep.contenu && parClasse[classeKey].distribution[rep.contenu] !== undefined) {
+          parClasse[classeKey].distribution[rep.contenu]++;
+        }
+      });
+
+      // Calculer les pourcentages par classe
+      Object.values(parClasse).forEach(cls => {
+        options.forEach(opt => {
+          cls.distributionPct[opt] = cls.totalReponses > 0
+            ? parseFloat(((cls.distribution[opt] / cls.totalReponses) * 100).toFixed(1))
+            : 0;
+        });
+      });
+
+      // Distribution par école (agrégation des classes)
+      const parEcole = {};
+      Object.values(parClasse).forEach(cls => {
+        const ecoleKey = cls.ecoleId || 'unknown';
+        if (!parEcole[ecoleKey]) {
+          parEcole[ecoleKey] = {
+            ecoleId: cls.ecoleId,
+            ecoleNom: cls.ecoleNom,
+            totalReponses: 0,
+            distribution: {},
+            distributionPct: {}
+          };
+          options.forEach(opt => { parEcole[ecoleKey].distribution[opt] = 0; });
+        }
+        parEcole[ecoleKey].totalReponses += cls.totalReponses;
+        options.forEach(opt => {
+          parEcole[ecoleKey].distribution[opt] += cls.distribution[opt];
+        });
+      });
+
+      Object.values(parEcole).forEach(ecole => {
+        options.forEach(opt => {
+          ecole.distributionPct[opt] = ecole.totalReponses > 0
+            ? parseFloat(((ecole.distribution[opt] / ecole.totalReponses) * 100).toFixed(1))
+            : 0;
+        });
+      });
+
+      // Pourcentages globaux
+      const globalDistPct = {};
+      options.forEach(opt => {
+        globalDistPct[opt] = reponses.length > 0
+          ? parseFloat(((globalDist[opt] / reponses.length) * 100).toFixed(1))
+          : 0;
+      });
+
+      return {
+        id: question.id,
+        enonce: question.enonce,
+        typeQuestion: question.typeQuestion,
+        ordre: question.ordre,
+        options,
+        totalReponses: reponses.length,
+        distribution: globalDist,
+        distributionPct: globalDistPct,
+        parClasse: Object.values(parClasse),
+        parEcole: Object.values(parEcole)
+      };
+    });
+
+    return {
+      evaluationId: evaluation.id,
+      titre: evaluation.titre,
+      statut: evaluation.statut,
+      cours: evaluation.Cours?.nom || evaluation.Cour?.nom || 'N/A',
+      classes: evaluation.Classes?.map(c => ({ id: c.id, nom: c.nom, ecole: c.Ecole?.nom })) || [],
+      questions: questionStats
+    };
   }
 
   /**

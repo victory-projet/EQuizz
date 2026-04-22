@@ -1,11 +1,31 @@
-const { Utilisateur, Superadministrateur, Administrateur, Enseignant, Etudiant, Ecole } = require('../models');
+const { Utilisateur, Superadministrateur, Administrateur, Enseignant, Etudiant, Ecole, Classe } = require('../models');
 const bcrypt = require('bcryptjs');
 const emailService = require('../services/email.service');
 
 // Récupérer tous les utilisateurs avec leurs rôles
 exports.getAllUtilisateurs = async (req, res) => {
   try {
-    // Tous les admins (super-admin et admin) ont accès à tous les utilisateurs
+    // Déterminer si l'utilisateur connecté est un admin (pas super-admin)
+    const isAdmin = req.user && req.user.role === 'admin';
+    const ecoleId = isAdmin
+      ? (req.user.Administrateur?.ecole_id || req.user.Administrateur?.dataValues?.ecole_id)
+      : null;
+
+    // Pour les étudiants, filtrer par école via la classe si admin
+    const etudiantInclude = {
+      model: Etudiant,
+      as: 'Etudiant',
+      ...(ecoleId ? {
+        required: false,
+        include: [{
+          model: Classe,
+          as: 'Classe',
+          where: { ecole_id: ecoleId },
+          required: true
+        }]
+      } : {})
+    };
+
     const utilisateurs = await Utilisateur.findAll({
       include: [
         { model: Superadministrateur, as: 'Superadministrateur' },
@@ -15,13 +35,13 @@ exports.getAllUtilisateurs = async (req, res) => {
           include: [{ model: Ecole, as: 'Ecole' }]
         },
         { model: Enseignant, as: 'Enseignant' },
-        { model: Etudiant, as: 'Etudiant' }
+        etudiantInclude
       ],
       order: [['created_at', 'DESC']]
     });
 
     // Ajouter le rôle à chaque utilisateur
-    const utilisateursAvecRole = utilisateurs.map(user => {
+    let utilisateursAvecRole = utilisateurs.map(user => {
       const userData = user.toJSON();
       if (userData.Superadministrateur) {
         userData.role = 'SUPER-ADMIN';
@@ -36,6 +56,16 @@ exports.getAllUtilisateurs = async (req, res) => {
       }
       return userData;
     });
+
+    // Si admin, exclure les étudiants qui n'appartiennent pas à son école
+    if (ecoleId) {
+      utilisateursAvecRole = utilisateursAvecRole.filter(u => {
+        if (u.role === 'ETUDIANT') {
+          return u.Etudiant?.Classe != null;
+        }
+        return true;
+      });
+    }
 
     res.json(utilisateursAvecRole);
   } catch (error) {
@@ -89,6 +119,7 @@ exports.getUtilisateurById = async (req, res) => {
 exports.createUtilisateur = async (req, res) => {
   try {
     const { nom, prenom, email, motDePasse, role, specialite, matricule, ecoleId } = req.body;
+    console.log('📝 createUtilisateur body:', { nom, prenom, email, role, ecoleId, hasMotDePasse: !!motDePasse, matricule });
 
     // Vérifier si l'email existe déjà
     const existingUser = await Utilisateur.findOne({ where: { email } });
@@ -97,15 +128,17 @@ exports.createUtilisateur = async (req, res) => {
     }
 
     // Pour les étudiants, le mot de passe est null (sera défini lors du claim account)
-    // Pour les admins et enseignants, le mot de passe est requis
+    // Pour les admins et enseignants, le mot de passe est requis ou généré automatiquement
     let motDePasseHash = null;
     if (role === 'ETUDIANT') {
-      // Les étudiants n'ont pas de mot de passe à la création
       motDePasseHash = null;
+    } else if (role === 'ENSEIGNANT') {
+      // Générer un mot de passe temporaire si non fourni
+      motDePasseHash = motDePasse || (Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8));
     } else {
-      // Admin et Enseignant doivent avoir un mot de passe
+      // ADMIN et SUPER-ADMIN doivent avoir un mot de passe
       if (!motDePasse) {
-        return res.status(400).json({ message: 'Le mot de passe est requis pour les administrateurs et enseignants' });
+        return res.status(400).json({ message: 'Le mot de passe est requis pour les administrateurs' });
       }
       motDePasseHash = motDePasse;
     }
@@ -123,13 +156,13 @@ exports.createUtilisateur = async (req, res) => {
     if (role === 'SUPER-ADMIN') {
       await Superadministrateur.create({ id: utilisateur.id });
     } else if (role === 'ADMIN') {
-      if (!ecoleId) {
+      if (!ecoleId || ecoleId === 'null' || ecoleId === 'undefined') {
         await utilisateur.destroy();
         return res.status(400).json({ message: 'L\'ID de l\'école est requis pour un administrateur' });
       }
       await Administrateur.create({
         id: utilisateur.id,
-        ecoleId: ecoleId
+        ecole_id: ecoleId
       });
     } else if (role === 'ENSEIGNANT') {
       await Enseignant.create({
@@ -137,20 +170,26 @@ exports.createUtilisateur = async (req, res) => {
         specialite: specialite || null
       });
     } else if (role === 'ETUDIANT') {
-      if (!matricule) {
-        return res.status(400).json({ message: 'Le matricule est requis pour un étudiant' });
+      // Générer un matricule unique si non fourni
+      let finalMatricule = matricule;
+      if (!finalMatricule) {
+        const year = new Date().getFullYear();
+        const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+        finalMatricule = `${year}${randomNum}`;
       }
 
       // Vérifier si le matricule existe déjà
-      const existingMatricule = await Etudiant.findOne({ where: { matricule } });
+      const existingMatricule = await Etudiant.findOne({ where: { matricule: finalMatricule } });
       if (existingMatricule) {
         await utilisateur.destroy();
         return res.status(400).json({ message: 'Ce matricule est déjà utilisé' });
       }
 
+      // matriculeUniv = même valeur que matricule si non fourni séparément
       await Etudiant.create({
         id: utilisateur.id,
-        matricule
+        matricule: finalMatricule,
+        matriculeUniv: finalMatricule
       });
     }
 
@@ -402,7 +441,8 @@ exports.importUtilisateurs = async (req, res) => {
 
           await Etudiant.create({
             id: utilisateur.id,
-            matricule: matricule
+            matricule: matricule,
+            matriculeUniv: matricule
           });
         }
 

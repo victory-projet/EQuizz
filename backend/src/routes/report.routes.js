@@ -25,6 +25,9 @@ router.get('/stats/ue', reportController.getUEStats);
 // GET /api/reports/stats/school - Statistiques par École
 router.get('/stats/school', reportController.getSchoolStats);
 
+// GET /api/reports/:id/question-stats - Statistiques des questions (quizz clôturés uniquement)
+router.get('/:id/question-stats', reportController.getQuestionStats);
+
 // =========================================================
 // --- Routes pour les Exports Excel ---
 // =========================================================

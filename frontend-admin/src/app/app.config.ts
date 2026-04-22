@@ -6,7 +6,6 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { routes } from './app.routes';
 import { authInterceptor } from './presentation/shared/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
-import { cacheInterceptor } from './core/interceptors/cache.interceptor';
 
 // Repository Providers
 import { AuthRepositoryInterface } from './core/domain/repositories/auth.repository.interface';
@@ -29,7 +28,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(
       withFetch(),
-      withInterceptors([authInterceptor, errorInterceptor, cacheInterceptor])
+      withInterceptors([authInterceptor, errorInterceptor])
     ),
     provideAnimationsAsync(),
     provideCharts(withDefaultRegisterables()),
