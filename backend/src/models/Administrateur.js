@@ -26,7 +26,15 @@ const Administrateur = sequelize.define('Administrateur', {
     comment: 'École à laquelle l\'administrateur appartient'
   },
 
-  date_nomination: {
+  profil: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      isUrl: true,
+    }
+  },
+
+  dateNomination: {
     type: DataTypes.DATE,
     allowNull: true,
     defaultValue: DataTypes.NOW,

@@ -242,16 +242,14 @@ export class SyncEngine {
       
       // 1. Push des opérations locales vers le serveur
       await this.pushLocalOperations();
-      
+
       // 2. Pull des changements depuis le serveur
+      // (le serverTime retourné est stocké directement dans pullServerChanges)
       await this.pullServerChanges();
-      
+
       // 3. Nettoyer les opérations synchronisées
       await this.cleanupSyncedOperations();
-      
-      // 4. Mettre à jour l'heure de dernière sync
-      await this.updateLastSyncTime();
-      
+
       console.log('✅ Synchronisation terminée avec succès');
       
     } catch (error) {
@@ -308,21 +306,21 @@ export class SyncEngine {
     // Construire l'endpoint et la méthode selon l'entité et le type
     switch (operation.entity) {
       case 'submission':
-        endpoint = `/evaluations/quizz/${operation.payload.quizzId}/submit`;
+        endpoint = `/student/quizzes/${operation.payload.quizzId}/submit`;
         method = 'POST';
         data = { reponses: operation.payload.responses };
         break;
-        
+
       case 'user_profile':
-        endpoint = '/auth/profile';
+        endpoint = '/student/me';
         method = 'PUT';
         break;
-        
+
       case 'answer':
         // Les réponses brouillons ne sont pas synchronisées individuellement
         await this.markOperationAsProcessed(operation.operationId);
         return;
-        
+
       default:
         throw new Error(`Type d'entité non supporté: ${operation.entity}`);
     }
@@ -478,31 +476,37 @@ export class SyncEngine {
   }
 
   /**
-   * Pull des changements depuis le serveur
+   * Pull des changements depuis le serveur via GET /student/sync/download
    */
   private async pullServerChanges(): Promise<void> {
     try {
       console.log('📥 Pull des changements serveur...');
-      
+
       const lastSyncTime = await this.getLastSyncTime();
-      
-      // Récupérer les évaluations mises à jour
-      const evaluationsResponse = await apiClient.get('/evaluations', {
-        params: lastSyncTime ? { since: new Date(lastSyncTime).toISOString() } : {}
-      });
-      
-      if (evaluationsResponse.data?.evaluations) {
-        await this.updateLocalEvaluations(evaluationsResponse.data.evaluations);
+      const params = lastSyncTime ? { since: lastSyncTime } : {};
+
+      const response = await apiClient.get('/student/sync/download', { params });
+      const payload = response.data;
+
+      if (payload.evaluations?.length) {
+        await this.updateLocalEvaluations(payload.evaluations);
       }
-      
-      // Récupérer le profil utilisateur mis à jour
-      const profileResponse = await apiClient.get('/auth/me');
-      if (profileResponse.data) {
-        await this.updateLocalUserProfile(profileResponse.data);
+
+      if (payload.quizzes?.length) {
+        await this.updateLocalQuizzes(payload.quizzes);
       }
-      
+
+      if (payload.user) {
+        await this.updateLocalUserProfile(payload.user);
+      }
+
+      // Stocker le serverTime retourné plutôt que l'heure locale
+      if (payload.serverTime) {
+        await this.setLastSyncTime(payload.serverTime);
+      }
+
       console.log('✅ Pull des changements terminé');
-      
+
     } catch (error) {
       console.error('❌ Erreur lors du pull:', error);
       // Ne pas throw pour ne pas bloquer la sync complète
@@ -514,25 +518,68 @@ export class SyncEngine {
    */
   private async updateLocalEvaluations(evaluations: any[]): Promise<void> {
     for (const evaluation of evaluations) {
+      // Le backend renvoie dateDebut/dateFin en camelCase depuis le modèle Sequelize
       const query = `
-        INSERT OR REPLACE INTO evaluations 
+        INSERT OR REPLACE INTO evaluations
         (id, titre, description, cours_id, date_debut, date_fin, duree_minutes, status, synced, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
       `;
-      
+
       await this.db.executeUpdate(query, [
         evaluation.id,
         evaluation.titre,
         evaluation.description || null,
-        evaluation.coursId || null,
+        evaluation.cours_id || evaluation.coursId || null,
         evaluation.dateDebut || null,
         evaluation.dateFin || null,
         evaluation.dureeMinutes || null,
-        evaluation.status || 'active'
+        evaluation.statut || evaluation.status || 'PUBLIEE'
       ]);
     }
-    
+
     console.log(`📚 ${evaluations.length} évaluation(s) mise(s) à jour localement`);
+  }
+
+  /**
+   * Met à jour les quizz locaux (avec leurs questions sérialisées)
+   */
+  private async updateLocalQuizzes(quizzes: any[]): Promise<void> {
+    for (const quizz of quizzes) {
+      const quizzQuery = `
+        INSERT OR REPLACE INTO quizzes
+        (id, evaluation_id, titre, description, questions_data, synced, updated_at)
+        VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+      `;
+
+      await this.db.executeUpdate(quizzQuery, [
+        quizz.id,
+        quizz.evaluation_id,
+        quizz.titre,
+        quizz.instructions || null,
+        JSON.stringify(quizz.Questions || [])
+      ]);
+
+      // Persister aussi chaque question individuellement
+      if (Array.isArray(quizz.Questions)) {
+        for (const question of quizz.Questions) {
+          const questionQuery = `
+            INSERT OR REPLACE INTO questions
+            (id, quizz_id, type, question, options, bonne_reponse, points, ordre, synced)
+            VALUES (?, ?, ?, ?, ?, NULL, 1, 0, 1)
+          `;
+
+          await this.db.executeUpdate(questionQuery, [
+            question.id,
+            quizz.id,
+            question.typeQuestion || question.type,
+            question.enonce || question.question,
+            question.options ? JSON.stringify(question.options) : null
+          ]);
+        }
+      }
+    }
+
+    console.log(`📝 ${quizzes.length} quizz(zes) mis à jour localement`);
   }
 
   /**
@@ -540,23 +587,23 @@ export class SyncEngine {
    */
   private async updateLocalUserProfile(userData: any): Promise<void> {
     const query = `
-      INSERT OR REPLACE INTO users 
+      INSERT OR REPLACE INTO users
       (id, nom, prenom, email, matricule, role, classe_id, classe_nom, classe_niveau, synced, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
     `;
-    
+
     await this.db.executeUpdate(query, [
       userData.id,
       userData.nom,
       userData.prenom,
       userData.email,
       userData.matricule || null,
-      userData.role,
+      userData.role || 'ETUDIANT',
       userData.classe?.id || null,
       userData.classe?.nom || null,
       userData.classe?.niveau || null
     ]);
-    
+
     console.log('👤 Profil utilisateur mis à jour localement');
   }
 
@@ -641,11 +688,11 @@ export class SyncEngine {
   }
 
   /**
-   * Met à jour l'heure de dernière synchronisation
+   * Enregistre le timestamp de dernière synchronisation (fourni par le serveur)
    */
-  private async updateLastSyncTime(): Promise<void> {
+  private async setLastSyncTime(timestamp: number): Promise<void> {
     try {
-      await SecureStore.setItemAsync(STORAGE_KEYS.LAST_SYNC, Date.now().toString());
+      await SecureStore.setItemAsync(STORAGE_KEYS.LAST_SYNC, timestamp.toString());
     } catch (error) {
       console.error('❌ Erreur sauvegarde heure sync:', error);
     }
@@ -659,7 +706,7 @@ export class SyncEngine {
   async queueSubmission(quizzId: string, evaluationId: string, userId: string, responses: any[]): Promise<string> {
     // D'abord sauvegarder localement
     const submissionQuery = `
-      INSERT INTO submissions (quizz_id, evaluation_id, user_id, responses, completed_at)
+      INSERT OR REPLACE INTO submissions (quizz_id, evaluation_id, user_id, responses, completed_at)
       VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
     `;
     
@@ -707,11 +754,11 @@ export class SyncEngine {
   /**
    * Force une synchronisation immédiate
    */
-  async forcSync(): Promise<void> {
+  async forceSync(): Promise<void> {
     if (!this.isOnline) {
       throw new Error('Impossible de synchroniser hors ligne');
     }
-    
+
     await this.performSync();
   }
 

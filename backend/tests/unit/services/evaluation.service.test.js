@@ -1,6 +1,6 @@
 // Tests unitaires pour le service d'évaluation
 const evaluationService = require('../../../src/services/evaluation.service');
-const db = require('../../../src/models');
+const _db = require('../../../src/models');
 
 // Mock des modèles Sequelize
 jest.mock('../../../src/models');

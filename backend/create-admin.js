@@ -34,7 +34,7 @@ async function createAdmin() {
         email: 'super.admin@universitesaintjean.org',
         motDePasseHash: hashedPassword,
         estActif: true
-      }, { hooks: false }); // Désactiver les hooks pour éviter le double hash
+      }, { hooks: false }); 
       console.log('✅ Utilisateur créé');
     }
 
@@ -50,7 +50,7 @@ async function createAdmin() {
       console.log('ℹ️  Profil superadministrateur existe déjà');
     } else {
       await db.Superadministrateur.create({
-        id: user.id // L'ID du superadmin doit être le même que l'ID de l'utilisateur
+        id: user.id
       });
       console.log('✅ Profil superadministrateur créé');
     }

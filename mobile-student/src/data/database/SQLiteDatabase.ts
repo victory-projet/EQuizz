@@ -181,7 +181,8 @@ export class SQLiteDatabase {
       'CREATE INDEX IF NOT EXISTS idx_answers_quizz_user ON answers(quizz_id, user_id)',
       'CREATE INDEX IF NOT EXISTS idx_submissions_synced ON submissions(synced)',
       'CREATE INDEX IF NOT EXISTS idx_submissions_user ON submissions(user_id)',
-      'CREATE INDEX IF NOT EXISTS idx_sync_queue_type ON sync_queue(type)'
+      'CREATE INDEX IF NOT EXISTS idx_sync_queue_type ON sync_queue(type)',
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_submissions_unique ON submissions(quizz_id, user_id)'
     ];
 
     for (const indexSQL of indexes) {

@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const utilisateurController = require('../controllers/utilisateur.controller');
-const { authenticate, authorize } = require('../middlewares/auth.middleware');
+const { authenticate, authorize, isSuperAdmin, isSchoolAdmin } = require('../middlewares/auth.middleware');
 
 // Toutes les routes nécessitent une authentification et le rôle ADMIN ou SUPER-ADMIN
 router.use(authenticate);
 router.use(authorize(['SUPER-ADMIN', 'ADMIN']));
 
-// Routes CRUD
+// Routes CRUD standards (accessibles par tout admin)
 router.get('/', utilisateurController.getAllUtilisateurs);
 router.get('/:id', utilisateurController.getUtilisateurById);
 router.post('/', utilisateurController.createUtilisateur);

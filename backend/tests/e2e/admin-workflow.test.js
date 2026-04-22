@@ -1,13 +1,13 @@
 // Tests end-to-end pour le workflow administrateur
-const request = require('supertest');
+const _request = require('supertest');
 const { createTestApp } = require('../helpers/testServer');
 
 describe('Admin Workflow - E2E Tests', () => {
-  let app;
-  let adminToken;
+  let _app;
+  let _adminToken;
 
   beforeAll(() => {
-    app = createTestApp();
+    _app = createTestApp();
   });
 
   it('devrait permettre de créer une évaluation complète', async () => {
