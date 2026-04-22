@@ -2,20 +2,29 @@ const db = require('./src/models');
 
 async function checkTables() {
   try {
-    console.log('🔍 Vérification des tables dans la base de données...\n');
-    
-    const [tables] = await db.sequelize.query('SHOW TABLES');
-    
-    console.log('📋 Tables existantes:');
-    tables.forEach((table, index) => {
-      const tableName = Object.values(table)[0];
-      console.log(`  ${index + 1}. ${tableName}`);
+    await db.sequelize.authenticate();
+    console.log('✅ Connected to database\n');
+
+    // Check administrateur table structure
+    const adminCols = await db.sequelize.query('DESCRIBE administrateur', { 
+      type: db.sequelize.QueryTypes.SELECT 
     });
-    
-    console.log(`\n✅ Total: ${tables.length} tables trouvées`);
+
+    console.log('administrateur table structure:');
+    console.log(JSON.stringify(adminCols, null, 2));
+    console.log('');
+
+    // Check ecole table structure
+    const ecoleCols = await db.sequelize.query('DESCRIBE ecole', { 
+      type: db.sequelize.QueryTypes.SELECT 
+    });
+
+    console.log('ecole table structure:');
+    console.log(JSON.stringify(ecoleCols, null, 2));
+
     process.exit(0);
   } catch (error) {
-    console.error('❌ Erreur:', error.message);
+    console.error('Error:', error.message);
     process.exit(1);
   }
 }

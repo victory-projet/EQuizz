@@ -136,7 +136,7 @@ export class DashboardService {
    * Récupère les statistiques de base
    */
   getStats(): Observable<DashboardStats> {
-    return this.http.get<DashboardStats>(`${this.API_BASE}/stats`);
+    return this.http.get<DashboardStats>(`${this.API_BASE}/admin`);
   }
 
   // === GESTION DES ALERTES ===

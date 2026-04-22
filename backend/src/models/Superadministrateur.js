@@ -18,7 +18,7 @@ const Superadministrateur = sequelize.define('Superadministrateur', {
   },
 
 }, {
-  tableName: 'superadministrateurs',
+  tableName: 'superadministrateur',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',

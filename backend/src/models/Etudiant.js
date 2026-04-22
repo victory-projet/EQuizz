@@ -12,10 +12,20 @@ const Etudiant = sequelize.define('Etudiant', {
     allowNull: false,
     unique: true,
   },
+  
   idCarte: {
     type: DataTypes.STRING,
     allowNull: true, 
     unique: true,
+  },
+
+  classe_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'classe',
+      key: 'id'
+    }
   },
 
   dateImport: {
@@ -25,6 +35,14 @@ const Etudiant = sequelize.define('Etudiant', {
     comment: 'Date du dernier import Excel'
   }
 
+}, {
+  tableName: 'etudiant',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  underscored: true,
+  paranoid: true,
+  deletedAt: 'deleted_at'
 });
 
 module.exports = Etudiant;

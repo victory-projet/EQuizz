@@ -19,6 +19,14 @@ const Enseignant = sequelize.define('Enseignant', {
     comment: 'Date du dernier import Excel'
   }
 
+}, {
+  tableName: 'enseignant',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  underscored: true,
+  paranoid: true,
+  deletedAt: 'deleted_at'
 });
 
 module.exports = Enseignant;

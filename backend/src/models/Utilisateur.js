@@ -58,7 +58,7 @@ const Utilisateur = sequelize.define('Utilisateur', {
     comment: 'Date du dernier import Excel'
   }
 }, {
-  tableName: 'utilisateurs',
+  tableName: 'utilisateur',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',

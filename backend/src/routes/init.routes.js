@@ -86,7 +86,6 @@ async function seedDatabase() {
     
     const admin = await db.Administrateur.create({
       id: adminUser.id,
-      ecoleId: ecole.id,
       ecole_id: ecole.id
     }, { transaction });
     

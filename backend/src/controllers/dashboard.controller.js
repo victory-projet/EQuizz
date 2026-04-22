@@ -341,7 +341,7 @@ class DashboardController {
             name: 'Système',
             role: 'system'
           },
-          timestamp: user.createdAt,
+          timestamp: user.created_at,
           icon: icon,
           color: color,
           category: 'user',
@@ -379,7 +379,7 @@ class DashboardController {
             name: 'Système',
             role: 'system'
           },
-          timestamp: classe.createdAt,
+          timestamp: classe.created_at,
           icon: 'group_add',
           color: '#607D8B',
           category: 'system',

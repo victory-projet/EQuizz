@@ -35,7 +35,7 @@ class DashboardService {
     const evaluationsRecentes = await db.Evaluation.findAll({
       where: whereClause,
       limit: 5,
-      order: [['createdAt', 'DESC']],
+      order: [['created_at', 'DESC']],
       include: [
         { model: db.Cours, required: false },
         { model: db.Classe, required: false }
@@ -565,12 +565,12 @@ class DashboardService {
     const [etudiantsCurrentMonth, etudiantsLastMonth] = await Promise.all([
       db.Etudiant.count({
         where: {
-          createdAt: { [Op.gte]: currentMonth }
+          created_at: { [Op.gte]: currentMonth }
         }
       }),
       db.Etudiant.count({
         where: {
-          createdAt: {
+          created_at: {
             [Op.gte]: lastMonth,
             [Op.lt]: currentMonth
           }
@@ -582,12 +582,12 @@ class DashboardService {
     const [coursCurrentMonth, coursLastMonth] = await Promise.all([
       db.Cours.count({
         where: {
-          createdAt: { [Op.gte]: currentMonth }
+          created_at: { [Op.gte]: currentMonth }
         }
       }),
       db.Cours.count({
         where: {
-          createdAt: {
+          created_at: {
             [Op.gte]: lastMonth,
             [Op.lt]: currentMonth
           }
@@ -600,13 +600,13 @@ class DashboardService {
       db.Evaluation.count({
         where: {
           statut: 'PUBLIEE',
-          createdAt: { [Op.gte]: currentMonth }
+          created_at: { [Op.gte]: currentMonth }
         }
       }),
       db.Evaluation.count({
         where: {
           statut: 'PUBLIEE',
-          createdAt: {
+          created_at: {
             [Op.gte]: lastMonth,
             [Op.lt]: currentMonth
           }
@@ -640,7 +640,7 @@ class DashboardService {
     const rapportsEnAttente = await db.Evaluation.count({
       where: {
         statut: 'CLOTUREE',
-        createdAt: {
+        created_at: {
           [Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // 7 derniers jours
         }
       }
@@ -729,3 +729,4 @@ class DashboardService {
 }
 
 module.exports = new DashboardService();
+

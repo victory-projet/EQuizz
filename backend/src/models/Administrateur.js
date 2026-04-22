@@ -6,7 +6,7 @@ const Administrateur = sequelize.define('Administrateur', {
     type: DataTypes.UUID,
     primaryKey: true,
     references: {
-      model: 'utilisateurs',
+      model: 'utilisateur',
       key: 'id'
     },
     onDelete: 'CASCADE',
@@ -14,12 +14,11 @@ const Administrateur = sequelize.define('Administrateur', {
     comment: 'Clé primaire et étrangère vers Utilisateur'
   },
   
-  ecoleId: {
+  ecole_id: {
     type: DataTypes.UUID,
     allowNull: false,
-    field: 'ecole_id',
     references: {
-      model: 'ecoles',
+      model: 'ecole',
       key: 'id'
     },
     onDelete: 'RESTRICT',
@@ -27,15 +26,14 @@ const Administrateur = sequelize.define('Administrateur', {
     comment: 'École à laquelle l\'administrateur appartient'
   },
 
-  dateNomination: {
+  date_nomination: {
     type: DataTypes.DATE,
     allowNull: true,
     defaultValue: DataTypes.NOW,
-    field: 'date_nomination',
     comment: 'Date de nomination en tant qu\'administrateur'
   }
 }, {
-  tableName: 'administrateurs',
+  tableName: 'administrateur',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',

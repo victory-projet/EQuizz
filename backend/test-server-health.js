@@ -1,52 +1,60 @@
-// Test de santé du serveur
-const http = require('http');
+const axios = require('axios');
 
-function testServer() {
-  const options = {
-    hostname: 'localhost',
-    port: 3000,
-    path: '/',
-    method: 'GET',
-    timeout: 5000
-  };
+const BASE_URL = 'http://localhost:3000';
 
-  console.log('🔍 Test de connexion au serveur...\n');
+async function testServerHealth() {
+  try {
+    console.log('🔍 Testing server health...\n');
 
-  const req = http.request(options, (res) => {
-    let data = '';
+    // Test health endpoint
+    const healthResponse = await axios.get(`${BASE_URL}/health`);
+    console.log('✅ Health check:', healthResponse.data);
+    console.log('');
 
-    res.on('data', (chunk) => {
-      data += chunk;
+    // Test admin login
+    console.log('🔐 Testing admin login...');
+    const loginResponse = await axios.post(`${BASE_URL}/api/auth/login`, {
+      email: 'jean.directeur@saintjeaningenieur.org',
+      motDePasse: 'Admin123!'
     });
 
-    res.on('end', () => {
-      if (res.statusCode === 200 || res.statusCode === 404) {
-        console.log('✅ Serveur accessible sur le port 3000');
-        console.log(`   Status: ${res.statusCode}`);
-        if (data) {
-          console.log(`   Réponse: ${data}`);
+    console.log('✅ Login successful!');
+    console.log('Response data:', JSON.stringify(loginResponse.data, null, 2));
+    
+    const user = loginResponse.data.utilisateur || loginResponse.data.user;
+    const token = loginResponse.data.token;
+    
+    if (user) {
+      console.log('\nUser:', {
+        id: user.id,
+        email: user.email,
+        nom: user.nom,
+        prenom: user.prenom,
+        role: user.role,
+        ecole: user.ecole
+      });
+      console.log('Token:', token.substring(0, 50) + '...');
+      console.log('');
+
+      // Test dashboard with admin token
+      console.log('📊 Testing dashboard endpoint...');
+      const dashboardResponse = await axios.get(`${BASE_URL}/api/dashboard/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-        process.exit(0);
-      } else {
-        console.log(`⚠️  Serveur répond avec le code: ${res.statusCode}`);
-        process.exit(1);
-      }
-    });
-  });
+      });
 
-  req.on('error', (error) => {
-    console.error('❌ Impossible de se connecter au serveur:', error.message);
-    console.log('\n💡 Assurez-vous que le serveur est démarré avec: npm run dev');
-    process.exit(1);
-  });
+      console.log('✅ Dashboard loaded successfully!');
+      console.log('Stats:', dashboardResponse.data);
+    }
 
-  req.on('timeout', () => {
-    console.error('❌ Timeout de connexion au serveur');
-    req.destroy();
-    process.exit(1);
-  });
-
-  req.end();
+  } catch (error) {
+    if (error.response) {
+      console.error('❌ Error:', error.response.status, error.response.data);
+    } else {
+      console.error('❌ Error:', error.message);
+    }
+  }
 }
 
-testServer();
+testServerHealth();

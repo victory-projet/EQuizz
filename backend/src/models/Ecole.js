@@ -32,7 +32,7 @@ const Ecole = sequelize.define('Ecole', {
   }
 
 }, {
-  tableName: 'ecoles',
+  tableName: 'ecole',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
