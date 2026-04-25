@@ -21,9 +21,9 @@ export interface QuizzDataSource {
 export class QuizzDataSourceImpl implements QuizzDataSource {
   async getAvailableQuizzes(): Promise<Evaluation[]> {
     try {
-      console.log("📡 Fetching available quizzes from /student/quizzes...");
+      console.log("Fetching available quizzes from /student/quizzes...");
       const response = await apiClient.get<Evaluation[]>("/student/quizzes");
-      console.log("✅ Quizzes fetched:", response.data.length, "quiz(zes)");
+      console.log("Quizzes fetched:", response.data.length, "quiz(zes)");
       return response.data;
     } catch (error) {
       ErrorHandlerService.logError(
@@ -37,9 +37,9 @@ export class QuizzDataSourceImpl implements QuizzDataSource {
 
   async getQuizzDetails(id: string): Promise<Quizz> {
     try {
-      console.log(`📡 Fetching quiz details from /student/quizzes/${id}...`);
+      console.log(`Fetching quiz details from /student/quizzes/${id}...`);
       const response = await apiClient.get<Quizz>(`/student/quizzes/${id}`);
-      console.log("✅ Quiz details fetched:", response.data);
+      console.log("Quiz details fetched:", response.data);
       return response.data;
     } catch (error) {
       ErrorHandlerService.logError(error, "QuizzDataSource.getQuizzDetails");
@@ -63,12 +63,12 @@ export class QuizzDataSourceImpl implements QuizzDataSource {
 
   async getQuizzHistory(): Promise<QuizzHistory[]> {
     try {
-      console.log("📡 Fetching quiz history from /student/quizzes/history...");
+      console.log("Fetching quiz history from /student/quizzes/history...");
       const response = await apiClient.get<QuizzHistory[]>(
         "/student/quizzes/history",
       );
       console.log(
-        "✅ Quiz history fetched:",
+        "Quiz history fetched:",
         response.data.length,
         "quiz(zes)",
       );

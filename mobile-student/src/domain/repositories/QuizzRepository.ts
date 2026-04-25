@@ -18,9 +18,15 @@ export interface QuizzRepository {
   getQuizzDetails(id: string): Promise<Quizz>;
 
   /**
-   * Soumet les réponses d'un quizz
+   * Soumet les réponses d'un quizz.
+   * En mode offline, les réponses sont mises en file d'attente localement
+   * et envoyées au serveur dès que la connexion revient.
    */
-  submitAnswers(quizzId: string, submission: QuizzSubmission): Promise<void>;
+  submitAnswers(
+    quizzId: string,
+    submission: QuizzSubmission,
+    options?: { evaluationId?: string; userId?: string },
+  ): Promise<void>;
 
   /**
    * Récupère l'historique complet de tous les quizz terminés par l'étudiant

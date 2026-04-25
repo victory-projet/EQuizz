@@ -25,6 +25,8 @@ import { ClasseDataSourceImpl } from '../../data/datasources/ClasseDataSource';
 import { ClasseRepositoryImpl } from '../../data/repositories/Classe.repository.impl';
 import { GetClassesUseCase } from '../../domain/usecases/GetClasses.usecase';
 import { GetQuizzHistoryUseCase } from '../../domain/usecases/GetQuizzHistoryUseCase';
+import { OfflineQuizzDataSource } from '../../data/datasources/OfflineQuizzDataSource';
+import { OfflineFirstQuizzRepository } from '../../data/repositories/OfflineFirstQuizzRepository';
 
 /**
  * Conteneur d'injection de dépendances
@@ -47,7 +49,10 @@ class DIContainer {
     private _authRepository: AuthRepositoryImpl | null = null;
     
     // Repositories - Quizz
-    private _quizzRepository: QuizzRepositoryImpl | null = null;
+    private _quizzRepository: OfflineFirstQuizzRepository | null = null;
+    
+    // DataSources - Offline Quizz
+    private _offlineQuizzDataSource: OfflineQuizzDataSource | null = null;
     
     // Repositories - Student
     private _studentRepository: StudentRepositoryImpl | null = null;
@@ -145,10 +150,16 @@ class DIContainer {
         return this._quizzDataSource;
     }
 
-    // Getters for quizz repositories
-    get quizzRepository(): QuizzRepositoryImpl {
+    // Getters for quizz repositories (offline-first)
+    get quizzRepository(): OfflineFirstQuizzRepository {
         if (!this._quizzRepository) {
-            this._quizzRepository = new QuizzRepositoryImpl(this.quizzDataSource);
+            if (!this._offlineQuizzDataSource) {
+                this._offlineQuizzDataSource = new OfflineQuizzDataSource();
+            }
+            this._quizzRepository = new OfflineFirstQuizzRepository(
+                this.quizzDataSource,
+                this._offlineQuizzDataSource,
+            );
         }
         return this._quizzRepository;
     }

@@ -48,7 +48,6 @@ export default function Profil() {
             if (!result.canceled && result.assets[0]) {
                 const imageUri = result.assets[0].uri;
                 setAvatarUri(imageUri);
-                console.log('📸 Image sélectionnée:', imageUri);
                 Alert.alert('Succès', 'Photo de profil mise à jour localement');
             }
         } catch (error) {

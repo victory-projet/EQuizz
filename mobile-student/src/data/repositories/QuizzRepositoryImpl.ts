@@ -19,7 +19,11 @@ export class QuizzRepositoryImpl implements QuizzRepository {
     return this.quizzDataSource.getQuizzDetails(id);
   }
 
-  async submitAnswers(quizzId: string, submission: QuizzSubmission): Promise<void> {
+  async submitAnswers(
+    quizzId: string,
+    submission: QuizzSubmission,
+    _options?: { evaluationId?: string; userId?: string },
+  ): Promise<void> {
     return this.quizzDataSource.submitAnswers(quizzId, submission);
   }
 

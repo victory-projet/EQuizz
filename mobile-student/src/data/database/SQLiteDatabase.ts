@@ -76,14 +76,17 @@ export class SQLiteDatabase {
         titre TEXT NOT NULL,
         description TEXT,
         cours_id TEXT,
+        cours_nom TEXT,
+        quizz_id TEXT,
+        statut_etudiant TEXT DEFAULT 'NOUVEAU',
+        evaluation_json TEXT,
         date_debut DATETIME,
         date_fin DATETIME,
         duree_minutes INTEGER,
         status TEXT DEFAULT 'active',
         synced INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (cours_id) REFERENCES courses(id) ON DELETE CASCADE
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`,
 
       // Table des quizz (détails des quizz)
@@ -186,6 +189,31 @@ export class SQLiteDatabase {
 
     for (const indexSQL of indexes) {
       await this.db.execAsync(indexSQL);
+    }
+  }
+
+  /**
+   * Migration pour les colonnes offline de la table evaluations
+   */
+  public async migrateEvaluationsTable(): Promise<void> {
+    if (!this.db) throw new Error('Base de données non initialisée');
+
+    const columnsToAdd = [
+      { name: 'cours_nom', type: 'TEXT' },
+      { name: 'quizz_id', type: 'TEXT' },
+      { name: 'statut_etudiant', type: "TEXT DEFAULT 'NOUVEAU'" },
+      { name: 'evaluation_json', type: 'TEXT' },
+    ];
+
+    for (const col of columnsToAdd) {
+      try {
+        await this.db.execAsync(
+          `ALTER TABLE evaluations ADD COLUMN ${col.name} ${col.type}`,
+        );
+        console.log(`✅ Colonne evaluations.${col.name} ajoutée`);
+      } catch {
+        // La colonne existe déjà — c'est normal
+      }
     }
   }
 

@@ -32,16 +32,6 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="profil"
-        options={{
-          title: 'Profil',
-          tabBarIcon: ({ color, size }) => (
-            <AntDesign name="user" size={size} color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
         name="notifications"
         options={{
           title: 'Notifications',
@@ -57,6 +47,16 @@ export default function TabLayout() {
           title: 'Historique',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="history" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="profil"
+        options={{
+          title: 'Profil',
+          tabBarIcon: ({ color, size }) => (
+            <AntDesign name="user" size={size} color={color} />
           ),
         }}
       />

@@ -3,12 +3,17 @@ import { QuizzRepository } from '../repositories/QuizzRepository';
 
 /**
  * Cas d'utilisation : Soumettre les réponses d'un quizz
- * Permet à un étudiant de soumettre ses réponses à un quizz
+ * Supporte le mode offline : les réponses sont mises en file d'attente
+ * et envoyées automatiquement au retour de la connexion.
  */
 export class SubmitQuizzAnswersUseCase {
   constructor(private quizzRepository: QuizzRepository) {}
 
-  async execute(quizzId: string, submission: QuizzSubmission): Promise<void> {
+  async execute(
+    quizzId: string,
+    submission: QuizzSubmission,
+    options?: { evaluationId?: string; userId?: string },
+  ): Promise<void> {
     if (!quizzId) {
       throw new Error('L\'ID du quizz est requis');
     }
@@ -17,6 +22,6 @@ export class SubmitQuizzAnswersUseCase {
       throw new Error('Au moins une réponse est requise');
     }
 
-    return this.quizzRepository.submitAnswers(quizzId, submission);
+    return this.quizzRepository.submitAnswers(quizzId, submission, options);
   }
 }
