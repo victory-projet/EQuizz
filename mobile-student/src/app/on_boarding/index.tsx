@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import { checkOnboardingCompleted } from '@/src/utils/onboarding';
 
 export default function Index() {
     const router = useRouter();
@@ -10,8 +11,13 @@ export default function Index() {
     const load = require('@/assets/images/load.png');
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-        router.replace('/on_boarding/page1');
+        const timer = setTimeout(async () => {
+            const onboardingDone = await checkOnboardingCompleted();
+            if (onboardingDone) {
+                router.replace('/(auth)');
+            } else {
+                router.replace('/on_boarding/page1');
+            }
         }, 2000);
 
         return () => clearTimeout(timer);
@@ -50,7 +56,7 @@ const styles = StyleSheet.create({
     },
     container1: {
         alignItems: 'center',
-        bottom: 50, // Position en bas
+        bottom: 50,
     },
     img: {
         height: 249,
@@ -59,7 +65,7 @@ const styles = StyleSheet.create({
     img1: {
         height: 150,
         width: 150,
-        tintColor: 'white', // Force la couleur blanche si l'image n'est pas déjà blanche (optionnel)
+        tintColor: 'white',
     },
     titre: {
         fontWeight: 'bold',

@@ -10,7 +10,7 @@ import { SQLiteDatabase } from "../data/database/SQLiteDatabase";
 import { SyncService } from "../data/services/SyncService";
 import { QuizzSyncService } from "../data/services/QuizzSyncService";
 import { AuthProvider, useAuth } from "../presentation/hooks/useAuth";
-import { isOnboardingCompleted } from "../utils/onboarding";
+import { isOnboardingCompleted, checkOnboardingCompleted } from "../utils/onboarding";
 
 /**
  * Composant d'initialisation de l'application
@@ -44,6 +44,9 @@ function AppInitializer({ children }: AppInitializerProps) {
       setStep("Nettoyage des anciennes données...");
       const syncService = SyncService.getInstance();
       await syncService.cleanOldData();
+
+      // Précharger l'état de l'onboarding depuis AsyncStorage
+      await checkOnboardingCompleted();
 
       // Démarrer le service de synchronisation des quiz hors ligne
       QuizzSyncService.getInstance().start();

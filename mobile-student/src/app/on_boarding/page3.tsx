@@ -10,8 +10,8 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 export default function Page2() {
     const router = useRouter();
 
-    const handleStart = () => {
-        completeOnboarding();
+    const handleStart = async () => {
+        await completeOnboarding();
         router.replace('/(auth)/Views/LoginScreen');
     };
 

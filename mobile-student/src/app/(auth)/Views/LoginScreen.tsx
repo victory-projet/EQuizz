@@ -84,7 +84,7 @@ const LoginScreen = () => {
           />
 
           <TouchableOpacity onPress={handleRegister} style={styles.link}>
-            <Text style={styles.linkText}>Première connexion ? S'inscrire</Text>
+            <Text style={styles.linkText}>Première connexion ? S&apos;inscrire</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
